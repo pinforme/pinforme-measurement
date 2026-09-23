@@ -2,20 +2,34 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
+
+<meta name="viewport"
+      content="width=device-width,
+               initial-scale=1,
+               maximum-scale=5,
+               user-scalable=yes">
+
 <title>PINFORME 採寸ナビ</title>
 
 <style>
+
 *{
   box-sizing:border-box;
 }
 
-html,body{
+html,
+body{
   margin:0;
   padding:0;
   width:100%;
   overflow-x:hidden;
-  font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue","Hiragino Kaku Gothic ProN",Meiryo,sans-serif;
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Helvetica Neue",
+    "Hiragino Kaku Gothic ProN",
+    Meiryo,
+    sans-serif;
   color:#222;
   background:#fff;
 }
@@ -100,6 +114,11 @@ h2{
   margin-bottom:24px;
 }
 
+
+/* -------------------------
+   6つのポイント
+------------------------- */
+
 .point-card{
   border:1px solid #e5e5e5;
   border-radius:16px;
@@ -120,6 +139,49 @@ h2{
   white-space:pre-line;
 }
 
+
+/* -------------------------
+   犬種入力
+------------------------- */
+
+.breed-box{
+  margin-bottom:24px;
+  padding:17px;
+  border:2px solid #222;
+  border-radius:16px;
+  background:#fff;
+}
+
+.breed-title{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-bottom:10px;
+  font-size:16px;
+  font-weight:700;
+}
+
+.required-badge{
+  display:inline-block;
+  padding:4px 8px;
+  border-radius:6px;
+  background:#222;
+  color:#fff;
+  font-size:11px;
+  font-weight:700;
+}
+
+.input-help{
+  color:#777;
+  font-size:12px;
+  margin-top:7px;
+}
+
+
+/* -------------------------
+   同意
+------------------------- */
+
 .agreement-card{
   margin-top:22px;
   padding:17px;
@@ -133,16 +195,6 @@ h2{
   align-items:center;
   gap:8px;
   margin-bottom:10px;
-}
-
-.required-badge{
-  display:inline-block;
-  padding:4px 8px;
-  border-radius:6px;
-  background:#222;
-  color:#fff;
-  font-size:11px;
-  font-weight:700;
 }
 
 .required-text{
@@ -175,22 +227,10 @@ h2{
   line-height:1.6;
 }
 
-.breed-box{
-  margin-bottom:24px;
-  padding:17px;
-  border:2px solid #222;
-  border-radius:16px;
-  background:#fff;
-}
 
-.breed-title{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  margin-bottom:10px;
-  font-size:16px;
-  font-weight:700;
-}
+/* -------------------------
+   入力
+------------------------- */
 
 .input-label{
   display:block;
@@ -222,25 +262,24 @@ input:focus{
   border-color:#222;
 }
 
-.input-help{
-  color:#777;
-  font-size:12px;
-  margin-top:7px;
-}
-
-.info-card{
-  border:1px solid #e5e5e5;
-  border-radius:16px;
-  padding:18px 16px;
-  margin-bottom:14px;
-}
-
 .field{
   margin-bottom:18px;
 }
 
 .field:last-child{
   margin-bottom:0;
+}
+
+
+/* -------------------------
+   基本情報
+------------------------- */
+
+.info-card{
+  border:1px solid #e5e5e5;
+  border-radius:16px;
+  padding:18px 16px;
+  margin-bottom:14px;
 }
 
 .sex-buttons{
@@ -262,6 +301,11 @@ input:focus{
   color:#fff;
   border-color:#222;
 }
+
+
+/* -------------------------
+   写真
+------------------------- */
 
 .photo-card{
   border:1px solid #e5e5e5;
@@ -298,6 +342,11 @@ input:focus{
   background:#fff;
   font-size:14px;
 }
+
+
+/* -------------------------
+   採寸
+------------------------- */
 
 .measure-header{
   margin-bottom:20px;
@@ -336,85 +385,127 @@ input:focus{
   font-size:16px;
   font-weight:700;
   line-height:1.5;
-  margin-bottom:12px;
+  margin-bottom:14px;
 }
 
-.measure-input-row{
+
+/* -------------------------
+   1回目・2回目・3回目
+------------------------- */
+
+.measure-row{
   display:flex;
-  gap:8px;
+  align-items:center;
   width:100%;
+  margin-bottom:10px;
 }
 
-.measure-input{
+.measure-row:last-child{
+  margin-bottom:0;
+}
+
+.measure-round{
+  flex:none;
+  width:58px;
+  font-size:14px;
+  font-weight:700;
+}
+
+.measure-input-wrap{
   flex:1;
+  display:flex;
+  align-items:center;
   min-width:0;
 }
 
-.measure-input input{
-  width:100%;
+.measure-input-wrap input{
+  flex:1;
+  min-width:0;
   height:48px;
-  padding:10px;
-  text-align:center;
+  padding:10px 12px;
+  text-align:right;
   font-size:16px;
 }
 
-.measure-label{
-  text-align:center;
-  font-size:11px;
-  color:#666;
-  margin-top:5px;
+.cm-unit{
+  flex:none;
+  width:34px;
+  margin-left:7px;
+  font-size:14px;
+  color:#555;
 }
 
-.cm-label{
-  text-align:center;
-  font-size:11px;
-  color:#777;
-  margin-top:3px;
-}
 
-.average-box{
-  margin-top:14px;
-  padding:12px;
+/* -------------------------
+   注意
+------------------------- */
+
+.measure-note{
+  margin-top:18px;
+  padding:13px 14px;
   border-radius:10px;
   background:#f7f7f7;
-  text-align:center;
-}
-
-.average-label{
+  color:#666;
   font-size:12px;
-  color:#777;
+  line-height:1.7;
 }
 
-.average-value{
-  font-size:20px;
-  font-weight:700;
-  margin-top:3px;
-}
 
-.notice{
-  margin-top:20px;
-  padding:16px;
-  border-radius:12px;
-  background:#f7f7f7;
-  font-size:13px;
-  line-height:1.8;
-}
+/* -------------------------
+   お礼
+------------------------- */
 
 .thanks{
   text-align:center;
-  padding:50px 10px;
+  padding:40px 8px 30px;
 }
 
 .thanks-icon{
-  font-size:48px;
-  margin-bottom:15px;
+  width:64px;
+  height:64px;
+  margin:0 auto 20px;
+  border-radius:50%;
+  background:#222;
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:30px;
 }
 
 .thanks-title{
-  font-size:24px;
+  font-size:23px;
   font-weight:700;
-  margin-bottom:12px;
+  line-height:1.5;
+  margin-bottom:20px;
 }
+
+.thanks-message{
+  font-size:15px;
+  line-height:2;
+  color:#444;
+  text-align:left;
+  margin-bottom:22px;
+}
+
+.thanks-message strong{
+  font-weight:700;
+  color:#222;
+}
+
+.thanks-box{
+  padding:18px;
+  border-radius:14px;
+  background:#f7f7f7;
+  font-size:14px;
+  line-height:1.9;
+  text-align:left;
+}
+
+
+/* -------------------------
+   結果
+------------------------- */
 
 .result-card{
   border:1px solid #e5e5e5;
@@ -466,6 +557,11 @@ input:focus{
   margin:22px 0 10px;
 }
 
+
+/* -------------------------
+   下部ボタン
+------------------------- */
+
 .bottom-nav{
   position:fixed;
   left:0;
@@ -514,49 +610,79 @@ input:focus{
   display:none!important;
 }
 
+
 @media(max-width:380px){
+
   main{
     padding-left:16px;
     padding-right:16px;
   }
 
-  .measure-input-row{
-    gap:5px;
+  .measure-round{
+    width:55px;
   }
 
-  .measure-input input{
-    padding:8px 5px;
-  }
 }
+
 </style>
 </head>
 
+
 <body>
 
+
 <header class="header">
+
   <div class="header-inner">
-    <div class="logo">PINFORME</div>
-    <div class="progress-wrap">
-      <div class="progress" id="progress"></div>
+
+    <div class="logo">
+      PINFORME
     </div>
+
+    <div class="progress-wrap">
+      <div
+        class="progress"
+        id="progress">
+      </div>
+    </div>
+
   </div>
+
 </header>
+
 
 <main id="app"></main>
 
+
 <div class="bottom-nav">
+
   <div class="bottom-nav-inner">
-    <button class="nav-button back" id="backButton" type="button">
+
+    <button
+      class="nav-button back"
+      id="backButton"
+      type="button">
       戻る
     </button>
 
-    <button class="nav-button next" id="nextButton" type="button">
+    <button
+      class="nav-button next"
+      id="nextButton"
+      type="button">
       次へ
     </button>
+
   </div>
+
 </div>
 
+
 <script>
+
+
+/* ========================================
+   15項目
+======================================== */
 
 const items = [
 
@@ -667,6 +793,11 @@ const items = [
 
 ];
 
+
+/* ========================================
+   6つのポイント
+======================================== */
+
 const points = [
 
   {
@@ -707,18 +838,25 @@ const points = [
 
 ];
 
-const warningText =
-"・わんちゃんがリラックスした状態で測定してください。\n\n" +
-"・メジャーは体に沿わせ、きつすぎず、ゆるすぎないように測ってください。\n\n" +
-"・毛の長さによって数値が変わるため、できるだけ毛をおさえた状態で測定してください。\n\n" +
-"・分からない場合は、無理に測らず、空欄のままで構いません。";
 
+/* ========================================
+   測定時の注意
+======================================== */
+
+const measurementNote =
+"※ 分からない場合は、無理に測らず、空欄のままで構いません。";
+
+
+/* ========================================
+   データ
+======================================== */
 
 let step = 0;
 
 let agreed = false;
 
 let dogInfo = {
+
   breed:"",
   owner:"",
   name:"",
@@ -726,838 +864,28 @@ let dogInfo = {
   birth:"",
   weight:"",
   photo:""
+
 };
 
-let values = items.map(item =>
-  item.locations.map(() => ["","",""])
-);
 
+let values =
+  items.map(item =>
+    item.locations.map(() =>
+      ["","",""]
+    )
+  );
 
-/* -----------------------------
-   画面表示
------------------------------ */
 
-function render(){
-
-  const app = document.getElementById("app");
-
-  if(step === 0){
-    renderPoints(app);
-  }
-  else if(step === 1){
-    renderInfo(app);
-  }
-  else if(step >= 2 && step <= 16){
-    renderMeasure(app, step - 2);
-  }
-  else if(step === 17){
-    renderThanks(app);
-  }
-  else if(step === 18){
-    renderResult(app);
-  }
-
-  updateNavigation();
-
-  window.scrollTo({
-    top:0,
-    behavior:"instant"
-  });
-
-}
-
-
-/* -----------------------------
-   6つのポイント
------------------------------ */
-
-function renderPoints(app){
-
-  app.innerHTML = `
-    <h1>採寸前に<br>大切な6つのポイント</h1>
-
-    <div class="subtitle">
-      正確な採寸のために、必ず確認してください。
-    </div>
-
-    <div class="breed-box">
-      <div class="breed-title">
-        犬種
-        <span class="required-badge">必須</span>
-      </div>
-
-      <input
-        id="breedInput"
-        type="text"
-        placeholder="例：ミニチュア・ピンシャー"
-        value="${escapeHtml(dogInfo.breed)}"
-      >
-
-      <div class="input-help">
-        採寸するわんちゃんの犬種を入力してください。
-      </div>
-    </div>
-
-    ${points.map(point => `
-      <div class="point-card">
-        <div class="point-title">
-          ${point.no} ${point.title}
-        </div>
-
-        <div class="point-text">
-          ${point.text}
-        </div>
-      </div>
-    `).join("")}
-
-    <div class="agreement-card">
-
-      <div class="required-row">
-        <span class="required-badge">必須</span>
-        <span class="required-text">最後まで確認してください</span>
-      </div>
-
-      <label class="agreement-label" for="agreeCheck">
-
-        <input
-          id="agreeCheck"
-          type="checkbox"
-          ${agreed ? "checked" : ""}
-        >
-
-        <span>
-          6つのポイントを確認しました
-        </span>
-
-      </label>
-
-      <div class="agreement-note">
-        ※犬種の入力と、このチェックの両方が完了すると「次へ」に進めます。
-      </div>
-
-    </div>
-  `;
-
-  const breedInput = document.getElementById("breedInput");
-
-  breedInput.addEventListener("input", function(){
-    dogInfo.breed = this.value;
-    updateNavigation();
-  });
-
-  const check = document.getElementById("agreeCheck");
-
-  check.addEventListener("change", function(){
-    agreed = this.checked;
-    updateNavigation();
-  });
-
-}
-
-
-/* -----------------------------
-   基本情報
------------------------------ */
-
-function renderInfo(app){
-
-  app.innerHTML = `
-
-    <h1>わんちゃんの情報</h1>
-
-    <div class="subtitle">
-      採寸するわんちゃんの情報を入力してください。
-    </div>
-
-    <div class="info-card">
-
-      <div class="field">
-        <label class="input-label">飼い主様のお名前</label>
-
-        <input
-          id="ownerInput"
-          type="text"
-          placeholder="お名前"
-          value="${escapeHtml(dogInfo.owner)}"
-        >
-      </div>
-
-      <div class="field">
-        <label class="input-label">わんちゃんのお名前</label>
-
-        <input
-          id="nameInput"
-          type="text"
-          placeholder="わんちゃんのお名前"
-          value="${escapeHtml(dogInfo.name)}"
-        >
-      </div>
-
-      <div class="field">
-        <label class="input-label">性別</label>
-
-        <div class="sex-buttons">
-
-          <button
-            class="sex-button ${dogInfo.sex === "男の子" ? "active" : ""}"
-            id="maleButton"
-            type="button"
-          >
-            男の子
-          </button>
-
-          <button
-            class="sex-button ${dogInfo.sex === "女の子" ? "active" : ""}"
-            id="femaleButton"
-            type="button"
-          >
-            女の子
-          </button>
-
-        </div>
-      </div>
-
-      <div class="field">
-        <label class="input-label">生年月日</label>
-
-        <input
-          id="birthInput"
-          type="date"
-          value="${escapeHtml(dogInfo.birth)}"
-        >
-      </div>
-
-      <div class="field">
-        <label class="input-label">体重</label>
-
-        <input
-          id="weightInput"
-          type="number"
-          step="0.1"
-          inputmode="decimal"
-          placeholder="例：4.5"
-          value="${escapeHtml(dogInfo.weight)}"
-        >
-
-        <div class="input-help">kg</div>
-      </div>
-
-      <div class="field">
-
-        <label class="input-label">写真</label>
-
-        <div class="photo-card">
-
-          <div class="photo-preview" id="photoPreview">
-            ${
-              dogInfo.photo
-              ? `<img src="${dogInfo.photo}" alt="わんちゃんの写真">`
-              : `写真を登録してください`
-            }
-          </div>
-
-          <input
-            id="photoInput"
-            type="file"
-            accept="image/*"
-            class="hidden"
-          >
-
-          <button
-            class="photo-button"
-            id="photoButton"
-            type="button"
-          >
-            写真を変更
-          </button>
-
-        </div>
-
-      </div>
-
-    </div>
-
-  `;
-
-  document.getElementById("ownerInput")
-    .addEventListener("input", e => {
-      dogInfo.owner = e.target.value;
-    });
-
-  document.getElementById("nameInput")
-    .addEventListener("input", e => {
-      dogInfo.name = e.target.value;
-    });
-
-  document.getElementById("birthInput")
-    .addEventListener("change", e => {
-      dogInfo.birth = e.target.value;
-    });
-
-  document.getElementById("weightInput")
-    .addEventListener("input", e => {
-      dogInfo.weight = e.target.value;
-    });
-
-  document.getElementById("maleButton")
-    .addEventListener("click", () => {
-
-      dogInfo.sex = "男の子";
-
-      render();
-
-    });
-
-  document.getElementById("femaleButton")
-    .addEventListener("click", () => {
-
-      dogInfo.sex = "女の子";
-
-      render();
-
-    });
-
-  document.getElementById("photoButton")
-    .addEventListener("click", () => {
-      document.getElementById("photoInput").click();
-    });
-
-  document.getElementById("photoInput")
-    .addEventListener("change", function(){
-
-      const file = this.files[0];
-
-      if(!file) return;
-
-      const reader = new FileReader();
-
-      reader.onload = function(e){
-
-        dogInfo.photo = e.target.result;
-
-        const preview =
-          document.getElementById("photoPreview");
-
-        preview.innerHTML =
-          `<img src="${dogInfo.photo}" alt="わんちゃんの写真">`;
-
-      };
-
-      reader.readAsDataURL(file);
-
-    });
-
-}
-
-
-/* -----------------------------
-   採寸画面
------------------------------ */
-
-function renderMeasure(app,index){
-
-  const item = items[index];
-
-  app.innerHTML = `
-
-    <div class="measure-header">
-
-      <div class="measure-number">
-        ${item.no} ${index + 1} / ${items.length}
-      </div>
-
-      <h1 class="measure-title">
-        ${item.title}
-      </h1>
-
-      <div class="description">
-        ${item.description}
-      </div>
-
-    </div>
-
-    ${item.locations.map((location,locationIndex) => {
-
-      const vals =
-        values[index][locationIndex];
-
-      return `
-
-        <div class="location-card">
-
-          <div class="location-title">
-            測定箇所：${location}
-          </div>
-
-          <div class="measure-input-row">
-
-            ${[0,1,2].map(n => `
-
-              <div class="measure-input">
-
-                <input
-                  type="number"
-                  step="0.1"
-                  inputmode="decimal"
-                  placeholder="0.0"
-                  value="${escapeHtml(vals[n])}"
-                  data-location="${locationIndex}"
-                  data-number="${n}"
-                >
-
-                <div class="measure-label">
-                  ${n + 1}回目
-                </div>
-
-                <div class="cm-label">
-                  cm
-                </div>
-
-              </div>
-
-            `).join("")}
-
-          </div>
-
-          <div class="average-box">
-
-            <div class="average-label">
-              平均
-            </div>
-
-            <div
-              class="average-value"
-              id="average-${locationIndex}"
-            >
-              ${calculateAverage(vals)}
-            </div>
-
-          </div>
-
-        </div>
-
-      `;
-
-    }).join("")}
-
-    <div class="notice">
-      ${warningText}
-    </div>
-
-  `;
-
-  document
-    .querySelectorAll(".measure-input input")
-    .forEach(input => {
-
-      input.addEventListener("input", function(){
-
-        const locationIndex =
-          Number(this.dataset.location);
-
-        const numberIndex =
-          Number(this.dataset.number);
-
-        values[index][locationIndex][numberIndex] =
-          this.value;
-
-        updateAverage(
-          index,
-          locationIndex
-        );
-
-      });
-
-    });
-
-}
-
-
-/* -----------------------------
-   平均値
------------------------------ */
-
-function calculateAverage(arr){
-
-  const nums = arr
-    .map(v => parseFloat(v))
-    .filter(v => !isNaN(v));
-
-  if(nums.length === 0){
-    return "—";
-  }
-
-  const avg =
-    nums.reduce((a,b) => a + b,0) / nums.length;
-
-  return avg.toFixed(1) + " cm";
-}
-
-
-function updateAverage(itemIndex,locationIndex){
-
-  const element =
-    document.getElementById(
-      `average-${locationIndex}`
-    );
-
-  if(!element) return;
-
-  element.textContent =
-    calculateAverage(
-      values[itemIndex][locationIndex]
-    );
-
-}
-
-
-/* -----------------------------
-   完了画面
------------------------------ */
-
-function renderThanks(app){
-
-  app.innerHTML = `
-
-    <div class="thanks">
-
-      <div class="thanks-icon">
-        ✓
-      </div>
-
-      <div class="thanks-title">
-        採寸ありがとうございました
-      </div>
-
-      <div class="subtitle">
-        すべての採寸が完了しました。
-      </div>
-
-    </div>
-
-  `;
-
-}
-
-
-/* -----------------------------
-   結果画面
------------------------------ */
-
-function renderResult(app){
-
-  app.innerHTML = `
-
-    <h1>採寸結果</h1>
-
-    <div class="subtitle">
-      PINFORME 採寸データ
-    </div>
-
-    <div class="result-card">
-
-      ${
-        dogInfo.photo
-        ? `
-          <div class="result-photo">
-            <img
-              src="${dogInfo.photo}"
-              alt="わんちゃんの写真"
-            >
-          </div>
-        `
-        : ""
-      }
-
-      <div class="result-row">
-        <span class="result-name">犬種</span>
-        <span class="result-value">
-          ${escapeHtml(dogInfo.breed) || "—"}
-        </span>
-      </div>
-
-      <div class="result-row">
-        <span class="result-name">飼い主様</span>
-        <span class="result-value">
-          ${escapeHtml(dogInfo.owner) || "—"}
-        </span>
-      </div>
-
-      <div class="result-row">
-        <span class="result-name">わんちゃん</span>
-        <span class="result-value">
-          ${escapeHtml(dogInfo.name) || "—"}
-        </span>
-      </div>
-
-      <div class="result-row">
-        <span class="result-name">性別</span>
-        <span class="result-value">
-          ${escapeHtml(dogInfo.sex) || "—"}
-        </span>
-      </div>
-
-      <div class="result-row">
-        <span class="result-name">生年月日</span>
-        <span class="result-value">
-          ${escapeHtml(dogInfo.birth) || "—"}
-        </span>
-      </div>
-
-      <div class="result-row">
-        <span class="result-name">体重</span>
-        <span class="result-value">
-          ${
-            dogInfo.weight
-            ? escapeHtml(dogInfo.weight) + " kg"
-            : "—"
-          }
-        </span>
-      </div>
-
-    </div>
-
-    <div class="result-section-title">
-      採寸結果
-    </div>
-
-    ${items.map((item,itemIndex) => `
-
-      <div class="result-card">
-
-        <div class="result-section-title" style="margin-top:0;">
-          ${item.no} ${item.title}
-        </div>
-
-        ${item.locations.map((location,locationIndex) => `
-
-          <div class="result-row">
-
-            <span class="result-name">
-              ${location}
-            </span>
-
-            <span class="result-value">
-              ${calculateAverage(
-                values[itemIndex][locationIndex]
-              )}
-            </span>
-
-          </div>
-
-        `).join("")}
-
-      </div>
-
-    `).join("")}
-
-  `;
-
-}
-
-
-/* -----------------------------
-   ナビゲーション
------------------------------ */
-
-function updateNavigation(){
-
-  const back =
-    document.getElementById("backButton");
-
-  const next =
-    document.getElementById("nextButton");
-
-  const progress =
-    document.getElementById("progress");
-
-  back.disabled = step === 0;
-
-  if(step === 0){
-
-    next.textContent = "次へ";
-
-    next.disabled =
-      !dogInfo.breed.trim() ||
-      !agreed;
-
-  }
-  else if(step === 1){
-
-    next.textContent = "採寸を始める";
-
-    next.disabled = false;
-
-  }
-  else if(step >= 2 && step <= 16){
-
-    next.textContent =
-      step === 16
-      ? "採寸完了"
-      : "次へ";
-
-    next.disabled = false;
-
-  }
-  else if(step === 17){
-
-    next.textContent = "結果を見る";
-
-    next.disabled = false;
-
-  }
-  else{
-
-    next.textContent = "完了";
-
-    next.disabled = true;
-
-  }
-
-  const totalSteps = 19;
-
-  const percentage =
-    Math.min(
-      100,
-      (step / (totalSteps - 1)) * 100
-    );
-
-  progress.style.width =
-    percentage + "%";
-
-}
-
-
-/* -----------------------------
-   次へ
------------------------------ */
-
-document
-  .getElementById("nextButton")
-  .addEventListener("click", () => {
-
-    if(step === 0){
-
-      if(
-        !dogInfo.breed.trim() ||
-        !agreed
-      ){
-        return;
-      }
-
-      dogInfo.breed =
-        dogInfo.breed.trim();
-
-      step = 1;
-
-    }
-    else if(step === 1){
-
-      saveInfo();
-
-      step = 2;
-
-    }
-    else if(step >= 2 && step <= 16){
-
-      step++;
-
-    }
-    else if(step === 17){
-
-      step = 18;
-
-    }
-
-    render();
-
-  });
-
-
-/* -----------------------------
-   戻る
------------------------------ */
-
-document
-  .getElementById("backButton")
-  .addEventListener("click", () => {
-
-    if(step <= 0){
-      return;
-    }
-
-    if(step === 1){
-
-      saveInfo();
-
-      step = 0;
-
-    }
-    else if(step >= 2 && step <= 16){
-
-      step--;
-
-    }
-    else if(step === 17){
-
-      step = 16;
-
-    }
-    else if(step === 18){
-
-      step = 17;
-
-    }
-
-    render();
-
-  });
-
-
-/* -----------------------------
-   基本情報保存
------------------------------ */
-
-function saveInfo(){
-
-  const owner =
-    document.getElementById("ownerInput");
-
-  const name =
-    document.getElementById("nameInput");
-
-  const birth =
-    document.getElementById("birthInput");
-
-  const weight =
-    document.getElementById("weightInput");
-
-  if(owner){
-    dogInfo.owner = owner.value;
-  }
-
-  if(name){
-    dogInfo.name = name.value;
-  }
-
-  if(birth){
-    dogInfo.birth = birth.value;
-  }
-
-  if(weight){
-    dogInfo.weight = weight.value;
-  }
-
-}
-
-
-/* -----------------------------
+/* ========================================
    HTMLエスケープ
------------------------------ */
+======================================== */
 
 function escapeHtml(value){
 
-  if(value === null || value === undefined){
+  if(
+    value === null ||
+    value === undefined
+  ){
     return "";
   }
 
@@ -1571,9 +899,1323 @@ function escapeHtml(value){
 }
 
 
-/* -----------------------------
-   初期表示
------------------------------ */
+/* ========================================
+   平均
+======================================== */
+
+function calculateAverage(arr){
+
+  const nums =
+    arr
+      .map(v => parseFloat(v))
+      .filter(v => !isNaN(v));
+
+  if(nums.length === 0){
+    return "—";
+  }
+
+  const avg =
+    nums.reduce(
+      (a,b) => a + b,
+      0
+    ) / nums.length;
+
+  return avg.toFixed(1) + " cm";
+
+}
+
+
+/* ========================================
+   画面表示
+======================================== */
+
+function render(){
+
+  const app =
+    document.getElementById("app");
+
+
+  if(step === 0){
+
+    renderPoints(app);
+
+  }
+  else if(step === 1){
+
+    renderInfo(app);
+
+  }
+  else if(
+    step >= 2 &&
+    step <= 16
+  ){
+
+    renderMeasure(
+      app,
+      step - 2
+    );
+
+  }
+  else if(step === 17){
+
+    renderThanks(app);
+
+  }
+  else if(step === 18){
+
+    renderResult(app);
+
+  }
+
+
+  updateNavigation();
+
+
+  window.scrollTo({
+    top:0,
+    behavior:"instant"
+  });
+
+}
+
+
+/* ========================================
+   6つのポイント画面
+======================================== */
+
+function renderPoints(app){
+
+  app.innerHTML = `
+
+    <h1>
+      採寸前に<br>
+      大切な6つのポイント
+    </h1>
+
+    <div class="subtitle">
+      正確な採寸のために、必ず確認してください。
+    </div>
+
+
+    <div class="breed-box">
+
+      <div class="breed-title">
+
+        犬種
+
+        <span class="required-badge">
+          必須
+        </span>
+
+      </div>
+
+      <input
+        id="breedInput"
+        type="text"
+        placeholder="例：ミニチュア・ピンシャー"
+        value="${escapeHtml(dogInfo.breed)}"
+      >
+
+      <div class="input-help">
+        採寸するわんちゃんの犬種を入力してください。
+      </div>
+
+    </div>
+
+
+    ${points.map(point => `
+
+      <div class="point-card">
+
+        <div class="point-title">
+          ${point.no} ${point.title}
+        </div>
+
+        <div class="point-text">
+          ${point.text}
+        </div>
+
+      </div>
+
+    `).join("")}
+
+
+    <div class="agreement-card">
+
+      <div class="required-row">
+
+        <span class="required-badge">
+          必須
+        </span>
+
+        <span class="required-text">
+          最後まで確認してください
+        </span>
+
+      </div>
+
+
+      <label
+        class="agreement-label"
+        for="agreeCheck">
+
+        <input
+          id="agreeCheck"
+          type="checkbox"
+          ${agreed ? "checked" : ""}
+        >
+
+        <span>
+          6つのポイントを確認しました
+        </span>
+
+      </label>
+
+
+      <div class="agreement-note">
+        ※犬種の入力と、このチェックの両方が完了すると「次へ」に進めます。
+      </div>
+
+    </div>
+
+  `;
+
+
+  document
+    .getElementById("breedInput")
+    .addEventListener(
+      "input",
+      function(){
+
+        dogInfo.breed =
+          this.value;
+
+        updateNavigation();
+
+      }
+    );
+
+
+  document
+    .getElementById("agreeCheck")
+    .addEventListener(
+      "change",
+      function(){
+
+        agreed =
+          this.checked;
+
+        updateNavigation();
+
+      }
+    );
+
+}
+
+
+/* ========================================
+   基本情報
+======================================== */
+
+function renderInfo(app){
+
+  app.innerHTML = `
+
+    <h1>
+      わんちゃんの情報
+    </h1>
+
+    <div class="subtitle">
+      採寸するわんちゃんの情報を入力してください。
+    </div>
+
+
+    <div class="info-card">
+
+
+      <div class="field">
+
+        <label class="input-label">
+          飼い主様のお名前
+        </label>
+
+        <input
+          id="ownerInput"
+          type="text"
+          placeholder="お名前"
+          value="${escapeHtml(dogInfo.owner)}"
+        >
+
+      </div>
+
+
+      <div class="field">
+
+        <label class="input-label">
+          わんちゃんのお名前
+        </label>
+
+        <input
+          id="nameInput"
+          type="text"
+          placeholder="わんちゃんのお名前"
+          value="${escapeHtml(dogInfo.name)}"
+        >
+
+      </div>
+
+
+      <div class="field">
+
+        <label class="input-label">
+          性別
+        </label>
+
+
+        <div class="sex-buttons">
+
+          <button
+            class="sex-button
+              ${dogInfo.sex === "男の子" ? "active" : ""}"
+            id="maleButton"
+            type="button">
+
+            男の子
+
+          </button>
+
+
+          <button
+            class="sex-button
+              ${dogInfo.sex === "女の子" ? "active" : ""}"
+            id="femaleButton"
+            type="button">
+
+            女の子
+
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <div class="field">
+
+        <label class="input-label">
+          生年月日
+        </label>
+
+        <input
+          id="birthInput"
+          type="date"
+          value="${escapeHtml(dogInfo.birth)}"
+        >
+
+      </div>
+
+
+      <div class="field">
+
+        <label class="input-label">
+          体重
+        </label>
+
+        <input
+          id="weightInput"
+          type="number"
+          step="0.1"
+          inputmode="decimal"
+          placeholder="例：4.5"
+          value="${escapeHtml(dogInfo.weight)}"
+        >
+
+        <div class="input-help">
+          kg
+        </div>
+
+      </div>
+
+
+      <div class="field">
+
+        <label class="input-label">
+          写真
+        </label>
+
+
+        <div class="photo-card">
+
+          <div
+            class="photo-preview"
+            id="photoPreview">
+
+            ${
+              dogInfo.photo
+              ?
+              `<img
+                 src="${dogInfo.photo}"
+                 alt="わんちゃんの写真">`
+              :
+              `写真を登録してください`
+            }
+
+          </div>
+
+
+          <input
+            id="photoInput"
+            type="file"
+            accept="image/*"
+            class="hidden"
+          >
+
+
+          <button
+            class="photo-button"
+            id="photoButton"
+            type="button">
+
+            写真を変更
+
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  `;
+
+
+  document
+    .getElementById("ownerInput")
+    .addEventListener(
+      "input",
+      e => {
+
+        dogInfo.owner =
+          e.target.value;
+
+      }
+    );
+
+
+  document
+    .getElementById("nameInput")
+    .addEventListener(
+      "input",
+      e => {
+
+        dogInfo.name =
+          e.target.value;
+
+      }
+    );
+
+
+  document
+    .getElementById("birthInput")
+    .addEventListener(
+      "change",
+      e => {
+
+        dogInfo.birth =
+          e.target.value;
+
+      }
+    );
+
+
+  document
+    .getElementById("weightInput")
+    .addEventListener(
+      "input",
+      e => {
+
+        dogInfo.weight =
+          e.target.value;
+
+      }
+    );
+
+
+  document
+    .getElementById("maleButton")
+    .addEventListener(
+      "click",
+      () => {
+
+        dogInfo.sex =
+          "男の子";
+
+        render();
+
+      }
+    );
+
+
+  document
+    .getElementById("femaleButton")
+    .addEventListener(
+      "click",
+      () => {
+
+        dogInfo.sex =
+          "女の子";
+
+        render();
+
+      }
+    );
+
+
+  document
+    .getElementById("photoButton")
+    .addEventListener(
+      "click",
+      () => {
+
+        document
+          .getElementById("photoInput")
+          .click();
+
+      }
+    );
+
+
+  document
+    .getElementById("photoInput")
+    .addEventListener(
+      "change",
+      function(){
+
+        const file =
+          this.files[0];
+
+        if(!file){
+          return;
+        }
+
+        const reader =
+          new FileReader();
+
+
+        reader.onload =
+          function(e){
+
+            dogInfo.photo =
+              e.target.result;
+
+
+            document
+              .getElementById("photoPreview")
+              .innerHTML =
+              `<img
+                src="${dogInfo.photo}"
+                alt="わんちゃんの写真">`;
+
+          };
+
+
+        reader.readAsDataURL(file);
+
+      }
+    );
+
+}
+
+
+/* ========================================
+   採寸画面
+======================================== */
+
+function renderMeasure(app,index){
+
+  const item =
+    items[index];
+
+
+  app.innerHTML = `
+
+    <div class="measure-header">
+
+      <div class="measure-number">
+        ${item.no} ${index + 1} / ${items.length}
+      </div>
+
+
+      <h1 class="measure-title">
+        ${item.title}
+      </h1>
+
+
+      <div class="description">
+        ${item.description}
+      </div>
+
+    </div>
+
+
+    ${item.locations.map(
+      (location,locationIndex) => {
+
+        const vals =
+          values[index][locationIndex];
+
+
+        return `
+
+          <div class="location-card">
+
+            <div class="location-title">
+              測定箇所：${location}
+            </div>
+
+
+            <div class="measure-row">
+
+              <div class="measure-round">
+                1回目
+              </div>
+
+              <div class="measure-input-wrap">
+
+                <input
+                  type="number"
+                  step="0.1"
+                  inputmode="decimal"
+                  placeholder="0.0"
+                  value="${escapeHtml(vals[0])}"
+                  data-location="${locationIndex}"
+                  data-number="0"
+                >
+
+                <span class="cm-unit">
+                  cm
+                </span>
+
+              </div>
+
+            </div>
+
+
+            <div class="measure-row">
+
+              <div class="measure-round">
+                2回目
+              </div>
+
+              <div class="measure-input-wrap">
+
+                <input
+                  type="number"
+                  step="0.1"
+                  inputmode="decimal"
+                  placeholder="0.0"
+                  value="${escapeHtml(vals[1])}"
+                  data-location="${locationIndex}"
+                  data-number="1"
+                >
+
+                <span class="cm-unit">
+                  cm
+                </span>
+
+              </div>
+
+            </div>
+
+
+            <div class="measure-row">
+
+              <div class="measure-round">
+                3回目
+              </div>
+
+              <div class="measure-input-wrap">
+
+                <input
+                  type="number"
+                  step="0.1"
+                  inputmode="decimal"
+                  placeholder="0.0"
+                  value="${escapeHtml(vals[2])}"
+                  data-location="${locationIndex}"
+                  data-number="2"
+                >
+
+                <span class="cm-unit">
+                  cm
+                </span>
+
+              </div>
+
+            </div>
+
+
+            <div class="average-box">
+
+              <div class="average-label">
+                平均
+              </div>
+
+              <div
+                class="average-value"
+                id="average-${locationIndex}">
+
+                ${calculateAverage(vals)}
+
+              </div>
+
+            </div>
+
+
+          </div>
+
+        `;
+
+      }
+    ).join("")}
+
+
+    <div class="measure-note">
+      ${measurementNote}
+    </div>
+
+  `;
+
+
+  document
+    .querySelectorAll(
+      ".measure-input-wrap input"
+    )
+    .forEach(input => {
+
+      input.addEventListener(
+        "input",
+        function(){
+
+          const locationIndex =
+            Number(
+              this.dataset.location
+            );
+
+
+          const numberIndex =
+            Number(
+              this.dataset.number
+            );
+
+
+          values[index]
+            [locationIndex]
+            [numberIndex] =
+            this.value;
+
+
+          updateAverage(
+            index,
+            locationIndex
+          );
+
+        }
+      );
+
+    });
+
+}
+
+
+/* ========================================
+   平均更新
+======================================== */
+
+function updateAverage(
+  itemIndex,
+  locationIndex
+){
+
+  const element =
+    document.getElementById(
+      `average-${locationIndex}`
+    );
+
+
+  if(!element){
+    return;
+  }
+
+
+  element.textContent =
+    calculateAverage(
+      values[itemIndex]
+        [locationIndex]
+    );
+
+}
+
+
+/* ========================================
+   お礼画面
+======================================== */
+
+function renderThanks(app){
+
+  app.innerHTML = `
+
+    <div class="thanks">
+
+      <div class="thanks-icon">
+        ✓
+      </div>
+
+
+      <div class="thanks-title">
+        採寸にご協力いただき<br>
+        ありがとうございます
+      </div>
+
+
+      <div class="thanks-message">
+
+        大切なわんちゃんの採寸を
+        最後まで行っていただき、
+        本当にありがとうございます。
+
+        <br><br>
+
+        いただいた採寸データは、
+        <strong>
+          わんちゃん一頭一頭の体型によりフィットした
+          ウェアづくり
+        </strong>
+        に役立ててまいります。
+
+        <br><br>
+
+        「着せやすく、動きやすく、そして愛犬にしっかりフィットする。」
+
+        <br><br>
+
+        そんなウェアをお届けできるよう、
+        PINFORMEの商品づくりに
+        大切に活用させていただきます。
+
+      </div>
+
+
+      <div class="thanks-box">
+
+        ご協力いただいた採寸データをもとに、
+        より多くのわんちゃんに心地よく着ていただける
+        ウェアを目指してまいります。
+
+        <br><br>
+
+        ご協力いただき、
+        心より感謝申し上げます。
+
+      </div>
+
+    </div>
+
+  `;
+
+}
+
+
+/* ========================================
+   結果画面
+======================================== */
+
+function renderResult(app){
+
+  app.innerHTML = `
+
+    <h1>
+      採寸結果
+    </h1>
+
+
+    <div class="subtitle">
+      PINFORME 採寸データ
+    </div>
+
+
+    <div class="result-card">
+
+
+      ${
+        dogInfo.photo
+        ?
+        `
+          <div class="result-photo">
+
+            <img
+              src="${dogInfo.photo}"
+              alt="わんちゃんの写真">
+
+          </div>
+        `
+        :
+        ""
+      }
+
+
+      <div class="result-row">
+
+        <span class="result-name">
+          犬種
+        </span>
+
+        <span class="result-value">
+          ${
+            escapeHtml(
+              dogInfo.breed
+            ) || "—"
+          }
+        </span>
+
+      </div>
+
+
+      <div class="result-row">
+
+        <span class="result-name">
+          飼い主様
+        </span>
+
+        <span class="result-value">
+          ${
+            escapeHtml(
+              dogInfo.owner
+            ) || "—"
+          }
+        </span>
+
+      </div>
+
+
+      <div class="result-row">
+
+        <span class="result-name">
+          わんちゃん
+        </span>
+
+        <span class="result-value">
+          ${
+            escapeHtml(
+              dogInfo.name
+            ) || "—"
+          }
+        </span>
+
+      </div>
+
+
+      <div class="result-row">
+
+        <span class="result-name">
+          性別
+        </span>
+
+        <span class="result-value">
+          ${
+            escapeHtml(
+              dogInfo.sex
+            ) || "—"
+          }
+        </span>
+
+      </div>
+
+
+      <div class="result-row">
+
+        <span class="result-name">
+          生年月日
+        </span>
+
+        <span class="result-value">
+          ${
+            escapeHtml(
+              dogInfo.birth
+            ) || "—"
+          }
+        </span>
+
+      </div>
+
+
+      <div class="result-row">
+
+        <span class="result-name">
+          体重
+        </span>
+
+        <span class="result-value">
+
+          ${
+            dogInfo.weight
+            ?
+            escapeHtml(
+              dogInfo.weight
+            ) + " kg"
+            :
+            "—"
+          }
+
+        </span>
+
+      </div>
+
+
+    </div>
+
+
+    <div class="result-section-title">
+      採寸結果
+    </div>
+
+
+    ${items.map(
+      (item,itemIndex) => `
+
+        <div class="result-card">
+
+          <div
+            class="result-section-title"
+            style="margin-top:0;">
+
+            ${item.no}
+            ${item.title}
+
+          </div>
+
+
+          ${item.locations.map(
+            (location,locationIndex) => `
+
+              <div class="result-row">
+
+                <span class="result-name">
+                  ${location}
+                </span>
+
+                <span class="result-value">
+
+                  ${
+                    calculateAverage(
+                      values[itemIndex]
+                        [locationIndex]
+                    )
+                  }
+
+                </span>
+
+              </div>
+
+          `).join("")}
+
+
+        </div>
+
+    `).join("")}
+
+  `;
+
+}
+
+
+/* ========================================
+   ナビゲーション
+======================================== */
+
+function updateNavigation(){
+
+  const back =
+    document.getElementById(
+      "backButton"
+    );
+
+
+  const next =
+    document.getElementById(
+      "nextButton"
+    );
+
+
+  const progress =
+    document.getElementById(
+      "progress"
+    );
+
+
+  back.disabled =
+    step === 0;
+
+
+  if(step === 0){
+
+    next.textContent =
+      "次へ";
+
+
+    next.disabled =
+      !dogInfo.breed.trim() ||
+      !agreed;
+
+  }
+
+  else if(step === 1){
+
+    next.textContent =
+      "採寸を始める";
+
+
+    next.disabled =
+      false;
+
+  }
+
+  else if(
+    step >= 2 &&
+    step <= 16
+  ){
+
+    next.textContent =
+      step === 16
+      ? "採寸完了"
+      : "次へ";
+
+
+    next.disabled =
+      false;
+
+  }
+
+  else if(step === 17){
+
+    next.textContent =
+      "結果を見る";
+
+
+    next.disabled =
+      false;
+
+  }
+
+  else{
+
+    next.textContent =
+      "完了";
+
+
+    next.disabled =
+      true;
+
+  }
+
+
+  const totalSteps =
+    19;
+
+
+  const percentage =
+    Math.min(
+      100,
+      (step / (totalSteps - 1)) * 100
+    );
+
+
+  progress.style.width =
+    percentage + "%";
+
+}
+
+
+/* ========================================
+   次へ
+======================================== */
+
+document
+  .getElementById("nextButton")
+  .addEventListener(
+    "click",
+    () => {
+
+
+      if(step === 0){
+
+        if(
+          !dogInfo.breed.trim() ||
+          !agreed
+        ){
+
+          return;
+
+        }
+
+
+        dogInfo.breed =
+          dogInfo.breed.trim();
+
+
+        step = 1;
+
+      }
+
+      else if(step === 1){
+
+        saveInfo();
+
+        step = 2;
+
+      }
+
+      else if(
+        step >= 2 &&
+        step <= 16
+      ){
+
+        step++;
+
+      }
+
+      else if(step === 17){
+
+        step = 18;
+
+      }
+
+
+      render();
+
+    }
+  );
+
+
+/* ========================================
+   戻る
+======================================== */
+
+document
+  .getElementById("backButton")
+  .addEventListener(
+    "click",
+    () => {
+
+
+      if(step <= 0){
+        return;
+      }
+
+
+      if(step === 1){
+
+        saveInfo();
+
+        step = 0;
+
+      }
+
+      else if(
+        step >= 2 &&
+        step <= 16
+      ){
+
+        step--;
+
+      }
+
+      else if(step === 17){
+
+        step = 16;
+
+      }
+
+      else if(step === 18){
+
+        step = 17;
+
+      }
+
+
+      render();
+
+    }
+  );
+
+
+/* ========================================
+   基本情報保存
+======================================== */
+
+function saveInfo(){
+
+  const owner =
+    document.getElementById(
+      "ownerInput"
+    );
+
+
+  const name =
+    document.getElementById(
+      "nameInput"
+    );
+
+
+  const birth =
+    document.getElementById(
+      "birthInput"
+    );
+
+
+  const weight =
+    document.getElementById(
+      "weightInput"
+    );
+
+
+  if(owner){
+
+    dogInfo.owner =
+      owner.value;
+
+  }
+
+
+  if(name){
+
+    dogInfo.name =
+      name.value;
+
+  }
+
+
+  if(birth){
+
+    dogInfo.birth =
+      birth.value;
+
+  }
+
+
+  if(weight){
+
+    dogInfo.weight =
+      weight.value;
+
+  }
+
+}
+
+
+/* ========================================
+   最初の画面
+======================================== */
 
 render();
 
