@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>PINFORME 採寸ナビ｜スマホ版</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f7f7f5;color:#222;font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif}
+.app{max-width:520px;margin:auto;min-height:100vh;background:#fff}.top{padding:18px 18px 12px;border-bottom:1px solid #eee;position:sticky;top:0;background:#fff;z-index:3}
+.brand{font-weight:800;letter-spacing:.12em;font-size:18px}.sub{font-size:11px;color:#777;margin-top:4px}.bar{height:5px;background:#eee;border-radius:10px;margin-top:14px;overflow:hidden}.bar i{display:block;height:100%;background:#222;width:6.67%;transition:.25s}
+main{padding:22px 18px 110px}.step{font-size:13px;color:#777}.title{font-size:27px;font-weight:800;margin:7px 0 8px}.desc{font-size:14px;line-height:1.75;color:#555}.note{margin:16px 0;padding:13px;background:#f5f5f2;border-radius:12px;font-size:12px;line-height:1.7}
+.measure{margin-top:20px}.row{display:flex;gap:8px;align-items:center;margin:10px 0}.row label{width:52px;font-size:13px;color:#666}.row input{flex:1;font-size:23px;padding:13px;border:1px solid #ddd;border-radius:12px;text-align:right;outline:none}.row input:focus{border-color:#222}.unit{font-size:14px;width:24px}.avg{margin:18px 0;padding:17px;border-radius:14px;background:#fafafa;border:1px solid #eee;display:flex;justify-content:space-between;align-items:center}.avg strong{font-size:24px}.status{font-size:12px;color:#777}
+.btns{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(520px,100%);display:flex;gap:10px;padding:12px 18px calc(12px + env(safe-area-inset-bottom));background:rgba(255,255,255,.96);border-top:1px solid #eee}.btn{flex:1;border:0;border-radius:13px;padding:15px;font-size:15px;font-weight:700}.back{background:#eee}.next{background:#222;color:#fff}.next:disabled{opacity:.35}
+.info input,.info select{width:100%;padding:14px;border:1px solid #ddd;border-radius:12px;font-size:16px;margin:6px 0 14px;background:#fff}.info label{font-size:13px;font-weight:700}.check{display:flex;gap:10px;margin:9px 0}.summary{padding:12px 0}.item{display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #eee}.small{font-size:12px;color:#777}
+.hidden{display:none}.success{text-align:center;padding-top:40px}.success .circle{font-size:56px;margin-bottom:10px}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="top">
+<div class="brand">PINFORME</div><div class="sub">Miniature Pinscher　採寸ナビ｜スマホ版</div>
+<div class="bar"><i id="bar"></i></div>
+</header>
+<main id="main"></main>
+<div class="btns" id="buttons">
+<button class="btn back" id="back">戻る</button><button class="btn next" id="next">次へ</button>
+</div>
+</div>
+<script>
+const items=[
+["首まわり（首の付け根）","姿勢を正した時にちょうど首から胴体に変わる瞬間部分の毛並みが変わる所があります。","首の付け根を一周","cm"],
+["胴まわり","一番胸が張っているポイントで測ります。大体前脚の脇あたりから2cmから3cm後ろへ行った辺りになります。","胸が一番張っている部分を一周","cm"],
+["ウェスト","胴体で一番細い部分を一周測ります。同時に背骨位置から服が被るであろう位置の片面のみの長さも測ります。","一番細い部分を一周","cm"],
+["着丈","首まわりを測った位置から尻尾の付け根までを測ります。尻尾は軽く持ち上げますと、首まわり同様に毛並みが変わるラインが薄っすら見えますのでそのラインまでを測ります。","首まわりの位置から尻尾の付け根まで","cm"],
+["前身頃","首まわりを測った位置からお腹部分を多いかぶせてあげたい部分までを測ります。","首まわりの位置からお腹側へ","cm"],
+["前脚の太さ","太いところと細いところを測ります。服を作る時の目安になります。","太いところ・細いところ","cm"],
+["後脚の太さ","太いところと細いところを測ります。服を作る時の目安になります。","太いところ・細いところ","cm"],
+["前脚の長さ","脇から関節ごとに地面までを測ります。服を作る時の目安になります。","脚の関節ごとに地面まで","cm"],
+["後脚の長さ","測るポイントは❼の測ったラインからになります。内側でズボンが止まるポイントとなりますのでそこからスタートします。関節ごとに地面までを測ります。服を作る時の目安になります。","❼の測ったラインから関節ごとに地面まで","cm"],
+["首の長さ","首まわりを測った位置から後頭部に入る手前までの長さでネックデザインを決める際に参考になります。","首まわりの位置から後頭部手前まで","cm"],
+["首の長さ","首まわりを測った位置から額までの長さでスヌードを測る際に参考になります。","首まわりの位置から額まで","cm"],
+["頭周り","額から一周測ります。首まわりより頭まわりの方が大きい場合があります。お洋服を着せる際は頭から着せますので、密かに重要ポイントとなります。","額を通って頭を一周","cm"],
+["前脚の幅","犬を前から見たときの前脚の脚と脚の間の幅です。体格の差や骨格の差や犬種にもより異なります。","左右の前脚の間の幅","cm"],
+["首の真ん中","首の中でも一番細い部分を測ります","首の一番細い部分","cm"],
+["尻尾の太さ","付け根の一番太い部分を測ります","尻尾の付け根の一番太い部分","cm"]
+];
+
+let step=0, data={info:{},vals:Array.from({length:15},()=>[])};
+const main=document.getElementById("main"), next=document.getElementById("next"), back=document.getElementById("back"), bar=document.getElementById("bar");
+
+function render(){
+ bar.style.width=((step+1)/(items.length+2)*100)+"%";
+ if(step===0){renderInfo();return}
+ if(step>=1&&step<=15){renderItem(step-1);return}
+ renderSummary();
+}
+function renderInfo(){
+ main.innerHTML=`<div class="step">START</div><div class="title">わんちゃん情報</div>
+ <p class="desc">まずは基本情報を入力してください。</p><div class="info">
+ <label>わんちゃんのお名前</label><input id="name" value="${data.info.name||""}" placeholder="例：PINちゃん">
+ <label>性別</label><select id="sex"><option value="">選択してください</option><option ${data.info.sex==="オス"?"selected":""}>オス</option><option ${data.info.sex==="メス"?"selected":""}>メス</option></select>
+ <label>生年月日</label><input id="birth" type="date" value="${data.info.birth||""}">
+ <label>体重（kg）</label><input id="weight" inputmode="decimal" value="${data.info.weight||""}" placeholder="例：3.2">
+ </div>
+ <div class="note">採寸は、わんちゃんがリラックスした状態で行ってください。メジャーは体に沿わせ、きつすぎず、ゆるすぎないようにしてください。分からない項目は無理に測らなくても大丈夫です。</div>`;
+ next.textContent="採寸スタート →"; next.disabled=false;
+}
+function saveInfo(){["name","sex","birth","weight"].forEach(k=>{let e=document.getElementById(k);if(e)data.info[k]=e.value})}
+function renderItem(i){
+ const x=items[i], v=data.vals[i]||[];
+ main.innerHTML=`<div class="step">STEP ${i+1} / 15</div><div class="title">❶${i+1===1?"":""} ${x[0]}</div>
+ <p class="desc">${x[1]}</p><div class="note">📏 測るポイント<br><b>${x[2]}</b><br><br>できるだけ毛をおさえ、わんちゃんを4本脚で自然に立たせて測ってください。</div>
+ <div class="measure">${[0,1,2].map((n)=>`<div class="row"><label>${n+1}回目</label><input class="m" inputmode="decimal" value="${v[n]||""}" placeholder="0.0"><span class="unit">cm</span></div>`).join("")}</div>
+ <div class="avg"><span>平均値</span><strong id="avg">—</strong><span class="unit">cm</span></div>
+ <div class="status" id="status">3回測ると平均値を自動計算します。</div>`;
+ document.querySelectorAll(".m").forEach((e,n)=>e.addEventListener("input",()=>{data.vals[i][n]=e.value;calc(i)}));
+ calc(i);
+ next.textContent=i===14?"確認する →":"次へ →"; next.disabled=false;
+}
+function calc(i){
+ let a=(data.vals[i]||[]).map(Number).filter(x=>Number.isFinite(x)&&x>0);
+ let avg=a.length? (a.reduce((s,x)=>s+x,0)/a.length).toFixed(1):"—";
+ document.getElementById("avg").textContent=avg;
+ document.getElementById("status").textContent=a.length===3?"3回の平均値を表示しています。":`${a.length}回入力済み（3回推奨）`;
+}
+function renderSummary(){
+ main.innerHTML=`<div class="step">FINISH</div><div class="title">採寸結果を確認</div><p class="desc">入力内容を確認して送信してください。</p>
+ <div class="summary">${items.map((x,i)=>{let a=data.vals[i].map(Number).filter(n=>n>0);let av=a.length?(a.reduce((s,n)=>s+n,0)/a.length).toFixed(1):"未入力";return `<div class="item"><span>${i+1}. ${x[0]}<br><span class="small">${a.length}回測定</span></span><b>${av} cm</b></div>`}).join("")}</div>
+ <div class="note">※この試作品では送信データを外部サーバーへ保存していません。実運用ではPINFORMEの管理画面・Googleスプレッドシート・データベース等への保存先を接続できます。</div>`;
+ next.textContent="送信する"; next.disabled=false;
+}
+next.onclick=()=>{
+ if(step===0){saveInfo();step=1}
+ else if(step<16){step++}
+ if(step===16){renderSummary();return}
+ render();
+};
+back.onclick=()=>{if(step>0){step--;render()}};
+render();
+</script>
+</body></html>
