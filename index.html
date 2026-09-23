@@ -13,6 +13,7 @@ box-sizing:border-box;
 
 html{
 scroll-behavior:auto;
+overflow-x:hidden;
 }
 
 body{
@@ -26,14 +27,17 @@ word-break:normal;
 overflow-wrap:normal;
 line-break:strict;
 text-wrap:pretty;
+overflow-x:hidden;
 }
 
 .app{
 max-width:520px;
+width:100%;
 margin:auto;
 min-height:100vh;
 background:#fff;
 box-shadow:0 0 30px rgba(0,0,0,.04);
+overflow-x:hidden;
 }
 
 header{
@@ -78,6 +82,9 @@ transition:.3s;
 
 main{
 padding:24px 20px 120px;
+width:100%;
+max-width:100%;
+min-width:0;
 }
 
 .step{
@@ -116,6 +123,10 @@ font-size:13px;
 line-height:1.8;
 line-break:strict;
 box-shadow:0 2px 8px rgba(0,0,0,.025);
+width:100%;
+max-width:100%;
+min-width:0;
+overflow-wrap:break-word;
 }
 
 /* =========================
@@ -165,6 +176,7 @@ padding:15px;
 background:#fafafa;
 border:1px solid #eee;
 border-radius:13px;
+max-width:100%;
 }
 
 .agree input{
@@ -192,7 +204,10 @@ margin-top:18px;
 
 input,
 select{
+display:block;
 width:100%;
+max-width:100%;
+min-width:0;
 padding:14px;
 font-size:16px;
 border:1px solid #ddd;
@@ -201,6 +216,18 @@ margin-top:7px;
 background:#fff;
 outline:none;
 transition:.2s;
+font-family:inherit;
+}
+
+input[type="date"]{
+-webkit-appearance:none;
+appearance:none;
+display:block;
+width:100%;
+max-width:100%;
+min-width:0;
+height:auto;
+min-height:50px;
 }
 
 input:focus,
@@ -219,6 +246,9 @@ padding:18px;
 background:#f6f6f3;
 border-radius:16px;
 box-shadow:0 2px 8px rgba(0,0,0,.025);
+width:100%;
+max-width:100%;
+min-width:0;
 }
 
 .notice-title{
@@ -256,6 +286,8 @@ padding-bottom:0;
 
 .photo-card{
 margin-top:20px;
+width:100%;
+max-width:100%;
 }
 
 .photo-label{
@@ -265,6 +297,7 @@ margin-bottom:10px;
 
 .photo-box{
 width:100%;
+max-width:100%;
 aspect-ratio:1/1;
 border:1px solid #ddd;
 border-radius:16px;
@@ -285,6 +318,7 @@ object-fit:cover;
 
 .photo-button{
 width:100%;
+max-width:100%;
 margin-top:10px;
 background:#eee;
 color:#222;
@@ -301,6 +335,9 @@ transform:scale(.98);
 
 .measure{
 margin-top:20px;
+width:100%;
+max-width:100%;
+min-width:0;
 }
 
 .measure-location{
@@ -310,6 +347,9 @@ background:#fafafa;
 border:1px solid #eee;
 border-radius:15px;
 box-shadow:0 2px 7px rgba(0,0,0,.02);
+width:100%;
+max-width:100%;
+min-width:0;
 }
 
 .location-title{
@@ -326,10 +366,12 @@ display:flex;
 align-items:center;
 gap:8px;
 margin:10px 0;
+min-width:0;
 }
 
 .measure-row label{
 width:55px;
+min-width:55px;
 margin:0;
 font-weight:normal;
 color:#666;
@@ -340,12 +382,15 @@ font-size:21px;
 text-align:right;
 margin:0;
 flex:1;
+width:auto;
+min-width:0;
 height:50px;
 }
 
 .unit{
 font-size:14px;
 width:22px;
+min-width:22px;
 color:#777;
 }
 
@@ -358,6 +403,7 @@ border:1px solid #eee;
 display:flex;
 justify-content:space-between;
 align-items:center;
+min-width:0;
 }
 
 .average strong{
@@ -380,6 +426,7 @@ text-wrap:pretty;
 .thanks{
 text-align:center;
 padding:50px 10px 30px;
+max-width:100%;
 }
 
 .thanks-mark{
@@ -430,6 +477,7 @@ text-wrap:pretty;
 
 .result-photo{
 width:100%;
+max-width:100%;
 aspect-ratio:1/1;
 object-fit:cover;
 border-radius:16px;
@@ -483,6 +531,8 @@ font-size:15px;
 font-weight:bold;
 cursor:pointer;
 transition:.15s;
+font-family:inherit;
+max-width:100%;
 }
 
 button:active{
@@ -801,50 +851,19 @@ document.getElementById("progress");
 
 
 /* =====================================
-   ページ最上部へ ＋ ズームリセット
+   ページ移動時に上端・左端へ
 ===================================== */
 
 function scrollTop(){
 
-/*
-   ページ移動時に現在のスクロール位置を
-   一番上へ戻す
-*/
-
 window.scrollTo({
 top:0,
 left:0,
 behavior:"instant"
 });
 
-
-/*
-   iPhoneのピンチズームは普段そのまま使用可能。
-   ページ移動したタイミングだけ
-   viewportを一時的に100%へ戻す。
-*/
-
-const viewport=
-document.querySelector('meta[name="viewport"]');
-
-if(!viewport)return;
-
-
-/* 現在の設定を一時的に保存 */
-
-const originalContent=
-viewport.getAttribute("content");
-
-
-/* 一度ズームを制限 */
-
-viewport.setAttribute(
-"content",
-"width=device-width,initial-scale=1,maximum-scale=1"
-);
-
-
-/* iPhone側に反映させる */
+document.documentElement.scrollLeft=0;
+document.body.scrollLeft=0;
 
 setTimeout(()=>{
 
@@ -854,25 +873,8 @@ left:0,
 behavior:"instant"
 });
 
-
-/* ピンチズームを再び許可 */
-
-viewport.setAttribute(
-"content",
-originalContent ||
-"width=device-width,initial-scale=1"
-);
-
-
-setTimeout(()=>{
-
-window.scrollTo({
-top:0,
-left:0,
-behavior:"instant"
-});
-
-},80);
+document.documentElement.scrollLeft=0;
+document.body.scrollLeft=0;
 
 },50);
 
