@@ -3,41 +3,38 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+      content="width=device-width, initial-scale=1.0,
+      maximum-scale=1.0, user-scalable=no">
 
 <title>PINFORME 採寸ナビ</title>
 
 <style>
+
+/* =========================
+   基本設定
+========================= */
+
 *{
   box-sizing:border-box;
 }
 
-html,body{
+html,
+body{
   margin:0;
   padding:0;
-  background:#faf7f8;
-  color:#333;
+  background:#f3f3f3;
+  color:#222;
   font-family:
     -apple-system,
     BlinkMacSystemFont,
-    "Hiragino Kaku Gothic ProN",
-    "Hiragino Sans",
-    "Yu Gothic",
+    "Helvetica Neue",
     "Noto Sans JP",
+    Arial,
     sans-serif;
 }
 
 body{
   min-height:100vh;
-}
-
-.app{
-  width:100%;
-  max-width:600px;
-  min-height:100vh;
-  margin:0 auto;
-  background:#fff;
-  overflow:hidden;
 }
 
 button,
@@ -46,133 +43,158 @@ select{
   font-family:inherit;
 }
 
-button{
-  -webkit-tap-highlight-color:transparent;
+.app{
+  width:100%;
+  max-width:520px;
+  min-height:100vh;
+  margin:0 auto;
+  background:#fff;
+  box-shadow:0 0 30px rgba(0,0,0,.08);
 }
 
-
 /* =========================
-   HEADER
+   ヘッダー
 ========================= */
 
 .header{
   position:sticky;
   top:0;
   z-index:50;
-  background:#fff;
-  border-bottom:1px solid #eee;
-}
-
-.header-inner{
-  height:62px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  position:relative;
+  background:#111;
+  color:#fff;
+  padding:16px 18px 14px;
 }
 
 .logo{
-  font-size:23px;
+  text-align:center;
+  font-size:22px;
   font-weight:800;
+  letter-spacing:3px;
+  margin-bottom:12px;
+}
+
+.logo-sub{
+  text-align:center;
+  font-size:9px;
   letter-spacing:2px;
-  color:#333;
-}
-
-.logo span{
-  color:#d88b9e;
-}
-
-.back-button{
-  position:absolute;
-  left:14px;
-  top:50%;
-  transform:translateY(-50%);
-  border:0;
-  background:none;
-  color:#777;
-  font-size:14px;
-  padding:8px;
-  cursor:pointer;
+  color:#aaa;
+  margin-top:-7px;
+  margin-bottom:12px;
 }
 
 .progress-wrap{
   width:100%;
   height:5px;
-  background:#f2e7ea;
+  background:#3b3b3b;
+  border-radius:10px;
+  overflow:hidden;
 }
 
-.progress-bar{
+.progress{
   width:0%;
   height:100%;
-  background:#d88b9e;
-  transition:width .25s ease;
+  background:#fff;
+  transition:.3s;
 }
 
-
 /* =========================
-   PAGE
+   ページ
 ========================= */
 
 .page{
   display:none;
-  padding:22px 18px 34px;
+  padding:24px 18px 110px;
 }
 
 .page.active{
   display:block;
 }
 
-.page-title{
-  margin:0 0 22px;
-  text-align:center;
+h1{
+  margin:0 0 20px;
   font-size:23px;
-  line-height:1.4;
+  line-height:1.45;
   font-weight:800;
-  color:#333;
+  color:#111;
 }
 
-.dog-page-title{
-  margin:0 0 22px;
-  text-align:center;
-  font-size:23px;
-  line-height:1.4;
-  font-weight:800;
+h2{
+  margin:0 0 14px;
+  font-size:18px;
+  color:#111;
 }
 
-.paw{
-  font-size:20px;
-}
-
-.subtitle{
-  margin:-10px 0 22px;
-  text-align:center;
-  font-size:13px;
+p{
   line-height:1.7;
-  color:#888;
 }
-
 
 /* =========================
-   FORM
+   トップタイトル
 ========================= */
 
-.form-group{
+.main-title{
+  text-align:center;
+  margin-top:10px;
+  margin-bottom:26px;
+}
+
+.main-title .pin{
+  display:block;
+  font-size:34px;
+  margin-bottom:8px;
+}
+
+.main-title strong{
+  display:block;
+  font-size:26px;
+  letter-spacing:3px;
+}
+
+.main-title small{
+  display:block;
+  margin-top:7px;
+  color:#777;
+  font-size:11px;
+  letter-spacing:2px;
+}
+
+/* =========================
+   説明
+========================= */
+
+.intro{
+  background:#f5f5f5;
+  border-left:4px solid #222;
+  padding:14px;
+  border-radius:6px;
+  font-size:13px;
   margin-bottom:20px;
 }
 
-.label{
+/* =========================
+   入力エリア
+========================= */
+
+.field{
+  margin-bottom:18px;
+}
+
+.field label{
   display:block;
-  margin-bottom:8px;
-  font-size:14px;
+  margin-bottom:7px;
+  font-size:13px;
   font-weight:700;
-  color:#444;
+  color:#333;
 }
 
 .required{
   display:inline-block;
   margin-left:5px;
-  font-size:10px;
-  color:#d86f89;
+  padding:2px 5px;
+  border-radius:3px;
+  background:#222;
+  color:#fff;
+  font-size:9px;
   vertical-align:middle;
 }
 
@@ -182,1121 +204,1069 @@ input[type="date"],
 select{
   width:100%;
   height:48px;
-  border:1px solid #ddd;
-  border-radius:12px;
-  background:#fff;
   padding:0 13px;
+  border:1px solid #ccc;
+  border-radius:7px;
+  background:#fff;
+  color:#222;
   font-size:16px;
-  color:#333;
   outline:none;
+  appearance:none;
 }
 
 input:focus,
 select:focus{
-  border-color:#d88b9e;
-  box-shadow:0 0 0 3px rgba(216,139,158,.12);
+  border-color:#222;
+  box-shadow:0 0 0 2px rgba(0,0,0,.08);
 }
+
+/* =========================
+   名前＋くん/ちゃん
+========================= */
+
+.name-suffix-row{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.name-input{
+  flex:1;
+  min-width:0;
+}
+
+.suffix-select{
+  width:88px !important;
+  flex:none;
+  text-align:center;
+  text-align-last:center;
+  background:#f7f7f7;
+  font-weight:700;
+  padding-left:8px !important;
+  padding-right:8px !important;
+}
+
+/* =========================
+   日付
+========================= */
 
 .date-field{
   width:100%;
-  min-width:0;
   overflow:hidden;
 }
 
-.date-field input[type="date"]{
-  display:block;
+.date-field input{
   width:100%;
-  min-width:0;
   max-width:100%;
-  padding-left:10px;
-  padding-right:10px;
-  font-size:16px;
-  -webkit-appearance:none;
-  appearance:none;
+  min-width:0;
 }
-
-@media(max-width:380px){
-  .date-field input[type="date"]{
-    font-size:15px;
-    padding-left:8px;
-    padding-right:8px;
-  }
-}
-
 
 /* =========================
-   RADIO
+   チェック項目
 ========================= */
 
-.radio-row{
+.check-list{
+  margin-top:20px;
+}
+
+.check-item{
+  margin-bottom:12px;
+  border:1px solid #ddd;
+  border-radius:8px;
+  overflow:hidden;
+  background:#fff;
+}
+
+.check-title{
+  padding:12px 13px;
+  background:#f1f1f1;
+  font-weight:800;
+  font-size:14px;
+  color:#111;
+}
+
+.check-text{
+  padding:13px;
+  font-size:12px;
+  line-height:1.75;
+  color:#555;
+}
+
+.confirm-box{
+  display:flex;
+  align-items:flex-start;
+  gap:9px;
+  padding:14px;
+  margin-top:20px;
+  border:1px solid #ccc;
+  border-radius:8px;
+  background:#fafafa;
+}
+
+.confirm-box input{
+  width:20px;
+  height:20px;
+  margin:0;
+  flex:none;
+  accent-color:#111;
+}
+
+.confirm-box label{
+  font-size:12px;
+  line-height:1.6;
+}
+
+/* =========================
+   ボタン
+========================= */
+
+.button-area{
+  margin-top:28px;
+}
+
+.btn{
+  width:100%;
+  min-height:52px;
+  border:none;
+  border-radius:8px;
+  background:#111;
+  color:#fff;
+  font-size:15px;
+  font-weight:700;
+  letter-spacing:.5px;
+  cursor:pointer;
+  transition:.2s;
+}
+
+.btn:active{
+  transform:scale(.98);
+}
+
+.btn:disabled{
+  background:#c8c8c8;
+  color:#fff;
+  cursor:not-allowed;
+}
+
+.btn-secondary{
+  background:#666;
+}
+
+.btn-light{
+  background:#eee;
+  color:#222;
+  border:1px solid #ccc;
+}
+
+.btn + .btn{
+  margin-top:10px;
+}
+
+/* =========================
+   わんちゃん情報タイトル
+========================= */
+
+.dog-page-title{
+  text-align:center;
+  font-size:22px;
+  margin-bottom:24px;
+}
+
+.dog-page-title .paw{
+  font-size:22px;
+  margin-right:4px;
+}
+
+.dog-page-title #dogInfoTitle{
+  font-weight:800;
+}
+
+/* =========================
+   性別
+========================= */
+
+.sex-row{
   display:flex;
   gap:10px;
 }
 
-.radio-label{
+.sex-option{
   flex:1;
   position:relative;
 }
 
-.radio-label input{
+.sex-option input{
   position:absolute;
   opacity:0;
 }
 
-.radio-box{
-  height:48px;
+.sex-option span{
   display:flex;
   align-items:center;
   justify-content:center;
-  border:1px solid #ddd;
-  border-radius:12px;
+  height:48px;
+  border:1px solid #ccc;
+  border-radius:7px;
   background:#fff;
-  font-size:15px;
-  cursor:pointer;
-}
-
-.radio-label input:checked + .radio-box{
-  border-color:#d88b9e;
-  background:#fff5f7;
-  color:#c7657d;
   font-weight:700;
 }
 
+.sex-option input:checked + span{
+  background:#111;
+  color:#fff;
+  border-color:#111;
+}
 
 /* =========================
-   CHECK POINTS
+   写真
 ========================= */
 
-.check-list{
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-}
-
-.check-item{
-  background:#fff;
-  border:1px solid #f0dfe5;
-  border-radius:14px;
-  padding:15px 14px;
-}
-
-.check-title{
-  font-size:16px;
-  font-weight:700;
-  line-height:1.5;
-  margin-bottom:8px;
-  color:#333;
-}
-
-.check-text{
-  font-size:14px;
-  line-height:1.8;
-  color:#555;
-  word-break:break-word;
-  overflow-wrap:anywhere;
-}
-
-.confirm-box{
-  margin-top:18px;
-  padding:15px;
-  border-radius:13px;
-  background:#fff7f8;
-  border:1px solid #f0dfe5;
-}
-
-.confirm-label{
-  display:flex;
-  align-items:flex-start;
-  gap:10px;
-  font-size:13px;
-  line-height:1.6;
-  cursor:pointer;
-}
-
-.confirm-label input{
-  width:20px;
-  height:20px;
-  flex:0 0 auto;
-  margin-top:1px;
-  accent-color:#d88b9e;
-}
-
-
-/* =========================
-   DOG INFO
-========================= */
-
-.info-card{
-  background:#fff;
-  border:1px solid #eee;
-  border-radius:16px;
-  padding:16px;
-  margin-bottom:20px;
-}
-
-.info-row{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:10px;
-  padding:10px 0;
-  border-bottom:1px solid #f1f1f1;
-}
-
-.info-row:last-child{
-  border-bottom:0;
-}
-
-.info-label{
-  font-size:13px;
-  color:#888;
-}
-
-.info-value{
-  font-size:15px;
-  font-weight:700;
-  text-align:right;
-}
-
-
-/* =========================
-   PHOTO
-========================= */
-
-.photo-area{
-  border:1px dashed #d9b8c1;
-  border-radius:14px;
-  padding:18px;
+.photo-box{
+  border:1px dashed #aaa;
+  border-radius:9px;
+  padding:20px;
   text-align:center;
-  background:#fffafb;
+  background:#fafafa;
 }
 
-.photo-area input{
+.photo-box input{
   width:100%;
-  font-size:14px;
+  font-size:13px;
 }
 
 .photo-preview{
-  display:none;
-  margin-top:12px;
-  width:100%;
+  max-width:100%;
   max-height:260px;
-  object-fit:contain;
-  border-radius:12px;
+  margin-top:15px;
+  border-radius:8px;
+  display:none;
 }
 
-
 /* =========================
-   MEASUREMENT
+   採寸ページ
 ========================= */
 
 .measure-header{
   text-align:center;
-  margin-bottom:18px;
+  margin-bottom:15px;
 }
 
 .measure-number{
-  display:inline-block;
   font-size:13px;
-  color:#c7657d;
-  font-weight:700;
-  margin-bottom:6px;
+  color:#777;
+  letter-spacing:1px;
+  margin-bottom:5px;
 }
 
 .measure-title{
-  margin:0;
-  font-size:23px;
-  line-height:1.4;
+  font-size:24px;
   font-weight:800;
-}
-
-.measure-description{
-  margin:10px 0 0;
-  font-size:13px;
-  line-height:1.75;
-  color:#777;
-}
-
-
-/* =========================
-   MEASUREMENT IMAGE
-========================= */
-
-.measure-image{
-  width:100%;
-  aspect-ratio:1 / .78;
-  border-radius:18px;
-  overflow:hidden;
-  background:#faf8f8;
-  border:1px solid #eee;
-  margin-bottom:18px;
-}
-
-.measure-image svg{
-  display:block;
-  width:100%;
-  height:100%;
-}
-
-
-/* =========================
-   MEASUREMENT BOX
-========================= */
-
-.measure-box{
-  background:#fff;
-  border:1px solid #eee;
-  border-radius:16px;
-  padding:15px;
+  color:#111;
+  line-height:1.4;
 }
 
 .measure-location{
-  margin-bottom:8px;
-  padding:10px 12px;
-  border-radius:10px;
-  background:#faf5f6;
-  font-size:13px;
-  line-height:1.6;
+  margin-top:8px;
+  font-size:12px;
   color:#666;
 }
-
-.measure-location strong{
-  color:#444;
-}
-
-
-/* ★ 今回追加 */
 
 .measure-note{
   margin:10px 2px 14px;
   font-size:12px;
   line-height:1.6;
-  color:#999;
+  color:#888;
 }
 
-
 /* =========================
-   INPUT
+   採寸イラスト
 ========================= */
 
-.measure-row{
+.measure-illustration{
+  width:100%;
+  min-height:230px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin:10px 0 18px;
+  background:#f6f6f6;
+  border-radius:10px;
+  overflow:hidden;
+}
+
+.measure-illustration svg{
+  width:100%;
+  max-width:420px;
+  height:auto;
+}
+
+/* =========================
+   採寸入力
+========================= */
+
+.measure-group{
+  margin-bottom:17px;
+  padding:14px;
+  border:1px solid #ddd;
+  border-radius:9px;
+  background:#fff;
+}
+
+.measure-group-title{
+  margin-bottom:10px;
+  font-size:13px;
+  font-weight:800;
+  color:#333;
+}
+
+.measure-input-row{
   display:grid;
-  grid-template-columns:1fr 1fr 1fr;
-  gap:8px;
+  grid-template-columns:repeat(3,1fr);
+  gap:7px;
 }
 
 .measure-input-wrap{
-  text-align:center;
-}
-
-.measure-input-wrap label{
-  display:block;
-  margin-bottom:5px;
-  font-size:11px;
-  color:#999;
+  position:relative;
 }
 
 .measure-input{
-  width:100%;
-  height:48px;
+  height:46px !important;
+  padding-right:28px !important;
   text-align:center;
-  padding:0 5px !important;
-  font-size:17px !important;
-  font-weight:700;
+  font-size:15px !important;
 }
 
-.average-box{
-  margin-top:13px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:12px;
-  border-radius:11px;
-  background:#fff6f8;
+.cm{
+  position:absolute;
+  right:7px;
+  top:50%;
+  transform:translateY(-50%);
+  font-size:10px;
+  color:#888;
+  pointer-events:none;
 }
 
-.average-label{
-  font-size:13px;
-  color:#777;
-}
-
-.average-value{
-  font-size:20px;
-  font-weight:800;
-  color:#c7657d;
+.average{
+  margin-top:9px;
   text-align:right;
-}
-
-.unit{
   font-size:12px;
-  font-weight:500;
-  margin-left:2px;
+  color:#555;
 }
 
-
-/* =========================
-   BUTTON
-========================= */
-
-.button-area{
-  margin-top:22px;
-}
-
-.main-button{
-  width:100%;
-  height:52px;
-  border:0;
-  border-radius:14px;
-  background:#d88b9e;
-  color:#fff;
-  font-size:16px;
-  font-weight:700;
-  cursor:pointer;
-  box-shadow:0 5px 12px rgba(216,139,158,.18);
-}
-
-.main-button:active{
-  transform:scale(.985);
-}
-
-.main-button:disabled{
-  background:#ddd;
-  color:#aaa;
-  box-shadow:none;
-}
-
-.sub-button{
-  width:100%;
-  height:48px;
-  margin-top:10px;
-  border:1px solid #ddd;
-  border-radius:13px;
-  background:#fff;
-  color:#666;
+.average strong{
+  color:#111;
   font-size:14px;
 }
 
+/* =========================
+   戻るボタン
+========================= */
+
+.back-area{
+  margin-top:14px;
+}
+
+.back-btn{
+  width:100%;
+  height:44px;
+  border:1px solid #ccc;
+  background:#fff;
+  border-radius:7px;
+  color:#555;
+  font-size:13px;
+}
 
 /* =========================
-   THANKS
+   完了画面
 ========================= */
 
 .thanks{
   text-align:center;
-  padding:60px 10px;
+  padding-top:45px;
 }
 
 .thanks-icon{
-  font-size:52px;
-  margin-bottom:16px;
+  width:80px;
+  height:80px;
+  margin:0 auto 20px;
+  border-radius:50%;
+  background:#111;
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:36px;
 }
 
-.thanks h2{
-  margin:0 0 12px;
+.thanks h1{
   font-size:25px;
 }
 
 .thanks p{
-  margin:0;
-  font-size:14px;
-  line-height:1.8;
-  color:#777;
+  color:#666;
+  font-size:13px;
 }
 
-
 /* =========================
-   RESULT
+   結果
 ========================= */
 
 .result-card{
-  border:1px solid #eee;
-  border-radius:16px;
+  margin-bottom:12px;
+  border:1px solid #ddd;
+  border-radius:9px;
   overflow:hidden;
-  background:#fff;
 }
 
-.result-owner{
-  padding:15px;
-  background:#fff7f8;
-  border-bottom:1px solid #f0e2e5;
+.result-title{
+  padding:11px 13px;
+  background:#111;
+  color:#fff;
+  font-weight:700;
   font-size:14px;
 }
 
-.result-item{
-  padding:15px;
-  border-bottom:1px solid #eee;
+.result-body{
+  padding:12px;
+  background:#fff;
 }
 
-.result-item:last-child{
-  border-bottom:0;
-}
-
-.result-name{
-  font-weight:700;
-  margin-bottom:7px;
-}
-
-.result-values{
+.result-row{
   display:flex;
-  gap:7px;
-  flex-wrap:wrap;
-}
-
-.result-chip{
-  padding:5px 9px;
-  border-radius:8px;
-  background:#f7f7f7;
+  justify-content:space-between;
+  gap:10px;
+  padding:7px 0;
+  border-bottom:1px solid #eee;
   font-size:12px;
 }
 
-.result-average{
-  margin-top:7px;
-  color:#c7657d;
+.result-row:last-child{
+  border-bottom:none;
+}
+
+.result-value{
   font-weight:700;
 }
 
-
 /* =========================
-   SMALL SCREEN
+   レスポンシブ
 ========================= */
 
-@media(max-width:380px){
+@media(max-width:360px){
 
   .page{
     padding-left:14px;
     padding-right:14px;
   }
 
-  .page-title,
-  .dog-page-title{
-    font-size:21px;
+  .name-suffix-row{
+    gap:5px;
+  }
+
+  .suffix-select{
+    width:76px !important;
+    font-size:14px;
+  }
+
+  .measure-input-row{
+    gap:4px;
+  }
+
+  .measure-input{
+    padding-left:4px !important;
+    padding-right:22px !important;
   }
 
   .measure-title{
     font-size:21px;
   }
-
-  .check-text{
-    font-size:13px;
-  }
-
-  .measure-row{
-    gap:5px;
-  }
 }
+
 </style>
 </head>
-
 
 <body>
 
 <div class="app">
 
+<!-- =========================
+     ヘッダー
+========================= -->
 
-  <!-- =========================
-       HEADER
-  ========================== -->
+<header class="header">
 
-  <header class="header">
+  <div class="logo">
+    PINFORME
+  </div>
 
-    <div class="header-inner">
+  <div class="logo-sub">
+    DOG WEAR MEASUREMENT NAVI
+  </div>
 
-      <button
-        id="backButton"
-        class="back-button"
-        onclick="goBack()"
-        style="display:none;">
-        ← 戻る
-      </button>
-
-      <div class="logo">
-        PIN<span>FORME</span>
-      </div>
-
+  <div class="progress-wrap">
+    <div
+      id="progress"
+      class="progress">
     </div>
+  </div>
 
-    <div class="progress-wrap">
-      <div
-        id="progressBar"
-        class="progress-bar">
-      </div>
-    </div>
-
-  </header>
+</header>
 
 
-  <!-- =========================
-       PAGE 0
-  ========================== -->
+<!-- ==================================================
+     PAGE 0
+     基本情報
+================================================== -->
 
-  <section id="page0" class="page active">
+<section
+  id="page0"
+  class="page active">
 
-    <h1 class="page-title">
-      採寸ナビ
-    </h1>
+  <div class="main-title">
 
-    <p class="subtitle">
-      正確な採寸のために、まずは基本情報を入力してください。
-    </p>
+    <span class="pin">🐾</span>
 
+    <strong>PINFORME</strong>
 
-    <div class="form-group">
+    <small>採寸ナビ</small>
 
-      <label class="label">
-        ご主人様の名前
-        <span class="required">必須</span>
-      </label>
-
-      <input
-        id="ownerName"
-        type="text"
-        placeholder="例：山田 太郎">
-
-    </div>
+  </div>
 
 
-    <div class="form-group">
+  <div class="intro">
 
-      <label class="label">
-        わんちゃんの名前
-        <span class="required">必須</span>
-      </label>
+    愛犬の情報を入力して、
+    PINFORMEの採寸を始めましょう。<br>
+    採寸は愛犬がリラックスした状態で行ってください。
+
+  </div>
+
+
+  <!-- ご主人様 -->
+
+  <div class="field">
+
+    <label>
+      ご主人様の名前
+      <span class="required">必須</span>
+    </label>
+
+    <input
+      id="ownerName"
+      type="text"
+      placeholder="お名前を入力してください">
+
+  </div>
+
+
+  <!-- わんちゃんの名前 -->
+
+  <div class="field">
+
+    <label>
+      わんちゃんの名前
+      <span class="required">必須</span>
+    </label>
+
+    <div class="name-suffix-row">
 
       <input
         id="dogName"
+        class="name-input"
         type="text"
-        placeholder="例：イタロー">
+        placeholder="わんちゃんのお名前">
+
+      <select
+        id="dogSuffix"
+        class="suffix-select">
+
+        <option value="くん">くん</option>
+        <option value="ちゃん">ちゃん</option>
+
+      </select>
 
     </div>
 
-
-    <div class="form-group">
-
-      <label class="label">
-        呼び方
-        <span class="required">必須</span>
-      </label>
-
-      <div class="radio-row">
-
-        <label class="radio-label">
-
-          <input
-            type="radio"
-            name="suffix"
-            value="くん"
-            checked>
-
-          <span class="radio-box">
-            くん
-          </span>
-
-        </label>
+  </div>
 
 
-        <label class="radio-label">
+  <!-- 犬種 -->
 
-          <input
-            type="radio"
-            name="suffix"
-            value="ちゃん">
+  <div class="field">
 
-          <span class="radio-box">
-            ちゃん
-          </span>
+    <label>
+      犬種
+      <span class="required">必須</span>
+    </label>
 
-        </label>
+    <input
+      id="breed"
+      type="text"
+      placeholder="例：ミニチュアピンシャー">
 
+  </div>
+
+
+  <!-- 採寸前の確認 -->
+
+  <h2>
+    採寸前に確認してください
+  </h2>
+
+
+  <div class="check-list">
+
+
+    <div class="check-item">
+
+      <div class="check-title">
+        ❶ 採寸は最低3回は測る事
+      </div>
+
+      <div class="check-text">
+        犬は動きますので、一度の採寸では確かな数字ではありません。
+        できるだけ同じ場所を最低3回測り、安定した数値を確認しましょう。
       </div>
 
     </div>
 
 
-    <div class="form-group">
+    <div class="check-item">
 
-      <label class="label">
-        犬種
-        <span class="required">必須</span>
-      </label>
-
-      <input
-        id="breed"
-        type="text"
-        placeholder="例：ミニチュア・ピンシャー">
-
-    </div>
-
-
-    <!-- =========================
-         採寸前の確認事項
-    ========================== -->
-
-    <div class="form-group">
-
-      <label class="label">
-        採寸前に必ずご確認ください
-      </label>
-
-
-      <div class="check-list">
-
-
-        <div class="check-item">
-
-          <div class="check-title">
-            ❶ 採寸は最低3回は測る事
-          </div>
-
-          <div class="check-text">
-            犬は動きますので、一度の採寸では確かな数字ではありません。できるだけ同じ場所を最低3回測り、安定した数値を確認しましょう。
-          </div>
-
-        </div>
-
-
-        <div class="check-item">
-
-          <div class="check-title">
-            ❷ 測る際の立たせている場所
-          </div>
-
-          <div class="check-text">
-            柔らかいソファーやクッション、ベッドなどの上では体が歪み、正しい採寸ができません。だからといって、フローリングで脚が滑りやすい状態も問題です。フローリングの上に滑り止めとして、薄手のブランケットやバスタオルなどを敷いて採寸してください。
-          </div>
-
-        </div>
-
-
-        <div class="check-item">
-
-          <div class="check-title">
-            ❸ 測る際の愛犬の体調
-          </div>
-
-          <div class="check-text">
-            寝起きではないですか？寝ていた直後は体が縮こまっている可能性があります。また、すぐに伏せをしてしまったり、怖がっていたりしていませんか？ついつい暴れないように高い所で測ろうとしてしまいたくなりますが、体も強張り、正確な数字とは言えません。寒くて震えていませんか？これもまた体も強張り、正確な数字とは言えません。疲れていませんか？怪我や、普段しないような行動をする可能性もあります。コンディションが悪いと採寸を嫌がりますので、避けましょう。
-          </div>
-
-        </div>
-
-
-        <div class="check-item">
-
-          <div class="check-title">
-            ❹ 測る際の体勢
-          </div>
-
-          <div class="check-text">
-            採寸時の犬の体勢をしっかり確認しましょう。4本の脚で立ち、まっすぐ前を見ている状態にします。何かを覗き込むように首を伸ばしたり、へっぴり腰になったり、お座りしたり、伏せたりしていない状態を作りましょう。伏せた状態やお座りした状態では、それぞれ数字が変わり、正しい採寸ができません。リラックスした自然な体勢がベストです。
-          </div>
-
-        </div>
-
-
-        <div class="check-item">
-
-          <div class="check-title">
-            ❺ 独自の体型を理解する
-          </div>
-
-          <div class="check-text">
-            お尻にかけてカーブが強い、胸板が厚い、前脚の間隔がとても広いなど、特徴的な体型の場合は、その特徴を意識して採寸しましょう。
-          </div>
-
-        </div>
-
-
-        <div class="check-item">
-
-          <div class="check-title">
-            ❻ 呼吸を感じる
-          </div>
-
-          <div class="check-text">
-            呼吸と共に1.0cmから1.5cmほど、採寸時のサイズに変化が出ます。興奮状態ですと特に呼吸が大きくなるため、採寸に誤差が生じます。できる限り落ち着いた状態で採寸することがベストですが、大抵の犬はメジャーを少し怖がり、呼吸が大きくなります。ですので、呼吸を感じながら数字を読み取りましょう。
-          </div>
-
-        </div>
-
+      <div class="check-title">
+        ❷ 測る際の立たせている場所
       </div>
 
-
-      <div class="confirm-box">
-
-        <label class="confirm-label">
-
-          <input
-            id="confirmCheck"
-            type="checkbox">
-
-          <span>
-            上記の内容を確認し、愛犬に無理をさせないように採寸します。
-          </span>
-
-        </label>
-
+      <div class="check-text">
+        柔らかいソファーやクッション、ベッドなどの上では体が歪み、正しい採寸ができません。
+        だからといって、フローリングで脚が滑りやすい状態も問題です。
+        フローリングの上に滑り止めとして、薄手のブランケットやバスタオルなどを敷いて採寸してください。
       </div>
 
     </div>
 
 
-    <div class="button-area">
+    <div class="check-item">
 
-      <button
-        class="main-button"
-        onclick="nextFromBasic()">
-        次へ
-      </button>
-
-    </div>
-
-  </section>
-
-
-  <!-- =========================
-       PAGE 1
-  ========================== -->
-
-  <section id="page1" class="page">
-
-    <h1 class="dog-page-title">
-
-      <span class="paw">🐾</span>
-
-      <span id="dogInfoTitle"></span>の情報
-
-    </h1>
-
-
-    <div class="info-card">
-
-      <div class="info-row">
-
-        <span class="info-label">
-          ご主人様
-        </span>
-
-        <span
-          id="summaryOwner"
-          class="info-value">
-        </span>
-
+      <div class="check-title">
+        ❸ 測る際の愛犬の体調
       </div>
 
-
-      <div class="info-row">
-
-        <span class="info-label">
-          わんちゃん
-        </span>
-
-        <span
-          id="summaryDog"
-          class="info-value">
-        </span>
-
-      </div>
-
-
-      <div class="info-row">
-
-        <span class="info-label">
-          犬種
-        </span>
-
-        <span
-          id="summaryBreed"
-          class="info-value">
-        </span>
-
+      <div class="check-text">
+        寝起きではないですか？寝ていた直後は体が縮こまっている可能性があります。
+        また、すぐに伏せをしてしまったり、怖がっていたりしていませんか？
+        ついつい暴れないように高い所で測ろうとしてしまいたくなりますが、
+        体も強張り、正確な数字とは言えません。
+        寒くて震えていませんか？これもまた体も強張り、正確な数字とは言えません。
+        疲れていませんか？怪我や、普段しないような行動をする可能性もあります。
+        コンディションが悪いと採寸を嫌がりますので、避けましょう。
       </div>
 
     </div>
 
 
-    <div class="form-group">
+    <div class="check-item">
 
-      <label class="label">
-        性別
-      </label>
+      <div class="check-title">
+        ❹ 測る際の体勢
+      </div>
 
-      <div class="radio-row">
-
-        <label class="radio-label">
-
-          <input
-            type="radio"
-            name="sex"
-            value="男の子"
-            checked>
-
-          <span class="radio-box">
-            男の子
-          </span>
-
-        </label>
-
-
-        <label class="radio-label">
-
-          <input
-            type="radio"
-            name="sex"
-            value="女の子">
-
-          <span class="radio-box">
-            女の子
-          </span>
-
-        </label>
-
+      <div class="check-text">
+        採寸時の犬の体勢をしっかり確認しましょう。
+        4本の脚で立ち、まっすぐ前を見ている状態にします。
+        何かを覗き込むように首を伸ばしたり、
+        へっぴり腰になったり、お座りしたり、伏せたりしていない状態を作りましょう。
+        伏せた状態やお座りした状態では、それぞれ数字が変わり、正しい採寸ができません。
+        リラックスした自然な体勢がベストです。
       </div>
 
     </div>
 
 
-    <div class="form-group">
+    <div class="check-item">
 
-      <label class="label">
-        生年月日
-      </label>
+      <div class="check-title">
+        ❺ 独自の体型を理解する
+      </div>
 
-      <div class="date-field">
+      <div class="check-text">
+        お尻にかけてカーブが強い、胸板が厚い、
+        前脚の間隔がとても広いなど、特徴的な体型の場合は、
+        その特徴を意識して採寸しましょう。
+      </div>
+
+    </div>
+
+
+    <div class="check-item">
+
+      <div class="check-title">
+        ❻ 呼吸を感じる
+      </div>
+
+      <div class="check-text">
+        呼吸と共に1.0cmから1.5cmほど、
+        採寸時のサイズに変化が出ます。
+        興奮状態ですと特に呼吸が大きくなるため、採寸に誤差が生じます。
+        できる限り落ち着いた状態で採寸することがベストですが、
+        大抵の犬はメジャーを少し怖がり、呼吸が大きくなります。
+        ですので、呼吸を感じながら数字を読み取りましょう。
+      </div>
+
+    </div>
+
+
+  </div>
+
+
+  <div class="confirm-box">
+
+    <input
+      id="basicConfirm"
+      type="checkbox">
+
+    <label for="basicConfirm">
+      上記の内容を確認しました。
+      愛犬の状態を確認してから採寸を開始します。
+    </label>
+
+  </div>
+
+
+  <div class="button-area">
+
+    <button
+      class="btn"
+      onclick="nextFromBasic()">
+
+      採寸を始める
+
+    </button>
+
+  </div>
+
+</section>
+
+
+<!-- ==================================================
+     PAGE 1
+     わんちゃん情報
+================================================== -->
+
+<section
+  id="page1"
+  class="page">
+
+  <h1 class="dog-page-title">
+
+    <span class="paw">🐾</span>
+
+    <span id="dogInfoTitle"></span>
+
+    の情報
+
+  </h1>
+
+
+  <div class="field">
+
+    <label>
+      性別
+    </label>
+
+    <div class="sex-row">
+
+      <label class="sex-option">
 
         <input
-          id="birthDate"
-          type="date">
+          type="radio"
+          name="sex"
+          value="男の子">
 
-      </div>
+        <span>男の子</span>
+
+      </label>
+
+
+      <label class="sex-option">
+
+        <input
+          type="radio"
+          name="sex"
+          value="女の子">
+
+        <span>女の子</span>
+
+      </label>
 
     </div>
 
+  </div>
 
-    <div class="form-group">
 
-      <label class="label">
-        現在の体重
-      </label>
+  <div class="field">
+
+    <label>
+      生年月日
+    </label>
+
+    <div class="date-field">
+
+      <input
+        id="birthDate"
+        type="date">
+
+    </div>
+
+  </div>
+
+
+  <div class="field">
+
+    <label>
+      体重
+    </label>
+
+    <div class="measure-input-wrap">
 
       <input
         id="weight"
         type="number"
-        inputmode="decimal"
         step="0.1"
         min="0"
         placeholder="例：4.5">
 
-    </div>
-
-
-    <div class="form-group">
-
-      <label class="label">
-        愛犬の写真
-      </label>
-
-      <div class="photo-area">
-
-        <input
-          id="dogPhoto"
-          type="file"
-          accept="image/*">
-
-        <img
-          id="photoPreview"
-          class="photo-preview"
-          alt="写真プレビュー">
-
-      </div>
+      <span class="cm">
+        kg
+      </span>
 
     </div>
 
-
-    <div class="button-area">
-
-      <button
-        class="main-button"
-        onclick="nextFromInfo()">
-        採寸を始める
-      </button>
-
-    </div>
-
-  </section>
+  </div>
 
 
-  <!-- =========================
-       MEASUREMENT
-  ========================== -->
+  <div class="field">
 
-  <section
-    id="measurementPage"
-    class="page">
+    <label>
+      わんちゃんの写真
+    </label>
 
+    <div class="photo-box">
 
-    <div class="measure-header">
+      <input
+        id="photoInput"
+        type="file"
+        accept="image/*"
+        onchange="handlePhoto(event)">
 
-      <div
-        id="measureNumber"
-        class="measure-number">
-      </div>
-
-      <h1
-        id="measureTitle"
-        class="measure-title">
-      </h1>
-
-      <p
-        id="measureDescription"
-        class="measure-description">
-      </p>
+      <img
+        id="photoPreview"
+        class="photo-preview">
 
     </div>
 
+  </div>
+
+
+  <div class="button-area">
+
+    <button
+      class="btn"
+      onclick="nextFromInfo()">
+
+      次へ
+
+    </button>
+
+  </div>
+
+
+  <div class="back-area">
+
+    <button
+      class="back-btn"
+      onclick="goBack()">
+
+      ← 戻る
+
+    </button>
+
+  </div>
+
+</section>
+
+
+<!-- ==================================================
+     採寸ページ
+================================================== -->
+
+<section
+  id="measurementPage"
+  class="page">
+
+  <div class="measure-header">
 
     <div
-      id="measureImage"
-      class="measure-image">
+      id="measureNumber"
+      class="measure-number">
     </div>
 
-
-    <div class="measure-box">
-
-      <div
-        id="measureLocation"
-        class="measure-location">
-      </div>
-
-
-      <!-- ★ 今回追加 -->
-
-      <p class="measure-note">
-        ※分からない時は、無理に測定せず、空欄のままで構いません。
-      </p>
-
-
-      <div
-        id="measureInputs"
-        class="measure-row">
-      </div>
-
-
-      <div class="average-box">
-
-        <span class="average-label">
-          平均値
-        </span>
-
-        <span
-          id="averageValue"
-          class="average-value">
-          —
-        </span>
-
-      </div>
-
+    <div
+      id="measureTitle"
+      class="measure-title">
     </div>
 
-
-    <div class="button-area">
-
-      <button
-        id="measureNextButton"
-        class="main-button"
-        onclick="nextMeasurement()">
-        次へ
-      </button>
-
+    <div
+      id="measureLocation"
+      class="measure-location">
     </div>
 
-  </section>
+  </div>
 
 
-  <!-- =========================
-       THANKS
-  ========================== -->
+  <p class="measure-note">
+    ※分からない時は、無理に測定せず、空欄のままで構いません。
+  </p>
 
-  <section
-    id="page17"
-    class="page">
 
-    <div class="thanks">
+  <div
+    id="measureIllustration"
+    class="measure-illustration">
+  </div>
 
-      <div class="thanks-icon">
-        🐾
-      </div>
 
-      <h2>
-        採寸お疲れさまでした
-      </h2>
+  <div
+    id="measureInputs">
+  </div>
 
-      <p>
-        すべての採寸データが入力されました。<br>
-        内容を確認して結果をご覧ください。
-      </p>
 
+  <div class="button-area">
+
+    <button
+      id="measureNextButton"
+      class="btn"
+      onclick="nextMeasurement()">
+
+      次へ
+
+    </button>
+
+  </div>
+
+
+  <div class="back-area">
+
+    <button
+      class="back-btn"
+      onclick="goBack()">
+
+      ← 戻る
+
+    </button>
+
+  </div>
+
+</section>
+
+
+<!-- ==================================================
+     PAGE 17
+     完了
+================================================== -->
+
+<section
+  id="page17"
+  class="page">
+
+  <div class="thanks">
+
+    <div class="thanks-icon">
+      ✓
     </div>
 
-
-    <div class="button-area">
-
-      <button
-        class="main-button"
-        onclick="showResult()">
-        採寸結果を見る
-      </button>
-
-    </div>
-
-  </section>
-
-
-  <!-- =========================
-       RESULT
-  ========================== -->
-
-  <section
-    id="page18"
-    class="page">
-
-    <h1 class="page-title">
-      採寸結果
+    <h1>
+      採寸お疲れさまでした
     </h1>
 
-    <div
-      id="resultContent"
-      class="result-card">
-    </div>
-
+    <p>
+      すべての採寸が完了しました。<br>
+      入力した内容を確認できます。
+    </p>
 
     <div class="button-area">
 
       <button
-        class="main-button"
-        onclick="window.print()">
-        結果を保存・印刷
-      </button>
+        class="btn"
+        onclick="showResult()">
 
-      <button
-        class="sub-button"
-        onclick="location.reload()">
-        最初からやり直す
+        採寸結果を見る
+
       </button>
 
     </div>
 
-  </section>
+  </div>
+
+</section>
+
+
+<!-- ==================================================
+     PAGE 18
+     結果
+================================================== -->
+
+<section
+  id="page18"
+  class="page">
+
+  <h1>
+    採寸結果
+  </h1>
+
+  <div
+    id="resultContent">
+  </div>
+
+
+  <div class="button-area">
+
+    <button
+      class="btn"
+      onclick="window.print()">
+
+      保存・印刷
+
+    </button>
+
+  </div>
+
+
+  <div class="back-area">
+
+    <button
+      class="back-btn"
+      onclick="goBack()">
+
+      ← 戻る
+
+    </button>
+
+  </div>
+
+</section>
+
 
 </div>
 
 
 <script>
 
-/* ========================================
-   基本情報
-======================================== */
+/* ==================================================
+   基本データ
+================================================== */
 
 const dogInfo = {
+
   owner:"",
   name:"",
   suffix:"くん",
@@ -1305,295 +1275,208 @@ const dogInfo = {
   birthDate:"",
   weight:"",
   photo:""
+
 };
 
 
-/* ========================================
+/* ==================================================
    採寸項目
-======================================== */
+================================================== */
 
 const items = [
 
   {
-    no:"❶",
+    number:"❶",
     title:"首まわり（首の付け根）",
-    description:
-      "犬を自然に立たせ、首と体の境目を一周測ります。首輪を付ける位置ではなく、首の付け根を確認してください。",
-    locations:[
-      "首の付け根"
-    ],
-    type:"neck"
+    locations:["首の付け根"]
   },
 
   {
-    no:"❷",
+    number:"❷",
     title:"胴まわり",
-    description:
-      "胸の一番太い部分を一周測ります。目安として前脚の付け根から約2〜3cm後ろの位置です。",
-    locations:[
-      "胴まわり"
-    ],
-    type:"chest"
+    locations:["胴まわり"]
   },
 
   {
-    no:"❸",
+    number:"❸",
     title:"ウェスト",
-    description:
-      "胴体の一番細い部分を一周測ります。",
-    locations:[
-      "ウェスト"
-    ],
-    type:"waist"
+    locations:["ウェスト"]
   },
 
   {
-    no:"❹",
+    number:"❹",
     title:"着丈",
-    description:
-      "首の付け根から尻尾の付け根までを測ります。尻尾の先までではありません。",
-    locations:[
-      "首の付け根 → 尻尾の付け根"
-    ],
-    type:"length"
+    locations:["首の付け根 → 尻尾の付け根"]
   },
 
   {
-    no:"❺",
+    number:"❺",
     title:"前身頃",
-    description:
-      "首の付け根から、お腹側の希望する被覆位置までを測ります。",
-    locations:[
-      "首の付け根 → お腹部分"
-    ],
-    type:"front"
+    locations:["首の付け根 → お腹部分"]
   },
 
   {
-    no:"❻",
+    number:"❻",
     title:"前脚の太さ",
-    description:
-      "前脚の太いところと細いところをそれぞれ測ります。",
     locations:[
       "太いところ",
       "細いところ"
-    ],
-    type:"frontLegWidth"
+    ]
   },
 
   {
-    no:"❼",
+    number:"❼",
     title:"後脚の太さ",
-    description:
-      "後脚の太いところと細いところをそれぞれ測ります。",
     locations:[
       "太いところ",
       "細いところ"
-    ],
-    type:"rearLegWidth"
+    ]
   },
 
   {
-    no:"❽",
+    number:"❽",
     title:"前脚の長さ",
-    description:
-      "脇から肘、肘から手首、手首から地面までをそれぞれ測ります。",
     locations:[
       "脇 → 肘",
       "肘 → 手首",
       "手首 → 地面"
-    ],
-    type:"frontLegLength"
+    ]
   },
 
   {
-    no:"❾",
+    number:"❾",
     title:"後脚の長さ",
-    description:
-      "❼で測ったラインから膝、膝から足首、足首から地面までを測ります。",
     locations:[
       "❼で測ったライン → 膝",
       "膝 → 足首",
       "足首 → 地面"
-    ],
-    type:"rearLegLength"
+    ]
   },
 
   {
-    no:"❿",
-    title:"首の長さ(ネック)",
-    description:
-      "首の付け根から、後頭部に入る手前までを測ります。",
+    number:"❿",
+    title:"首の長さ（ネック）",
     locations:[
       "首の付け根 → 後頭部手前"
-    ],
-    type:"neckLength"
+    ]
   },
 
   {
-    no:"⓫",
-    title:"首の長さ(スヌーズ)",
-    description:
-      "首の付け根から額までを測ります。",
+    number:"⓫",
+    title:"首の長さ（スヌーズ）",
     locations:[
       "首の付け根 → 額"
-    ],
-    type:"snood"
+    ]
   },
 
   {
-    no:"⓬",
+    number:"⓬",
     title:"頭周り",
-    description:
-      "額を通る位置で頭を一周測ります。",
     locations:[
       "頭周り"
-    ],
-    type:"head"
+    ]
   },
 
   {
-    no:"⓭",
+    number:"⓭",
     title:"前脚の幅",
-    description:
-      "正面から見て、左右の前脚の間の距離を測ります。",
     locations:[
       "前脚と前脚の間"
-    ],
-    type:"frontWidth"
+    ]
   },
 
   {
-    no:"⓮",
+    number:"⓮",
     title:"首の真ん中",
-    description:
-      "首の一番細い部分を一周測ります。",
     locations:[
       "首の一番細い部分"
-    ],
-    type:"middleNeck"
+    ]
   },
 
   {
-    no:"⓯",
+    number:"⓯",
     title:"尻尾の太さ",
-    description:
-      "尻尾の付け根部分で、一番太いところを一周測ります。",
     locations:[
       "尻尾の付け根"
-    ],
-    type:"tail"
+    ]
   }
 
 ];
 
 
-/* ========================================
-   現在ページ
-======================================== */
+/* ==================================================
+   採寸データ
+================================================== */
+
+const measurements =
+  items.map(item =>
+    item.locations.map(() => [
+      "",
+      "",
+      ""
+    ])
+  );
+
 
 let current = 0;
 
 
-/* ========================================
-   採寸データ
-======================================== */
-
-const measurements =
-  items.map(item =>
-    item.locations.map(() => ["","",""])
-  );
-
-
-/* ========================================
+/* ==================================================
    初期化
-======================================== */
+================================================== */
 
 document.addEventListener(
   "DOMContentLoaded",
-  ()=>{
+  () => {
 
     updateProgress();
-
-
-    const photoInput =
-      document.getElementById("dogPhoto");
-
-
-    photoInput.addEventListener(
-      "change",
-      handlePhoto
-    );
 
   }
 );
 
 
-/* ========================================
+/* ==================================================
    ページ表示
-======================================== */
+================================================== */
 
 function showPage(pageNumber){
 
   document
     .querySelectorAll(".page")
-    .forEach(page=>{
+    .forEach(page => {
+
       page.classList.remove("active");
+
     });
 
 
-  if(pageNumber === 0){
-
-    document
-      .getElementById("page0")
-      .classList.add("active");
-
-  }
-
-  else if(pageNumber === 1){
-
-    document
-      .getElementById("page1")
-      .classList.add("active");
-
-    renderInfo();
-
-  }
-
-  else if(
-    pageNumber >= 2 &&
-    pageNumber <= 16
-  ){
+  if(pageNumber >= 2 && pageNumber <= 16){
 
     document
       .getElementById("measurementPage")
       .classList.add("active");
 
-    renderMeasurement(
-      pageNumber - 2
-    );
+    renderMeasurement(pageNumber - 2);
 
   }
 
-  else if(pageNumber === 17){
+  else{
 
-    document
-      .getElementById("page17")
-      .classList.add("active");
+    const page =
+      document.getElementById(
+        "page" + pageNumber
+      );
 
-  }
-
-  else if(pageNumber === 18){
-
-    document
-      .getElementById("page18")
-      .classList.add("active");
+    if(page){
+      page.classList.add("active");
+    }
 
   }
 
+
+  current = pageNumber;
 
   updateProgress();
-
 
   window.scrollTo({
     top:0,
@@ -1603,9 +1486,9 @@ function showPage(pageNumber){
 }
 
 
-/* ========================================
-   基本情報
-======================================== */
+/* ==================================================
+   基本情報 → わんちゃん情報
+================================================== */
 
 function nextFromBasic(){
 
@@ -1615,13 +1498,11 @@ function nextFromBasic(){
       .value
       .trim();
 
-
-  const name =
+  const dogName =
     document
       .getElementById("dogName")
       .value
       .trim();
-
 
   const breed =
     document
@@ -1629,10 +1510,9 @@ function nextFromBasic(){
       .value
       .trim();
 
-
-  const confirmed =
+  const confirm =
     document
-      .getElementById("confirmCheck")
+      .getElementById("basicConfirm")
       .checked;
 
 
@@ -1643,16 +1523,18 @@ function nextFromBasic(){
     );
 
     return;
+
   }
 
 
-  if(!name){
+  if(!dogName){
 
     alert(
       "わんちゃんの名前を入力してください。"
     );
 
     return;
+
   }
 
 
@@ -1663,51 +1545,41 @@ function nextFromBasic(){
     );
 
     return;
+
   }
 
 
-  if(!confirmed){
+  if(!confirm){
 
     alert(
       "採寸前の確認事項を確認してください。"
     );
 
     return;
+
   }
 
 
-  dogInfo.owner =
-    owner;
-
-  dogInfo.name =
-    name;
-
-  dogInfo.breed =
-    breed;
-
-
-  const suffix =
-    document.querySelector(
-      'input[name="suffix"]:checked'
-    );
-
-
+  dogInfo.owner = owner;
+  dogInfo.name = dogName;
   dogInfo.suffix =
-    suffix
-      ? suffix.value
-      : "くん";
+    document
+      .getElementById("dogSuffix")
+      .value;
+
+  dogInfo.breed = breed;
 
 
-  current = 1;
+  renderInfo();
 
-  showPage(current);
+  showPage(1);
 
 }
 
 
-/* ========================================
-   情報表示
-======================================== */
+/* ==================================================
+   わんちゃん情報表示
+================================================== */
 
 function renderInfo(){
 
@@ -1716,30 +1588,12 @@ function renderInfo(){
     .textContent =
       `${dogInfo.name}${dogInfo.suffix}`;
 
-
-  document
-    .getElementById("summaryOwner")
-    .textContent =
-      dogInfo.owner;
-
-
-  document
-    .getElementById("summaryDog")
-    .textContent =
-      `${dogInfo.name}${dogInfo.suffix}`;
-
-
-  document
-    .getElementById("summaryBreed")
-    .textContent =
-      dogInfo.breed;
-
 }
 
 
-/* ========================================
-   情報 → 採寸
-======================================== */
+/* ==================================================
+   わんちゃん情報 → 採寸
+================================================== */
 
 function nextFromInfo(){
 
@@ -1750,9 +1604,7 @@ function nextFromInfo(){
 
 
   dogInfo.sex =
-    sex
-      ? sex.value
-      : "";
+    sex ? sex.value : "";
 
 
   dogInfo.birthDate =
@@ -1767,22 +1619,19 @@ function nextFromInfo(){
       .value;
 
 
-  current = 2;
-
-  showPage(current);
+  showPage(2);
 
 }
 
 
-/* ========================================
+/* ==================================================
    写真
-======================================== */
+================================================== */
 
 function handlePhoto(event){
 
   const file =
     event.target.files[0];
-
 
   if(!file){
     return;
@@ -1801,14 +1650,14 @@ function handlePhoto(event){
 
 
       const preview =
-        document.getElementById(
-          "photoPreview"
-        );
+        document
+          .getElementById(
+            "photoPreview"
+          );
 
 
       preview.src =
         e.target.result;
-
 
       preview.style.display =
         "block";
@@ -1821,9 +1670,9 @@ function handlePhoto(event){
 }
 
 
-/* ========================================
-   採寸画面
-======================================== */
+/* ==================================================
+   採寸ページ表示
+================================================== */
 
 function renderMeasurement(index){
 
@@ -1834,284 +1683,189 @@ function renderMeasurement(index){
   document
     .getElementById("measureNumber")
     .textContent =
-      `${index + 1} / ${items.length}`;
+      `${item.number} ${index + 1} / ${items.length}`;
 
 
   document
     .getElementById("measureTitle")
     .textContent =
-      `${item.no} ${item.title}`;
-
-
-  document
-    .getElementById("measureDescription")
-    .textContent =
-      item.description;
+      item.title;
 
 
   document
     .getElementById("measureLocation")
+    .textContent =
+      item.locations.join("　／　");
+
+
+  document
+    .getElementById("measureIllustration")
     .innerHTML =
-      "<strong>測定位置</strong><br>" +
-      item.locations.join(" ／ ");
+      dogSvg(index);
 
 
   renderInputs(index);
-
-  renderDogSvg(index);
 
   updateMeasureButton(index);
 
 }
 
 
-/* ========================================
+/* ==================================================
    入力欄
-======================================== */
+================================================== */
 
 function renderInputs(index){
 
   const item =
     items[index];
 
-
-  const container =
-    document.getElementById(
-      "measureInputs"
-    );
+  const data =
+    measurements[index];
 
 
-  container.innerHTML =
-    "";
+  let html = "";
 
 
-  container.style.display =
-    "";
+  item.locations.forEach(
+    (location, groupIndex) => {
+
+      html += `
+
+        <div class="measure-group">
+
+          <div class="measure-group-title">
+            ${location}
+          </div>
+
+          <div class="measure-input-row">
+
+      `;
 
 
-  if(item.locations.length === 1){
+      data[groupIndex]
+        .forEach(
+          (value, valueIndex) => {
 
-    container.style.gridTemplateColumns =
-      "repeat(3,1fr)";
+            html += `
 
+              <div class="measure-input-wrap">
 
-    for(let i=0;i<3;i++){
+                <input
+                  class="measure-input"
+                  type="number"
+                  inputmode="decimal"
+                  step="0.1"
+                  min="0"
+                  placeholder="${valueIndex + 1}回目"
+                  value="${value}"
+                  oninput="
+                    saveMeasurement(
+                      ${index},
+                      ${groupIndex},
+                      ${valueIndex},
+                      this.value
+                    )
+                  "
+                >
 
-      const wrap =
-        document.createElement("div");
+                <span class="cm">
+                  cm
+                </span>
 
-      wrap.className =
-        "measure-input-wrap";
+              </div>
 
+            `;
 
-      const label =
-        document.createElement("label");
-
-      label.textContent =
-        `${i+1}回目`;
-
-
-      const input =
-        document.createElement("input");
-
-      input.type =
-        "number";
-
-      input.inputMode =
-        "decimal";
-
-      input.step =
-        "0.1";
-
-      input.min =
-        "0";
-
-      input.placeholder =
-        "0.0";
-
-      input.className =
-        "measure-input";
+          }
+        );
 
 
-      input.value =
-        measurements[index][0][i];
+      html += `
 
+          </div>
 
-      input.addEventListener(
-        "input",
-        ()=>{
+          <div
+            class="average"
+            id="average-${index}-${groupIndex}">
 
-          measurements[index][0][i] =
-            input.value;
+            平均：
+            <strong>—</strong>
 
-          updateAverage(index);
+          </div>
 
-        }
-      );
+        </div>
 
-
-      wrap.appendChild(label);
-      wrap.appendChild(input);
-
-      container.appendChild(wrap);
+      `;
 
     }
-
-  }
-
-  else{
-
-    container.style.display =
-      "flex";
-
-    container.style.flexDirection =
-      "column";
-
-    container.style.gap =
-      "15px";
+  );
 
 
-    item.locations.forEach(
-      (location,locationIndex)=>{
-
-        const group =
-          document.createElement("div");
+  document
+    .getElementById("measureInputs")
+    .innerHTML = html;
 
 
-        const title =
-          document.createElement("div");
-
-
-        title.style.fontSize =
-          "13px";
-
-        title.style.fontWeight =
-          "700";
-
-        title.style.marginBottom =
-          "6px";
-
-        title.style.color =
-          "#555";
-
-        title.textContent =
-          location;
-
-
-        const row =
-          document.createElement("div");
-
-
-        row.className =
-          "measure-row";
-
-
-        for(let i=0;i<3;i++){
-
-          const wrap =
-            document.createElement("div");
-
-
-          wrap.className =
-            "measure-input-wrap";
-
-
-          const label =
-            document.createElement("label");
-
-
-          label.textContent =
-            `${i+1}回目`;
-
-
-          const input =
-            document.createElement("input");
-
-
-          input.type =
-            "number";
-
-          input.inputMode =
-            "decimal";
-
-          input.step =
-            "0.1";
-
-          input.min =
-            "0";
-
-          input.placeholder =
-            "0.0";
-
-          input.className =
-            "measure-input";
-
-
-          input.value =
-            measurements[index]
-              [locationIndex][i];
-
-
-          input.addEventListener(
-            "input",
-            ()=>{
-
-              measurements[index]
-                [locationIndex][i] =
-                input.value;
-
-              updateAverage(index);
-
-            }
-          );
-
-
-          wrap.appendChild(label);
-          wrap.appendChild(input);
-
-          row.appendChild(wrap);
-
-        }
-
-
-        group.appendChild(title);
-        group.appendChild(row);
-
-        container.appendChild(group);
-
-      }
-    );
-
-  }
-
-
-  updateAverage(index);
+  updateAllAverages(index);
 
 }
 
 
-/* ========================================
-   平均値
-======================================== */
+/* ==================================================
+   採寸値保存
+================================================== */
+
+function saveMeasurement(
+  index,
+  groupIndex,
+  valueIndex,
+  value
+){
+
+  measurements[index]
+    [groupIndex]
+    [valueIndex] =
+      value;
+
+
+  updateAverage(
+    index,
+    groupIndex
+  );
+
+}
+
+
+/* ==================================================
+   平均計算
+================================================== */
 
 function calcAverage(values){
 
   const nums =
     values
-      .map(v=>parseFloat(v))
-      .filter(v=>!isNaN(v));
+      .filter(
+        value =>
+          value !== "" &&
+          !isNaN(
+            parseFloat(value)
+          )
+      )
+      .map(
+        value =>
+          parseFloat(value)
+      );
 
 
   if(nums.length === 0){
-
     return null;
-
   }
 
 
   const total =
     nums.reduce(
-      (sum,value)=>
+      (sum, value) =>
         sum + value,
       0
     );
@@ -2122,74 +1876,84 @@ function calcAverage(values){
 }
 
 
-function updateAverage(index){
+/* ==================================================
+   平均表示
+================================================== */
 
-  const item =
-    items[index];
+function updateAverage(
+  index,
+  groupIndex
+){
 
-
-  const averages =
-    measurements[index]
-      .map(values =>
-        calcAverage(values)
-      )
-      .filter(
-        value =>
-          value !== null
-      );
-
-
-  const el =
-    document.getElementById(
-      "averageValue"
+  const average =
+    calcAverage(
+      measurements[index]
+        [groupIndex]
     );
 
 
-  if(averages.length === 0){
+  const element =
+    document.getElementById(
+      `average-${index}-${groupIndex}`
+    );
 
-    el.innerHTML =
-      "—";
 
+  if(!element){
     return;
-
   }
 
 
-  if(averages.length === 1){
+  if(average === null){
 
-    el.innerHTML =
-      `${averages[0].toFixed(1)}<span class="unit">cm</span>`;
-
-    return;
+    element.innerHTML =
+      `平均：<strong>—</strong>`;
 
   }
 
+  else{
 
-  el.innerHTML =
-    averages
-      .map(
-        (value,i)=>
-          `${item.locations[i]}：${value.toFixed(1)}cm`
-      )
-      .join("<br>");
+    element.innerHTML =
+      `平均：
+       <strong>
+         ${average.toFixed(1)} cm
+       </strong>`;
+
+  }
 
 }
 
 
-/* ========================================
-   ★ 今回変更した入力判定
-======================================== */
+function updateAllAverages(index){
+
+  items[index]
+    .locations
+    .forEach(
+      (_, groupIndex) => {
+
+        updateAverage(
+          index,
+          groupIndex
+        );
+
+      }
+    );
+
+}
+
+
+/* ==================================================
+   採寸入力チェック
+
+   ・全部空欄 → OK
+   ・一部だけ入力 → NG
+   ・全部入力 → OK
+================================================== */
 
 function hasMeasurement(index){
 
   const data =
     measurements[index];
 
-
-  /*
-   * まず、
-   * 全部空欄か確認
-   */
 
   const allEmpty =
     data.every(
@@ -2201,21 +1965,12 @@ function hasMeasurement(index){
     );
 
 
-  /*
-   * 全部空欄ならOK
-   */
-
   if(allEmpty){
 
     return true;
 
   }
 
-
-  /*
-   * 1つでも入力されている場合は、
-   * すべての欄に入力されている必要がある
-   */
 
   const allFilled =
     data.every(
@@ -2229,10 +1984,6 @@ function hasMeasurement(index){
         )
     );
 
-
-  /*
-   * 一部だけ入力されている場合
-   */
 
   if(!allFilled){
 
@@ -2253,19 +2004,15 @@ function hasMeasurement(index){
 }
 
 
-/* ========================================
-   次の採寸へ
-======================================== */
+/* ==================================================
+   次へ
+================================================== */
 
 function nextMeasurement(){
 
   const index =
     current - 2;
 
-
-  /*
-   * 空欄OK・一部入力NG
-   */
 
   if(!hasMeasurement(index)){
 
@@ -2274,35 +2021,26 @@ function nextMeasurement(){
   }
 
 
-  /*
-   * 次の採寸
-   */
+  if(index < items.length - 1){
 
-  if(
-    index <
-    items.length - 1
-  ){
-
-    current++;
-
-    showPage(current);
+    showPage(
+      current + 1
+    );
 
   }
 
   else{
 
-    current = 17;
-
-    showPage(current);
+    showPage(17);
 
   }
 
 }
 
 
-/* ========================================
-   ボタン
-======================================== */
+/* ==================================================
+   ボタン状態
+================================================== */
 
 function updateMeasureButton(index){
 
@@ -2312,72 +2050,72 @@ function updateMeasureButton(index){
     );
 
 
-  if(
-    index ===
-    items.length - 1
-  ){
-
-    button.textContent =
-      "採寸を完了する";
-
+  if(!button){
+    return;
   }
 
-  else{
 
-    button.textContent =
-      "次の採寸へ";
-
-  }
+  button.textContent =
+    index === items.length - 1
+      ? "採寸を完了する"
+      : "次へ";
 
 }
 
 
-/* ========================================
+/* ==================================================
    戻る
-======================================== */
+================================================== */
 
 function goBack(){
 
-  if(current <= 0){
+  if(current === 1){
 
-    return;
+    showPage(0);
 
   }
 
+  else if(current === 2){
 
-  if(current === 17){
+    showPage(1);
 
-    current = 16;
+  }
+
+  else if(
+    current >= 3 &&
+    current <= 16
+  ){
+
+    showPage(
+      current - 1
+    );
+
+  }
+
+  else if(current === 17){
+
+    showPage(16);
 
   }
 
   else if(current === 18){
 
-    current = 17;
+    showPage(17);
 
   }
-
-  else{
-
-    current--;
-
-  }
-
-
-  showPage(current);
 
 }
 
 
-/* ========================================
-   進捗
-======================================== */
+/* ==================================================
+   プログレス
+================================================== */
 
 function updateProgress(){
 
-  const bar =
+  const progress =
     document.getElementById(
-      "progressBar"
+      "progress"
     );
 
 
@@ -2392,7 +2130,7 @@ function updateProgress(){
 
   else if(current === 1){
 
-    percent = 8;
+    percent = 6;
 
   }
 
@@ -2402,670 +2140,357 @@ function updateProgress(){
   ){
 
     percent =
-      8 +
-      ((current - 1) / 15) * 84;
+      ((current - 1) / 15) * 100;
 
   }
 
-  else{
+  else if(current === 17){
+
+    percent = 100;
+
+  }
+
+  else if(current === 18){
 
     percent = 100;
 
   }
 
 
-  bar.style.width =
+  progress.style.width =
     `${percent}%`;
 
-
-  const back =
-    document.getElementById(
-      "backButton"
-    );
-
-
-  if(
-    current > 0 &&
-    current < 18
-  ){
-
-    back.style.display =
-      "block";
-
-  }
-
-  else{
-
-    back.style.display =
-      "none";
-
-  }
-
 }
 
 
-/* ========================================
-   犬の採寸イラスト
-======================================== */
-
-function renderDogSvg(index){
-
-  const container =
-    document.getElementById(
-      "measureImage"
-    );
-
-
-  container.innerHTML =
-    dogSvg(index);
-
-}
-
-
-/* ========================================
-   SVG採寸イメージ
-======================================== */
+/* ==================================================
+   犬のSVGイラスト
+================================================== */
 
 function dogSvg(index){
 
-  const item =
-    items[index];
-
+  let extra = "";
 
-  const pink =
-    "#d88b9e";
-
-
-  const dark =
-    "#454545";
-
-
-  let lines = "";
-
-
-  switch(item.type){
-
-    case "neck":
-
-      lines = `
-        <ellipse
-          cx="185"
-          cy="305"
-          rx="35"
-          ry="22"
-          fill="none"
-          stroke="${pink}"
-          stroke-width="5"/>
-
-        <text
-          x="225"
-          y="292"
-          font-size="16"
-          fill="${pink}"
-          font-weight="bold">
-          首の付け根
-        </text>
-      `;
-
-      break;
-
-
-    case "chest":
-
-      lines = `
-        <ellipse
-          cx="255"
-          cy="370"
-          rx="76"
-          ry="46"
-          fill="none"
-          stroke="${pink}"
-          stroke-width="5"/>
-
-        <text
-          x="285"
-          y="310"
-          font-size="16"
-          fill="${pink}"
-          font-weight="bold">
-          胴まわり
-        </text>
-      `;
-
-      break;
-
-
-    case "waist":
-
-      lines = `
-        <ellipse
-          cx="350"
-          cy="375"
-          rx="58"
-          ry="34"
-          fill="none"
-          stroke="${pink}"
-          stroke-width="5"/>
-
-        <text
-          x="350"
-          y="330"
-          font-size="16"
-          fill="${pink}"
-          font-weight="bold">
-          ウェスト
-        </text>
-      `;
-
-      break;
-
-
-    case "length":
-
-      lines = `
-        <line
-          x1="185"
-          y1="300"
-          x2="505"
-          y2="365"
-          stroke="${pink}"
-          stroke-width="5"/>
-
-        <circle
-          cx="185"
-          cy="300"
-          r="8"
-          fill="${pink}"/>
-
-        <circle
-          cx="505"
-          cy="365"
-          r="8"
-          fill="${pink}"/>
-
-        <text
-          x="320"
-          y="285"
-          font-size="16"
-          fill="${pink}"
-          font-weight="bold">
-          首の付け根
-        </text>
-
-        <text
-          x="455"
-          y="345"
-          font-size="16"
-          fill="${pink}"
-          font-weight="bold">
-          尻尾の付け根
-        </text>
-      `;
-
-      break;
-
-
-    case "front":
-
-      lines = `
-        <line
-          x1="185"
-          y1="300"
-          x2="330"
-          y2="430"
-          stroke="${pink}"
-          stroke-width="5"/>
-
-        <circle
-          cx="185"
-          cy="300"
-          r="8"
-          fill="${pink}"/>
-
-        <circle
-          cx="330"
-          cy="430"
-          r="8"
-          fill="${pink}"/>
-
-        <text
-          x="205"
-          y="285"
-          font-size="16"
-          fill="${pink}"
-          font-weight="bold">
-          首の付け根
-        </text>
-
-        <text
-          x="335"
-          y="445"
-          font-size="16"
-          fill="${pink}"
-          font-weight="bold">
-          お腹部分
-        </text>
-      `;
-
-      break;
-
-
-    case "frontLegWidth":
-
-      lines = `
-        <ellipse
-          cx="215"
-          cy="480"
-          rx="20"
-          ry="45"
-          fill="none"
-          stroke="${pink}"
-          stroke-width="5"/>
-
-        <ellipse
-          cx="275"
-          cy="480"
-          rx="20"
-          ry="45"
-          fill="none"
-          stroke="${pink}"
-          stroke-width="5"/>
-
-        <text
-          x="175"
-          y="550"
-          font-size="16"
-          fill="${pink}"
-          font-weight="bold">
-          太い・細い部分
-        </text>
-      `;
-
-      break;
-
-
-    case "rearLegWidth":
-
-      lines = `
-        <ellipse
-          cx="440"
-          cy="465"
-          rx="25"
-          ry="52"
-          fill="none"
-          stroke="${pink}"
-          stroke-width="5"/>
-
-        <text
-          x="390"
-          y="540"
-          font-size="16"
-          fill="${pink}"
-          font-weight="bold">
-          太い・細い部分
-        </text>
-      `;
-
-      break;
-
-
-    case "frontLegLength":
-
-      lines = `
-        <line
-          x1="215"
-          y1="390"
-          x2="215"
-          y2="455"
-          stroke="${pink}"
-          stroke-width="5"/>
-
-        <line
-          x1="215"
-          y1="455"
-          x2="215"
-          y2="500"
-          stroke="${pink}"
-          stroke-width="5"/>
-
-        <line
-          x1="215"
-          y1="500"
-          x2="215"
-          y2="545"
-          stroke="${pink}"
-          stroke-width="5"/>
-
-        <text
-          x="225"
-          y="425"
-          font-size="15"
-          fill="${pink}"
-          font-weight="bold">
-          脇 → 肘
-        </text>
-
-        <text
-          x="225"
-          y="480"
-          font-size="15"
-          fill="${pink}"
-          font-weight="bold">
-          肘 → 手首
-        </text>
-
-        <text
-          x="225"
-          y="530"
-          font-size="15"
-          fill="${pink}"
-          font-weight="bold">
-          手首 → 地面
-        </text>
-      `;
-
-      break;
-
-
-    case "rearLegLength":
-
-      lines = `
-        <line
-          x1="435"
-          y1="390"
-          x2="435"
-          y2="445"
-          stroke="${pink}"
-          stroke-width="5"/>
-
-        <line
-          x1="435"
-          y1="445"
-          x2="420"
-          y2="495"
-          stroke="${pink}"
-          stroke-width="5"/>
-
-        <line
-          x1="420"
-          y1="495"
-          x2="420"
-          y2="545"
-          stroke="${pink}"
-          stroke-width="5"/>
-
-        <text
-          x="275"
-          y="420"
-          font-size="14"
-          fill="${pink}"
-          font-weight="bold">
-          ❼のライン → 膝
-        </text>
-
-        <text
-          x="275"
-          y="470"
-          font-size="14"
-          fill="${pink}"
-          font-weight="bold">
-          膝 → 足首
-        </text>
-
-        <text
-          x="275"
-          y="525"
-          font-size="14"
-          fill="${pink}"
-          font-weight="bold">
-          足首 → 地面
-        </text>
-      `;
-
-      break;
-
-
-    case "neckLength":
-
-      lines = `
-        <line
-          x1="185"
-          y1="300"
-          x2="185"
-          y2="220"
-          stroke="${pink}"
-          stroke-width="5"/>
-
-        <circle
-          cx="185"
-          cy="300"
-          r="7"
-          fill="${pink}"/>
-
-        <circle
-          cx="185"
-          cy="220"
-          r="7"
-          fill="${pink}"/>
-
-        <text
-          x="205"
-          y="260"
-          font-size="15"
-          fill="${pink}"
-          font-weight="bold">
-          首の付け根 → 後頭部手前
-        </text>
-      `;
-
-      break;
-
-
-    case "snood":
-
-      lines = `
-        <line
-          x1="185"
-          y1="300"
-          x2="125"
-          y2="180"
-          stroke="${pink}"
-          stroke-width="5"/>
-
-        <circle
-          cx="185"
-          cy="300"
-          r="7"
-          fill="${pink}"/>
-
-        <circle
-          cx="125"
-          cy="180"
-          r="7"
-          fill="${pink}"/>
-
-        <text
-          x="205"
-          y="250"
-          font-size="15"
-          fill="${pink}"
-          font-weight="bold">
-          首の付け根 → 額
-        </text>
-      `;
-
-      break;
-
-
-    case "head":
-
-      lines = `
-        <ellipse
-          cx="125"
-          cy="180"
-          rx="57"
-          ry="45"
-          fill="none"
-          stroke="${pink}"
-          stroke-width="5"/>
-
-        <text
-          x="200"
-          y="175"
-          font-size="16"
-          fill="${pink}"
-          font-weight="bold">
-          頭周り
-        </text>
-      `;
-
-      break;
-
-
-    case "frontWidth":
-
-      return `
-
-        <svg
-          viewBox="0 0 600 600"
-          xmlns="http://www.w3.org/2000/svg">
-
-          <rect
-            width="600"
-            height="600"
-            fill="#faf8f8"/>
-
-
-          <ellipse
-            cx="300"
-            cy="155"
-            rx="75"
-            ry="70"
-            fill="#c9c9c9"/>
-
-
-          <ellipse
-            cx="270"
-            cy="145"
-            rx="9"
-            ry="13"
-            fill="#333"/>
-
-          <ellipse
-            cx="330"
-            cy="145"
-            rx="9"
-            ry="13"
-            fill="#333"/>
-
-
-          <ellipse
-            cx="300"
-            cy="175"
-            rx="17"
-            ry="12"
-            fill="#555"/>
-
-
-          <path
-            d="
-              M245 210
-              C225 250 215 315 220 380
-              L245 380
-              L260 275
-              L340 275
-              L355 380
-              L380 380
-              C385 315 375 250 355 210
-              Z"
-            fill="#bdbdbd"/>
-
-
-          <line
-            x1="245"
-            y1="390"
-            x2="355"
-            y2="390"
-            stroke="${pink}"
-            stroke-width="6"/>
-
-
-          <circle
-            cx="245"
-            cy="390"
-            r="8"
-            fill="${pink}"/>
-
-          <circle
-            cx="355"
-            cy="390"
-            r="8"
-            fill="${pink}"/>
-
-
-          <text
-            x="300"
-            y="365"
-            text-anchor="middle"
-            font-size="18"
-            fill="${pink}"
-            font-weight="bold">
-            前脚と前脚の間
-          </text>
-
-        </svg>
-
-      `;
-
-
-    case "middleNeck":
-
-      lines = `
-        <ellipse
-          cx="175"
-          cy="265"
-          rx="28"
-          ry="20"
-          fill="none"
-          stroke="${pink}"
-          stroke-width="5"/>
-
-        <text
-          x="215"
-          y="260"
-          font-size="16"
-          fill="${pink}"
-          font-weight="bold">
-          首の一番細い部分
-        </text>
-      `;
-
-      break;
-
-
-    case "tail":
-
-      lines = `
-        <ellipse
-          cx="515"
-          cy="360"
-          rx="25"
-          ry="20"
-          fill="none"
-          stroke="${pink}"
-          stroke-width="5"/>
-
-        <text
-          x="400"
-          y="320"
-          font-size="16"
-          fill="${pink}"
-          font-weight="bold">
-          尻尾の付け根
-        </text>
-      `;
-
-      break;
+
+  /* 首まわり */
+
+  if(index === 0){
+
+    extra = `
+      <ellipse
+        cx="175"
+        cy="105"
+        rx="38"
+        ry="24"
+        fill="none"
+        stroke="#222"
+        stroke-width="4"
+      />
+    `;
+
+  }
+
+
+  /* 胴まわり */
+
+  if(index === 1){
+
+    extra = `
+      <ellipse
+        cx="235"
+        cy="135"
+        rx="72"
+        ry="48"
+        fill="none"
+        stroke="#222"
+        stroke-width="4"
+      />
+    `;
+
+  }
+
+
+  /* ウェスト */
+
+  if(index === 2){
+
+    extra = `
+      <ellipse
+        cx="285"
+        cy="145"
+        rx="48"
+        ry="35"
+        fill="none"
+        stroke="#222"
+        stroke-width="4"
+      />
+    `;
+
+  }
+
+
+  /* 着丈 */
+
+  if(index === 3){
+
+    extra = `
+      <line
+        x1="165"
+        y1="105"
+        x2="340"
+        y2="175"
+        stroke="#222"
+        stroke-width="4"
+        stroke-dasharray="8 6"
+      />
+
+      <circle
+        cx="165"
+        cy="105"
+        r="6"
+        fill="#222"
+      />
+
+      <circle
+        cx="340"
+        cy="175"
+        r="6"
+        fill="#222"
+      />
+    `;
+
+  }
+
+
+  /* 前身頃 */
+
+  if(index === 4){
+
+    extra = `
+      <line
+        x1="165"
+        y1="105"
+        x2="190"
+        y2="185"
+        stroke="#222"
+        stroke-width="4"
+        stroke-dasharray="8 6"
+      />
+    `;
+
+  }
+
+
+  /* 前脚太さ */
+
+  if(index === 5){
+
+    extra = `
+      <line
+        x1="188"
+        y1="155"
+        x2="188"
+        y2="205"
+        stroke="#222"
+        stroke-width="8"
+      />
+    `;
+
+  }
+
+
+  /* 後脚太さ */
+
+  if(index === 6){
+
+    extra = `
+      <line
+        x1="310"
+        y1="155"
+        x2="315"
+        y2="210"
+        stroke="#222"
+        stroke-width="8"
+      />
+    `;
+
+  }
+
+
+  /* 前脚長さ */
+
+  if(index === 7){
+
+    extra = `
+      <line
+        x1="188"
+        y1="155"
+        x2="188"
+        y2="230"
+        stroke="#222"
+        stroke-width="3"
+        stroke-dasharray="7 5"
+      />
+
+      <circle
+        cx="188"
+        cy="155"
+        r="5"
+        fill="#222"
+      />
+
+      <circle
+        cx="188"
+        cy="230"
+        r="5"
+        fill="#222"
+      />
+    `;
+
+  }
+
+
+  /* 後脚長さ */
+
+  if(index === 8){
+
+    extra = `
+      <line
+        x1="315"
+        y1="155"
+        x2="340"
+        y2="230"
+        stroke="#222"
+        stroke-width="3"
+        stroke-dasharray="7 5"
+      />
+
+      <circle
+        cx="315"
+        cy="155"
+        r="5"
+        fill="#222"
+      />
+
+      <circle
+        cx="340"
+        cy="230"
+        r="5"
+        fill="#222"
+      />
+    `;
+
+  }
+
+
+  /* ネック */
+
+  if(index === 9){
+
+    extra = `
+      <line
+        x1="165"
+        y1="105"
+        x2="145"
+        y2="72"
+        stroke="#222"
+        stroke-width="4"
+        stroke-dasharray="7 5"
+      />
+    `;
+
+  }
+
+
+  /* スヌーズ */
+
+  if(index === 10){
+
+    extra = `
+      <line
+        x1="165"
+        y1="105"
+        x2="125"
+        y2="75"
+        stroke="#222"
+        stroke-width="4"
+        stroke-dasharray="7 5"
+      />
+    `;
+
+  }
+
+
+  /* 頭周り */
+
+  if(index === 11){
+
+    extra = `
+      <ellipse
+        cx="118"
+        cy="75"
+        rx="38"
+        ry="30"
+        fill="none"
+        stroke="#222"
+        stroke-width="4"
+      />
+    `;
+
+  }
+
+
+  /* 前脚幅 */
+
+  if(index === 12){
+
+    extra = `
+      <line
+        x1="188"
+        y1="165"
+        x2="230"
+        y2="165"
+        stroke="#222"
+        stroke-width="4"
+        stroke-dasharray="7 5"
+      />
+    `;
+
+  }
+
+
+  /* 首の真ん中 */
+
+  if(index === 13){
+
+    extra = `
+      <line
+        x1="142"
+        y1="102"
+        x2="178"
+        y2="102"
+        stroke="#222"
+        stroke-width="5"
+      />
+    `;
+
+  }
+
+
+  /* 尻尾の太さ */
+
+  if(index === 14){
+
+    extra = `
+      <line
+        x1="350"
+        y1="115"
+        x2="370"
+        y2="135"
+        stroke="#222"
+        stroke-width="9"
+      />
+    `;
 
   }
 
@@ -3073,134 +2498,130 @@ function dogSvg(index){
   return `
 
     <svg
-      viewBox="0 0 600 600"
+      viewBox="0 0 430 260"
       xmlns="http://www.w3.org/2000/svg">
 
-      <rect
-        width="600"
-        height="600"
-        fill="#faf8f8"/>
+      <!-- 犬本体 -->
+
+      <g
+        fill="#d0d0d0"
+        stroke="#222"
+        stroke-width="3">
+
+        <!-- 頭 -->
+
+        <circle
+          cx="120"
+          cy="75"
+          r="34"/>
+
+        <!-- 耳 -->
+
+        <path
+          d="
+            M95 54
+            Q70 30 83 15
+            Q105 28 112 52
+          "/>
+
+        <path
+          d="
+            M137 53
+            Q158 28 153 12
+            Q132 25 127 50
+          "/>
+
+        <!-- 首 -->
+
+        <path
+          d="
+            M140 92
+            Q155 105 175 108
+            L175 135
+            L140 130
+            Z
+          "/>
+
+        <!-- 胴体 -->
+
+        <ellipse
+          cx="250"
+          cy="130"
+          rx="100"
+          ry="52"/>
+
+        <!-- 前脚 -->
+
+        <path
+          d="
+            M185 158
+            L185 225
+            L202 225
+            L202 158
+          "/>
+
+        <path
+          d="
+            M215 158
+            L215 225
+            L232 225
+            L232 158
+          "/>
+
+        <!-- 後脚 -->
+
+        <path
+          d="
+            M305 160
+            L320 225
+            L338 225
+            L330 155
+          "/>
+
+        <path
+          d="
+            M335 150
+            L355 212
+            L372 208
+            L355 140
+          "/>
+
+        <!-- 尻尾 -->
+
+        <path
+          d="
+            M340 110
+            Q385 80 398 108
+            Q388 125 350 130
+          "
+          fill="none"
+          stroke-linecap="round"/>
+
+      </g>
 
 
-      <!-- 頭 -->
+      <!-- 測定ライン -->
 
-      <ellipse
-        cx="140"
-        cy="185"
-        rx="75"
-        ry="65"
-        fill="#c0c0c0"/>
-
-
-      <!-- 耳 -->
-
-      <path
-        d="M90 145 L65 80 L125 130 Z"
-        fill="#aaa"/>
-
-      <path
-        d="M165 130 L205 75 L185 165 Z"
-        fill="#aaa"/>
-
-
-      <!-- 首 -->
-
-      <path
-        d="
-          M170 300
-          C165 260 180 220 210 205
-          C240 190 265 220 270 270
-          L260 335
-          Z"
-        fill="#c3c3c3"/>
+      ${extra}
 
 
       <!-- 目 -->
 
       <circle
-        cx="118"
-        cy="180"
-        r="7"
-        fill="${dark}"/>
-
-      <circle
-        cx="162"
-        cy="180"
-        r="7"
-        fill="${dark}"/>
-
+        cx="108"
+        cy="69"
+        r="3"
+        fill="#222"
+        stroke="none"/>
 
       <!-- 鼻 -->
 
-      <ellipse
-        cx="140"
-        cy="215"
-        rx="13"
-        ry="9"
-        fill="${dark}"/>
-
-
-      <!-- 胴体 -->
-
-      <ellipse
-        cx="350"
-        cy="355"
-        rx="160"
-        ry="95"
-        fill="#c9c9c9"/>
-
-
-      <!-- 前脚 -->
-
-      <path
-        d="
-          M230 400
-          L225 540
-          L250 540
-          L270 405
-          Z"
-        fill="#bbb"/>
-
-
-      <path
-        d="
-          M280 405
-          L285 540
-          L310 540
-          L315 410
-          Z"
-        fill="#bbb"/>
-
-
-      <!-- 後脚 -->
-
-      <path
-        d="
-          M430 395
-          L415 500
-          L400 540
-          L425 540
-          L455 480
-          L475 400
-          Z"
-        fill="#b8b8b8"/>
-
-
-      <!-- 尻尾 -->
-
-      <path
-        d="
-          M485 320
-          C535 280 560 235 545 195"
-        fill="none"
-        stroke="#aaa"
-        stroke-width="22"
-        stroke-linecap="round"/>
-
-
-      <!-- 採寸ライン -->
-
-      ${lines}
+      <circle
+        cx="91"
+        cy="79"
+        r="4"
+        fill="#222"
+        stroke="none"/>
 
     </svg>
 
@@ -3209,31 +2630,64 @@ function dogSvg(index){
 }
 
 
-/* ========================================
+/* ==================================================
    結果表示
-======================================== */
+================================================== */
 
 function showResult(){
 
-  current = 18;
+  let html = "";
 
 
-  const container =
-    document.getElementById(
-      "resultContent"
-    );
+  html += `
 
+    <div class="result-card">
 
-  let html = `
+      <div class="result-title">
+        わんちゃん情報
+      </div>
 
-    <div class="result-owner">
+      <div class="result-body">
 
-      <strong>
-        ${escapeHtml(dogInfo.name)}
-        ${escapeHtml(dogInfo.suffix)}
-      </strong>
+        <div class="result-row">
+          <span>名前</span>
+          <span class="result-value">
+            ${escapeHtml(dogInfo.name)}
+            ${escapeHtml(dogInfo.suffix)}
+          </span>
+        </div>
 
-      の採寸結果
+        <div class="result-row">
+          <span>犬種</span>
+          <span class="result-value">
+            ${escapeHtml(dogInfo.breed)}
+          </span>
+        </div>
+
+        <div class="result-row">
+          <span>性別</span>
+          <span class="result-value">
+            ${escapeHtml(dogInfo.sex || "—")}
+          </span>
+        </div>
+
+        <div class="result-row">
+          <span>生年月日</span>
+          <span class="result-value">
+            ${escapeHtml(dogInfo.birthDate || "—")}
+          </span>
+        </div>
+
+        <div class="result-row">
+          <span>体重</span>
+          <span class="result-value">
+            ${dogInfo.weight
+              ? escapeHtml(dogInfo.weight) + " kg"
+              : "—"}
+          </span>
+        </div>
+
+      </div>
 
     </div>
 
@@ -3241,94 +2695,37 @@ function showResult(){
 
 
   items.forEach(
-    (item,index)=>{
+    (item, index) => {
 
-      html += `
-
-        <div class="result-item">
-
-          <div class="result-name">
-            ${item.no}
-            ${escapeHtml(item.title)}
-          </div>
-
-          <div class="result-values">
-
-      `;
+      const data =
+        measurements[index];
 
 
-      measurements[index]
-        .forEach(
-          (group,locationIndex)=>{
-
-            const location =
-              item.locations[
-                locationIndex
-              ];
+      let rows = "";
 
 
-            group.forEach(
-              (
-                value,
-                measurementIndex
-              )=>{
+      item.locations.forEach(
+        (location, groupIndex) => {
 
-                /*
-                 * 空欄は結果にも表示しない
-                 */
-
-                if(value === ""){
-                  return;
-                }
-
-
-                html += `
-
-                  <span class="result-chip">
-
-                    ${escapeHtml(location)}
-                    ${measurementIndex + 1}回目：
-                    ${escapeHtml(value)} cm
-
-                  </span>
-
-                `;
-
-              }
+          const average =
+            calcAverage(
+              data[groupIndex]
             );
 
-          }
-        );
-
-
-      html += `
-          </div>
-      `;
-
-
-      const averages =
-        measurements[index]
-          .map(
-            values =>
-              calcAverage(values)
-          );
-
-
-      averages.forEach(
-        (average,i)=>{
 
           if(average !== null){
 
-            html += `
+            rows += `
 
-              <div class="result-average">
+              <div class="result-row">
 
-                ${escapeHtml(
-                  item.locations[i]
-                )}
+                <span>
+                  ${escapeHtml(location)}
+                </span>
 
-                平均：
-                ${average.toFixed(1)} cm
+                <span class="result-value">
+                  ${average.toFixed(1)} cm
+                </span>
 
               </div>
 
@@ -3340,16 +2737,49 @@ function showResult(){
       );
 
 
-      html += `
-        </div>
-      `;
+      if(rows){
+
+        html += `
+
+          <div class="result-card">
+
+            <div class="result-title">
+              ${item.number} ${escapeHtml(item.title)}
+            </div>
+
+            <div class="result-body">
+              ${rows}
+            </div>
+
+          </div>
+
+        `;
+
+      }
 
     }
   );
 
 
-  container.innerHTML =
-    html;
+  if(
+    html === ""
+  ){
+
+    html += `
+
+      <div class="intro">
+        採寸結果はありません。
+      </div>
+
+    `;
+
+  }
+
+
+  document
+    .getElementById("resultContent")
+    .innerHTML =
+      html;
 
 
   showPage(18);
@@ -3357,13 +2787,13 @@ function showResult(){
 }
 
 
-/* ========================================
+/* ==================================================
    HTMLエスケープ
-======================================== */
+================================================== */
 
 function escapeHtml(value){
 
-  return String(value ?? "")
+  return String(value)
     .replace(/&/g,"&amp;")
     .replace(/</g,"&lt;")
     .replace(/>/g,"&gt;")
