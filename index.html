@@ -514,8 +514,44 @@ select:focus{
   color:#666;
 }
 
+
+/* =========================
+   採寸説明
+========================= */
+
+.measure-description{
+  margin:12px 0 16px;
+  padding:14px;
+  background:#f5f5f5;
+  border-left:4px solid #222;
+  border-radius:7px;
+  font-size:13px;
+  line-height:1.8;
+  color:#444;
+}
+
+.measure-description-title{
+  margin-bottom:6px;
+  font-size:12px;
+  font-weight:800;
+  color:#111;
+}
+
+.measure-description-text{
+  white-space:pre-line;
+}
+
+
+/* =========================
+   採寸注意
+========================= */
+
 .measure-note{
   margin:10px 2px 14px;
+  padding:10px 12px;
+  background:#fafafa;
+  border:1px solid #eee;
+  border-radius:6px;
   font-size:12px;
   line-height:1.6;
   color:#888;
@@ -734,6 +770,11 @@ select:focus{
     font-size:21px;
   }
 
+  .measure-description{
+    font-size:12px;
+    padding:12px;
+  }
+
 }
 
 
@@ -862,15 +903,6 @@ select:focus{
   #page18 .back-area{
     display:none !important;
   }
-
-}
-
-
-/* =========================
-   印刷用・空結果
-========================= */
-
-@media print{
 
   #resultContent .intro{
     grid-column:1 / -1 !important;
@@ -1404,6 +1436,15 @@ select:focus{
   </div>
 
 
+  <!-- 採寸説明 -->
+
+  <div
+    id="measureDescription"
+    class="measure-description">
+
+  </div>
+
+
   <p class="measure-note">
 
     ※分からない時は、無理に測定せず、空欄のままで構いません。
@@ -1580,7 +1621,10 @@ const items = [
     title:"首まわり（首の付け根）",
     locations:[
       "首の付け根"
-    ]
+    ],
+    description:
+      "姿勢を正した時に、ちょうど首から胴体に変わる瞬間の部分を測ります。\n" +
+      "毛並みが変わる所が目印になります。"
   },
 
   {
@@ -1588,15 +1632,22 @@ const items = [
     title:"胴まわり",
     locations:[
       "胴まわり"
-    ]
+    ],
+    description:
+      "一番胸が張っているポイントを一周測ります。\n" +
+      "大体、前脚の脇あたりから2cm〜3cm後ろへ行った辺りになります。"
   },
 
   {
     number:"❸",
     title:"ウェスト",
     locations:[
-      "ウェスト"
-    ]
+      "ウェスト（一周）",
+      "背骨位置 → 服が被る位置（片面）"
+    ],
+    description:
+      "胴体で一番細い部分を一周測ります。\n" +
+      "同時に、背骨の位置から服が被るであろう位置までの片面の長さも測ります。"
   },
 
   {
@@ -1604,7 +1655,11 @@ const items = [
     title:"着丈",
     locations:[
       "首の付け根 → 尻尾の付け根"
-    ]
+    ],
+    description:
+      "首まわりを測った位置から、尻尾の付け根までを測ります。\n" +
+      "尻尾は軽く持ち上げます。\n" +
+      "首まわり同様に毛並みが変わるラインが薄っすら見えますので、そのラインまでを測ります。"
   },
 
   {
@@ -1612,7 +1667,9 @@ const items = [
     title:"前身頃",
     locations:[
       "首の付け根 → お腹部分"
-    ]
+    ],
+    description:
+      "首まわりを測った位置から、お腹部分を覆ってあげたい位置までを測ります。"
   },
 
   {
@@ -1621,7 +1678,10 @@ const items = [
     locations:[
       "太いところ",
       "細いところ"
-    ]
+    ],
+    description:
+      "前脚の太いところと細いところを測ります。\n" +
+      "服を作る時の目安になります。"
   },
 
   {
@@ -1630,7 +1690,10 @@ const items = [
     locations:[
       "太いところ",
       "細いところ"
-    ]
+    ],
+    description:
+      "後脚の太いところと細いところを測ります。\n" +
+      "服を作る時の目安になります。"
   },
 
   {
@@ -1640,7 +1703,11 @@ const items = [
       "脇 → 肘",
       "肘 → 手首",
       "手首 → 地面"
-    ]
+    ],
+    description:
+      "脇から関節ごとに地面までを測ります。\n" +
+      "「脇 → 肘」「肘 → 手首」「手首 → 地面」の3か所を測ります。\n" +
+      "服を作る時の目安になります。"
   },
 
   {
@@ -1650,7 +1717,12 @@ const items = [
       "❼で測ったライン → 膝",
       "膝 → 足首",
       "足首 → 地面"
-    ]
+    ],
+    description:
+      "測るポイントは、❼で測ったラインからになります。\n" +
+      "内側でズボンが止まるポイントとなりますので、そこからスタートします。\n" +
+      "「❼のライン → 膝」「膝 → 足首」「足首 → 地面」と、関節ごとに地面までを測ります。\n" +
+      "服を作る時の目安になります。"
   },
 
   {
@@ -1658,23 +1730,33 @@ const items = [
     title:"首の長さ（ネック）",
     locations:[
       "首の付け根 → 後頭部手前"
-    ]
+    ],
+    description:
+      "首まわりを測った位置から、後頭部に入る手前までの長さを測ります。\n" +
+      "ネックデザインを決める際の参考になります。"
   },
 
   {
     number:"⓫",
-    title:"首の長さ（スヌーズ）",
+    title:"首の長さ（スヌード）",
     locations:[
       "首の付け根 → 額"
-    ]
+    ],
+    description:
+      "首まわりを測った位置から、額までの長さを測ります。\n" +
+      "スヌードを作る際の参考になります。"
   },
 
   {
     number:"⓬",
     title:"頭周り",
     locations:[
-      "頭周り"
-    ]
+      "額 → 頭周り一周"
+    ],
+    description:
+      "額から頭の周りを一周測ります。\n" +
+      "首まわりより頭まわりの方が大きい場合があります。\n" +
+      "お洋服を着せる際は頭から着せますので、密かに重要なポイントとなります。"
   },
 
   {
@@ -1682,7 +1764,10 @@ const items = [
     title:"前脚の幅",
     locations:[
       "前脚と前脚の間"
-    ]
+    ],
+    description:
+      "犬を前から見たときの、前脚と前脚の間の幅を測ります。\n" +
+      "体格の差、骨格の差、犬種などによって異なります。"
   },
 
   {
@@ -1690,7 +1775,9 @@ const items = [
     title:"首の真ん中",
     locations:[
       "首の一番細い部分"
-    ]
+    ],
+    description:
+      "首の中でも、一番細い部分を測ります。"
   },
 
   {
@@ -1698,7 +1785,9 @@ const items = [
     title:"尻尾の太さ",
     locations:[
       "尻尾の付け根"
-    ]
+    ],
+    description:
+      "尻尾の付け根の、一番太い部分を測ります。"
   }
 
 ];
@@ -2028,6 +2117,21 @@ function renderMeasurement(index){
 
 
   document
+    .getElementById("measureDescription")
+    .innerHTML = `
+
+      <div class="measure-description-title">
+        📏 測るポイント
+      </div>
+
+      <div class="measure-description-text">
+        ${escapeHtml(item.description)}
+      </div>
+
+  `;
+
+
+  document
     .getElementById("measureIllustration")
     .innerHTML =
       dogSvg(index);
@@ -2066,7 +2170,7 @@ function renderInputs(index){
         <div class="measure-group">
 
           <div class="measure-group-title">
-            ${location}
+            ${escapeHtml(location)}
           </div>
 
           <div class="measure-input-row">
@@ -2090,7 +2194,7 @@ function renderInputs(index){
                   step="0.1"
                   min="0"
                   placeholder="${valueIndex + 1}回目"
-                  value="${value}"
+                  value="${escapeHtml(value)}"
                   oninput="
                     saveMeasurement(
                       ${index},
@@ -2280,10 +2384,6 @@ function updateAllAverages(index){
 
 /* ==================================================
    採寸入力チェック
-
-   ・全部空欄 → OK
-   ・一部だけ入力 → NG
-   ・全部入力 → OK
 ================================================== */
 
 function hasMeasurement(index){
@@ -2485,13 +2585,10 @@ function updateProgress(){
 
   }
 
-  else if(current === 17){
-
-    percent = 100;
-
-  }
-
-  else if(current === 18){
+  else if(
+    current === 17 ||
+    current === 18
+  ){
 
     percent = 100;
 
@@ -2513,7 +2610,7 @@ function dogSvg(index){
   let extra = "";
 
 
-  /* 首まわり */
+  /* ❶ 首まわり */
 
   if(index === 0){
 
@@ -2534,7 +2631,7 @@ function dogSvg(index){
   }
 
 
-  /* 胴まわり */
+  /* ❷ 胴まわり */
 
   if(index === 1){
 
@@ -2555,7 +2652,7 @@ function dogSvg(index){
   }
 
 
-  /* ウェスト */
+  /* ❸ ウェスト */
 
   if(index === 2){
 
@@ -2571,12 +2668,22 @@ function dogSvg(index){
         stroke-width="4"
       />
 
+      <line
+        x1="215"
+        y1="130"
+        x2="285"
+        y2="130"
+        stroke="#222"
+        stroke-width="3"
+        stroke-dasharray="7 5"
+      />
+
     `;
 
   }
 
 
-  /* 着丈 */
+  /* ❹ 着丈 */
 
   if(index === 3){
 
@@ -2585,8 +2692,8 @@ function dogSvg(index){
       <line
         x1="165"
         y1="105"
-        x2="340"
-        y2="175"
+        x2="350"
+        y2="120"
         stroke="#222"
         stroke-width="4"
         stroke-dasharray="8 6"
@@ -2600,8 +2707,8 @@ function dogSvg(index){
       />
 
       <circle
-        cx="340"
-        cy="175"
+        cx="350"
+        cy="120"
         r="6"
         fill="#222"
       />
@@ -2611,7 +2718,7 @@ function dogSvg(index){
   }
 
 
-  /* 前身頃 */
+  /* ❺ 前身頃 */
 
   if(index === 4){
 
@@ -2627,12 +2734,26 @@ function dogSvg(index){
         stroke-dasharray="8 6"
       />
 
+      <circle
+        cx="165"
+        cy="105"
+        r="5"
+        fill="#222"
+      />
+
+      <circle
+        cx="190"
+        cy="185"
+        r="5"
+        fill="#222"
+      />
+
     `;
 
   }
 
 
-  /* 前脚太さ */
+  /* ❻ 前脚太さ */
 
   if(index === 5){
 
@@ -2652,7 +2773,7 @@ function dogSvg(index){
   }
 
 
-  /* 後脚太さ */
+  /* ❼ 後脚太さ */
 
   if(index === 6){
 
@@ -2672,7 +2793,7 @@ function dogSvg(index){
   }
 
 
-  /* 前脚長さ */
+  /* ❽ 前脚長さ */
 
   if(index === 7){
 
@@ -2697,6 +2818,13 @@ function dogSvg(index){
 
       <circle
         cx="188"
+        cy="190"
+        r="5"
+        fill="#222"
+      />
+
+      <circle
+        cx="188"
         cy="230"
         r="5"
         fill="#222"
@@ -2707,7 +2835,7 @@ function dogSvg(index){
   }
 
 
-  /* 後脚長さ */
+  /* ❾ 後脚長さ */
 
   if(index === 8){
 
@@ -2731,6 +2859,13 @@ function dogSvg(index){
       />
 
       <circle
+        cx="328"
+        cy="195"
+        r="5"
+        fill="#222"
+      />
+
+      <circle
         cx="340"
         cy="230"
         r="5"
@@ -2742,7 +2877,7 @@ function dogSvg(index){
   }
 
 
-  /* ネック */
+  /* ❿ ネック */
 
   if(index === 9){
 
@@ -2758,12 +2893,26 @@ function dogSvg(index){
         stroke-dasharray="7 5"
       />
 
+      <circle
+        cx="165"
+        cy="105"
+        r="5"
+        fill="#222"
+      />
+
+      <circle
+        cx="145"
+        cy="72"
+        r="5"
+        fill="#222"
+      />
+
     `;
 
   }
 
 
-  /* スヌーズ */
+  /* ⓫ スヌード */
 
   if(index === 10){
 
@@ -2772,11 +2921,25 @@ function dogSvg(index){
       <line
         x1="165"
         y1="105"
-        x2="125"
-        y2="75"
+        x2="108"
+        y2="65"
         stroke="#222"
         stroke-width="4"
         stroke-dasharray="7 5"
+      />
+
+      <circle
+        cx="165"
+        cy="105"
+        r="5"
+        fill="#222"
+      />
+
+      <circle
+        cx="108"
+        cy="65"
+        r="5"
+        fill="#222"
       />
 
     `;
@@ -2784,7 +2947,7 @@ function dogSvg(index){
   }
 
 
-  /* 頭周り */
+  /* ⓬ 頭周り */
 
   if(index === 11){
 
@@ -2805,7 +2968,7 @@ function dogSvg(index){
   }
 
 
-  /* 前脚幅 */
+  /* ⓭ 前脚幅 */
 
   if(index === 12){
 
@@ -2821,12 +2984,26 @@ function dogSvg(index){
         stroke-dasharray="7 5"
       />
 
+      <circle
+        cx="188"
+        cy="165"
+        r="5"
+        fill="#222"
+      />
+
+      <circle
+        cx="230"
+        cy="165"
+        r="5"
+        fill="#222"
+      />
+
     `;
 
   }
 
 
-  /* 首の真ん中 */
+  /* ⓮ 首の真ん中 */
 
   if(index === 13){
 
@@ -2846,7 +3023,7 @@ function dogSvg(index){
   }
 
 
-  /* 尻尾の太さ */
+  /* ⓯ 尻尾の太さ */
 
   if(index === 14){
 
@@ -3213,27 +3390,6 @@ function showResult(){
 
     }
   );
-
-
-  /* =========================
-     結果なし
-  ========================= */
-
-  if(
-    html === ""
-  ){
-
-    html += `
-
-      <div class="intro">
-
-        採寸結果はありません。
-
-      </div>
-
-    `;
-
-  }
 
 
   document
