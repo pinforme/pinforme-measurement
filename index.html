@@ -31,6 +31,15 @@ body{
   min-height:100vh;
 }
 
+.app{
+  width:100%;
+  max-width:600px;
+  min-height:100vh;
+  margin:0 auto;
+  background:#fff;
+  overflow:hidden;
+}
+
 button,
 input,
 select{
@@ -41,14 +50,6 @@ button{
   -webkit-tap-highlight-color:transparent;
 }
 
-.app{
-  width:100%;
-  max-width:600px;
-  min-height:100vh;
-  margin:0 auto;
-  background:#fff;
-  overflow:hidden;
-}
 
 /* =========================
    HEADER
@@ -107,6 +108,7 @@ button{
   transition:width .25s ease;
 }
 
+
 /* =========================
    PAGE
 ========================= */
@@ -148,6 +150,7 @@ button{
   line-height:1.7;
   color:#888;
 }
+
 
 /* =========================
    FORM
@@ -220,6 +223,7 @@ select:focus{
   }
 }
 
+
 /* =========================
    RADIO
 ========================= */
@@ -257,6 +261,7 @@ select:focus{
   color:#c7657d;
   font-weight:700;
 }
+
 
 /* =========================
    CHECK POINTS
@@ -316,6 +321,7 @@ select:focus{
   accent-color:#d88b9e;
 }
 
+
 /* =========================
    DOG INFO
 ========================= */
@@ -352,6 +358,7 @@ select:focus{
   text-align:right;
 }
 
+
 /* =========================
    PHOTO
 ========================= */
@@ -377,6 +384,7 @@ select:focus{
   object-fit:contain;
   border-radius:12px;
 }
+
 
 /* =========================
    MEASUREMENT
@@ -409,8 +417,9 @@ select:focus{
   color:#777;
 }
 
+
 /* =========================
-   ILLUSTRATION
+   MEASUREMENT IMAGE
 ========================= */
 
 .measure-image{
@@ -429,8 +438,9 @@ select:focus{
   height:100%;
 }
 
+
 /* =========================
-   MEASUREMENT INPUT
+   MEASUREMENT BOX
 ========================= */
 
 .measure-box{
@@ -441,7 +451,7 @@ select:focus{
 }
 
 .measure-location{
-  margin-bottom:13px;
+  margin-bottom:8px;
   padding:10px 12px;
   border-radius:10px;
   background:#faf5f6;
@@ -453,6 +463,21 @@ select:focus{
 .measure-location strong{
   color:#444;
 }
+
+
+/* ★ 今回追加 */
+
+.measure-note{
+  margin:10px 2px 14px;
+  font-size:12px;
+  line-height:1.6;
+  color:#999;
+}
+
+
+/* =========================
+   INPUT
+========================= */
 
 .measure-row{
   display:grid;
@@ -499,6 +524,7 @@ select:focus{
   font-size:20px;
   font-weight:800;
   color:#c7657d;
+  text-align:right;
 }
 
 .unit{
@@ -506,6 +532,7 @@ select:focus{
   font-weight:500;
   margin-left:2px;
 }
+
 
 /* =========================
    BUTTON
@@ -549,6 +576,7 @@ select:focus{
   font-size:14px;
 }
 
+
 /* =========================
    THANKS
 ========================= */
@@ -574,6 +602,7 @@ select:focus{
   line-height:1.8;
   color:#777;
 }
+
 
 /* =========================
    RESULT
@@ -626,6 +655,7 @@ select:focus{
   font-weight:700;
 }
 
+
 /* =========================
    SMALL SCREEN
 ========================= */
@@ -662,7 +692,11 @@ select:focus{
 
 <div class="app">
 
-  <!-- HEADER -->
+
+  <!-- =========================
+       HEADER
+  ========================== -->
+
   <header class="header">
 
     <div class="header-inner">
@@ -682,7 +716,10 @@ select:focus{
     </div>
 
     <div class="progress-wrap">
-      <div id="progressBar" class="progress-bar"></div>
+      <div
+        id="progressBar"
+        class="progress-bar">
+      </div>
     </div>
 
   </header>
@@ -790,7 +827,9 @@ select:focus{
     </div>
 
 
-    <!-- 採寸前の確認 -->
+    <!-- =========================
+         採寸前の確認事項
+    ========================== -->
 
     <div class="form-group">
 
@@ -921,26 +960,55 @@ select:focus{
   <section id="page1" class="page">
 
     <h1 class="dog-page-title">
+
       <span class="paw">🐾</span>
+
       <span id="dogInfoTitle"></span>の情報
+
     </h1>
 
 
     <div class="info-card">
 
       <div class="info-row">
-        <span class="info-label">ご主人様</span>
-        <span id="summaryOwner" class="info-value"></span>
+
+        <span class="info-label">
+          ご主人様
+        </span>
+
+        <span
+          id="summaryOwner"
+          class="info-value">
+        </span>
+
       </div>
 
-      <div class="info-row">
-        <span class="info-label">わんちゃん</span>
-        <span id="summaryDog" class="info-value"></span>
-      </div>
 
       <div class="info-row">
-        <span class="info-label">犬種</span>
-        <span id="summaryBreed" class="info-value"></span>
+
+        <span class="info-label">
+          わんちゃん
+        </span>
+
+        <span
+          id="summaryDog"
+          class="info-value">
+        </span>
+
+      </div>
+
+
+      <div class="info-row">
+
+        <span class="info-label">
+          犬種
+        </span>
+
+        <span
+          id="summaryBreed"
+          class="info-value">
+        </span>
+
       </div>
 
     </div>
@@ -1058,10 +1126,13 @@ select:focus{
 
 
   <!-- =========================
-       MEASUREMENT PAGES
+       MEASUREMENT
   ========================== -->
 
-  <section id="measurementPage" class="page">
+  <section
+    id="measurementPage"
+    class="page">
+
 
     <div class="measure-header">
 
@@ -1095,6 +1166,13 @@ select:focus{
         id="measureLocation"
         class="measure-location">
       </div>
+
+
+      <!-- ★ 今回追加 -->
+
+      <p class="measure-note">
+        ※分からない時は、無理に測定せず、空欄のままで構いません。
+      </p>
 
 
       <div
@@ -1138,7 +1216,9 @@ select:focus{
        THANKS
   ========================== -->
 
-  <section id="page17" class="page">
+  <section
+    id="page17"
+    class="page">
 
     <div class="thanks">
 
@@ -1175,7 +1255,9 @@ select:focus{
        RESULT
   ========================== -->
 
-  <section id="page18" class="page">
+  <section
+    id="page18"
+    class="page">
 
     <h1 class="page-title">
       採寸結果
@@ -1211,7 +1293,7 @@ select:focus{
 <script>
 
 /* ========================================
-   基本データ
+   基本情報
 ======================================== */
 
 const dogInfo = {
@@ -1407,7 +1489,7 @@ const items = [
 
 
 /* ========================================
-   現在位置
+   現在ページ
 ======================================== */
 
 let current = 0;
@@ -1417,30 +1499,34 @@ let current = 0;
    採寸データ
 ======================================== */
 
-const measurements = items.map(() => []);
-
-items.forEach((item,index)=>{
-
-  measurements[index] =
-    item.locations.map(() => ["","",""]);
-
-});
+const measurements =
+  items.map(item =>
+    item.locations.map(() => ["","",""])
+  );
 
 
 /* ========================================
    初期化
 ======================================== */
 
-document.addEventListener("DOMContentLoaded",()=>{
+document.addEventListener(
+  "DOMContentLoaded",
+  ()=>{
 
-  updateProgress();
+    updateProgress();
 
-  const photoInput =
-    document.getElementById("dogPhoto");
 
-  photoInput.addEventListener("change",handlePhoto);
+    const photoInput =
+      document.getElementById("dogPhoto");
 
-});
+
+    photoInput.addEventListener(
+      "change",
+      handlePhoto
+    );
+
+  }
+);
 
 
 /* ========================================
@@ -1474,13 +1560,18 @@ function showPage(pageNumber){
 
   }
 
-  else if(pageNumber >= 2 && pageNumber <= 16){
+  else if(
+    pageNumber >= 2 &&
+    pageNumber <= 16
+  ){
 
     document
       .getElementById("measurementPage")
       .classList.add("active");
 
-    renderMeasurement(pageNumber - 2);
+    renderMeasurement(
+      pageNumber - 2
+    );
 
   }
 
@@ -1503,6 +1594,7 @@ function showPage(pageNumber){
 
   updateProgress();
 
+
   window.scrollTo({
     top:0,
     behavior:"smooth"
@@ -1512,59 +1604,86 @@ function showPage(pageNumber){
 
 
 /* ========================================
-   基本情報 → 次へ
+   基本情報
 ======================================== */
 
 function nextFromBasic(){
 
   const owner =
-    document.getElementById("ownerName").value.trim();
+    document
+      .getElementById("ownerName")
+      .value
+      .trim();
+
 
   const name =
-    document.getElementById("dogName").value.trim();
+    document
+      .getElementById("dogName")
+      .value
+      .trim();
+
 
   const breed =
-    document.getElementById("breed").value.trim();
+    document
+      .getElementById("breed")
+      .value
+      .trim();
+
 
   const confirmed =
-    document.getElementById("confirmCheck").checked;
+    document
+      .getElementById("confirmCheck")
+      .checked;
 
 
   if(!owner){
 
-    alert("ご主人様の名前を入力してください。");
-    return;
+    alert(
+      "ご主人様の名前を入力してください。"
+    );
 
+    return;
   }
 
 
   if(!name){
 
-    alert("わんちゃんの名前を入力してください。");
-    return;
+    alert(
+      "わんちゃんの名前を入力してください。"
+    );
 
+    return;
   }
 
 
   if(!breed){
 
-    alert("犬種を入力してください。");
-    return;
+    alert(
+      "犬種を入力してください。"
+    );
 
+    return;
   }
 
 
   if(!confirmed){
 
-    alert("採寸前の確認事項を確認してください。");
-    return;
+    alert(
+      "採寸前の確認事項を確認してください。"
+    );
 
+    return;
   }
 
 
-  dogInfo.owner = owner;
-  dogInfo.name = name;
-  dogInfo.breed = breed;
+  dogInfo.owner =
+    owner;
+
+  dogInfo.name =
+    name;
+
+  dogInfo.breed =
+    breed;
 
 
   const suffix =
@@ -1572,8 +1691,11 @@ function nextFromBasic(){
       'input[name="suffix"]:checked'
     );
 
+
   dogInfo.suffix =
-    suffix ? suffix.value : "くん";
+    suffix
+      ? suffix.value
+      : "くん";
 
 
   current = 1;
@@ -1584,7 +1706,7 @@ function nextFromBasic(){
 
 
 /* ========================================
-   情報画面
+   情報表示
 ======================================== */
 
 function renderInfo(){
@@ -1626,16 +1748,23 @@ function nextFromInfo(){
       'input[name="sex"]:checked'
     );
 
+
   dogInfo.sex =
-    sex ? sex.value : "";
+    sex
+      ? sex.value
+      : "";
 
 
   dogInfo.birthDate =
-    document.getElementById("birthDate").value;
+    document
+      .getElementById("birthDate")
+      .value;
 
 
   dogInfo.weight =
-    document.getElementById("weight").value;
+    document
+      .getElementById("weight")
+      .value;
 
 
   current = 2;
@@ -1654,6 +1783,7 @@ function handlePhoto(event){
   const file =
     event.target.files[0];
 
+
   if(!file){
     return;
   }
@@ -1663,22 +1793,27 @@ function handlePhoto(event){
     new FileReader();
 
 
-  reader.onload = function(e){
+  reader.onload =
+    function(e){
 
-    dogInfo.photo =
-      e.target.result;
+      dogInfo.photo =
+        e.target.result;
 
 
-    const preview =
-      document.getElementById("photoPreview");
+      const preview =
+        document.getElementById(
+          "photoPreview"
+        );
 
-    preview.src =
-      e.target.result;
 
-    preview.style.display =
-      "block";
+      preview.src =
+        e.target.result;
 
-  };
+
+      preview.style.display =
+        "block";
+
+    };
 
 
   reader.readAsDataURL(file);
@@ -1739,23 +1874,22 @@ function renderInputs(index){
   const item =
     items[index];
 
+
   const container =
-    document.getElementById("measureInputs");
+    document.getElementById(
+      "measureInputs"
+    );
 
 
-  container.innerHTML = "";
+  container.innerHTML =
+    "";
 
 
-  const locations =
-    item.locations;
+  container.style.display =
+    "";
 
 
-  /*
-    複数箇所ある場合は、
-    各箇所ごとに3回入力できるようにする
-  */
-
-  if(locations.length === 1){
+  if(item.locations.length === 1){
 
     container.style.gridTemplateColumns =
       "repeat(3,1fr)";
@@ -1774,7 +1908,7 @@ function renderInputs(index){
         document.createElement("label");
 
       label.textContent =
-        ` ${i+1}回目`;
+        `${i+1}回目`;
 
 
       const input =
@@ -1806,10 +1940,12 @@ function renderInputs(index){
       input.addEventListener(
         "input",
         ()=>{
+
           measurements[index][0][i] =
             input.value;
 
           updateAverage(index);
+
         }
       );
 
@@ -1835,7 +1971,7 @@ function renderInputs(index){
       "15px";
 
 
-    locations.forEach(
+    item.locations.forEach(
       (location,locationIndex)=>{
 
         const group =
@@ -1844,6 +1980,7 @@ function renderInputs(index){
 
         const title =
           document.createElement("div");
+
 
         title.style.fontSize =
           "13px";
@@ -1864,6 +2001,7 @@ function renderInputs(index){
         const row =
           document.createElement("div");
 
+
         row.className =
           "measure-row";
 
@@ -1873,6 +2011,7 @@ function renderInputs(index){
           const wrap =
             document.createElement("div");
 
+
           wrap.className =
             "measure-input-wrap";
 
@@ -1880,12 +2019,14 @@ function renderInputs(index){
           const label =
             document.createElement("label");
 
+
           label.textContent =
             `${i+1}回目`;
 
 
           const input =
             document.createElement("input");
+
 
           input.type =
             "number";
@@ -1907,7 +2048,8 @@ function renderInputs(index){
 
 
           input.value =
-            measurements[index][locationIndex][i];
+            measurements[index]
+              [locationIndex][i];
 
 
           input.addEventListener(
@@ -1961,13 +2103,16 @@ function calcAverage(values){
 
 
   if(nums.length === 0){
+
     return null;
+
   }
 
 
   const total =
     nums.reduce(
-      (sum,value)=>sum+value,
+      (sum,value)=>
+        sum + value,
       0
     );
 
@@ -1985,12 +2130,19 @@ function updateAverage(index){
 
   const averages =
     measurements[index]
-      .map(values=>calcAverage(values))
-      .filter(value=>value !== null);
+      .map(values =>
+        calcAverage(values)
+      )
+      .filter(
+        value =>
+          value !== null
+      );
 
 
   const el =
-    document.getElementById("averageValue");
+    document.getElementById(
+      "averageValue"
+    );
 
 
   if(averages.length === 0){
@@ -2015,8 +2167,9 @@ function updateAverage(index){
 
   el.innerHTML =
     averages
-      .map((value,i)=>
-        `${item.locations[i]}：${value.toFixed(1)}cm`
+      .map(
+        (value,i)=>
+          `${item.locations[i]}：${value.toFixed(1)}cm`
       )
       .join("<br>");
 
@@ -2024,7 +2177,7 @@ function updateAverage(index){
 
 
 /* ========================================
-   入力確認
+   ★ 今回変更した入力判定
 ======================================== */
 
 function hasMeasurement(index){
@@ -2033,20 +2186,75 @@ function hasMeasurement(index){
     measurements[index];
 
 
-  return data.every(
-    group =>
-      group.every(
-        value =>
-          value !== "" &&
-          !isNaN(parseFloat(value))
-      )
-  );
+  /*
+   * まず、
+   * 全部空欄か確認
+   */
+
+  const allEmpty =
+    data.every(
+      group =>
+        group.every(
+          value =>
+            value === ""
+        )
+    );
+
+
+  /*
+   * 全部空欄ならOK
+   */
+
+  if(allEmpty){
+
+    return true;
+
+  }
+
+
+  /*
+   * 1つでも入力されている場合は、
+   * すべての欄に入力されている必要がある
+   */
+
+  const allFilled =
+    data.every(
+      group =>
+        group.every(
+          value =>
+            value !== "" &&
+            !isNaN(
+              parseFloat(value)
+            )
+        )
+    );
+
+
+  /*
+   * 一部だけ入力されている場合
+   */
+
+  if(!allFilled){
+
+    alert(
+      "一部だけ入力されています。\n\n" +
+      "分からない場合はすべて空欄のまま進むか、" +
+      "測定する場合はすべての数値を入力してください。"
+    );
+
+
+    return false;
+
+  }
+
+
+  return true;
 
 }
 
 
 /* ========================================
-   次へ
+   次の採寸へ
 ======================================== */
 
 function nextMeasurement(){
@@ -2055,18 +2263,25 @@ function nextMeasurement(){
     current - 2;
 
 
-  if(!hasMeasurement(index)){
+  /*
+   * 空欄OK・一部入力NG
+   */
 
-    alert(
-      "3回すべての採寸値を入力してください。"
-    );
+  if(!hasMeasurement(index)){
 
     return;
 
   }
 
 
-  if(index < items.length - 1){
+  /*
+   * 次の採寸
+   */
+
+  if(
+    index <
+    items.length - 1
+  ){
 
     current++;
 
@@ -2086,7 +2301,7 @@ function nextMeasurement(){
 
 
 /* ========================================
-   ボタン表示
+   ボタン
 ======================================== */
 
 function updateMeasureButton(index){
@@ -2097,7 +2312,10 @@ function updateMeasureButton(index){
     );
 
 
-  if(index === items.length - 1){
+  if(
+    index ===
+    items.length - 1
+  ){
 
     button.textContent =
       "採寸を完了する";
@@ -2121,7 +2339,9 @@ function updateMeasureButton(index){
 function goBack(){
 
   if(current <= 0){
+
     return;
+
   }
 
 
@@ -2176,7 +2396,10 @@ function updateProgress(){
 
   }
 
-  else if(current >= 2 && current <= 16){
+  else if(
+    current >= 2 &&
+    current <= 16
+  ){
 
     percent =
       8 +
@@ -2201,7 +2424,10 @@ function updateProgress(){
     );
 
 
-  if(current > 0 && current < 18){
+  if(
+    current > 0 &&
+    current < 18
+  ){
 
     back.style.display =
       "block";
@@ -2237,7 +2463,7 @@ function renderDogSvg(index){
 
 
 /* ========================================
-   SVG
+   SVG採寸イメージ
 ======================================== */
 
 function dogSvg(index){
@@ -2249,11 +2475,9 @@ function dogSvg(index){
   const pink =
     "#d88b9e";
 
+
   const dark =
     "#454545";
-
-  const light =
-    "#eee";
 
 
   let lines = "";
@@ -2630,9 +2854,7 @@ function dogSvg(index){
           font-size="15"
           fill="${pink}"
           font-weight="bold">
-          首の付け根
-          →
-          後頭部手前
+          首の付け根 → 後頭部手前
         </text>
       `;
 
@@ -2714,14 +2936,13 @@ function dogSvg(index){
             fill="#faf8f8"/>
 
 
-          <!-- 正面の犬 -->
-
           <ellipse
             cx="300"
             cy="155"
             rx="75"
             ry="70"
             fill="#c9c9c9"/>
+
 
           <ellipse
             cx="270"
@@ -2736,6 +2957,7 @@ function dogSvg(index){
             rx="9"
             ry="13"
             fill="#333"/>
+
 
           <ellipse
             cx="300"
@@ -2767,6 +2989,7 @@ function dogSvg(index){
             stroke="${pink}"
             stroke-width="6"/>
 
+
           <circle
             cx="245"
             cy="390"
@@ -2779,6 +3002,7 @@ function dogSvg(index){
             r="8"
             fill="${pink}"/>
 
+
           <text
             x="300"
             y="365"
@@ -2790,6 +3014,7 @@ function dogSvg(index){
           </text>
 
         </svg>
+
       `;
 
 
@@ -2857,28 +3082,6 @@ function dogSvg(index){
         fill="#faf8f8"/>
 
 
-      <!-- 犬の簡易シルエット -->
-
-      <ellipse
-        cx="350"
-        cy="355"
-        rx="160"
-        ry="95"
-        fill="#c9c9c9"/>
-
-
-      <!-- 首 -->
-
-      <path
-        d="
-          M170 300
-          C165 260 180 220 210 205
-          C240 190 265 220 270 270
-          L260 335
-          Z"
-        fill="#c3c3c3"/>
-
-
       <!-- 頭 -->
 
       <ellipse
@@ -2898,6 +3101,18 @@ function dogSvg(index){
       <path
         d="M165 130 L205 75 L185 165 Z"
         fill="#aaa"/>
+
+
+      <!-- 首 -->
+
+      <path
+        d="
+          M170 300
+          C165 260 180 220 210 205
+          C240 190 265 220 270 270
+          L260 335
+          Z"
+        fill="#c3c3c3"/>
 
 
       <!-- 目 -->
@@ -2925,13 +3140,13 @@ function dogSvg(index){
         fill="${dark}"/>
 
 
-      <!-- 胴 -->
+      <!-- 胴体 -->
 
       <ellipse
-        cx="355"
-        cy="350"
-        rx="145"
-        ry="80"
+        cx="350"
+        cy="355"
+        rx="160"
+        ry="95"
         fill="#c9c9c9"/>
 
 
@@ -2945,6 +3160,7 @@ function dogSvg(index){
           L270 405
           Z"
         fill="#bbb"/>
+
 
       <path
         d="
@@ -2982,7 +3198,7 @@ function dogSvg(index){
         stroke-linecap="round"/>
 
 
-      <!-- 採寸表示 -->
+      <!-- 採寸ライン -->
 
       ${lines}
 
@@ -2994,12 +3210,13 @@ function dogSvg(index){
 
 
 /* ========================================
-   結果
+   結果表示
 ======================================== */
 
 function showResult(){
 
   current = 18;
+
 
   const container =
     document.getElementById(
@@ -3023,90 +3240,112 @@ function showResult(){
   `;
 
 
-  items.forEach((item,index)=>{
+  items.forEach(
+    (item,index)=>{
 
-    html += `
+      html += `
 
-      <div class="result-item">
+        <div class="result-item">
 
-        <div class="result-name">
-          ${item.no} ${escapeHtml(item.title)}
-        </div>
+          <div class="result-name">
+            ${item.no}
+            ${escapeHtml(item.title)}
+          </div>
 
-        <div class="result-values">
-    `;
+          <div class="result-values">
 
-
-    measurements[index]
-      .forEach(
-        (group,locationIndex)=>{
-
-          const location =
-            item.locations[locationIndex];
+      `;
 
 
-          group.forEach(
-            (value,measurementIndex)=>{
+      measurements[index]
+        .forEach(
+          (group,locationIndex)=>{
 
-              html += `
+            const location =
+              item.locations[
+                locationIndex
+              ];
 
-                <span class="result-chip">
 
-                  ${escapeHtml(location)}
-                  ${measurementIndex+1}回目：
-                  ${escapeHtml(value)} cm
+            group.forEach(
+              (
+                value,
+                measurementIndex
+              )=>{
 
-                </span>
+                /*
+                 * 空欄は結果にも表示しない
+                 */
 
-              `;
+                if(value === ""){
+                  return;
+                }
 
-            }
+
+                html += `
+
+                  <span class="result-chip">
+
+                    ${escapeHtml(location)}
+                    ${measurementIndex + 1}回目：
+                    ${escapeHtml(value)} cm
+
+                  </span>
+
+                `;
+
+              }
+            );
+
+          }
+        );
+
+
+      html += `
+          </div>
+      `;
+
+
+      const averages =
+        measurements[index]
+          .map(
+            values =>
+              calcAverage(values)
           );
+
+
+      averages.forEach(
+        (average,i)=>{
+
+          if(average !== null){
+
+            html += `
+
+              <div class="result-average">
+
+                ${escapeHtml(
+                  item.locations[i]
+                )}
+
+                平均：
+                ${average.toFixed(1)} cm
+
+              </div>
+
+            `;
+
+          }
 
         }
       );
 
 
-    html += `
+      html += `
         </div>
-    `;
+      `;
 
-
-    const averages =
-      measurements[index]
-        .map(values=>
-          calcAverage(values)
-        );
-
-
-    averages.forEach(
-      (average,i)=>{
-
-        if(average !== null){
-
-          html += `
-
-            <div class="result-average">
-
-              ${escapeHtml(item.locations[i])}
-              平均：
-              ${average.toFixed(1)} cm
-
-            </div>
-
-          `;
-
-        }
-
-      }
-    );
-
-
-    html += `
-      </div>
-    `;
-
-  });
+    }
+  );
 
 
   container.innerHTML =
