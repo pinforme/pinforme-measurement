@@ -4,578 +4,241 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>PINFORME 採寸ナビ</title>
-
 <style>
 *{box-sizing:border-box}
-
-body{
-margin:0;
-background:#f7f7f5;
-color:#222;
-font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif
-}
-
-.app{
-max-width:520px;
-margin:auto;
-min-height:100vh;
-background:#fff
-}
-
-header{
-padding:18px;
-border-bottom:1px solid #eee;
-position:sticky;
-top:0;
-background:#fff;
-z-index:10
-}
-
-.brand{
-font-size:20px;
-font-weight:800;
-letter-spacing:.12em
-}
-
-.sub{
-font-size:11px;
-color:#777;
-margin-top:4px
-}
-
-.progress{
-height:5px;
-background:#eee;
-border-radius:10px;
-margin-top:14px;
-overflow:hidden
-}
-
-.progress span{
-display:block;
-height:100%;
-background:#222;
-width:6%;
-transition:.3s
-}
-
-main{
-padding:24px 18px 110px
-}
-
-.step{
-font-size:13px;
-color:#777
-}
-
-h1{
-font-size:27px;
-margin:8px 0
-}
-
-.desc{
-font-size:14px;
-line-height:1.8;
-color:#555
-}
-
-.card{
-background:#f6f6f3;
-padding:16px;
-border-radius:14px;
-margin-top:18px;
-font-size:13px;
-line-height:1.7
-}
-
-label{
-display:block;
-font-size:13px;
-font-weight:bold;
-margin-top:18px
-}
-
-input,select{
-width:100%;
-padding:14px;
-font-size:16px;
-border:1px solid #ddd;
-border-radius:12px;
-margin-top:7px;
-background:#fff
-}
-
-.measure{
-margin-top:20px
-}
-
-.measure-row{
-display:flex;
-align-items:center;
-gap:8px;
-margin:10px 0
-}
-
-.measure-row label{
-width:55px;
-margin:0;
-font-weight:normal;
-color:#666
-}
-
-.measure-row input{
-font-size:22px;
-text-align:right;
-margin:0;
-flex:1
-}
-
-.unit{
-font-size:14px;
-width:22px
-}
-
-.average{
-margin-top:20px;
-padding:18px;
-border:1px solid #eee;
-background:#fafafa;
-border-radius:14px;
-display:flex;
-justify-content:space-between;
-align-items:center
-}
-
-.average strong{
-font-size:25px
-}
-
-.buttons{
-position:fixed;
-bottom:0;
-left:50%;
-transform:translateX(-50%);
-width:min(520px,100%);
-display:flex;
-gap:10px;
-padding:12px 18px;
-padding-bottom:calc(12px + env(safe-area-inset-bottom));
-background:rgba(255,255,255,.97);
-border-top:1px solid #eee
-}
-
-button{
-border:0;
-border-radius:13px;
-padding:15px;
-font-size:15px;
-font-weight:bold
-}
-
-.back{
-flex:1;
-background:#eee;
-color:#222
-}
-
-.next{
-flex:2;
-background:#222;
-color:#fff
-}
-
-.item{
-display:flex;
-justify-content:space-between;
-padding:13px 0;
-border-bottom:1px solid #eee
-}
-
-.small{
-font-size:11px;
-color:#777
-}
+body{margin:0;background:#f7f7f5;color:#222;font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif}
+.app{max-width:520px;margin:auto;min-height:100vh;background:#fff}
+header{padding:18px;border-bottom:1px solid #eee;position:sticky;top:0;background:#fff;z-index:10}
+.brand{font-size:20px;font-weight:800;letter-spacing:.12em}
+.sub{font-size:11px;color:#777;margin-top:4px}
+.progress{height:5px;background:#eee;border-radius:10px;margin-top:14px;overflow:hidden}
+.progress span{display:block;height:100%;background:#222;width:5%;transition:.3s}
+main{padding:24px 18px 110px}
+.step{font-size:13px;color:#777}
+h1{font-size:27px;margin:8px 0 12px}
+.desc{font-size:14px;line-height:1.8;color:#555}
+.card{background:#f6f6f3;padding:16px;border-radius:14px;margin-top:18px;font-size:13px;line-height:1.7}
+.point{padding:15px 0;border-bottom:1px solid #eee}
+.point b{display:block;font-size:15px;margin-bottom:5px}
+.point span{font-size:13px;color:#666;line-height:1.6}
+.agree{display:flex;gap:10px;align-items:center;margin-top:22px;padding:15px;background:#fafafa;border:1px solid #eee;border-radius:13px}
+.agree input{width:20px;height:20px;margin:0}
+label{display:block;font-size:13px;font-weight:bold;margin-top:18px}
+input,select{width:100%;padding:14px;font-size:16px;border:1px solid #ddd;border-radius:12px;margin-top:7px;background:#fff}
+.measure{margin-top:20px}
+.measure-row{display:flex;align-items:center;gap:8px;margin:10px 0}
+.measure-row label{width:55px;margin:0;font-weight:normal;color:#666}
+.measure-row input{font-size:22px;text-align:right;margin:0;flex:1}
+.unit{font-size:14px;width:22px}
+.average{margin-top:20px;padding:18px;border:1px solid #eee;background:#fafafa;border-radius:14px;display:flex;justify-content:space-between;align-items:center}
+.average strong{font-size:25px}
+.buttons{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(520px,100%);display:flex;gap:10px;padding:12px 18px;padding-bottom:calc(12px + env(safe-area-inset-bottom));background:rgba(255,255,255,.97);border-top:1px solid #eee}
+button{border:0;border-radius:13px;padding:15px;font-size:15px;font-weight:bold}
+.back{flex:1;background:#eee;color:#222}
+.next{flex:2;background:#222;color:#fff}
+.next:disabled{opacity:.35}
+.item{display:flex;justify-content:space-between;padding:13px 0;border-bottom:1px solid #eee}
+.small{font-size:11px;color:#777}
 </style>
 </head>
 
 <body>
-
 <div class="app">
 
 <header>
 <div class="brand">PINFORME</div>
 <div class="sub">Miniature Pinscher　採寸ナビ｜スマホ版</div>
-
-<div class="progress">
-<span id="progress"></span>
-</div>
+<div class="progress"><span id="progress"></span></div>
 </header>
 
 <main id="main"></main>
 
 <div class="buttons">
 <button class="back" id="back">戻る</button>
-<button class="next" id="next">採寸スタート →</button>
+<button class="next" id="next">確認しました →</button>
 </div>
 
 </div>
 
 <script>
-
 const items=[
+["首まわり（首の付け根）","首の付け根を一周測ります。","首の付け根を一周"],
+["胴まわり","一番胸が張っているポイントを一周測ります。前脚の脇あたりから2〜3cm後ろが目安です。","胸が一番張っている部分を一周"],
+["ウェスト","胴体で一番細い部分を一周測ります。","一番細い部分を一周"],
+["着丈","首まわりを測った位置から尻尾の付け根までを測ります。","首まわりの位置から尻尾の付け根まで"],
+["前身頃","首まわりの位置から、お腹側へ服をかぶせたい位置までを測ります。","首まわりの位置からお腹側へ"],
+["前脚の太さ","前脚の太い部分と細い部分を測ります。","前脚の太いところ・細いところ"],
+["後脚の太さ","後脚の太い部分と細い部分を測ります。","後脚の太いところ・細いところ"],
+["前脚の長さ","脇から関節ごとに地面までを測ります。","脇から関節ごとに地面まで"],
+["後脚の長さ","⑦で測ったラインからスタートし、関節ごとに地面まで測ります。","⑦の測定ラインから関節ごとに地面まで"],
+["首の長さ（ネック）","首まわりの位置から後頭部に入る手前までを測ります。","首まわりの位置から後頭部手前まで"],
+["首の長さ（スヌード）","首まわりの位置から額までを測ります。","首まわりの位置から額まで"],
+["頭周り","額を通って頭を一周測ります。","額を通って頭を一周"],
+["前脚の幅","犬を前から見たときの左右の前脚の間の幅を測ります。","左右の前脚の間"],
+["首の真ん中","首の中で一番細い部分を測ります。","首の一番細い部分"],
+["尻尾の太さ","尻尾の付け根の一番太い部分を測ります。","尻尾の付け根の一番太い部分"]
+];
 
-["首まわり（首の付け根）",
-"首の付け根を一周測ります。",
-"首の付け根を一周"],
-
-["胴まわり",
-"一番胸が張っているポイントを一周測ります。前脚の脇あたりから2〜3cm後ろが目安です。",
-"胸が一番張っている部分を一周"],
-
-["ウェスト",
-"胴体で一番細い部分を一周測ります。",
-"一番細い部分を一周"],
-
-["着丈",
-"首まわりを測った位置から尻尾の付け根までを測ります。尻尾は軽く持ち上げます。",
-"首まわりの位置から尻尾の付け根まで"],
-
-["前身頃",
-"首まわりを測った位置から、お腹側へ服をかぶせたい位置までを測ります。",
-"首まわりの位置からお腹側へ"],
-
-["前脚の太さ",
-"前脚の太い部分と細い部分を測ります。",
-"前脚の太いところ・細いところ"],
-
-["後脚の太さ",
-"後脚の太い部分と細い部分を測ります。",
-"後脚の太いところ・細いところ"],
-
-["前脚の長さ",
-"脇から関節ごとに地面までを測ります。",
-"脇から関節ごとに地面まで"],
-
-["後脚の長さ",
-"⑦で測ったラインからスタートし、関節ごとに地面まで測ります。",
-"⑦の測定ラインから関節ごとに地面まで"],
-
-["首の長さ（ネック）",
-"首まわりを測った位置から後頭部に入る手前までを測ります。",
-"首まわりの位置から後頭部手前まで"],
-
-["首の長さ（スヌード）",
-"首まわりを測った位置から額までを測ります。",
-"首まわりの位置から額まで"],
-
-["頭周り",
-"額を通って頭を一周測ります。",
-"額を通って頭を一周"],
-
-["前脚の幅",
-"犬を前から見たときの左右の前脚の間の幅を測ります。",
-"左右の前脚の間"],
-
-["首の真ん中",
-"首の中で一番細い部分を測ります。",
-"首の一番細い部分"],
-
-["尻尾の太さ",
-"尻尾の付け根の一番太い部分を測ります。",
-"尻尾の付け根の一番太い部分"]
-
+const points=[
+["① リラックスした状態で","わんちゃんが緊張していると体が伸びたり縮んだりします。できるだけ落ち着いた状態で測りましょう。"],
+["② 4本脚で自然に立たせる","座った状態や伏せた状態ではなく、自然に4本脚で立った状態を基本にします。"],
+["③ メジャーを締めすぎない","体に沿わせますが、食い込むほど強く締めないでください。"],
+["④ 毛をできるだけおさえる","毛の厚みで数値が変わらないよう、できる範囲で毛をおさえて測ります。"],
+["⑤ 同じ場所を3回測る","1回だけでは誤差が出ることがあります。できるだけ同じ位置を3回測りましょう。"],
+["⑥ わんちゃんの安全を最優先","嫌がったり動いたりする場合は無理をせず、一度休憩してください。"]
 ];
 
 let step=0;
-
-let values=Array.from(
-{length:items.length},
-()=>["","",""]
-);
+let agreed=false;
+let values=Array.from({length:15},()=>["","",""]);
 
 const main=document.getElementById("main");
 const next=document.getElementById("next");
 const back=document.getElementById("back");
 const progress=document.getElementById("progress");
 
-function updateProgress(){
-
-let percent=((step+1)/(items.length+2))*100;
-
-progress.style.width=percent+"%";
-
-}
-
 function render(){
+progress.style.width=(((step+1)/18)*100)+"%";
 
-updateProgress();
-
-if(step===0){
-renderStart();
-return;
-}
-
-if(step>=1 && step<=15){
-renderMeasure(step-1);
-return;
-}
-
+if(step===0)return renderPoints();
+if(step===1)return renderInfo();
+if(step>=2&&step<=16)return renderMeasure(step-2);
 renderFinish();
-
 }
 
-function renderStart(){
-
+function renderPoints(){
 main.innerHTML=`
+<div class="step">WELCOME</div>
+<h1>採寸前に<br>大切な6つのポイント</h1>
+<p class="desc">正確な採寸と、わんちゃんの安全のために、まずこちらをご確認ください。</p>
+${points.map(p=>`
+<div class="point">
+<b>${p[0]}</b>
+<span>${p[1]}</span>
+</div>`).join("")}
+<div class="agree">
+<input type="checkbox" id="agree">
+<label for="agree" style="margin:0;font-weight:normal">
+6つのポイントを確認し、内容に同意します
+</label>
+</div>`;
+next.textContent="同意して入力画面へ →";
+next.disabled=true;
+document.getElementById("agree").onchange=e=>{
+agreed=e.target.checked;
+next.disabled=!agreed;
+};
+back.disabled=true;
+}
 
+function renderInfo(){
+main.innerHTML=`
 <div class="step">START</div>
-
 <h1>わんちゃん情報</h1>
-
-<p class="desc">
-まずは基本情報を入力してください。
-</p>
-
+<p class="desc">まずは基本情報を入力してください。</p>
 <label>わんちゃんのお名前</label>
-<input id="dogName" placeholder="例：PINちゃん">
-
+<input id="name" placeholder="例：PINちゃん">
 <label>性別</label>
-<select id="dogSex">
+<select id="sex">
 <option value="">選択してください</option>
 <option>オス</option>
 <option>メス</option>
 </select>
-
 <label>生年月日</label>
-<input id="dogBirth" type="date">
-
+<input id="birth" type="date">
 <label>体重（kg）</label>
-<input id="dogWeight" inputmode="decimal" placeholder="例：3.2">
-
+<input id="weight" inputmode="decimal" placeholder="例：3.2">
 <div class="card">
-
-📏 採寸のポイント<br><br>
-
-・わんちゃんを4本脚で自然に立たせる<br>
-・メジャーをきつく締めすぎない<br>
-・できるだけ毛をおさえて測る<br>
-・分からない項目は無理に測らなくても大丈夫です
-
-</div>
-
-`;
-
-back.disabled=true;
-
+採寸は、わんちゃんがリラックスした状態で行ってください。<br>
+メジャーは体に沿わせ、きつすぎず、ゆるすぎないようにしてください。
+</div>`;
 next.textContent="採寸スタート →";
-
+next.disabled=false;
+back.disabled=false;
 }
 
-function renderMeasure(index){
-
-let item=items[index];
+function renderMeasure(i){
+const x=items[i];
 
 main.innerHTML=`
-
-<div class="step">STEP ${index+1} / 15</div>
-
-<h1>${index+1}. ${item[0]}</h1>
-
-<p class="desc">
-${item[1]}
-</p>
-
-<div class="card">
-
-📏 測るポイント<br><br>
-
-<b>${item[2]}</b><br><br>
-
-できるだけ毛をおさえ、
-わんちゃんを4本脚で自然に立たせて測ってください。
-
-</div>
-
+<div class="step">STEP ${i+1} / 15</div>
+<h1>${i+1}. ${x[0]}</h1>
+<p class="desc">${x[1]}</p>
+<div class="card">📏 測るポイント<br><br><b>${x[2]}</b><br><br>できるだけ毛をおさえ、4本脚で自然に立たせて測ってください。</div>
 <div class="measure">
-
+${[0,1,2].map(n=>`
 <div class="measure-row">
-<label>1回目</label>
-<input class="measure-input" inputmode="decimal"
-value="${values[index][0]}"
-placeholder="0.0">
+<label>${n+1}回目</label>
+<input class="m" inputmode="decimal" value="${values[i][n]}" placeholder="0.0">
 <span class="unit">cm</span>
+</div>`).join("")}
 </div>
-
-<div class="measure-row">
-<label>2回目</label>
-<input class="measure-input" inputmode="decimal"
-value="${values[index][1]}"
-placeholder="0.0">
-<span class="unit">cm</span>
-</div>
-
-<div class="measure-row">
-<label>3回目</label>
-<input class="measure-input" inputmode="decimal"
-value="${values[index][2]}"
-placeholder="0.0">
-<span class="unit">cm</span>
-</div>
-
-</div>
-
 <div class="average">
-
 <span>平均値</span>
-
-<strong id="average">—</strong>
-
+<strong id="avg">—</strong>
 <span class="unit">cm</span>
-
 </div>
+<div class="small" id="status">3回測ると平均値を表示します。</div>`;
 
-<div class="small" id="status">
-3回測ると平均値を表示します。
-</div>
-
-`;
-
-document
-.querySelectorAll(".measure-input")
-.forEach((input,i)=>{
-
-input.addEventListener("input",()=>{
-
-values[index][i]=input.value;
-
-calculate(index);
-
+document.querySelectorAll(".m").forEach((e,n)=>{
+e.oninput=()=>{
+values[i][n]=e.value;
+calc(i);
+};
 });
-
-});
-
-calculate(index);
-
-back.disabled=false;
-
-next.textContent=
-index===14
-?"結果を確認 →"
-:"次へ →";
-
+calc(i);
+next.textContent=i===14?"結果を確認 →":"次へ →";
+next.disabled=false;
 }
 
-function calculate(index){
-
-let nums=values[index]
-.map(Number)
-.filter(n=>Number.isFinite(n)&&n>0);
-
-let average=
-nums.length
-?(nums.reduce((a,b)=>a+b,0)/nums.length).toFixed(1)
-:"—";
-
-document.getElementById("average").textContent=average;
-
+function calc(i){
+let a=values[i].map(Number).filter(n=>Number.isFinite(n)&&n>0);
+let avg=a.length?(a.reduce((s,n)=>s+n,0)/a.length).toFixed(1):"—";
+document.getElementById("avg").textContent=avg;
 document.getElementById("status").textContent=
-nums.length===3
-?"3回の平均値を表示しています。"
-:`${nums.length}回入力済み（3回測定がおすすめ）`;
-
+a.length===3?"3回の平均値を表示しています。":`${a.length}回入力済み（3回測定がおすすめ）`;
 }
 
 function renderFinish(){
-
 main.innerHTML=`
-
 <div class="step">FINISH</div>
-
 <h1>採寸結果</h1>
-
-<p class="desc">
-入力した採寸結果を確認してください。
-</p>
-
-${items.map((item,index)=>{
-
-let nums=values[index]
-.map(Number)
-.filter(n=>Number.isFinite(n)&&n>0);
-
-let average=
-nums.length
-?(nums.reduce((a,b)=>a+b,0)/nums.length).toFixed(1)
-:"未入力";
-
-return`
-
-<div class="item">
-
-<span>
-${index+1}. ${item[0]}<br>
-<span class="small">${nums.length}回測定</span>
-</span>
-
-<b>${average} cm</b>
-
-</div>
-
-`;
-
+<p class="desc">入力した結果を確認してください。</p>
+${items.map((x,i)=>{
+let a=values[i].map(Number).filter(n=>n>0);
+let avg=a.length?(a.reduce((s,n)=>s+n,0)/a.length).toFixed(1):"未入力";
+return `<div class="item"><span>${i+1}. ${x[0]}<br><span class="small">${a.length}回測定</span></span><b>${avg} cm</b></div>`;
 }).join("")}
-
-<div class="card">
-
-現在はテスト版です。<br><br>
-
-この段階では入力データを外部へ送信・保存していません。
-
-</div>
-
-`;
-
+<div class="card">現在はテスト版です。入力データは外部へ送信・保存していません。</div>`;
 next.textContent="最初に戻る";
-
+next.disabled=false;
 }
 
 next.onclick=()=>{
-
-if(step<16){
-
-step++;
-
+if(step===0&&agreed){
+step=1;
 render();
-
-}else{
-
-step=0;
-
-values=Array.from(
-{length:items.length},
-()=>["","",""]
-);
-
-render();
-
+return;
 }
-
+if(step<17){
+step++;
+render();
+}else{
+step=0;
+agreed=false;
+values=Array.from({length:15},()=>["","",""]);
+render();
+}
 };
 
 back.onclick=()=>{
-
 if(step>0){
-
 step--;
-
 render();
-
 }
-
 };
 
 render();
-
 </script>
 
 </body>
