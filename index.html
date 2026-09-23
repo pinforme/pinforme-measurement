@@ -801,15 +801,80 @@ document.getElementById("progress");
 
 
 /* =====================================
-   ページ最上部へ
+   ページ最上部へ ＋ ズームリセット
 ===================================== */
 
 function scrollTop(){
 
+/*
+   ページ移動時に現在のスクロール位置を
+   一番上へ戻す
+*/
+
 window.scrollTo({
 top:0,
+left:0,
 behavior:"instant"
 });
+
+
+/*
+   iPhoneのピンチズームは普段そのまま使用可能。
+   ページ移動したタイミングだけ
+   viewportを一時的に100%へ戻す。
+*/
+
+const viewport=
+document.querySelector('meta[name="viewport"]');
+
+if(!viewport)return;
+
+
+/* 現在の設定を一時的に保存 */
+
+const originalContent=
+viewport.getAttribute("content");
+
+
+/* 一度ズームを制限 */
+
+viewport.setAttribute(
+"content",
+"width=device-width,initial-scale=1,maximum-scale=1"
+);
+
+
+/* iPhone側に反映させる */
+
+setTimeout(()=>{
+
+window.scrollTo({
+top:0,
+left:0,
+behavior:"instant"
+});
+
+
+/* ピンチズームを再び許可 */
+
+viewport.setAttribute(
+"content",
+originalContent ||
+"width=device-width,initial-scale=1"
+);
+
+
+setTimeout(()=>{
+
+window.scrollTo({
+top:0,
+left:0,
+behavior:"instant"
+});
+
+},80);
+
+},50);
 
 }
 
@@ -1044,17 +1109,17 @@ placeholder="例：PINちゃん"
 </option>
 
 <option
-value="オス"
-${dogInfo.sex==="オス"?"selected":""}
+value="男の子"
+${dogInfo.sex==="男の子"?"selected":""}
 >
-オス
+男の子
 </option>
 
 <option
-value="メス"
-${dogInfo.sex==="メス"?"selected":""}
+value="女の子"
+${dogInfo.sex==="女の子"?"selected":""}
 >
-メス
+女の子
 </option>
 
 </select>
