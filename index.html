@@ -1,19 +1,24 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
+
 <meta charset="UTF-8">
 
 <meta name="viewport"
-      content="width=device-width, initial-scale=1.0,
-      maximum-scale=1.0, user-scalable=no">
+      content="width=device-width,
+      initial-scale=1.0,
+      maximum-scale=1.0,
+      user-scalable=no">
 
 <title>PINFORME 採寸ナビ</title>
 
+
 <style>
 
-/* =========================
-   基本設定
-========================= */
+/* =========================================================
+   基本
+========================================================= */
 
 *{
   box-sizing:border-box;
@@ -54,9 +59,9 @@ select{
 }
 
 
-/* =========================
+/* =========================================================
    ヘッダー
-========================= */
+========================================================= */
 
 .header{
   position:sticky;
@@ -100,9 +105,9 @@ select{
 }
 
 
-/* =========================
+/* =========================================================
    ページ
-========================= */
+========================================================= */
 
 .page{
   display:none;
@@ -132,9 +137,9 @@ p{
 }
 
 
-/* =========================
-   トップタイトル
-========================= */
+/* =========================================================
+   トップ
+========================================================= */
 
 .main-title{
   text-align:center;
@@ -162,11 +167,6 @@ p{
   letter-spacing:2px;
 }
 
-
-/* =========================
-   説明
-========================= */
-
 .intro{
   background:#f5f5f5;
   border-left:4px solid #222;
@@ -177,9 +177,9 @@ p{
 }
 
 
-/* =========================
-   入力エリア
-========================= */
+/* =========================================================
+   入力
+========================================================= */
 
 .field{
   margin-bottom:18px;
@@ -227,9 +227,9 @@ select:focus{
 }
 
 
-/* =========================
-   名前＋くん/ちゃん
-========================= */
+/* =========================================================
+   名前
+========================================================= */
 
 .name-suffix-row{
   display:flex;
@@ -283,9 +283,9 @@ select:focus{
 }
 
 
-/* =========================
+/* =========================================================
    日付
-========================= */
+========================================================= */
 
 .date-field{
   width:100%;
@@ -299,9 +299,9 @@ select:focus{
 }
 
 
-/* =========================
-   チェック項目
-========================= */
+/* =========================================================
+   チェック
+========================================================= */
 
 .check-list{
   margin-top:20px;
@@ -355,9 +355,9 @@ select:focus{
 }
 
 
-/* =========================
+/* =========================================================
    ボタン
-========================= */
+========================================================= */
 
 .button-area{
   margin-top:28px;
@@ -402,9 +402,9 @@ select:focus{
 }
 
 
-/* =========================
-   わんちゃん情報タイトル
-========================= */
+/* =========================================================
+   犬情報
+========================================================= */
 
 .dog-page-title{
   text-align:center;
@@ -422,9 +422,9 @@ select:focus{
 }
 
 
-/* =========================
+/* =========================================================
    性別
-========================= */
+========================================================= */
 
 .sex-row{
   display:flex;
@@ -459,9 +459,9 @@ select:focus{
 }
 
 
-/* =========================
+/* =========================================================
    写真
-========================= */
+========================================================= */
 
 .photo-box{
   border:1px dashed #aaa;
@@ -485,9 +485,9 @@ select:focus{
 }
 
 
-/* =========================
+/* =========================================================
    採寸ページ
-========================= */
+========================================================= */
 
 .measure-header{
   text-align:center;
@@ -514,11 +514,6 @@ select:focus{
   color:#666;
 }
 
-
-/* =========================
-   採寸説明
-========================= */
-
 .measure-description{
   margin:12px 0 16px;
   padding:14px;
@@ -541,11 +536,6 @@ select:focus{
   white-space:pre-line;
 }
 
-
-/* =========================
-   採寸注意
-========================= */
-
 .measure-note{
   margin:10px 2px 14px;
   padding:10px 12px;
@@ -556,11 +546,6 @@ select:focus{
   line-height:1.6;
   color:#888;
 }
-
-
-/* =========================
-   採寸イラスト
-========================= */
 
 .measure-illustration{
   width:100%;
@@ -579,11 +564,6 @@ select:focus{
   max-width:420px;
   height:auto;
 }
-
-
-/* =========================
-   採寸入力
-========================= */
 
 .measure-group{
   margin-bottom:17px;
@@ -640,9 +620,9 @@ select:focus{
 }
 
 
-/* =========================
-   戻るボタン
-========================= */
+/* =========================================================
+   戻る
+========================================================= */
 
 .back-area{
   margin-top:14px;
@@ -659,9 +639,9 @@ select:focus{
 }
 
 
-/* =========================
-   完了画面
-========================= */
+/* =========================================================
+   完了
+========================================================= */
 
 .thanks{
   text-align:center;
@@ -691,9 +671,9 @@ select:focus{
 }
 
 
-/* =========================
-   結果
-========================= */
+/* =========================================================
+   通常の結果
+========================================================= */
 
 .result-card{
   margin-bottom:12px;
@@ -733,9 +713,18 @@ select:focus{
 }
 
 
-/* =========================
-   レスポンシブ
-========================= */
+/* =========================================================
+   印刷用専用ページ
+========================================================= */
+
+.print-sheet{
+  display:none;
+}
+
+
+/* =========================================================
+   スマホ
+========================================================= */
 
 @media(max-width:360px){
 
@@ -778,153 +767,369 @@ select:focus{
 }
 
 
-/* ==================================================
-   印刷設定
-   A4・1枚用
-================================================== */
+/* =========================================================
+   ★ A4横 印刷
+========================================================= */
 
 @media print{
 
   @page{
-    size:A4 portrait;
-    margin:8mm;
+    size:A4 landscape;
+    margin:5mm;
   }
 
   html,
   body{
-    background:#fff !important;
+    width:100%;
+    height:100%;
     margin:0 !important;
     padding:0 !important;
-    width:100% !important;
+    background:#fff !important;
   }
 
   body{
-    -webkit-print-color-adjust:exact;
-    print-color-adjust:exact;
+    -webkit-print-color-adjust:exact !important;
+    print-color-adjust:exact !important;
   }
 
   .app{
-    width:100% !important;
-    max-width:none !important;
-    min-height:0 !important;
-    margin:0 !important;
-    box-shadow:none !important;
-    background:#fff !important;
-  }
-
-  .header{
     display:none !important;
   }
 
-  .page{
-    display:none !important;
-    padding:0 !important;
-  }
-
-  #page18{
+  .print-sheet{
     display:block !important;
-    padding:0 !important;
+    width:100%;
+    height:auto;
+    color:#111;
+    background:#fff;
+    font-family:
+      Arial,
+      "Noto Sans JP",
+      sans-serif;
   }
 
-  #page18 > h1{
-    display:block !important;
-    margin:0 0 4mm !important;
-    padding:0 0 2mm !important;
-    font-size:18px !important;
-    line-height:1.2 !important;
-    border-bottom:2px solid #111 !important;
+
+  /* -----------------------------------------
+     印刷ヘッダー
+  ----------------------------------------- */
+
+  .print-top{
+    display:grid;
+    grid-template-columns:46% 54%;
+    gap:4mm;
+    border-bottom:1.5px solid #111;
+    padding-bottom:2.5mm;
+    margin-bottom:2.5mm;
   }
 
-  #resultContent{
-    width:100% !important;
-    display:grid !important;
-    grid-template-columns:1fr 1fr !important;
-    column-gap:5mm !important;
-    row-gap:2mm !important;
-    align-items:start !important;
+  .print-brand{
+    display:flex;
+    align-items:flex-start;
+    gap:3mm;
   }
 
-  #resultContent .result-card{
-    margin:0 !important;
-    border:1px solid #aaa !important;
-    border-radius:3px !important;
-    overflow:hidden !important;
-    break-inside:avoid !important;
-    page-break-inside:avoid !important;
+  .print-brand-mark{
+    width:15mm;
+    height:15mm;
+    border:1px solid #111;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:8mm;
+    line-height:1;
   }
 
-  #resultContent .result-card:first-child{
-    grid-column:1 / -1 !important;
+  .print-brand-name{
+    font-size:21pt;
+    font-weight:900;
+    letter-spacing:2.5px;
+    line-height:1;
   }
 
-  #resultContent .result-title{
-    padding:2mm 2.5mm !important;
-    background:#111 !important;
-    color:#fff !important;
-    font-size:9px !important;
-    line-height:1.2 !important;
-    min-height:0 !important;
+  .print-brand-sub{
+    margin-top:1.2mm;
+    font-size:7pt;
+    color:#555;
+    letter-spacing:1.2px;
   }
 
-  #resultContent .result-body{
-    padding:1mm 2.5mm !important;
+  .print-sheet-title{
+    margin-top:2mm;
+    font-size:12pt;
+    font-weight:900;
   }
 
-  #resultContent .result-row{
-    padding:1mm 0 !important;
-    min-height:0 !important;
-    font-size:8px !important;
-    line-height:1.25 !important;
-    border-bottom:1px solid #ddd !important;
+  .print-sheet-caption{
+    margin-top:.8mm;
+    font-size:6.5pt;
+    color:#666;
   }
 
-  #resultContent .result-value{
-    font-size:8px !important;
+
+  /* -----------------------------------------
+     基本情報
+  ----------------------------------------- */
+
+  .print-info{
+    border:1px solid #999;
+    padding:2mm;
+    min-height:28mm;
   }
 
-  #resultContent .result-card:first-child .result-body{
-    display:grid !important;
-    grid-template-columns:repeat(5,1fr) !important;
-    column-gap:4mm !important;
+  .print-section-label{
+    font-size:7pt;
+    font-weight:900;
+    margin-bottom:1.5mm;
+    letter-spacing:.5px;
   }
 
-  #resultContent .result-card:first-child .result-row{
-    display:flex !important;
-    flex-direction:column !important;
-    gap:1mm !important;
-    border-bottom:none !important;
+  .print-info-grid{
+    display:grid;
+    grid-template-columns:
+      1.25fr
+      1.5fr
+      1fr
+      1.25fr
+      .9fr;
+    gap:1.5mm;
   }
 
-  #resultContent .result-card:first-child .result-value{
-    font-size:9px !important;
+  .print-info-item{
+    border-bottom:1px solid #aaa;
+    min-height:11mm;
   }
 
-  #page18 .button-area,
-  #page18 .back-area{
-    display:none !important;
+  .print-info-label{
+    display:block;
+    font-size:5.5pt;
+    color:#666;
+    margin-bottom:1mm;
   }
 
-  #resultContent .intro{
-    grid-column:1 / -1 !important;
-    margin:0 !important;
-    padding:3mm !important;
-    font-size:9px !important;
+  .print-info-value{
+    display:block;
+    font-size:8pt;
+    font-weight:800;
+    min-height:4mm;
+  }
+
+
+  /* -----------------------------------------
+     上部メイン
+  ----------------------------------------- */
+
+  .print-main{
+    display:grid;
+    grid-template-columns:42% 58%;
+    gap:3mm;
+    margin-bottom:2.5mm;
+  }
+
+  .print-dog-panel{
+    border:1px solid #aaa;
+    padding:2mm;
+    height:55mm;
+  }
+
+  .print-panel-title{
+    font-size:7pt;
+    font-weight:900;
+    padding-bottom:1mm;
+    margin-bottom:1mm;
+    border-bottom:1px solid #ccc;
+  }
+
+  .print-dog-svg{
+    width:100%;
+    height:43mm;
+  }
+
+  .print-dog-svg svg{
+    width:100%;
+    height:100%;
+  }
+
+
+  /* -----------------------------------------
+     注意事項
+  ----------------------------------------- */
+
+  .print-notes{
+    border:1px solid #aaa;
+    padding:2mm;
+    height:55mm;
+  }
+
+  .print-note-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:1.5mm 3mm;
+  }
+
+  .print-note{
+    display:flex;
+    gap:1.5mm;
+    font-size:5.8pt;
+    line-height:1.45;
+  }
+
+  .print-note-number{
+    flex:none;
+    font-weight:900;
+    font-size:7pt;
+  }
+
+  .print-note strong{
+    display:block;
+    font-size:6.2pt;
+    margin-bottom:.4mm;
+  }
+
+
+  /* -----------------------------------------
+     採寸表
+  ----------------------------------------- */
+
+  .print-measurements{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    grid-template-rows:repeat(5, 1fr);
+    gap:1.6mm;
+    width:100%;
+  }
+
+  .print-measure-card{
+    border:1px solid #999;
+    min-height:28mm;
+    break-inside:avoid;
+    page-break-inside:avoid;
+    overflow:hidden;
+  }
+
+  .print-measure-card-title{
+    min-height:7mm;
+    padding:1.3mm 2mm;
+    background:#f0f0f0;
+    border-bottom:1px solid #aaa;
+    display:flex;
+    align-items:center;
+    gap:1.5mm;
+    font-size:6.8pt;
+    font-weight:900;
+    line-height:1.15;
+  }
+
+  .print-number{
+    font-size:8pt;
+    font-weight:900;
+  }
+
+  .print-measure-body{
+    padding:1.5mm 2mm;
+  }
+
+  .print-location{
+    font-size:5.4pt;
+    color:#666;
+    min-height:3.5mm;
+    margin-bottom:1mm;
+    line-height:1.25;
+  }
+
+  .print-values{
+    display:grid;
+    grid-template-columns:
+      repeat(3,1fr);
+    gap:1mm;
+  }
+
+  .print-value{
+    text-align:center;
+    border-right:1px solid #ddd;
+  }
+
+  .print-value:last-child{
+    border-right:none;
+  }
+
+  .print-value-label{
+    font-size:4.8pt;
+    color:#777;
+    display:block;
+    margin-bottom:.5mm;
+  }
+
+  .print-value-number{
+    font-size:7pt;
+    font-weight:800;
+    white-space:nowrap;
+  }
+
+  .print-average{
+    margin-top:1.2mm;
+    padding-top:1mm;
+    border-top:1px solid #aaa;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+
+  .print-average-label{
+    font-size:5.3pt;
+    font-weight:700;
+  }
+
+  .print-average-value{
+    font-size:8pt;
+    font-weight:900;
+  }
+
+
+  /* -----------------------------------------
+     フッター
+  ----------------------------------------- */
+
+  .print-footer{
+    margin-top:2mm;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    border-top:1px solid #aaa;
+    padding-top:1.5mm;
+    font-size:5.5pt;
+    color:#666;
+  }
+
+}
+
+
+/* =========================================================
+   画面表示時に印刷シートを完全非表示
+========================================================= */
+
+@media screen{
+
+  .print-sheet{
+    display:none;
   }
 
 }
 
 </style>
+
 </head>
 
 
 <body>
 
+
+<!-- =========================================================
+     通常アプリ
+========================================================= -->
+
 <div class="app">
 
-
-<!-- =========================
-     ヘッダー
-========================= -->
 
 <header class="header">
 
@@ -948,10 +1153,9 @@ select:focus{
 </header>
 
 
-<!-- ==================================================
-     PAGE 0
-     基本情報
-================================================== -->
+<!-- =========================================================
+     PAGE 0 基本情報
+========================================================= -->
 
 <section
   id="page0"
@@ -979,20 +1183,12 @@ select:focus{
   </div>
 
 
-  <!-- ご主人様 -->
-
   <div class="field">
 
     <label>
-
       ご主人様の名前
-
-      <span class="required">
-        必須
-      </span>
-
+      <span class="required">必須</span>
     </label>
-
 
     <input
       id="ownerName"
@@ -1002,18 +1198,11 @@ select:focus{
   </div>
 
 
-  <!-- わんちゃんの名前 -->
-
   <div class="field">
 
     <label>
-
       わんちゃんの名前
-
-      <span class="required">
-        必須
-      </span>
-
+      <span class="required">必須</span>
     </label>
 
 
@@ -1028,7 +1217,6 @@ select:focus{
 
       <div class="suffix-buttons">
 
-
         <label class="suffix-option">
 
           <input
@@ -1037,9 +1225,7 @@ select:focus{
             value="くん"
             checked>
 
-          <span>
-            くん
-          </span>
+          <span>くん</span>
 
         </label>
 
@@ -1051,12 +1237,9 @@ select:focus{
             name="dogSuffix"
             value="ちゃん">
 
-          <span>
-            ちゃん
-          </span>
+          <span>ちゃん</span>
 
         </label>
-
 
       </div>
 
@@ -1065,20 +1248,12 @@ select:focus{
   </div>
 
 
-  <!-- 犬種 -->
-
   <div class="field">
 
     <label>
-
       犬種
-
-      <span class="required">
-        必須
-      </span>
-
+      <span class="required">必須</span>
     </label>
-
 
     <input
       id="breed"
@@ -1087,8 +1262,6 @@ select:focus{
 
   </div>
 
-
-  <!-- 採寸前の確認 -->
 
   <h2>
     採寸前に確認してください
@@ -1122,9 +1295,10 @@ select:focus{
 
       <div class="check-text">
 
-        柔らかいソファーやクッション、ベッドなどの上では体が歪み、正しい採寸ができません。
-        だからといって、フローリングで脚が滑りやすい状態も問題です。
-        フローリングの上に滑り止めとして、薄手のブランケットやバスタオルなどを敷いて採寸してください。
+        柔らかいソファーやクッション、ベッドなどの上では体が歪み、
+        正しい採寸ができません。
+        フローリングの場合は滑り止めとして薄手のブランケットや
+        バスタオルなどを敷いてください。
 
       </div>
 
@@ -1139,13 +1313,8 @@ select:focus{
 
       <div class="check-text">
 
-        寝起きではないですか？寝ていた直後は体が縮こまっている可能性があります。
-        また、すぐに伏せをしてしまったり、怖がっていたりしていませんか？
-        ついつい暴れないように高い所で測ろうとしてしまいたくなりますが、
-        体も強張り、正確な数字とは言えません。
-        寒くて震えていませんか？これもまた体も強張り、正確な数字とは言えません。
-        疲れていませんか？怪我や、普段しないような行動をする可能性もあります。
-        コンディションが悪いと採寸を嫌がりますので、避けましょう。
+        寝起き直後、怖がっている状態、寒くて震えている状態、
+        疲れている状態などは避け、リラックスした状態で測定してください。
 
       </div>
 
@@ -1160,12 +1329,8 @@ select:focus{
 
       <div class="check-text">
 
-        採寸時の犬の体勢をしっかり確認しましょう。
         4本の脚で立ち、まっすぐ前を見ている状態にします。
-        何かを覗き込むように首を伸ばしたり、
-        へっぴり腰になったり、お座りしたり、伏せたりしていない状態を作りましょう。
-        伏せた状態やお座りした状態では、それぞれ数字が変わり、正しい採寸ができません。
-        リラックスした自然な体勢がベストです。
+        お座り、伏せ、へっぴり腰などにならない自然な体勢がベストです。
 
       </div>
 
@@ -1181,8 +1346,7 @@ select:focus{
       <div class="check-text">
 
         お尻にかけてカーブが強い、胸板が厚い、
-        前脚の間隔がとても広いなど、特徴的な体型の場合は、
-        その特徴を意識して採寸しましょう。
+        前脚の間隔が広いなど、特徴的な体型も意識して採寸しましょう。
 
       </div>
 
@@ -1197,12 +1361,8 @@ select:focus{
 
       <div class="check-text">
 
-        呼吸と共に1.0cmから1.5cmほど、
-        採寸時のサイズに変化が出ます。
-        興奮状態ですと特に呼吸が大きくなるため、採寸に誤差が生じます。
-        できる限り落ち着いた状態で採寸することがベストですが、
-        大抵の犬はメジャーを少し怖がり、呼吸が大きくなります。
-        ですので、呼吸を感じながら数字を読み取りましょう。
+        呼吸によって1.0cm〜1.5cmほど変化する場合があります。
+        数字だけでなく、呼吸の動きも感じながら読み取りましょう。
 
       </div>
 
@@ -1243,10 +1403,9 @@ select:focus{
 </section>
 
 
-<!-- ==================================================
-     PAGE 1
-     わんちゃん情報
-================================================== -->
+<!-- =========================================================
+     PAGE 1 犬情報
+========================================================= -->
 
 <section
   id="page1"
@@ -1255,9 +1414,7 @@ select:focus{
 
   <h1 class="dog-page-title">
 
-    <span class="paw">
-      🐾
-    </span>
+    <span class="paw">🐾</span>
 
     <span id="dogInfoTitle"></span>
 
@@ -1268,13 +1425,9 @@ select:focus{
 
   <div class="field">
 
-    <label>
-      性別
-    </label>
-
+    <label>性別</label>
 
     <div class="sex-row">
-
 
       <label class="sex-option">
 
@@ -1283,9 +1436,7 @@ select:focus{
           name="sex"
           value="男の子">
 
-        <span>
-          男の子
-        </span>
+        <span>男の子</span>
 
       </label>
 
@@ -1297,12 +1448,9 @@ select:focus{
           name="sex"
           value="女の子">
 
-        <span>
-          女の子
-        </span>
+        <span>女の子</span>
 
       </label>
-
 
     </div>
 
@@ -1311,10 +1459,7 @@ select:focus{
 
   <div class="field">
 
-    <label>
-      生年月日
-    </label>
-
+    <label>生年月日</label>
 
     <div class="date-field">
 
@@ -1329,10 +1474,7 @@ select:focus{
 
   <div class="field">
 
-    <label>
-      体重
-    </label>
-
+    <label>体重</label>
 
     <div class="measure-input-wrap">
 
@@ -1343,9 +1485,7 @@ select:focus{
         min="0"
         placeholder="例：4.5">
 
-      <span class="cm">
-        kg
-      </span>
+      <span class="cm">kg</span>
 
     </div>
 
@@ -1354,10 +1494,7 @@ select:focus{
 
   <div class="field">
 
-    <label>
-      わんちゃんの写真
-    </label>
-
+    <label>わんちゃんの写真</label>
 
     <div class="photo-box">
 
@@ -1366,7 +1503,6 @@ select:focus{
         type="file"
         accept="image/*"
         onchange="handlePhoto(event)">
-
 
       <img
         id="photoPreview"
@@ -1405,9 +1541,9 @@ select:focus{
 </section>
 
 
-<!-- ==================================================
+<!-- =========================================================
      採寸ページ
-================================================== -->
+========================================================= -->
 
 <section
   id="measurementPage"
@@ -1421,12 +1557,10 @@ select:focus{
       class="measure-number">
     </div>
 
-
     <div
       id="measureTitle"
       class="measure-title">
     </div>
-
 
     <div
       id="measureLocation"
@@ -1436,12 +1570,9 @@ select:focus{
   </div>
 
 
-  <!-- 採寸説明 -->
-
   <div
     id="measureDescription"
     class="measure-description">
-
   </div>
 
 
@@ -1492,10 +1623,9 @@ select:focus{
 </section>
 
 
-<!-- ==================================================
-     PAGE 17
-     完了
-================================================== -->
+<!-- =========================================================
+     PAGE 17 完了
+========================================================= -->
 
 <section
   id="page17"
@@ -1515,10 +1645,8 @@ select:focus{
 
 
     <p>
-
       すべての採寸が完了しました。<br>
       入力した内容を確認できます。
-
     </p>
 
 
@@ -1539,10 +1667,9 @@ select:focus{
 </section>
 
 
-<!-- ==================================================
-     PAGE 18
-     結果
-================================================== -->
+<!-- =========================================================
+     PAGE 18 結果
+========================================================= -->
 
 <section
   id="page18"
@@ -1554,8 +1681,7 @@ select:focus{
   </h1>
 
 
-  <div
-    id="resultContent">
+  <div id="resultContent">
   </div>
 
 
@@ -1563,7 +1689,7 @@ select:focus{
 
     <button
       class="btn"
-      onclick="window.print()">
+      onclick="preparePrint()">
 
       保存・印刷
 
@@ -1590,11 +1716,332 @@ select:focus{
 </div>
 
 
+<!-- =========================================================
+     ★ 印刷専用シート
+========================================================= -->
+
+<div
+  id="printSheet"
+  class="print-sheet">
+
+
+  <!-- -----------------------------------------------
+       上部
+  ------------------------------------------------ -->
+
+  <div class="print-top">
+
+
+    <div class="print-brand">
+
+      <div class="print-brand-mark">
+        🐾
+      </div>
+
+
+      <div>
+
+        <div class="print-brand-name">
+          PINFORME
+        </div>
+
+        <div class="print-brand-sub">
+          DOG WEAR MEASUREMENT NAVI
+        </div>
+
+        <div class="print-sheet-title">
+          Miniature Pinscher　採寸表
+        </div>
+
+        <div class="print-sheet-caption">
+          正確なサイズで、より快適な着心地を。
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div class="print-info">
+
+      <div class="print-section-label">
+        基本情報
+      </div>
+
+
+      <div class="print-info-grid">
+
+
+        <div class="print-info-item">
+
+          <span class="print-info-label">
+            ご主人様
+          </span>
+
+          <span
+            id="printOwner"
+            class="print-info-value">
+          </span>
+
+        </div>
+
+
+        <div class="print-info-item">
+
+          <span class="print-info-label">
+            わんちゃんのお名前
+          </span>
+
+          <span
+            id="printDogName"
+            class="print-info-value">
+          </span>
+
+        </div>
+
+
+        <div class="print-info-item">
+
+          <span class="print-info-label">
+            犬種
+          </span>
+
+          <span
+            id="printBreed"
+            class="print-info-value">
+          </span>
+
+        </div>
+
+
+        <div class="print-info-item">
+
+          <span class="print-info-label">
+            性別
+          </span>
+
+          <span
+            id="printSex"
+            class="print-info-value">
+          </span>
+
+        </div>
+
+
+        <div class="print-info-item">
+
+          <span class="print-info-label">
+            体重
+          </span>
+
+          <span
+            id="printWeight"
+            class="print-info-value">
+          </span>
+
+        </div>
+
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- -----------------------------------------------
+       イラスト＋注意事項
+  ------------------------------------------------ -->
+
+  <div class="print-main">
+
+
+    <div class="print-dog-panel">
+
+      <div class="print-panel-title">
+        採寸ポイント
+      </div>
+
+
+      <div
+        id="printDogSvg"
+        class="print-dog-svg">
+      </div>
+
+    </div>
+
+
+    <div class="print-notes">
+
+      <div class="print-panel-title">
+        採寸時の注意点
+      </div>
+
+
+      <div class="print-note-grid">
+
+
+        <div class="print-note">
+
+          <div class="print-note-number">
+            ❶
+          </div>
+
+          <div>
+
+            <strong>
+              採寸は最低3回
+            </strong>
+
+            同じ場所を最低3回測り、
+            安定した数値を確認してください。
+
+          </div>
+
+        </div>
+
+
+        <div class="print-note">
+
+          <div class="print-note-number">
+            ❷
+          </div>
+
+          <div>
+
+            <strong>
+              測る場所
+            </strong>
+
+            柔らかい場所は避け、
+            滑りにくい安定した場所で測定してください。
+
+          </div>
+
+        </div>
+
+
+        <div class="print-note">
+
+          <div class="print-note-number">
+            ❸
+          </div>
+
+          <div>
+
+            <strong>
+              愛犬の体調
+            </strong>
+
+            寝起き、興奮、恐怖、震え、
+            疲労などの状態では避けてください。
+
+          </div>
+
+        </div>
+
+
+        <div class="print-note">
+
+          <div class="print-note-number">
+            ❹
+          </div>
+
+          <div>
+
+            <strong>
+              自然な立ち姿
+            </strong>
+
+            4本の脚で立ち、
+            前を向いた自然な姿勢で測定してください。
+
+          </div>
+
+        </div>
+
+
+        <div class="print-note">
+
+          <div class="print-note-number">
+            ❺
+          </div>
+
+          <div>
+
+            <strong>
+              体型の特徴
+            </strong>
+
+            胸板、背中のカーブ、脚幅など、
+            個体差も意識してください。
+
+          </div>
+
+        </div>
+
+
+        <div class="print-note">
+
+          <div class="print-note-number">
+            ❻
+          </div>
+
+          <div>
+
+            <strong>
+              呼吸を感じる
+            </strong>
+
+            呼吸によってサイズが変化します。
+            呼吸の動きも感じながら読み取ってください。
+
+          </div>
+
+        </div>
+
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- -----------------------------------------------
+       15項目
+  ------------------------------------------------ -->
+
+  <div
+    id="printMeasurements"
+    class="print-measurements">
+  </div>
+
+
+  <!-- -----------------------------------------------
+       フッター
+  ------------------------------------------------ -->
+
+  <div class="print-footer">
+
+    <span>
+      PINFORME　Miniature Pinscher 採寸表
+    </span>
+
+    <span>
+      採寸値は製品製作時の参考値としてご使用ください。
+    </span>
+
+  </div>
+
+</div>
+
+
 <script>
 
-/* ==================================================
+/* =========================================================
    基本データ
-================================================== */
+========================================================= */
 
 const dogInfo = {
 
@@ -1610,15 +2057,15 @@ const dogInfo = {
 };
 
 
-/* ==================================================
+/* =========================================================
    採寸項目
-================================================== */
+========================================================= */
 
 const items = [
 
   {
     number:"❶",
-    title:"首まわり（首の付け根）",
+    title:"首まわり",
     locations:[
       "首の付け根"
     ],
@@ -1658,8 +2105,7 @@ const items = [
     ],
     description:
       "首まわりを測った位置から、尻尾の付け根までを測ります。\n" +
-      "尻尾は軽く持ち上げます。\n" +
-      "首まわり同様に毛並みが変わるラインが薄っすら見えますので、そのラインまでを測ります。"
+      "尻尾は軽く持ち上げます。"
   },
 
   {
@@ -1705,9 +2151,7 @@ const items = [
       "手首 → 地面"
     ],
     description:
-      "脇から関節ごとに地面までを測ります。\n" +
-      "「脇 → 肘」「肘 → 手首」「手首 → 地面」の3か所を測ります。\n" +
-      "服を作る時の目安になります。"
+      "脇から関節ごとに地面までを測ります。"
   },
 
   {
@@ -1719,10 +2163,7 @@ const items = [
       "足首 → 地面"
     ],
     description:
-      "測るポイントは、❼で測ったラインからになります。\n" +
-      "内側でズボンが止まるポイントとなりますので、そこからスタートします。\n" +
-      "「❼のライン → 膝」「膝 → 足首」「足首 → 地面」と、関節ごとに地面までを測ります。\n" +
-      "服を作る時の目安になります。"
+      "❼で測ったラインから、関節ごとに地面までを測ります。"
   },
 
   {
@@ -1732,8 +2173,7 @@ const items = [
       "首の付け根 → 後頭部手前"
     ],
     description:
-      "首まわりを測った位置から、後頭部に入る手前までの長さを測ります。\n" +
-      "ネックデザインを決める際の参考になります。"
+      "首まわりを測った位置から、後頭部に入る手前までの長さを測ります。"
   },
 
   {
@@ -1743,8 +2183,7 @@ const items = [
       "首の付け根 → 額"
     ],
     description:
-      "首まわりを測った位置から、額までの長さを測ります。\n" +
-      "スヌードを作る際の参考になります。"
+      "首まわりを測った位置から、額までの長さを測ります。"
   },
 
   {
@@ -1754,9 +2193,7 @@ const items = [
       "額 → 頭周り一周"
     ],
     description:
-      "額から頭の周りを一周測ります。\n" +
-      "首まわりより頭まわりの方が大きい場合があります。\n" +
-      "お洋服を着せる際は頭から着せますので、密かに重要なポイントとなります。"
+      "額から頭の周りを一周測ります。"
   },
 
   {
@@ -1766,8 +2203,7 @@ const items = [
       "前脚と前脚の間"
     ],
     description:
-      "犬を前から見たときの、前脚と前脚の間の幅を測ります。\n" +
-      "体格の差、骨格の差、犬種などによって異なります。"
+      "犬を前から見たときの、前脚と前脚の間の幅を測ります。"
   },
 
   {
@@ -1793,9 +2229,9 @@ const items = [
 ];
 
 
-/* ==================================================
+/* =========================================================
    採寸データ
-================================================== */
+========================================================= */
 
 const measurements =
   items.map(item =>
@@ -1810,9 +2246,9 @@ const measurements =
 let current = 0;
 
 
-/* ==================================================
+/* =========================================================
    初期化
-================================================== */
+========================================================= */
 
 document.addEventListener(
   "DOMContentLoaded",
@@ -1824,9 +2260,9 @@ document.addEventListener(
 );
 
 
-/* ==================================================
+/* =========================================================
    ページ表示
-================================================== */
+========================================================= */
 
 function showPage(pageNumber){
 
@@ -1883,9 +2319,9 @@ function showPage(pageNumber){
 }
 
 
-/* ==================================================
-   基本情報 → わんちゃん情報
-================================================== */
+/* =========================================================
+   基本情報 → 犬情報
+========================================================= */
 
 function nextFromBasic(){
 
@@ -1991,9 +2427,9 @@ function nextFromBasic(){
 }
 
 
-/* ==================================================
-   わんちゃん情報表示
-================================================== */
+/* =========================================================
+   犬情報表示
+========================================================= */
 
 function renderInfo(){
 
@@ -2005,9 +2441,9 @@ function renderInfo(){
 }
 
 
-/* ==================================================
-   わんちゃん情報 → 採寸
-================================================== */
+/* =========================================================
+   犬情報 → 採寸
+========================================================= */
 
 function nextFromInfo(){
 
@@ -2038,9 +2474,9 @@ function nextFromInfo(){
 }
 
 
-/* ==================================================
+/* =========================================================
    写真
-================================================== */
+========================================================= */
 
 function handlePhoto(event){
 
@@ -2088,9 +2524,9 @@ function handlePhoto(event){
 }
 
 
-/* ==================================================
-   採寸ページ表示
-================================================== */
+/* =========================================================
+   採寸ページ
+========================================================= */
 
 function renderMeasurement(index){
 
@@ -2144,9 +2580,9 @@ function renderMeasurement(index){
 }
 
 
-/* ==================================================
+/* =========================================================
    入力欄
-================================================== */
+========================================================= */
 
 function renderInputs(index){
 
@@ -2249,9 +2685,9 @@ function renderInputs(index){
 }
 
 
-/* ==================================================
-   採寸値保存
-================================================== */
+/* =========================================================
+   保存
+========================================================= */
 
 function saveMeasurement(
   index,
@@ -2274,9 +2710,9 @@ function saveMeasurement(
 }
 
 
-/* ==================================================
-   平均計算
-================================================== */
+/* =========================================================
+   平均
+========================================================= */
 
 function calcAverage(values){
 
@@ -2314,10 +2750,6 @@ function calcAverage(values){
 
 }
 
-
-/* ==================================================
-   平均表示
-================================================== */
 
 function updateAverage(
   index,
@@ -2382,9 +2814,9 @@ function updateAllAverages(index){
 }
 
 
-/* ==================================================
-   採寸入力チェック
-================================================== */
+/* =========================================================
+   入力チェック
+========================================================= */
 
 function hasMeasurement(index){
 
@@ -2441,9 +2873,9 @@ function hasMeasurement(index){
 }
 
 
-/* ==================================================
+/* =========================================================
    次へ
-================================================== */
+========================================================= */
 
 function nextMeasurement(){
 
@@ -2477,9 +2909,9 @@ function nextMeasurement(){
 }
 
 
-/* ==================================================
-   ボタン状態
-================================================== */
+/* =========================================================
+   ボタン
+========================================================= */
 
 function updateMeasureButton(index){
 
@@ -2504,9 +2936,9 @@ function updateMeasureButton(index){
 }
 
 
-/* ==================================================
+/* =========================================================
    戻る
-================================================== */
+========================================================= */
 
 function goBack(){
 
@@ -2548,9 +2980,9 @@ function goBack(){
 }
 
 
-/* ==================================================
+/* =========================================================
    プログレス
-================================================== */
+========================================================= */
 
 function updateProgress(){
 
@@ -2601,16 +3033,14 @@ function updateProgress(){
 }
 
 
-/* ==================================================
-   犬のSVGイラスト
-================================================== */
+/* =========================================================
+   犬SVG
+========================================================= */
 
 function dogSvg(index){
 
   let extra = "";
 
-
-  /* ❶ 首まわり */
 
   if(index === 0){
 
@@ -2631,8 +3061,6 @@ function dogSvg(index){
   }
 
 
-  /* ❷ 胴まわり */
-
   if(index === 1){
 
     extra = `
@@ -2651,8 +3079,6 @@ function dogSvg(index){
 
   }
 
-
-  /* ❸ ウェスト */
 
   if(index === 2){
 
@@ -2682,8 +3108,6 @@ function dogSvg(index){
 
   }
 
-
-  /* ❹ 着丈 */
 
   if(index === 3){
 
@@ -2718,8 +3142,6 @@ function dogSvg(index){
   }
 
 
-  /* ❺ 前身頃 */
-
   if(index === 4){
 
     extra = `
@@ -2734,26 +3156,10 @@ function dogSvg(index){
         stroke-dasharray="8 6"
       />
 
-      <circle
-        cx="165"
-        cy="105"
-        r="5"
-        fill="#222"
-      />
-
-      <circle
-        cx="190"
-        cy="185"
-        r="5"
-        fill="#222"
-      />
-
     `;
 
   }
 
-
-  /* ❻ 前脚太さ */
 
   if(index === 5){
 
@@ -2773,8 +3179,6 @@ function dogSvg(index){
   }
 
 
-  /* ❼ 後脚太さ */
-
   if(index === 6){
 
     extra = `
@@ -2792,8 +3196,6 @@ function dogSvg(index){
 
   }
 
-
-  /* ❽ 前脚長さ */
 
   if(index === 7){
 
@@ -2835,8 +3237,6 @@ function dogSvg(index){
   }
 
 
-  /* ❾ 後脚長さ */
-
   if(index === 8){
 
     extra = `
@@ -2877,8 +3277,6 @@ function dogSvg(index){
   }
 
 
-  /* ❿ ネック */
-
   if(index === 9){
 
     extra = `
@@ -2893,26 +3291,10 @@ function dogSvg(index){
         stroke-dasharray="7 5"
       />
 
-      <circle
-        cx="165"
-        cy="105"
-        r="5"
-        fill="#222"
-      />
-
-      <circle
-        cx="145"
-        cy="72"
-        r="5"
-        fill="#222"
-      />
-
     `;
 
   }
 
-
-  /* ⓫ スヌード */
 
   if(index === 10){
 
@@ -2928,26 +3310,10 @@ function dogSvg(index){
         stroke-dasharray="7 5"
       />
 
-      <circle
-        cx="165"
-        cy="105"
-        r="5"
-        fill="#222"
-      />
-
-      <circle
-        cx="108"
-        cy="65"
-        r="5"
-        fill="#222"
-      />
-
     `;
 
   }
 
-
-  /* ⓬ 頭周り */
 
   if(index === 11){
 
@@ -2968,8 +3334,6 @@ function dogSvg(index){
   }
 
 
-  /* ⓭ 前脚幅 */
-
   if(index === 12){
 
     extra = `
@@ -2984,26 +3348,10 @@ function dogSvg(index){
         stroke-dasharray="7 5"
       />
 
-      <circle
-        cx="188"
-        cy="165"
-        r="5"
-        fill="#222"
-      />
-
-      <circle
-        cx="230"
-        cy="165"
-        r="5"
-        fill="#222"
-      />
-
     `;
 
   }
 
-
-  /* ⓮ 首の真ん中 */
 
   if(index === 13){
 
@@ -3022,8 +3370,6 @@ function dogSvg(index){
 
   }
 
-
-  /* ⓯ 尻尾の太さ */
 
   if(index === 14){
 
@@ -3049,24 +3395,15 @@ function dogSvg(index){
       viewBox="0 0 430 260"
       xmlns="http://www.w3.org/2000/svg">
 
-
-      <!-- 犬本体 -->
-
       <g
         fill="#d0d0d0"
         stroke="#222"
         stroke-width="3">
 
-
-        <!-- 頭 -->
-
         <circle
           cx="120"
           cy="75"
           r="34"/>
-
-
-        <!-- 耳 -->
 
         <path
           d="
@@ -3075,16 +3412,12 @@ function dogSvg(index){
             Q105 28 112 52
           "/>
 
-
         <path
           d="
             M137 53
             Q158 28 153 12
             Q132 25 127 50
           "/>
-
-
-        <!-- 首 -->
 
         <path
           d="
@@ -3095,17 +3428,11 @@ function dogSvg(index){
             Z
           "/>
 
-
-        <!-- 胴体 -->
-
         <ellipse
           cx="250"
           cy="130"
           rx="100"
           ry="52"/>
-
-
-        <!-- 前脚 -->
 
         <path
           d="
@@ -3115,7 +3442,6 @@ function dogSvg(index){
             L202 158
           "/>
 
-
         <path
           d="
             M215 158
@@ -3123,9 +3449,6 @@ function dogSvg(index){
             L232 225
             L232 158
           "/>
-
-
-        <!-- 後脚 -->
 
         <path
           d="
@@ -3135,7 +3458,6 @@ function dogSvg(index){
             L330 155
           "/>
 
-
         <path
           d="
             M335 150
@@ -3143,9 +3465,6 @@ function dogSvg(index){
             L372 208
             L355 140
           "/>
-
-
-        <!-- 尻尾 -->
 
         <path
           d="
@@ -3156,16 +3475,9 @@ function dogSvg(index){
           fill="none"
           stroke-linecap="round"/>
 
-
       </g>
 
-
-      <!-- 測定ライン -->
-
       ${extra}
-
-
-      <!-- 目 -->
 
       <circle
         cx="108"
@@ -3174,16 +3486,12 @@ function dogSvg(index){
         fill="#222"
         stroke="none"/>
 
-
-      <!-- 鼻 -->
-
       <circle
         cx="91"
         cy="79"
         r="4"
         fill="#222"
         stroke="none"/>
-
 
     </svg>
 
@@ -3192,18 +3500,14 @@ function dogSvg(index){
 }
 
 
-/* ==================================================
-   結果表示
-================================================== */
+/* =========================================================
+   結果画面
+========================================================= */
 
 function showResult(){
 
   let html = "";
 
-
-  /* =========================
-     わんちゃん情報
-  ========================= */
 
   html += `
 
@@ -3213,95 +3517,47 @@ function showResult(){
         わんちゃん情報
       </div>
 
-
       <div class="result-body">
 
-
         <div class="result-row">
-
-          <span>
-            名前
-          </span>
-
+          <span>名前</span>
           <span class="result-value">
-
             ${escapeHtml(dogInfo.name)}
             ${escapeHtml(dogInfo.suffix)}
-
           </span>
-
         </div>
 
-
         <div class="result-row">
-
-          <span>
-            犬種
-          </span>
-
+          <span>犬種</span>
           <span class="result-value">
-
             ${escapeHtml(dogInfo.breed)}
-
           </span>
-
         </div>
 
-
         <div class="result-row">
-
-          <span>
-            性別
-          </span>
-
+          <span>性別</span>
           <span class="result-value">
-
-            ${escapeHtml(
-              dogInfo.sex || "—"
-            )}
-
+            ${escapeHtml(dogInfo.sex || "—")}
           </span>
-
         </div>
 
-
         <div class="result-row">
-
-          <span>
-            生年月日
-          </span>
-
+          <span>生年月日</span>
           <span class="result-value">
-
-            ${escapeHtml(
-              dogInfo.birthDate || "—"
-            )}
-
+            ${escapeHtml(dogInfo.birthDate || "—")}
           </span>
-
         </div>
 
-
         <div class="result-row">
-
-          <span>
-            体重
-          </span>
-
+          <span>体重</span>
           <span class="result-value">
-
             ${
               dogInfo.weight
-                ? escapeHtml(
-                    dogInfo.weight
-                  ) + " kg"
-                : "—"
+              ? escapeHtml(dogInfo.weight) + " kg"
+              : "—"
             }
-
           </span>
-
         </div>
-
 
       </div>
 
@@ -3310,24 +3566,17 @@ function showResult(){
   `;
 
 
-  /* =========================
-     採寸結果
-  ========================= */
-
   items.forEach(
     (item,index) => {
 
-
       const data =
         measurements[index];
-
 
       let rows = "";
 
 
       item.locations.forEach(
         (location,groupIndex) => {
-
 
           const average =
             calcAverage(
@@ -3345,11 +3594,8 @@ function showResult(){
                   ${escapeHtml(location)}
                 </span>
 
-
                 <span class="result-value">
-
                   ${average.toFixed(1)} cm
-
                 </span>
 
               </div>
@@ -3374,7 +3620,6 @@ function showResult(){
               ${escapeHtml(item.title)}
 
             </div>
-
 
             <div class="result-body">
 
@@ -3403,9 +3648,629 @@ function showResult(){
 }
 
 
-/* ==================================================
+/* =========================================================
+   ★ 印刷用データ作成
+========================================================= */
+
+function preparePrint(){
+
+  buildPrintSheet();
+
+  setTimeout(
+    () => {
+
+      window.print();
+
+    },
+    100
+  );
+
+}
+
+
+/* =========================================================
+   印刷シート生成
+========================================================= */
+
+function buildPrintSheet(){
+
+  /* -----------------------------------------------
+     基本情報
+  ------------------------------------------------ */
+
+  document
+    .getElementById("printOwner")
+    .textContent =
+      dogInfo.owner || "—";
+
+
+  document
+    .getElementById("printDogName")
+    .textContent =
+      dogInfo.name
+        ? dogInfo.name + dogInfo.suffix
+        : "—";
+
+
+  document
+    .getElementById("printBreed")
+    .textContent =
+      dogInfo.breed || "—";
+
+
+  document
+    .getElementById("printSex")
+    .textContent =
+      dogInfo.sex || "—";
+
+
+  document
+    .getElementById("printWeight")
+    .textContent =
+      dogInfo.weight
+        ? dogInfo.weight + " kg"
+        : "—";
+
+
+  /* -----------------------------------------------
+     犬イラスト
+  ------------------------------------------------ */
+
+  document
+    .getElementById("printDogSvg")
+    .innerHTML =
+      createPrintDogSvg();
+
+
+  /* -----------------------------------------------
+     15項目
+  ------------------------------------------------ */
+
+  let html = "";
+
+
+  items.forEach(
+    (item,index) => {
+
+      html += `
+
+        <div class="print-measure-card">
+
+          <div class="print-measure-card-title">
+
+            <span class="print-number">
+              ${item.number}
+            </span>
+
+            <span>
+              ${escapeHtml(item.title)}
+            </span>
+
+          </div>
+
+
+          <div class="print-measure-body">
+
+      `;
+
+
+      item.locations.forEach(
+        (location,groupIndex) => {
+
+          const values =
+            measurements[index][groupIndex];
+
+
+          const average =
+            calcAverage(values);
+
+
+          html += `
+
+            <div class="print-location">
+              ${escapeHtml(location)}
+            </div>
+
+
+            <div class="print-values">
+
+          `;
+
+
+          values.forEach(
+            (value,valueIndex) => {
+
+              html += `
+
+                <div class="print-value">
+
+                  <span class="print-value-label">
+                    ${valueIndex + 1}回目
+                  </span>
+
+                  <span class="print-value-number">
+
+                    ${
+                      value !== ""
+                      ? escapeHtml(value) + " cm"
+                      : "—"
+                    }
+
+                  </span>
+
+                </div>
+
+              `;
+
+            }
+          );
+
+
+          html += `
+
+            </div>
+
+
+            <div class="print-average">
+
+              <span class="print-average-label">
+                平均
+              </span>
+
+              <span class="print-average-value">
+
+                ${
+                  average !== null
+                  ? average.toFixed(1) + " cm"
+                  : "—"
+                }
+
+              </span>
+
+            </div>
+
+          `;
+
+        }
+      );
+
+
+      html += `
+
+          </div>
+
+        </div>
+
+      `;
+
+    }
+  );
+
+
+  document
+    .getElementById("printMeasurements")
+    .innerHTML =
+      html;
+
+}
+
+
+/* =========================================================
+   印刷用犬イラスト
+========================================================= */
+
+function createPrintDogSvg(){
+
+  return `
+
+    <svg
+      viewBox="0 0 700 230"
+      xmlns="http://www.w3.org/2000/svg">
+
+      <!-- 犬 -->
+
+      <g
+        fill="#d9d9d9"
+        stroke="#222"
+        stroke-width="2.5">
+
+        <!-- 頭 -->
+
+        <ellipse
+          cx="105"
+          cy="80"
+          rx="42"
+          ry="35"/>
+
+
+        <!-- 耳 -->
+
+        <path
+          d="
+            M78 57
+            Q55 15 70 8
+            Q94 25 98 57
+          "/>
+
+        <path
+          d="
+            M130 56
+            Q155 18 150 7
+            Q126 23 120 55
+          "/>
+
+
+        <!-- 首 -->
+
+        <path
+          d="
+            M128 100
+            L165 105
+            L165 130
+            L130 125
+            Z
+          "/>
+
+
+        <!-- 胴 -->
+
+        <ellipse
+          cx="295"
+          cy="128"
+          rx="135"
+          ry="58"/>
+
+
+        <!-- 前脚 -->
+
+        <path
+          d="
+            M190 165
+            L190 218
+            L210 218
+            L210 165
+          "/>
+
+        <path
+          d="
+            M230 166
+            L230 218
+            L250 218
+            L250 166
+          "/>
+
+
+        <!-- 後脚 -->
+
+        <path
+          d="
+            M385 164
+            L400 218
+            L422 218
+            L415 160
+          "/>
+
+        <path
+          d="
+            M420 154
+            L445 208
+            L465 204
+            L442 146
+          "/>
+
+
+        <!-- 尻尾 -->
+
+        <path
+          d="
+            M425 112
+            Q500 65 545 98
+            Q525 126 450 133
+          "
+          fill="none"
+          stroke-linecap="round"/>
+
+      </g>
+
+
+      <!-- 目 -->
+
+      <circle
+        cx="93"
+        cy="73"
+        r="4"
+        fill="#222"
+        stroke="none"/>
+
+
+      <!-- 鼻 -->
+
+      <circle
+        cx="64"
+        cy="82"
+        r="5"
+        fill="#222"
+        stroke="none"/>
+
+
+      <!-- -----------------------------------------
+           採寸番号
+      ------------------------------------------ -->
+
+      <g
+        font-family="Arial, sans-serif"
+        font-size="14"
+        font-weight="bold"
+        text-anchor="middle">
+
+        <!-- ❶ -->
+
+        <circle
+          cx="155"
+          cy="108"
+          r="10"
+          fill="#fff"
+          stroke="#222"/>
+
+        <text
+          x="155"
+          y="113"
+          fill="#222">
+          1
+        </text>
+
+
+        <!-- ❷ -->
+
+        <circle
+          cx="295"
+          cy="80"
+          r="10"
+          fill="#fff"
+          stroke="#222"/>
+
+        <text
+          x="295"
+          y="85">
+          2
+        </text>
+
+
+        <!-- ❸ -->
+
+        <circle
+          cx="360"
+          cy="94"
+          r="10"
+          fill="#fff"
+          stroke="#222"/>
+
+        <text
+          x="360"
+          y="99">
+          3
+        </text>
+
+
+        <!-- ❹ -->
+
+        <circle
+          cx="440"
+          cy="130"
+          r="10"
+          fill="#fff"
+          stroke="#222"/>
+
+        <text
+          x="440"
+          y="135">
+          4
+        </text>
+
+
+        <!-- ❺ -->
+
+        <circle
+          cx="185"
+          cy="190"
+          r="10"
+          fill="#fff"
+          stroke="#222"/>
+
+        <text
+          x="185"
+          y="195">
+          5
+        </text>
+
+
+        <!-- ❻ -->
+
+        <circle
+          cx="200"
+          cy="215"
+          r="10"
+          fill="#fff"
+          stroke="#222"/>
+
+        <text
+          x="200"
+          y="220">
+          6
+        </text>
+
+
+        <!-- ❼ -->
+
+        <circle
+          cx="420"
+          cy="210"
+          r="10"
+          fill="#fff"
+          stroke="#222"/>
+
+        <text
+          x="420"
+          y="215">
+          7
+        </text>
+
+
+        <!-- ❿ -->
+
+        <circle
+          cx="145"
+          cy="52"
+          r="10"
+          fill="#fff"
+          stroke="#222"/>
+
+        <text
+          x="145"
+          y="57">
+          10
+        </text>
+
+
+        <!-- ⓫ -->
+
+        <circle
+          cx="110"
+          cy="32"
+          r="10"
+          fill="#fff"
+          stroke="#222"/>
+
+        <text
+          x="110"
+          y="37">
+          11
+        </text>
+
+
+        <!-- ⓬ -->
+
+        <circle
+          cx="95"
+          cy="120"
+          r="10"
+          fill="#fff"
+          stroke="#222"/>
+
+        <text
+          x="95"
+          y="125">
+          12
+        </text>
+
+
+        <!-- ⓭ -->
+
+        <circle
+          cx="220"
+          cy="150"
+          r="10"
+          fill="#fff"
+          stroke="#222"/>
+
+        <text
+          x="220"
+          y="155">
+          13
+        </text>
+
+
+        <!-- ⓮ -->
+
+        <circle
+          cx="150"
+          cy="100"
+          r="10"
+          fill="#fff"
+          stroke="#222"/>
+
+        <text
+          x="150"
+          y="105">
+          14
+        </text>
+
+
+        <!-- ⓯ -->
+
+        <circle
+          cx="455"
+          cy="120"
+          r="10"
+          fill="#fff"
+          stroke="#222"/>
+
+        <text
+          x="455"
+          y="125">
+          15
+        </text>
+
+      </g>
+
+
+      <!-- ❹ 着丈ライン -->
+
+      <line
+        x1="155"
+        y1="108"
+        x2="440"
+        y2="130"
+        stroke="#222"
+        stroke-width="2"
+        stroke-dasharray="7 5"/>
+
+
+      <!-- ⓭ 前脚幅 -->
+
+      <line
+        x1="200"
+        y1="155"
+        x2="240"
+        y2="155"
+        stroke="#222"
+        stroke-width="2"
+        stroke-dasharray="5 4"/>
+
+
+      <!-- ❽ 前脚 -->
+
+      <line
+        x1="200"
+        y1="165"
+        x2="200"
+        y2="218"
+        stroke="#222"
+        stroke-width="2"
+        stroke-dasharray="5 4"/>
+
+
+      <!-- ❾ 後脚 -->
+
+      <line
+        x1="420"
+        y1="165"
+        x2="440"
+        y2="210"
+        stroke="#222"
+        stroke-width="2"
+        stroke-dasharray="5 4"/>
+
+    </svg>
+
+  `;
+
+}
+
+
+/* =========================================================
    HTMLエスケープ
-================================================== */
+========================================================= */
 
 function escapeHtml(value){
 
@@ -3439,6 +4304,7 @@ function escapeHtml(value){
 }
 
 </script>
+
 
 </body>
 </html>
