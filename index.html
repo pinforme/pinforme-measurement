@@ -2,10 +2,16 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<meta
+name="viewport"
+content="width=device-width,initial-scale=1"
+>
+
 <title>PINFORME 採寸ナビ</title>
 
 <style>
+
 *{
 box-sizing:border-box;
 -webkit-tap-highlight-color:transparent;
@@ -14,25 +20,38 @@ box-sizing:border-box;
 html{
 scroll-behavior:auto;
 overflow-x:hidden;
+width:100%;
+max-width:100%;
 }
 
 body{
 margin:0;
 background:#f3f3f1;
 color:#222;
-font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",
-"ヒラギノ角ゴ ProN","Hiragino Kaku Gothic ProN",
-"Yu Gothic",Arial,sans-serif;
+font-family:
+-apple-system,
+BlinkMacSystemFont,
+"Helvetica Neue",
+"ヒラギノ角ゴ ProN",
+"Hiragino Kaku Gothic ProN",
+"Yu Gothic",
+Arial,
+sans-serif;
+
 word-break:normal;
 overflow-wrap:normal;
 line-break:strict;
 text-wrap:pretty;
+
 overflow-x:hidden;
+width:100%;
+max-width:100%;
 }
 
 .app{
 max-width:520px;
 width:100%;
+min-width:0;
 margin:auto;
 min-height:100vh;
 background:#fff;
@@ -85,6 +104,7 @@ padding:24px 20px 120px;
 width:100%;
 max-width:100%;
 min-width:0;
+overflow-x:hidden;
 }
 
 .step{
@@ -226,8 +246,8 @@ display:block;
 width:100%;
 max-width:100%;
 min-width:0;
-height:auto;
-min-height:50px;
+height:50px;
+padding:14px;
 }
 
 input:focus,
@@ -237,7 +257,7 @@ box-shadow:0 0 0 3px rgba(0,0,0,.04);
 }
 
 /* =========================
-   採寸時の注意点
+   注意点
 ========================= */
 
 .notice-card{
@@ -420,7 +440,7 @@ text-wrap:pretty;
 }
 
 /* =========================
-   お礼画面
+   お礼
 ========================= */
 
 .thanks{
@@ -512,6 +532,7 @@ bottom:0;
 left:50%;
 transform:translateX(-50%);
 width:min(520px,100%);
+max-width:100%;
 display:flex;
 gap:10px;
 padding:12px 18px;
@@ -560,7 +581,7 @@ opacity:.35;
 }
 
 /* =========================
-   スマホ微調整
+   スマホ
 ========================= */
 
 @media(max-width:380px){
@@ -587,8 +608,10 @@ font-size:13px;
 }
 
 }
+
 </style>
 </head>
+
 
 <body>
 
@@ -851,10 +874,42 @@ document.getElementById("progress");
 
 
 /* =====================================
-   ページ移動時に上端・左端へ
+   ★ ズーム・横位置リセット
 ===================================== */
 
-function scrollTop(){
+function resetViewport(){
+
+/*
+iPhone Safariでは
+「initial-scale=1」を一時的に強制することで
+次ページ表示時の拡大状態をリセットする。
+その後、ピンチズーム可能な設定へ戻す。
+*/
+
+const viewport=
+document.querySelector(
+'meta[name="viewport"]'
+);
+
+if(viewport){
+
+viewport.setAttribute(
+"content",
+"width=device-width,initial-scale=1,maximum-scale=1"
+);
+
+setTimeout(()=>{
+
+viewport.setAttribute(
+"content",
+"width=device-width,initial-scale=1"
+);
+
+},120);
+
+}
+
+/* 横位置も完全に左端へ */
 
 window.scrollTo({
 top:0,
@@ -876,7 +931,18 @@ behavior:"instant"
 document.documentElement.scrollLeft=0;
 document.body.scrollLeft=0;
 
-},50);
+},150);
+
+}
+
+
+/* =====================================
+   ページ移動後の表示リセット
+===================================== */
+
+function scrollTop(){
+
+resetViewport();
 
 }
 
@@ -920,9 +986,6 @@ return;
 
 }
 
-
-/* 採寸完了 → お礼画面 */
-
 if(step===items.length+2){
 
 renderThanks();
@@ -932,9 +995,6 @@ scrollTop();
 return;
 
 }
-
-
-/* 結果 */
 
 renderFinish();
 
@@ -1173,9 +1233,6 @@ placeholder="例：3.2"
 
 `;
 
-
-/* ---------- 入力保持 ---------- */
-
 document.getElementById("owner").oninput=e=>{
 dogInfo.owner=e.target.value;
 };
@@ -1196,8 +1253,6 @@ document.getElementById("weight").oninput=e=>{
 dogInfo.weight=e.target.value;
 };
 
-
-/* ---------- 写真 ---------- */
 
 const photoInput=
 document.getElementById("photoInput");
@@ -1479,7 +1534,7 @@ statusElement.textContent=
 
 
 /* =====================================
-   お礼画面
+   お礼
 ===================================== */
 
 function renderThanks(){
@@ -1535,7 +1590,7 @@ back.disabled=false;
 
 
 /* =====================================
-   結果画面
+   結果
 ===================================== */
 
 function renderFinish(){
@@ -1701,8 +1756,6 @@ back.disabled=false;
 
 next.onclick=()=>{
 
-/* 最初の画面 */
-
 if(step===0 && agreed){
 
 step=1;
@@ -1714,11 +1767,7 @@ return;
 }
 
 
-/* 通常のページ移動 */
-
 if(step < items.length+2){
-
-/* 情報画面の入力を保存 */
 
 if(step===1){
 
@@ -1748,8 +1797,6 @@ return;
 }
 
 
-/* お礼画面 → 結果画面 */
-
 if(step===items.length+2){
 
 step++;
@@ -1760,8 +1807,6 @@ return;
 
 }
 
-
-/* 最初に戻る */
 
 step=0;
 
@@ -1802,9 +1847,6 @@ return;
 
 }
 
-
-/* 情報画面から戻る */
-
 if(step===1){
 
 dogInfo.owner=
@@ -1831,8 +1873,6 @@ return;
 }
 
 
-/* お礼画面 */
-
 if(step===items.length+2){
 
 step--;
@@ -1843,8 +1883,6 @@ return;
 
 }
 
-
-/* その他 */
 
 step--;
 
