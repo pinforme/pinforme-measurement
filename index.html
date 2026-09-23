@@ -4,27 +4,22 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>PINFORME 採寸ナビ</title>
-
 <style>
-
 *{
 box-sizing:border-box
 }
-
 body{
 margin:0;
 background:#f7f7f5;
 color:#222;
 font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif
 }
-
 .app{
 max-width:520px;
 margin:auto;
 min-height:100vh;
 background:#fff
 }
-
 header{
 padding:18px;
 border-bottom:1px solid #eee;
@@ -33,19 +28,16 @@ top:0;
 background:#fff;
 z-index:10
 }
-
 .brand{
 font-size:20px;
 font-weight:800;
 letter-spacing:.12em
 }
-
 .sub{
 font-size:11px;
 color:#777;
 margin-top:4px
 }
-
 .progress{
 height:5px;
 background:#eee;
@@ -53,7 +45,6 @@ border-radius:10px;
 margin-top:14px;
 overflow:hidden
 }
-
 .progress span{
 display:block;
 height:100%;
@@ -61,28 +52,23 @@ background:#222;
 width:5%;
 transition:.3s
 }
-
 main{
 padding:24px 18px 110px
 }
-
 .step{
 font-size:13px;
 color:#777
 }
-
 h1{
 font-size:27px;
 margin:8px 0 12px;
 line-height:1.4
 }
-
 .desc{
 font-size:14px;
 line-height:1.8;
 color:#555
 }
-
 .card{
 background:#f6f6f3;
 padding:16px;
@@ -91,24 +77,20 @@ margin-top:18px;
 font-size:13px;
 line-height:1.8
 }
-
 .point{
 padding:15px 0;
 border-bottom:1px solid #eee
 }
-
 .point b{
 display:block;
 font-size:15px;
 margin-bottom:6px
 }
-
 .point span{
 font-size:13px;
 color:#666;
 line-height:1.7
 }
-
 .agree{
 display:flex;
 gap:10px;
@@ -119,21 +101,18 @@ background:#fafafa;
 border:1px solid #eee;
 border-radius:13px
 }
-
 .agree input{
 width:20px;
 height:20px;
 margin:0;
 flex:none
 }
-
 label{
 display:block;
 font-size:13px;
 font-weight:bold;
 margin-top:18px
 }
-
 input,
 select{
 width:100%;
@@ -144,19 +123,14 @@ border-radius:12px;
 margin-top:7px;
 background:#fff
 }
-
-
 /* 写真 */
-
 .photo-card{
 margin-top:20px
 }
-
 .photo-label{
 margin-top:0;
 margin-bottom:10px
 }
-
 .photo-box{
 width:100%;
 aspect-ratio:1/1;
@@ -170,27 +144,21 @@ overflow:hidden;
 color:#777;
 font-size:14px
 }
-
 .photo-box img{
 width:100%;
 height:100%;
 object-fit:cover
 }
-
 .photo-button{
 width:100%;
 margin-top:10px;
 background:#eee;
 color:#222
 }
-
-
 /* 採寸 */
-
 .measure{
 margin-top:20px
 }
-
 .measure-location{
 margin-top:22px;
 padding:16px;
@@ -198,39 +166,33 @@ background:#fafafa;
 border:1px solid #eee;
 border-radius:14px
 }
-
 .location-title{
 font-size:15px;
 font-weight:bold;
 margin-bottom:12px
 }
-
 .measure-row{
 display:flex;
 align-items:center;
 gap:8px;
 margin:10px 0
 }
-
 .measure-row label{
 width:55px;
 margin:0;
 font-weight:normal;
 color:#666
 }
-
 .measure-row input{
 font-size:21px;
 text-align:right;
 margin:0;
 flex:1
 }
-
 .unit{
 font-size:14px;
 width:22px
 }
-
 .average{
 margin-top:14px;
 padding:13px;
@@ -241,20 +203,15 @@ display:flex;
 justify-content:space-between;
 align-items:center
 }
-
 .average strong{
 font-size:22px
 }
-
 .small{
 font-size:11px;
 color:#777;
 line-height:1.6
 }
-
-
 /* 結果 */
-
 .result-photo{
 width:100%;
 aspect-ratio:1/1;
@@ -262,21 +219,16 @@ object-fit:cover;
 border-radius:14px;
 margin-top:14px
 }
-
 .result-location{
 padding:14px 0;
 border-bottom:1px solid #eee
 }
-
 .result-location-title{
 font-weight:bold;
 font-size:14px;
 margin-bottom:5px
 }
-
-
 /* ボタン */
-
 .buttons{
 position:fixed;
 bottom:0;
@@ -290,7 +242,6 @@ padding-bottom:calc(12px + env(safe-area-inset-bottom));
 background:rgba(255,255,255,.97);
 border-top:1px solid #eee
 }
-
 button{
 border:0;
 border-radius:13px;
@@ -298,81 +249,58 @@ padding:15px;
 font-size:15px;
 font-weight:bold
 }
-
 .back{
 flex:1;
 background:#eee;
 color:#222
 }
-
 .next{
 flex:2;
 background:#222;
 color:#fff
 }
-
 .next:disabled{
 opacity:.35
 }
-
+.back:disabled{
+opacity:.35
+}
 </style>
 </head>
-
-
 <body>
-
 <div class="app">
-
 <header>
-
 <div class="brand">
 PINFORME
 </div>
-
 <div class="sub">
 Miniature Pinscher　採寸ナビ｜スマホ版
 </div>
-
 <div class="progress">
 <span id="progress"></span>
 </div>
-
 </header>
-
-
 <main id="main"></main>
-
-
 <div class="buttons">
-
 <button
 class="back"
 id="back"
 >
 戻る
 </button>
-
 <button
 class="next"
 id="next"
 >
 確認しました →
 </button>
-
 </div>
-
 </div>
-
-
 <script>
-
-
 /* =====================================
    採寸項目
 ===================================== */
-
 const items=[
-
 {
 title:"首まわり（首の付け根）",
 desc:"姿勢を正した時にちょうど首から胴体に変わる瞬間部分の毛並みが変わる所があります。",
@@ -380,7 +308,6 @@ locations:[
 "首の付け根を一周"
 ]
 },
-
 {
 title:"胴まわり",
 desc:"一番胸が張っているポイントで測ります。大体前脚の脇あたりから2cmから3cm後ろへ行った辺りになります。",
@@ -388,16 +315,13 @@ locations:[
 "胸が一番張っている部分を一周"
 ]
 },
-
 {
 title:"ウェスト",
-desc:"胴体で一番細い部分を一周測ります。同時に背骨位置から服が被るであろう位置の片面のみの長さも測ります。",
+desc:"胴体で一番細い部分を一周測ります。",
 locations:[
-"一番細い部分を一周",
-"背骨位置 → 服が被る位置"
+"一番細い部分を一周"
 ]
 },
-
 {
 title:"着丈",
 desc:"首まわりを測った位置から尻尾の付け根までを測ります。尻尾は軽く持ち上げますと、首まわり同様に毛並みが変わるラインが薄っすら見えますのでそのラインまでを測ります。",
@@ -405,7 +329,6 @@ locations:[
 "首まわりの位置 → 尻尾の付け根"
 ]
 },
-
 {
 title:"前身頃",
 desc:"首まわりを測った位置からお腹部分を覆いかぶせてあげたい部分までを測ります。",
@@ -413,7 +336,6 @@ locations:[
 "首まわりの位置 → お腹側"
 ]
 },
-
 {
 title:"前脚の太さ",
 desc:"太いところと細いところを測ります。服を作る時の目安になります。",
@@ -422,7 +344,6 @@ locations:[
 "細い部分"
 ]
 },
-
 {
 title:"後脚の太さ",
 desc:"太いところと細いところを測ります。服を作る時の目安になります。",
@@ -431,7 +352,6 @@ locations:[
 "細い部分"
 ]
 },
-
 {
 title:"前脚の長さ",
 desc:"脇から関節ごとに地面までを測ります。服を作る時の目安になります。",
@@ -441,7 +361,6 @@ locations:[
 "手首 → 地面"
 ]
 },
-
 {
 title:"後脚の長さ",
 desc:"測るポイントは❼の測ったラインからになります。内側でズボンが止まるポイントとなりますのでそこからスタートします。関節ごとに地面までを測ります。服を作る時の目安になります。",
@@ -451,7 +370,6 @@ locations:[
 "足首 → 地面"
 ]
 },
-
 {
 title:"首の長さ（ネック）",
 desc:"首まわりを測った位置から後頭部に入る手前までの長さでネックデザインを決める際に参考になります。",
@@ -459,7 +377,6 @@ locations:[
 "首まわりの位置 → 後頭部手前"
 ]
 },
-
 {
 title:"首の長さ（スヌード）",
 desc:"首まわりを測った位置から額までの長さでスヌードを測る際に参考になります。",
@@ -467,7 +384,6 @@ locations:[
 "首まわりの位置 → 額"
 ]
 },
-
 {
 title:"頭周り",
 desc:"額から一周測ります。首まわりより頭まわりの方が大きい場合があります。お洋服を着せる際は頭から着せますので、密かに重要ポイントとなります。",
@@ -475,7 +391,6 @@ locations:[
 "額を通って頭を一周"
 ]
 },
-
 {
 title:"前脚の幅",
 desc:"犬を前から見たときの前脚の脚と脚の間の幅です。体格の差や骨格の差や犬種にもより異なります。",
@@ -483,7 +398,6 @@ locations:[
 "左右の前脚の間"
 ]
 },
-
 {
 title:"首の真ん中",
 desc:"首の中でも一番細い部分を測ります。",
@@ -491,7 +405,6 @@ locations:[
 "首の一番細い部分を一周"
 ]
 },
-
 {
 title:"尻尾の太さ",
 desc:"付け根の一番太い部分を測ります。",
@@ -499,298 +412,190 @@ locations:[
 "尻尾の付け根の一番太い部分を一周"
 ]
 }
-
 ];
-
-
 /* =====================================
    大切な6つのポイント
 ===================================== */
-
 const points=[
-
 [
 "❶ 採寸は最低3回は測る事",
 "犬は動きますので、一度の採寸では確かな数字ではありません。できるだけ同じ場所を最低3回測り、安定した数値を確認しましょう。"
 ],
-
 [
 "❷ 測る際の立たせている場所",
 "柔らかいソファーやクッション、ベッドなどの上では体が歪み、正しい採寸ができません。だからといって、フローリングで脚が滑りやすい状態も問題です。フローリングの上に滑り止めとして、薄手のブランケットやバスタオルなどを敷いて採寸してください。"
 ],
-
 [
 "❸ 測る際の愛犬の体調",
 "寝起きではないですか？寝ていた直後は体が縮こまっている可能性があります。また、すぐに伏せをしてしまったり、怖がっていたりしていませんか？ついつい暴れないように高い所で測ろうとしてしまいたくなりますが、体も強張り、正確な数字とは言えません。寒くて震えていませんか？これもまた体も強張り、正確な数字とは言えません。疲れていませんか？怪我や、普段しないような行動をする可能性もあります。コンディションが悪いと採寸を嫌がりますので、避けましょう。"
 ],
-
 [
 "❹ 測る際の体勢",
 "採寸時の犬の体勢をしっかり確認しましょう。4本の脚で立ち、まっすぐ前を見ている状態にします。何かを覗き込むように首を伸ばしたり、へっぴり腰になったり、お座りしたり、伏せたりしていない状態を作りましょう。伏せた状態やお座りした状態では、それぞれ数字が変わり、正しい採寸ができません。リラックスした自然な体勢がベストです。"
 ],
-
 [
 "❺ 独自の体型を理解する",
 "お尻にかけてカーブが強い、胸板が厚い、前脚の間隔がとても広いなど、特徴的な体型の場合は、その特徴を意識して採寸しましょう。"
 ],
-
 [
 "❻ 呼吸を感じる",
 "呼吸と共に1.0cmから1.5cmほど、採寸時のサイズに変化が出ます。興奮状態ですと特に呼吸が大きくなるため、採寸に誤差が生じます。できる限り落ち着いた状態で採寸することがベストですが、大抵の犬はメジャーを少し怖がり、呼吸が大きくなります。ですので、呼吸を感じながら数字を読み取りましょう。"
 ]
-
 ];
-
-
 /* =====================================
    データ
 ===================================== */
-
 let step=0;
-
 let agreed=false;
-
-
 let dogInfo={
-
 owner:"",
 name:"",
 sex:"",
 birth:"",
 weight:"",
 photo:""
-
 };
-
-
 let values=items.map(item=>
-
 item.locations.map(location=>
 ["","",""]
 )
-
 );
-
-
 /* =====================================
    要素
 ===================================== */
-
 const main=
 document.getElementById("main");
-
 const next=
 document.getElementById("next");
-
 const back=
 document.getElementById("back");
-
 const progress=
 document.getElementById("progress");
-
-
 /* =====================================
    ページ最上部へ
 ===================================== */
-
 function scrollTop(){
-
 window.scrollTo({
 top:0,
-behavior:"smooth"
+behavior:"instant"
 });
-
 }
-
-
 /* =====================================
    画面切り替え
 ===================================== */
-
 function render(){
-
 progress.style.width=
 (((step+1)/(items.length+3))*100)+"%";
-
-
+/* 最初の画面 */
 if(step===0){
-
 renderPoints();
-
+scrollTop();
 return;
-
 }
-
-
+/* わんちゃん情報 */
 if(step===1){
-
 renderInfo();
-
 scrollTop();
-
 return;
-
 }
-
-
+/* 採寸 */
 if(step>=2 && step<=items.length+1){
-
 renderMeasure(step-2);
-
 scrollTop();
-
 return;
-
 }
-
-
+/* 結果 */
 renderFinish();
-
 scrollTop();
-
 }
-
-
 /* =====================================
    6つのポイント
 ===================================== */
-
 function renderPoints(){
-
 main.innerHTML=`
-
 <div class="step">
 WELCOME
 </div>
-
-
 <h1>
 採寸前に<br>
 大切な6つのポイント
 </h1>
-
-
 <p class="desc">
 正確な採寸と、わんちゃんの安全のために、
 まずこちらをご確認ください。
 </p>
-
-
 ${points.map(p=>`
-
 <div class="point">
-
 <b>
 ${p[0]}
 </b>
-
 <span>
 ${p[1]}
 </span>
-
 </div>
-
 `).join("")}
-
-
 <div class="agree">
-
 <input
 type="checkbox"
 id="agree"
+${agreed ? "checked" : ""}
 >
-
 <label
 for="agree"
 style="margin:0;font-weight:normal"
 >
-
 6つのポイントを確認し、内容に同意します
-
 </label>
-
 </div>
-
 `;
-
-
 next.textContent=
 "同意して入力画面へ →";
-
-next.disabled=true;
-
+next.disabled=
+!agreed;
 back.disabled=true;
-
-
 document.getElementById("agree").onchange=e=>{
-
 agreed=e.target.checked;
-
 next.disabled=!agreed;
-
 };
-
 }
-
-
 /* =====================================
    わんちゃん情報
 ===================================== */
-
 function renderInfo(){
-
 main.innerHTML=`
-
 <div class="step">
 START
 </div>
-
-
 <h1>
 わんちゃん情報
 </h1>
-
-
 <p class="desc">
 まずは基本情報を入力してください。
 </p>
-
-
 <div class="photo-card">
-
 <label class="photo-label">
 わんちゃんの写真
 </label>
-
-
 <div
 class="photo-box"
 id="photoBox"
 >
-
 <span
 id="photoText"
 >
 📷 写真を選択
 </span>
-
-
 <img
 id="photoPreview"
 style="display:none;"
 >
-
 </div>
-
-
 <input
 type="file"
 id="photoInput"
 accept="image/*"
 style="display:none;"
 >
-
-
 <button
 type="button"
 id="photoButton"
@@ -798,309 +603,166 @@ class="photo-button"
 >
 写真を選択
 </button>
-
 </div>
-
-
 <label>
 飼い主様のお名前
 </label>
-
-
 <input
 id="owner"
 value="${dogInfo.owner}"
 placeholder="例：山田 太郎"
 >
-
-
 <label>
 わんちゃんのお名前
 </label>
-
-
 <input
 id="name"
 value="${dogInfo.name}"
 placeholder="例：PINちゃん"
 >
-
-
 <label>
 性別
 </label>
-
-
 <select id="sex">
-
 <option value="">
 選択してください
 </option>
-
 <option
 value="オス"
 ${dogInfo.sex==="オス"?"selected":""}
 >
 オス
 </option>
-
 <option
 value="メス"
 ${dogInfo.sex==="メス"?"selected":""}
 >
 メス
 </option>
-
 </select>
-
-
 <label>
 生年月日
 </label>
-
-
 <input
 id="birth"
 type="date"
 value="${dogInfo.birth}"
 >
-
-
 <label>
 体重（kg）
 </label>
-
-
 <input
 id="weight"
 inputmode="decimal"
 value="${dogInfo.weight}"
 placeholder="例：3.2"
 >
-
-
 <div class="card">
-
 <b>
 採寸時の注意点
 </b>
-
 <br><br>
-
 ・わんちゃんがリラックスした状態で測定してください。
-
 <br><br>
-
 ・メジャーは体に沿わせ、きつすぎず、ゆるすぎないように測ってください。
-
 <br><br>
-
 ・毛の長さによって数値が変わるため、できるだけ毛をおさえた状態で測定してください。
-
 <br><br>
-
 ・分からない場合は、無理に測らず、空欄のままで構いません。
-
 </div>
-
 `;
-
-
 /* ---------- 入力保持 ---------- */
-
 document.getElementById("owner").oninput=e=>{
-
 dogInfo.owner=e.target.value;
-
 };
-
-
 document.getElementById("name").oninput=e=>{
-
 dogInfo.name=e.target.value;
-
 };
-
-
 document.getElementById("sex").onchange=e=>{
-
 dogInfo.sex=e.target.value;
-
 };
-
-
 document.getElementById("birth").oninput=e=>{
-
 dogInfo.birth=e.target.value;
-
 };
-
-
 document.getElementById("weight").oninput=e=>{
-
 dogInfo.weight=e.target.value;
-
 };
-
-
 /* ---------- 写真 ---------- */
-
 const photoInput=
 document.getElementById("photoInput");
-
 const photoButton=
 document.getElementById("photoButton");
-
 const photoPreview=
 document.getElementById("photoPreview");
-
 const photoText=
 document.getElementById("photoText");
-
-
 if(dogInfo.photo){
-
 photoPreview.src=
 dogInfo.photo;
-
 photoPreview.style.display=
 "block";
-
 photoText.style.display=
 "none";
-
 photoButton.textContent=
 "写真を変更";
-
 }
-
-
 photoButton.onclick=()=>{
-
 photoInput.click();
-
 };
-
-
 photoInput.onchange=e=>{
-
 const file=e.target.files[0];
-
 if(!file)return;
-
-
 const reader=
 new FileReader();
-
-
 reader.onload=event=>{
-
 dogInfo.photo=
 event.target.result;
-
-
 photoPreview.src=
 dogInfo.photo;
-
-
 photoPreview.style.display=
 "block";
-
-
 photoText.style.display=
 "none";
-
-
 photoButton.textContent=
 "写真を変更";
-
 };
-
-
 reader.readAsDataURL(file);
-
 };
-
-
 next.textContent=
 "採寸スタート →";
-
 next.disabled=false;
-
+/* 情報画面では戻れる */
+back.disabled=false;
 }
-
-
 /* =====================================
    採寸画面
 ===================================== */
-
 function renderMeasure(i){
-
 const item=
 items[i];
-
-
 main.innerHTML=`
-
 <div class="step">
 STEP ${i+1} / ${items.length}
 </div>
-
-
 <h1>
 ${i+1}. ${item.title}
 </h1>
-
-
 <p class="desc">
 ${item.desc}
 </p>
-
-
-<div class="card">
-
-📏 <b>測るポイント</b>
-
-<br><br>
-
-${item.locations.map(
-(location,index)=>
-`${index+1}. ${location}<br>`
-).join("")}
-
-<br>
-
-できるだけ毛をおさえ、
-自然な状態で測定してください。
-
-</div>
-
-
 <div class="measure">
-
 ${item.locations.map(
 (location,locationIndex)=>`
-
 <div class="measure-location">
-
-
 <div class="location-title">
-
 ${locationIndex+1}.
 ${location}
-
 </div>
-
-
 ${[0,1,2].map(n=>`
-
 <div class="measure-row">
-
 <label>
 ${n+1}回目
 </label>
-
-
 <input
 class="m"
 data-location="${locationIndex}"
@@ -1109,102 +771,64 @@ inputmode="decimal"
 value="${values[i][locationIndex][n]}"
 placeholder="0.0"
 >
-
-
 <span class="unit">
 cm
 </span>
-
 </div>
-
 `).join("")}
-
-
 <div class="average">
-
 <span>
 平均値
 </span>
-
 <strong
 id="avg-${locationIndex}"
 >
 —
 </strong>
-
 <span class="unit">
 cm
 </span>
-
 </div>
-
-
 <div
 class="small"
 id="status-${locationIndex}"
 >
 3回測ると平均値を表示します。
 </div>
-
-
 </div>
-
 `).join("")}
-
 </div>
-
 `;
-
-
 document.querySelectorAll(".m").forEach(input=>{
-
 input.oninput=()=>{
-
 const locationIndex=
 Number(input.dataset.location);
-
 const number=
 Number(input.dataset.number);
-
-
 values[i][locationIndex][number]
 =
 input.value;
-
-
 calc(i,locationIndex);
-
 };
-
 });
-
-
 item.locations.forEach(
 (_,locationIndex)=>{
-
 calc(i,locationIndex);
-
 });
-
-
 next.textContent=
 i===items.length-1
 ?
 "結果を確認 →"
 :
 "次へ →";
-
 next.disabled=false;
-
+/* 採寸画面では必ず戻れる */
+back.disabled=false;
 }
-
-
 /* =====================================
    平均
 ===================================== */
-
 function calc(i,locationIndex){
-
 const a=
 values[i][locationIndex]
 .map(Number)
@@ -1213,13 +837,8 @@ n=>
 Number.isFinite(n)&&
 n>0
 );
-
-
 let avg="—";
-
-
 if(a.length){
-
 avg=
 (
 a.reduce(
@@ -1229,112 +848,66 @@ a.reduce(
 /
 a.length
 ).toFixed(1);
-
 }
-
-
 const avgElement=
 document.getElementById(
 `avg-${locationIndex}`
 );
-
-
 const statusElement=
 document.getElementById(
 `status-${locationIndex}`
 );
-
-
 if(avgElement){
-
 avgElement.textContent=
 avg;
-
 }
-
-
 if(statusElement){
-
 if(a.length===3){
-
 statusElement.textContent=
 "3回の平均値を表示しています。";
-
 }else{
-
 statusElement.textContent=
 `${a.length}回入力済み（最低3回がおすすめ）`;
-
 }
-
 }
-
 }
-
-
 /* =====================================
    結果画面
 ===================================== */
-
 function renderFinish(){
-
 main.innerHTML=`
-
 <div class="step">
 FINISH
 </div>
-
-
 <h1>
 採寸結果
 </h1>
-
-
 <p class="desc">
 入力した結果を確認してください。
 </p>
-
-
 <div class="card">
-
 <b>
 飼い主様・わんちゃん情報
 </b>
-
-
 ${dogInfo.photo ? `
-
 <img
 src="${dogInfo.photo}"
 class="result-photo"
 >
-
 ` : ""}
-
-
 <br>
-
-
 飼い主様：
 ${dogInfo.owner || "未入力"}
-
 <br>
-
 名前：
 ${dogInfo.name || "未入力"}
-
 <br>
-
 性別：
 ${dogInfo.sex || "未入力"}
-
 <br>
-
 生年月日：
 ${dogInfo.birth || "未入力"}
-
 <br>
-
 体重：
 ${
 dogInfo.weight
@@ -1343,28 +916,18 @@ dogInfo.weight+" kg"
 :
 "未入力"
 }
-
 </div>
-
-
 ${items.map(
 (item,i)=>`
-
 <div class="card">
-
 <b>
 ${i+1}. ${item.title}
 </b>
-
-
 <div class="small" style="margin-top:8px;">
 ${item.desc}
 </div>
-
-
 ${item.locations.map(
 (location,locationIndex)=>{
-
 const a=
 values[i][locationIndex]
 .map(Number)
@@ -1373,8 +936,6 @@ n=>
 Number.isFinite(n)&&
 n>0
 );
-
-
 const avg=
 a.length
 ?
@@ -1388,123 +949,70 @@ a.length
 ).toFixed(1)
 :
 "未入力";
-
-
 return `
-
 <div class="result-location">
-
 <div class="result-location-title">
-
 ${location}
-
 </div>
-
-
 <div>
-
 平均：
 <b>
 ${avg}
 ${avg==="未入力"?"":" cm"}
 </b>
-
 </div>
-
-
 <div class="small">
-
 ${a.length}回測定
-
 </div>
-
 </div>
-
 `;
-
 }).join("")}
-
-
 </div>
-
 `).join("")}
-
-
 <div class="card">
-
 採寸結果は現在この画面上でのみ表示されています。
-
 <br>
-
 入力データは外部へ送信・保存していません。
-
 </div>
-
 `;
-
-
 next.textContent=
 "最初に戻る";
-
 next.disabled=false;
-
+/* 結果画面でも戻れる */
+back.disabled=false;
 }
-
-
 /* =====================================
    次へ
 ===================================== */
-
 next.onclick=()=>{
-
-
+/* 最初の画面 */
 if(step===0 && agreed){
-
 step=1;
-
 render();
-
 return;
-
 }
-
-
+/* 通常のページ移動 */
 if(step < items.length+2){
-
-
+/* 情報画面の入力を保存 */
 if(step===1){
-
 dogInfo.owner=
 document.getElementById("owner")?.value || "";
-
 dogInfo.name=
 document.getElementById("name")?.value || "";
-
 dogInfo.sex=
 document.getElementById("sex")?.value || "";
-
 dogInfo.birth=
 document.getElementById("birth")?.value || "";
-
 dogInfo.weight=
 document.getElementById("weight")?.value || "";
-
 }
-
-
 step++;
-
 render();
-
-
-}else{
-
-
+return;
+}
+/* 最初に戻る */
 step=0;
-
 agreed=false;
-
-
 values=
 items.map(
 item=>
@@ -1513,8 +1021,6 @@ location=>
 ["","",""]
 )
 );
-
-
 dogInfo={
 owner:"",
 name:"",
@@ -1523,61 +1029,40 @@ birth:"",
 weight:"",
 photo:""
 };
-
-
 render();
-
-}
-
 };
-
-
 /* =====================================
    戻る
 ===================================== */
-
 back.onclick=()=>{
-
-if(step>0){
-
-
-if(step===2){
-
+/* 最初の画面では何もしない */
+if(step===0){
+return;
+}
+/* 情報画面から戻る */
+if(step===1){
 dogInfo.owner=
 document.getElementById("owner")?.value || "";
-
 dogInfo.name=
 document.getElementById("name")?.value || "";
-
 dogInfo.sex=
 document.getElementById("sex")?.value || "";
-
 dogInfo.birth=
 document.getElementById("birth")?.value || "";
-
 dogInfo.weight=
 document.getElementById("weight")?.value || "";
-
-}
-
-
-step--;
-
+step=0;
 render();
-
+return;
 }
-
+/* 採寸・結果画面 */
+step--;
+render();
 };
-
-
 /* =====================================
    開始
 ===================================== */
-
 render();
-
-
 </script>
-
 </body>
 </html>
