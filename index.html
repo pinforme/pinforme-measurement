@@ -1,18 +1,2245 @@
-<div class="name-suffix-row">
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-  <input
-    id="dogName"
-    class="name-input"
-    type="text"
-    placeholder="わんちゃんのお名前">
+<title>PINFORME 採寸ナビ</title>
 
-  <select
-    id="dogSuffix"
-    class="suffix-select">
+<style>
+*{
+  box-sizing:border-box;
+  -webkit-tap-highlight-color:transparent;
+}
 
-    <option value="くん">くん</option>
-    <option value="ちゃん">ちゃん</option>
+html,body{
+  margin:0;
+  padding:0;
+  width:100%;
+  min-height:100%;
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Helvetica Neue",
+    "Noto Sans JP",
+    sans-serif;
+  background:#f7f5f2;
+  color:#333;
+}
 
-  </select>
+body{
+  padding-bottom:30px;
+}
+
+button,
+input,
+select{
+  font-family:inherit;
+}
+
+.app{
+  width:100%;
+  max-width:520px;
+  margin:0 auto;
+  min-height:100vh;
+}
+
+/* =========================
+   ヘッダー
+========================= */
+
+.header{
+  background:#fff;
+  padding:20px 18px 14px;
+  text-align:center;
+  border-bottom:1px solid #e8e4df;
+  position:sticky;
+  top:0;
+  z-index:20;
+}
+
+.logo{
+  font-size:24px;
+  font-weight:700;
+  letter-spacing:4px;
+  color:#333;
+}
+
+.logo-sub{
+  font-size:10px;
+  letter-spacing:2px;
+  color:#999;
+  margin-top:3px;
+}
+
+/* =========================
+   画面
+========================= */
+
+.screen{
+  display:none;
+  padding:18px 15px 100px;
+}
+
+.screen.active{
+  display:block;
+}
+
+/* =========================
+   タイトル
+========================= */
+
+.page-title{
+  text-align:center;
+  margin:5px 0 8px;
+  font-size:24px;
+  font-weight:700;
+  color:#333;
+}
+
+.page-subtitle{
+  text-align:center;
+  color:#888;
+  font-size:13px;
+  line-height:1.7;
+  margin-bottom:20px;
+}
+
+/* =========================
+   カード
+========================= */
+
+.card{
+  background:#fff;
+  border-radius:18px;
+  padding:18px;
+  margin-bottom:15px;
+  box-shadow:0 3px 14px rgba(0,0,0,.05);
+}
+
+.card-title{
+  font-size:16px;
+  font-weight:700;
+  margin-bottom:15px;
+}
+
+/* =========================
+   入力
+========================= */
+
+.form-group{
+  margin-bottom:17px;
+}
+
+.form-label{
+  display:block;
+  font-size:14px;
+  font-weight:600;
+  margin-bottom:8px;
+}
+
+.required{
+  color:#c66;
+  font-size:11px;
+  margin-left:5px;
+}
+
+input[type="text"],
+input[type="number"],
+input[type="date"],
+select{
+  width:100%;
+  height:50px;
+  border:1px solid #ddd8d2;
+  border-radius:12px;
+  background:#fff;
+  padding:0 14px;
+  font-size:16px;
+  color:#333;
+  outline:none;
+}
+
+input:focus,
+select:focus{
+  border-color:#aaa;
+}
+
+.date-wrap{
+  width:100%;
+  overflow:hidden;
+}
+
+.date-wrap input{
+  width:100%;
+  max-width:100%;
+  min-width:0;
+  display:block;
+  appearance:none;
+  -webkit-appearance:none;
+}
+
+.gender-row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+
+.gender-btn{
+  height:50px;
+  border:1px solid #ddd8d2;
+  border-radius:12px;
+  background:#fff;
+  font-size:15px;
+  color:#555;
+}
+
+.gender-btn.active{
+  background:#333;
+  color:#fff;
+  border-color:#333;
+}
+
+/* =========================
+   ボタン
+========================= */
+
+.bottom-buttons{
+  position:fixed;
+  left:0;
+  right:0;
+  bottom:0;
+  z-index:30;
+  background:rgba(255,255,255,.96);
+  backdrop-filter:blur(10px);
+  padding:10px 15px;
+  border-top:1px solid #e7e2dc;
+}
+
+.bottom-inner{
+  max-width:520px;
+  margin:0 auto;
+  display:grid;
+  grid-template-columns:1fr 1.5fr;
+  gap:10px;
+}
+
+.btn{
+  height:52px;
+  border:none;
+  border-radius:14px;
+  font-size:15px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.btn-back{
+  background:#eeeae6;
+  color:#555;
+}
+
+.btn-next{
+  background:#333;
+  color:#fff;
+}
+
+.btn:active{
+  transform:scale(.98);
+}
+
+/* =========================
+   プログレス
+========================= */
+
+.progress{
+  margin:5px 0 20px;
+}
+
+.progress-text{
+  display:flex;
+  justify-content:space-between;
+  font-size:11px;
+  color:#999;
+  margin-bottom:7px;
+}
+
+.progress-bar{
+  width:100%;
+  height:5px;
+  background:#e8e4df;
+  border-radius:10px;
+  overflow:hidden;
+}
+
+.progress-fill{
+  height:100%;
+  background:#333;
+  width:0%;
+  transition:.3s;
+}
+
+/* =========================
+   犬情報タイトル
+========================= */
+
+.dog-name-title{
+  text-align:center;
+  font-size:27px;
+  font-weight:700;
+  margin:4px 0 4px;
+}
+
+.dog-name-sub{
+  text-align:center;
+  color:#999;
+  font-size:12px;
+  margin-bottom:20px;
+}
+
+/* =========================
+   採寸ページ
+========================= */
+
+.measure-number{
+  text-align:center;
+  color:#999;
+  font-size:12px;
+  margin-bottom:4px;
+}
+
+.measure-title{
+  text-align:center;
+  font-size:23px;
+  font-weight:700;
+  margin:0 0 5px;
+}
+
+.measure-description{
+  text-align:center;
+  font-size:13px;
+  line-height:1.7;
+  color:#777;
+  margin:0 auto 15px;
+  max-width:400px;
+}
+
+/* =========================
+   採寸イメージ
+========================= */
+
+.measure-image-card{
+  background:#fff;
+  border-radius:18px;
+  padding:12px 8px 14px;
+  margin-bottom:15px;
+  box-shadow:0 3px 14px rgba(0,0,0,.05);
+}
+
+.measure-svg{
+  display:block;
+  width:100%;
+  height:auto;
+  max-height:300px;
+}
+
+.measure-point{
+  text-align:center;
+  margin-top:7px;
+  font-size:13px;
+  font-weight:600;
+  color:#555;
+}
+
+.measure-note{
+  background:#f7f5f2;
+  border-radius:12px;
+  padding:12px;
+  margin-top:10px;
+  font-size:12px;
+  line-height:1.7;
+  color:#666;
+}
+
+/* =========================
+   3回測定
+========================= */
+
+.measure-inputs{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:8px;
+}
+
+.measure-input-box{
+  text-align:center;
+}
+
+.measure-input-label{
+  font-size:11px;
+  color:#999;
+  margin-bottom:5px;
+}
+
+.measure-input-box input{
+  text-align:center;
+  padding:0 5px;
+  height:48px;
+  font-size:16px;
+}
+
+.unit{
+  font-size:11px;
+  color:#999;
+  margin-top:5px;
+}
+
+.average-box{
+  margin-top:15px;
+  background:#333;
+  color:#fff;
+  border-radius:13px;
+  padding:14px;
+  text-align:center;
+}
+
+.average-label{
+  font-size:11px;
+  opacity:.7;
+}
+
+.average-value{
+  font-size:25px;
+  font-weight:700;
+  margin-top:2px;
+}
+
+.average-unit{
+  font-size:12px;
+  opacity:.7;
+}
+
+/* =========================
+   結果
+========================= */
+
+.result-card{
+  background:#fff;
+  border-radius:17px;
+  overflow:hidden;
+  margin-bottom:12px;
+  box-shadow:0 3px 12px rgba(0,0,0,.04);
+}
+
+.result-header{
+  padding:14px 15px;
+  border-bottom:1px solid #eee;
+  font-weight:700;
+  font-size:14px;
+}
+
+.result-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:12px 15px;
+  border-bottom:1px solid #f1efec;
+  font-size:13px;
+}
+
+.result-row:last-child{
+  border-bottom:none;
+}
+
+.result-value{
+  font-weight:700;
+  font-size:16px;
+}
+
+/* =========================
+   完了
+========================= */
+
+.complete-icon{
+  width:72px;
+  height:72px;
+  border-radius:50%;
+  background:#333;
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin:25px auto 15px;
+  font-size:32px;
+}
+
+.complete-title{
+  text-align:center;
+  font-size:25px;
+  font-weight:700;
+}
+
+.complete-text{
+  text-align:center;
+  color:#777;
+  line-height:1.8;
+  font-size:13px;
+  margin:10px 20px 25px;
+}
+
+/* =========================
+   トースト
+========================= */
+
+.toast{
+  position:fixed;
+  left:50%;
+  bottom:85px;
+  transform:translateX(-50%) translateY(20px);
+  background:#333;
+  color:#fff;
+  padding:11px 18px;
+  border-radius:30px;
+  font-size:13px;
+  opacity:0;
+  pointer-events:none;
+  transition:.25s;
+  z-index:100;
+  white-space:nowrap;
+}
+
+.toast.show{
+  opacity:1;
+  transform:translateX(-50%) translateY(0);
+}
+
+/* =========================
+   小さい画面
+========================= */
+
+@media(max-width:360px){
+
+  .screen{
+    padding-left:12px;
+    padding-right:12px;
+  }
+
+  .page-title{
+    font-size:22px;
+  }
+
+  .measure-title{
+    font-size:21px;
+  }
+
+  .dog-name-title{
+    font-size:24px;
+  }
+
+  .measure-inputs{
+    gap:5px;
+  }
+
+  .measure-input-box input{
+    font-size:15px;
+  }
+
+}
+
+/* =========================
+   PC
+========================= */
+
+@media(min-width:700px){
+
+  body{
+    padding-top:20px;
+  }
+
+  .app{
+    background:#f7f5f2;
+    border-radius:22px;
+    overflow:hidden;
+    box-shadow:0 5px 30px rgba(0,0,0,.08);
+  }
+
+  .bottom-buttons{
+    position:static;
+    margin-top:-90px;
+    background:transparent;
+    border:none;
+  }
+
+}
+</style>
+</head>
+
+
+<body>
+
+<div class="app">
+
+<header class="header">
+  <div class="logo">PINFORME</div>
+  <div class="logo-sub">MEASUREMENT NAVIGATION</div>
+</header>
+
+
+<!-- =====================================
+     SCREEN 1
+===================================== -->
+
+<section id="screen1" class="screen active">
+
+  <h1 class="page-title">採寸ナビ</h1>
+
+  <p class="page-subtitle">
+    わんちゃんの情報を入力してください。<br>
+    入力した情報は採寸結果と一緒に保存されます。
+  </p>
+
+
+  <div class="card">
+
+    <div class="card-title">飼い主様の情報</div>
+
+    <div class="form-group">
+
+      <label class="form-label">
+        ご主人様の名前
+        <span class="required">必須</span>
+      </label>
+
+      <input
+        id="ownerName"
+        type="text"
+        placeholder="例：山田 太郎"
+        autocomplete="name"
+      >
+
+    </div>
+
+  </div>
+
+
+  <div class="card">
+
+    <div class="card-title">わんちゃんの情報</div>
+
+    <div class="form-group">
+
+      <label class="form-label">
+        わんちゃんの名前
+        <span class="required">必須</span>
+      </label>
+
+      <input
+        id="dogName"
+        type="text"
+        placeholder="例：イタロー"
+      >
+
+    </div>
+
+
+    <div class="form-group">
+
+      <label class="form-label">
+        性別
+        <span class="required">必須</span>
+      </label>
+
+      <div class="gender-row">
+
+        <button
+          type="button"
+          class="gender-btn"
+          id="maleBtn"
+          onclick="selectGender('male')">
+          ♂ 男の子
+        </button>
+
+        <button
+          type="button"
+          class="gender-btn"
+          id="femaleBtn"
+          onclick="selectGender('female')">
+          ♀ 女の子
+        </button>
+
+      </div>
+
+    </div>
+
+
+    <div class="form-group">
+
+      <label class="form-label">
+        生年月日
+        <span class="required">必須</span>
+      </label>
+
+      <div class="date-wrap">
+        <input
+          id="birthDate"
+          type="date"
+        >
+      </div>
+
+    </div>
+
+
+    <div class="form-group">
+
+      <label class="form-label">
+        体重
+        <span class="required">必須</span>
+      </label>
+
+      <input
+        id="weight"
+        type="number"
+        inputmode="decimal"
+        step="0.01"
+        min="0"
+        placeholder="例：4.2"
+      >
+
+      <div class="unit">kg</div>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================
+     SCREEN 2
+===================================== -->
+
+<section id="screen2" class="screen">
+
+  <div class="dog-name-title" id="dogNameTitle">
+    わんちゃん
+  </div>
+
+  <div class="dog-name-sub">
+    基本情報
+  </div>
+
+
+  <div class="card">
+
+    <div class="card-title">入力内容</div>
+
+    <div class="result-row">
+      <span>ご主人様</span>
+      <span class="result-value" id="confirmOwner">-</span>
+    </div>
+
+    <div class="result-row">
+      <span>お名前</span>
+      <span class="result-value" id="confirmDog">-</span>
+    </div>
+
+    <div class="result-row">
+      <span>性別</span>
+      <span class="result-value" id="confirmGender">-</span>
+    </div>
+
+    <div class="result-row">
+      <span>生年月日</span>
+      <span class="result-value" id="confirmBirth">-</span>
+    </div>
+
+    <div class="result-row">
+      <span>体重</span>
+      <span class="result-value" id="confirmWeight">-</span>
+    </div>
+
+  </div>
+
+
+  <div class="card">
+
+    <div class="card-title">採寸について</div>
+
+    <p style="
+      font-size:13px;
+      line-height:1.8;
+      color:#666;
+      margin:0;
+    ">
+      これから15項目を順番に採寸します。<br>
+      各項目は3回測定してください。<br>
+      3回の平均値が自動で計算されます。
+    </p>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================
+     SCREEN 3
+     MEASUREMENT
+===================================== -->
+
+<section id="screen3" class="screen">
+
+  <div class="progress">
+
+    <div class="progress-text">
+      <span id="progressLabel">採寸 1 / 15</span>
+      <span id="progressPercent">7%</span>
+    </div>
+
+    <div class="progress-bar">
+      <div
+        id="progressFill"
+        class="progress-fill">
+      </div>
+    </div>
+
+  </div>
+
+
+  <div class="measure-number" id="measureNumber">
+    採寸 1
+  </div>
+
+  <h1 class="measure-title" id="measureTitle">
+    首まわり（首の付け根）
+  </h1>
+
+  <p class="measure-description" id="measureDescription">
+  </p>
+
+
+  <!-- SVG採寸イメージ -->
+
+  <div class="measure-image-card">
+
+    <svg
+      id="measureSvg"
+      class="measure-svg"
+      viewBox="0 0 500 330"
+      xmlns="http://www.w3.org/2000/svg">
+
+      <!-- 背景 -->
+      <rect
+        x="0"
+        y="0"
+        width="500"
+        height="330"
+        rx="15"
+        fill="#faf9f7"/>
+
+      <!-- 犬 -->
+      <g
+        id="dogIllustration"
+        fill="#d9d4ce"
+        stroke="#77716b"
+        stroke-width="3"
+        stroke-linejoin="round">
+
+        <!-- 胴 -->
+        <ellipse
+          cx="255"
+          cy="165"
+          rx="125"
+          ry="65"/>
+
+        <!-- 首 -->
+        <path
+          d="M150 145
+             C135 125 135 95 155 80
+             C175 65 195 90 190 120
+             L180 155 Z"/>
+
+        <!-- 頭 -->
+        <ellipse
+          cx="160"
+          cy="70"
+          rx="48"
+          ry="38"/>
+
+        <!-- 鼻 -->
+        <ellipse
+          cx="113"
+          cy="75"
+          rx="17"
+          ry="11"/>
+
+        <!-- 耳 -->
+        <path
+          d="M138 45
+             C105 12 108 0 130 8
+             C152 16 160 35 157 50 Z"/>
+
+        <path
+          d="M175 42
+             C200 12 215 18 207 38
+             C200 55 190 63 178 58 Z"/>
+
+        <!-- 前脚 -->
+        <path
+          d="M185 205
+             L185 290
+             L210 290
+             L218 205 Z"/>
+
+        <!-- 後脚 -->
+        <path
+          d="M335 205
+             L350 290
+             L375 290
+             L365 195 Z"/>
+
+        <!-- しっぽ -->
+        <path
+          d="M370 145
+             C425 105 455 125 440 150
+             C430 166 410 165 390 158"
+          fill="none"/>
+
+        <!-- 目 -->
+        <circle
+          cx="148"
+          cy="63"
+          r="4"
+          fill="#555"
+          stroke="none"/>
+
+      </g>
+
+
+      <!-- 測定線 -->
+      <g id="measureLine"
+         fill="none"
+         stroke="#555"
+         stroke-width="4"
+         stroke-linecap="round">
+
+        <line
+          x1="130"
+          y1="100"
+          x2="190"
+          y2="100"/>
+
+      </g>
+
+
+      <!-- 矢印 -->
+      <g id="measureArrows"
+         fill="#555"
+         stroke="#555"
+         stroke-width="2">
+
+        <path d="M130 100 L142 94 L142 106 Z"/>
+        <path d="M190 100 L178 94 L178 106 Z"/>
+
+      </g>
+
+
+      <!-- 測定番号 -->
+      <g id="measureLabels">
+
+        <rect
+          x="195"
+          y="85"
+          width="110"
+          height="32"
+          rx="16"
+          fill="#333"/>
+
+        <text
+          x="250"
+          y="106"
+          text-anchor="middle"
+          font-size="13"
+          fill="#fff"
+          font-weight="bold">
+          測定ポイント
+        </text>
+
+      </g>
+
+    </svg>
+
+
+    <div
+      id="measurePointText"
+      class="measure-point">
+      首の付け根を一周
+    </div>
+
+
+    <div
+      id="measureNote"
+      class="measure-note">
+    </div>
+
+  </div>
+
+
+  <!-- 3回測定 -->
+
+  <div class="card">
+
+    <div class="card-title">
+      3回測定してください
+    </div>
+
+    <div class="measure-inputs">
+
+      <div class="measure-input-box">
+
+        <div class="measure-input-label">
+          1回目
+        </div>
+
+        <input
+          id="measure1"
+          type="number"
+          inputmode="decimal"
+          step="0.1"
+          min="0"
+          oninput="updateAverage()">
+
+        <div class="unit">
+          cm
+        </div>
+
+      </div>
+
+
+      <div class="measure-input-box">
+
+        <div class="measure-input-label">
+          2回目
+        </div>
+
+        <input
+          id="measure2"
+          type="number"
+          inputmode="decimal"
+          step="0.1"
+          min="0"
+          oninput="updateAverage()">
+
+        <div class="unit">
+          cm
+        </div>
+
+      </div>
+
+
+      <div class="measure-input-box">
+
+        <div class="measure-input-label">
+          3回目
+        </div>
+
+        <input
+          id="measure3"
+          type="number"
+          inputmode="decimal"
+          step="0.1"
+          min="0"
+          oninput="updateAverage()">
+
+        <div class="unit">
+          cm
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div class="average-box">
+
+      <div class="average-label">
+        3回の平均値
+      </div>
+
+      <div
+        id="averageValue"
+        class="average-value">
+        -
+      </div>
+
+      <div class="average-unit">
+        cm
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================
+     SCREEN 4
+===================================== -->
+
+<section id="screen4" class="screen">
+
+  <h1 class="page-title">
+    採寸結果
+  </h1>
+
+  <p class="page-subtitle">
+    3回測定した平均値です。
+  </p>
+
+  <div id="resultList"></div>
+
+</section>
+
+
+<!-- =====================================
+     SCREEN 5
+===================================== -->
+
+<section id="screen5" class="screen">
+
+  <div class="complete-icon">
+    ✓
+  </div>
+
+  <div class="complete-title">
+    採寸完了
+  </div>
+
+  <p class="complete-text">
+    お疲れさまでした。<br>
+    すべての採寸が完了しました。
+  </p>
+
+
+  <div class="card">
+
+    <div class="card-title">
+      わんちゃん
+    </div>
+
+    <div class="result-row">
+      <span>お名前</span>
+      <span
+        class="result-value"
+        id="completeDog">
+      </span>
+    </div>
+
+    <div class="result-row">
+      <span>体重</span>
+      <span
+        class="result-value"
+        id="completeWeight">
+      </span>
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================
+     下部ボタン
+===================================== -->
+
+<div
+  id="bottomButtons"
+  class="bottom-buttons">
+
+  <div class="bottom-inner">
+
+    <button
+      id="backButton"
+      class="btn btn-back"
+      onclick="goBack()">
+      戻る
+    </button>
+
+    <button
+      id="nextButton"
+      class="btn btn-next"
+      onclick="goNext()">
+      次へ
+    </button>
+
+  </div>
 
 </div>
+
+
+<div
+  id="toast"
+  class="toast">
+</div>
+
+
+</div>
+
+
+<script>
+
+/* =====================================================
+   データ
+===================================================== */
+
+const measurements = [
+
+  {
+    name:"首まわり（首の付け根）",
+    description:"首の付け根を一周するように測ります。",
+    point:"首の付け根を一周",
+    note:"メジャーを強く締めすぎず、毛を押さえる程度で測ってください。",
+    line:[130,100,190,100]
+  },
+
+  {
+    name:"胴まわり",
+    description:"前脚の付け根のすぐ後ろを一周して測ります。",
+    point:"前脚の後ろ側を一周",
+    note:"胸の一番深い部分を通る位置で一周します。",
+    line:[170,150,340,150]
+  },
+
+  {
+    name:"ウェスト",
+    description:"胴体の細くなっている部分を一周します。",
+    point:"腰の細い部分を一周",
+    note:"犬の体型に合わせ、自然に立った状態で測ります。",
+    line:[210,175,325,175]
+  },
+
+  {
+    name:"着丈",
+    description:"首の付け根から尻尾の付け根までを測ります。",
+    point:"首の付け根 → 尻尾の付け根",
+    note:"背中に沿わせて、まっすぐ測ります。",
+    line:[155,105,380,145]
+  },
+
+  {
+    name:"前身頃",
+    description:"首の付け根から前脚の付け根付近までを測ります。",
+    point:"首元 → 前脚付け根",
+    note:"胸側の中心ラインを基準に測ります。",
+    line:[145,105,190,205]
+  },
+
+  {
+    name:"前脚の太さ",
+    description:"前脚の一番太い部分を一周します。",
+    point:"前脚の一番太い部分",
+    note:"左右どちらか一方の前脚を測ってください。",
+    line:[180,245,215,245]
+  },
+
+  {
+    name:"後脚の太さ",
+    description:"後脚の一番太い部分を一周します。",
+    point:"後脚の一番太い部分",
+    note:"左右どちらか一方の後脚を測ってください。",
+    line:[345,245,375,245]
+  },
+
+  {
+    name:"前脚の長さ",
+    description:"前脚の付け根から足先までを測ります。",
+    point:"前脚付け根 → 足先",
+    note:"脚を自然に伸ばした状態で測ります。",
+    line:[200,205,195,290]
+  },
+
+  {
+    name:"後脚の長さ",
+    description:"後脚の付け根から足先までを測ります。",
+    point:"後脚付け根 → 足先",
+    note:"脚を自然に立たせた状態で測ります。",
+    line:[355,200,365,290]
+  },
+
+  {
+    name:"首の長さ（後頭部手前）",
+    description:"首の付け根から後頭部手前までを測ります。",
+    point:"首の付け根 → 後頭部手前",
+    note:"首のラインに沿わせて測ります。",
+    line:[155,110,165,45]
+  },
+
+  {
+    name:"首の長さ（額まで）",
+    description:"首の付け根から額までの長さを測ります。",
+    point:"首の付け根 → 額",
+    note:"頭のラインに沿って測ります。",
+    line:[155,110,140,45]
+  },
+
+  {
+    name:"頭周り",
+    description:"頭の一番大きい部分を一周します。",
+    point:"頭の一番大きい部分を一周",
+    note:"耳の付け根付近を含め、頭全体を一周します。",
+    line:[115,60,205,60]
+  },
+
+  {
+    name:"前脚の幅",
+    description:"前脚の左右の幅を測ります。",
+    point:"前脚の外側 → 外側",
+    note:"自然に立っている状態で測ります。",
+    line:[175,210,220,210]
+  },
+
+  {
+    name:"首の真ん中",
+    description:"首の中央部分を一周して測ります。",
+    point:"首の中央を一周",
+    note:"首の付け根ではなく、中央部分を測ります。",
+    line:[145,90,185,90]
+  },
+
+  {
+    name:"尻尾の太さ",
+    description:"尻尾の付け根付近の太さを測ります。",
+    point:"尻尾の付け根付近",
+    note:"尻尾を強く締めず、自然な状態で一周します。",
+    line:[375,145,410,145]
+  }
+
+];
+
+
+/* =====================================================
+   状態
+===================================================== */
+
+let currentScreen = 1;
+let currentMeasurement = 0;
+
+let ownerName = "";
+let dogName = "";
+let gender = "";
+let birthDate = "";
+let weight = "";
+
+let results = measurements.map(() => ({
+  values:["","",""],
+  average:""
+}));
+
+
+/* =====================================================
+   性別
+===================================================== */
+
+function selectGender(value){
+
+  gender = value;
+
+  document
+    .getElementById("maleBtn")
+    .classList.toggle(
+      "active",
+      value === "male"
+    );
+
+  document
+    .getElementById("femaleBtn")
+    .classList.toggle(
+      "active",
+      value === "female"
+    );
+}
+
+
+/* =====================================================
+   画面切り替え
+===================================================== */
+
+function showScreen(number){
+
+  document
+    .querySelectorAll(".screen")
+    .forEach(el=>{
+      el.classList.remove("active");
+    });
+
+  document
+    .getElementById("screen" + number)
+    .classList.add("active");
+
+  currentScreen = number;
+
+  updateButtons();
+
+  window.scrollTo({
+    top:0,
+    behavior:"instant"
+  });
+}
+
+
+/* =====================================================
+   基本情報チェック
+===================================================== */
+
+function validateBasic(){
+
+  ownerName =
+    document.getElementById("ownerName").value.trim();
+
+  dogName =
+    document.getElementById("dogName").value.trim();
+
+  birthDate =
+    document.getElementById("birthDate").value;
+
+  weight =
+    document.getElementById("weight").value;
+
+  if(!ownerName){
+    showToast("ご主人様の名前を入力してください");
+    return false;
+  }
+
+  if(!dogName){
+    showToast("わんちゃんの名前を入力してください");
+    return false;
+  }
+
+  if(!gender){
+    showToast("性別を選択してください");
+    return false;
+  }
+
+  if(!birthDate){
+    showToast("生年月日を入力してください");
+    return false;
+  }
+
+  if(!weight){
+    showToast("体重を入力してください");
+    return false;
+  }
+
+  return true;
+}
+
+
+/* =====================================================
+   基本情報表示
+===================================================== */
+
+function updateBasicInfo(){
+
+  const suffix =
+    gender === "male"
+      ? "くん"
+      : "ちゃん";
+
+  document.getElementById(
+    "dogNameTitle"
+  ).textContent =
+    dogName + suffix;
+
+  document.getElementById(
+    "confirmOwner"
+  ).textContent =
+    ownerName;
+
+  document.getElementById(
+    "confirmDog"
+  ).textContent =
+    dogName + suffix;
+
+  document.getElementById(
+    "confirmGender"
+  ).textContent =
+    gender === "male"
+      ? "男の子"
+      : "女の子";
+
+  document.getElementById(
+    "confirmBirth"
+  ).textContent =
+    formatDate(birthDate);
+
+  document.getElementById(
+    "confirmWeight"
+  ).textContent =
+    weight + " kg";
+
+}
+
+
+/* =====================================================
+   生年月日表示
+===================================================== */
+
+function formatDate(value){
+
+  if(!value) return "-";
+
+  const d =
+    new Date(value + "T00:00:00");
+
+  return (
+    d.getFullYear() +
+    "年" +
+    (d.getMonth()+1) +
+    "月" +
+    d.getDate() +
+    "日"
+  );
+}
+
+
+/* =====================================================
+   採寸画面
+===================================================== */
+
+function loadMeasurement(){
+
+  const data =
+    measurements[currentMeasurement];
+
+  document.getElementById(
+    "measureNumber"
+  ).textContent =
+    "採寸 " +
+    (currentMeasurement + 1);
+
+  document.getElementById(
+    "measureTitle"
+  ).textContent =
+    data.name;
+
+  document.getElementById(
+    "measureDescription"
+  ).textContent =
+    data.description;
+
+  document.getElementById(
+    "measurePointText"
+  ).textContent =
+    data.point;
+
+  document.getElementById(
+    "measureNote"
+  ).textContent =
+    data.note;
+
+
+  const line =
+    document.getElementById("measureLine");
+
+  line.innerHTML = `
+    <line
+      x1="${data.line[0]}"
+      y1="${data.line[1]}"
+      x2="${data.line[2]}"
+      y2="${data.line[3]}"
+      stroke="#555"
+      stroke-width="5"
+      stroke-linecap="round"
+    />
+  `;
+
+
+  const arrows =
+    document.getElementById("measureArrows");
+
+  arrows.innerHTML =
+    createArrows(
+      data.line
+    );
+
+
+  const labels =
+    document.getElementById(
+      "measureLabels"
+    );
+
+  labels.innerHTML =
+    createMeasurementLabel(
+      data.line
+    );
+
+
+  const saved =
+    results[currentMeasurement];
+
+  document.getElementById(
+    "measure1"
+  ).value =
+    saved.values[0];
+
+  document.getElementById(
+    "measure2"
+  ).value =
+    saved.values[1];
+
+  document.getElementById(
+    "measure3"
+  ).value =
+    saved.values[2];
+
+  updateAverage();
+
+  updateProgress();
+
+}
+
+
+/* =====================================================
+   矢印生成
+===================================================== */
+
+function createArrows(line){
+
+  const x1 = line[0];
+  const y1 = line[1];
+  const x2 = line[2];
+  const y2 = line[3];
+
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+
+  const length =
+    Math.sqrt(dx*dx + dy*dy);
+
+  if(length === 0) return "";
+
+  const ux = dx / length;
+  const uy = dy / length;
+
+  const px = -uy;
+  const py = ux;
+
+  const size = 12;
+
+  const p1 = [
+    x1,
+    y1
+  ];
+
+  const p2 = [
+    x1 + ux*size + px*size*.55,
+    y1 + uy*size + py*size*.55
+  ];
+
+  const p3 = [
+    x1 + ux*size - px*size*.55,
+    y1 + uy*size - py*size*.55
+  ];
+
+
+  const q1 = [
+    x2,
+    y2
+  ];
+
+  const q2 = [
+    x2 - ux*size + px*size*.55,
+    y2 - uy*size + py*size*.55
+  ];
+
+  const q3 = [
+    x2 - ux*size - px*size*.55,
+    y2 - uy*size - py*size*.55
+  ];
+
+
+  return `
+    <polygon
+      points="${p1[0]},${p1[1]}
+              ${p2[0]},${p2[1]}
+              ${p3[0]},${p3[1]}"
+      fill="#555"
+    />
+
+    <polygon
+      points="${q1[0]},${q1[1]}
+              ${q2[0]},${q2[1]}
+              ${q3[0]},${q3[1]}"
+      fill="#555"
+    />
+  `;
+}
+
+
+/* =====================================================
+   ラベル生成
+===================================================== */
+
+function createMeasurementLabel(line){
+
+  const x =
+    (line[0] + line[2]) / 2;
+
+  const y =
+    (line[1] + line[3]) / 2;
+
+  let labelY =
+    y - 28;
+
+  if(labelY < 20){
+    labelY = y + 18;
+  }
+
+  return `
+    <rect
+      x="${x-55}"
+      y="${labelY-14}"
+      width="110"
+      height="28"
+      rx="14"
+      fill="#333"
+    />
+
+    <text
+      x="${x}"
+      y="${labelY+5}"
+      text-anchor="middle"
+      font-size="12"
+      fill="#fff"
+      font-weight="bold">
+      ここを測る
+    </text>
+  `;
+}
+
+
+/* =====================================================
+   平均
+===================================================== */
+
+function updateAverage(){
+
+  const values = [
+
+    document.getElementById(
+      "measure1"
+    ).value,
+
+    document.getElementById(
+      "measure2"
+    ).value,
+
+    document.getElementById(
+      "measure3"
+    ).value
+
+  ];
+
+
+  results[currentMeasurement]
+    .values = values;
+
+
+  const nums =
+    values
+      .filter(v => v !== "")
+      .map(Number)
+      .filter(v => !isNaN(v));
+
+
+  if(nums.length === 0){
+
+    results[currentMeasurement]
+      .average = "";
+
+    document.getElementById(
+      "averageValue"
+    ).textContent = "-";
+
+    return;
+  }
+
+
+  const avg =
+    nums.reduce(
+      (a,b)=>a+b,
+      0
+    ) / nums.length;
+
+
+  const rounded =
+    Math.round(avg * 10) / 10;
+
+
+  results[currentMeasurement]
+    .average =
+    rounded.toFixed(1);
+
+
+  document.getElementById(
+    "averageValue"
+  ).textContent =
+    rounded.toFixed(1);
+
+}
+
+
+/* =====================================================
+   採寸入力チェック
+===================================================== */
+
+function validateMeasurement(){
+
+  const values = [
+
+    document.getElementById(
+      "measure1"
+    ).value,
+
+    document.getElementById(
+      "measure2"
+    ).value,
+
+    document.getElementById(
+      "measure3"
+    ).value
+
+  ];
+
+
+  if(
+    values.some(
+      v => v === "" || Number(v) <= 0
+    )
+  ){
+
+    showToast(
+      "3回すべて入力してください"
+    );
+
+    return false;
+  }
+
+
+  return true;
+}
+
+
+/* =====================================================
+   進行状況
+===================================================== */
+
+function updateProgress(){
+
+  const current =
+    currentMeasurement + 1;
+
+  const total =
+    measurements.length;
+
+  const percent =
+    Math.round(
+      current / total * 100
+    );
+
+
+  document.getElementById(
+    "progressLabel"
+  ).textContent =
+    "採寸 " +
+    current +
+    " / " +
+    total;
+
+
+  document.getElementById(
+    "progressPercent"
+  ).textContent =
+    percent + "%";
+
+
+  document.getElementById(
+    "progressFill"
+  ).style.width =
+    percent + "%";
+
+}
+
+
+/* =====================================================
+   結果一覧
+===================================================== */
+
+function createResults(){
+
+  const container =
+    document.getElementById(
+      "resultList"
+    );
+
+  container.innerHTML = "";
+
+
+  measurements.forEach(
+    (item,index)=>{
+
+      const result =
+        results[index];
+
+      const card =
+        document.createElement(
+          "div"
+        );
+
+      card.className =
+        "result-card";
+
+
+      card.innerHTML = `
+
+        <div class="result-header">
+          ${index+1}. ${item.name}
+        </div>
+
+        <div class="result-row">
+          <span>1回目</span>
+          <span>
+            ${result.values[0]} cm
+          </span>
+        </div>
+
+        <div class="result-row">
+          <span>2回目</span>
+          <span>
+            ${result.values[1]} cm
+          </span>
+        </div>
+
+        <div class="result-row">
+          <span>3回目</span>
+          <span>
+            ${result.values[2]} cm
+          </span>
+        </div>
+
+        <div class="result-row">
+          <span>平均</span>
+          <span class="result-value">
+            ${result.average} cm
+          </span>
+        </div>
+      `;
+
+
+      container.appendChild(card);
+
+    }
+  );
+
+}
+
+
+/* =====================================================
+   完了画面
+===================================================== */
+
+function updateComplete(){
+
+  const suffix =
+    gender === "male"
+      ? "くん"
+      : "ちゃん";
+
+
+  document.getElementById(
+    "completeDog"
+  ).textContent =
+    dogName + suffix;
+
+
+  document.getElementById(
+    "completeWeight"
+  ).textContent =
+    weight + " kg";
+
+}
+
+
+/* =====================================================
+   次へ
+===================================================== */
+
+function goNext(){
+
+  /* 1 → 2 */
+
+  if(currentScreen === 1){
+
+    if(!validateBasic()){
+      return;
+    }
+
+    updateBasicInfo();
+
+    showScreen(2);
+
+    return;
+  }
+
+
+  /* 2 → 3 */
+
+  if(currentScreen === 2){
+
+    currentMeasurement = 0;
+
+    loadMeasurement();
+
+    showScreen(3);
+
+    return;
+  }
+
+
+  /* 採寸 */
+
+  if(currentScreen === 3){
+
+    if(!validateMeasurement()){
+      return;
+    }
+
+
+    if(
+      currentMeasurement <
+      measurements.length - 1
+    ){
+
+      currentMeasurement++;
+
+      loadMeasurement();
+
+      window.scrollTo({
+        top:0,
+        behavior:"smooth"
+      });
+
+    }else{
+
+      createResults();
+
+      showScreen(4);
+
+    }
+
+    return;
+  }
+
+
+  /* 結果 → 完了 */
+
+  if(currentScreen === 4){
+
+    updateComplete();
+
+    showScreen(5);
+
+    return;
+  }
+
+}
+
+
+/* =====================================================
+   戻る
+===================================================== */
+
+function goBack(){
+
+  if(currentScreen === 1){
+    return;
+  }
+
+
+  if(currentScreen === 2){
+
+    showScreen(1);
+
+    return;
+  }
+
+
+  if(currentScreen === 3){
+
+    if(currentMeasurement > 0){
+
+      currentMeasurement--;
+
+      loadMeasurement();
+
+      return;
+    }
+
+    showScreen(2);
+
+    return;
+  }
+
+
+  if(currentScreen === 4){
+
+    currentMeasurement =
+      measurements.length - 1;
+
+    loadMeasurement();
+
+    showScreen(3);
+
+    return;
+  }
+
+
+  if(currentScreen === 5){
+
+    showScreen(4);
+
+    return;
+  }
+
+}
+
+
+/* =====================================================
+   ボタン表示
+===================================================== */
+
+function updateButtons(){
+
+  const back =
+    document.getElementById(
+      "backButton"
+    );
+
+  const next =
+    document.getElementById(
+      "nextButton"
+    );
+
+  const bottom =
+    document.getElementById(
+      "bottomButtons"
+    );
+
+
+  if(currentScreen === 1){
+
+    back.style.display =
+      "none";
+
+    next.textContent =
+      "次へ";
+
+    bottom.style.display =
+      "block";
+
+  }
+
+  else if(currentScreen === 2){
+
+    back.style.display =
+      "block";
+
+    next.textContent =
+      "採寸を始める";
+
+    bottom.style.display =
+      "block";
+
+  }
+
+  else if(currentScreen === 3){
+
+    back.style.display =
+      "block";
+
+    next.textContent =
+      currentMeasurement ===
+      measurements.length - 1
+        ? "結果を見る"
+        : "次の採寸へ";
+
+    bottom.style.display =
+      "block";
+
+  }
+
+  else if(currentScreen === 4){
+
+    back.style.display =
+      "block";
+
+    next.textContent =
+      "完了";
+
+    bottom.style.display =
+      "block";
+
+  }
+
+  else if(currentScreen === 5){
+
+    bottom.style.display =
+      "none";
+
+  }
+
+}
+
+
+/* =====================================================
+   トースト
+===================================================== */
+
+function showToast(message){
+
+  const toast =
+    document.getElementById(
+      "toast"
+    );
+
+  toast.textContent =
+    message;
+
+  toast.classList.add("show");
+
+
+  setTimeout(()=>{
+    toast.classList.remove(
+      "show"
+    );
+  },2200);
+
+}
+
+
+/* =====================================================
+   初期化
+===================================================== */
+
+document.addEventListener(
+  "DOMContentLoaded",
+  ()=>{
+
+    updateButtons();
+
+  }
+);
+
+</script>
+
+</body>
+</html>
