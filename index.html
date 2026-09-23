@@ -150,6 +150,7 @@ h2{
   font-size:13px;
   line-height:1.8;
   color:#444;
+  white-space:pre-line;
 }
 
 label{
@@ -249,7 +250,8 @@ input[type="date"]{
 .measure-description{
   font-size:14px;
   color:#555;
-  line-height:1.8;
+  line-height:1.9;
+  white-space:pre-line;
 }
 
 .location-card{
@@ -264,6 +266,7 @@ input[type="date"]{
   font-size:15px;
   font-weight:700;
   margin-bottom:12px;
+  white-space:pre-line;
 }
 
 .measure-row{
@@ -272,16 +275,27 @@ input[type="date"]{
   gap:8px;
 }
 
-.measure-row input{
-  text-align:center;
-  padding:0 8px;
+.measure-input{
+  min-width:0;
 }
 
-.unit{
-  font-size:12px;
+.measure-input input{
+  text-align:center;
+  padding:0 6px;
+}
+
+.measure-number-label{
+  font-size:11px;
   color:#888;
   text-align:center;
-  margin-top:6px;
+  margin-bottom:5px;
+}
+
+.measure-unit{
+  text-align:center;
+  font-size:12px;
+  color:#555;
+  margin-top:5px;
 }
 
 .average{
@@ -291,6 +305,7 @@ input[type="date"]{
   border-radius:9px;
   font-size:12px;
   color:#555;
+  line-height:1.6;
 }
 
 .bottom-nav{
@@ -346,6 +361,11 @@ input[type="date"]{
   margin-top:2px;
 }
 
+.agree-box label{
+  margin:0;
+  font-weight:400;
+}
+
 .finish{
   text-align:center;
   padding-top:30px;
@@ -397,6 +417,7 @@ input[type="date"]{
 
 .result-value{
   font-weight:600;
+  overflow-wrap:anywhere;
 }
 
 .result-location{
@@ -424,6 +445,7 @@ input[type="date"]{
 }
 
 @media (max-width:360px){
+
   main{
     padding-left:16px;
     padding-right:16px;
@@ -433,9 +455,14 @@ input[type="date"]{
     gap:5px;
   }
 
-  .measure-row input{
-    padding:0 4px;
+  .measure-input input{
+    padding:0 3px;
   }
+
+  .measure-number-label{
+    font-size:10px;
+  }
+
 }
 </style>
 </head>
@@ -445,20 +472,39 @@ input[type="date"]{
 <div class="app">
 
 <header>
+
   <div class="header-row">
-    <div class="brand">PINFORME</div>
-    <div class="page-number" id="pageNumber"></div>
+
+    <div class="brand">
+      PINFORME
+    </div>
+
+    <div
+      class="page-number"
+      id="pageNumber">
+    </div>
+
   </div>
 
   <div class="progress">
-    <div class="progress-bar" id="progressBar"></div>
+
+    <div
+      class="progress-bar"
+      id="progressBar">
+    </div>
+
   </div>
+
 </header>
+
 
 <main id="main"></main>
 
+
 <div class="bottom-nav">
+
   <div class="nav-inner">
+
     <button
       class="nav-button"
       id="backButton">
@@ -470,154 +516,232 @@ input[type="date"]{
       id="nextButton">
       次へ
     </button>
+
   </div>
+
 </div>
 
 </div>
+
 
 <script>
 
-/* =========================
-   基本データ
-========================= */
+/* =========================================================
+   15項目
+========================================================= */
 
 const items = [
 
   {
     title:"首まわり（首の付け根）",
-    description:"首の付け根を一周するように測ります。",
-    locations:["首の付け根"]
+    description:
+`姿勢を正した時にちょうど首から胴体に変わる瞬間部分
+の毛並みが変わる所があります。`,
+    locations:[
+      "首の付け根"
+    ]
   },
 
   {
     title:"胴まわり",
-    description:"前脚の付け根のすぐ後ろを一周するように測ります。",
-    locations:["胴まわり"]
+    description:
+`一番胸が張っているポイントで測ります。
+大体前脚の脇あたりから2cmから3cm後ろへ行った辺りに
+なります。`,
+    locations:[
+      "胴まわり"
+    ]
   },
 
   {
     title:"ウェスト",
-    description:"胴の中で一番細い部分を一周するように測ります。",
-    locations:["ウェスト"]
+    description:
+`胴体で一番細い部分を一周測ります。`,
+    locations:[
+      "ウェスト"
+    ]
   },
 
   {
     title:"着丈",
-    description:"首の付け根から、尻尾の付け根までを測ります。",
-    locations:["首の付け根 → 尻尾の付け根"]
+    description:
+`首まわりを測った位置から尻尾の付け根までを測ります。尻尾は軽く持ち上げますと、首まわり同様に毛並みが
+変わるラインが薄っすら見えますのでそのラインまでを
+測ります。`,
+    locations:[
+      "首の付け根 → 尻尾の付け根"
+    ]
   },
 
   {
     title:"前身頃",
-    description:"首の付け根から胸の下を通り、前脚の間までを測ります。",
-    locations:["首の付け根 → 前脚の間"]
+    description:
+`首まわりを測った位置からお腹部分を多いかぶせて
+あげたい部分までを測ります。`,
+    locations:[
+      "首の付け根 → お腹部分"
+    ]
   },
 
   {
     title:"前脚の太さ",
-    description:"前脚の太い部分と細い部分を測ります。",
-    locations:["太い部分","細い部分"]
+    description:
+`太いところと細いところを測ります。
+服を作る時の目安になります。`,
+    locations:[
+      "太いところ",
+      "細いところ"
+    ]
   },
 
   {
     title:"後脚の太さ",
-    description:"後脚の太い部分と細い部分を測ります。",
-    locations:["太い部分","細い部分"]
+    description:
+`太いところと細いところを測ります。
+服を作る時の目安になります。`,
+    locations:[
+      "太いところ",
+      "細いところ"
+    ]
   },
 
   {
     title:"前脚の長さ",
-    description:"前脚を3か所に分けて測ります。",
-    locations:["脇 → 肘","肘 → 手首","手首 → 地面"]
+    description:
+`脇から関節ごとに地面までを測ります。
+服を作る時の目安になります。`,
+    locations:[
+      "脇 → 肘",
+      "肘 → 手首",
+      "手首 → 地面"
+    ]
   },
 
   {
     title:"後脚の長さ",
-    description:"後脚を3か所に分けて測ります。",
-    locations:["❼で測ったライン → 膝","膝 → 足首","足首 → 地面"]
+    description:
+`測るポイントは❼の測ったラインからになります。
+内側でズボンが止まるポイントとなりますのでそこから
+スタートします。関節ごとに地面までを測ります。
+服を作る時の目安になります。`,
+    locations:[
+      "❼で測ったライン → 膝",
+      "膝 → 足首",
+      "足首 → 地面"
+    ]
   },
 
   {
-    title:"首の長さ（ネック）",
-    description:"首の付け根から首の上までを測ります。",
-    locations:["首の長さ"]
+    title:"首の長さ(ネック)",
+    description:
+`首まわりを測った位置から後頭部に入る手前までの長さ
+でネックデザインを決める際に参考にないます。`,
+    locations:[
+      "首の付け根 → 後頭部手前"
+    ]
   },
 
   {
-    title:"首の長さ（スヌード）",
-    description:"スヌードを着用する部分の首の長さを測ります。",
-    locations:["スヌード部分"]
+    title:"首の長さ(スヌーズ)",
+    description:
+`首まわりを測った位置から額までの長さでスヌードを測る
+際に参考になります。`,
+    locations:[
+      "首の付け根 → 額"
+    ]
   },
 
   {
     title:"頭周り",
-    description:"頭の一番大きい部分を一周するように測ります。",
-    locations:["頭周り"]
+    description:
+`額から一周測ります。
+首まわりより頭まわりの方が大きい場合があります。
+お洋服を着せる際は頭から着せますので、密かに重要
+ポイントとなります。`,
+    locations:[
+      "頭周り"
+    ]
   },
 
   {
     title:"前脚の幅",
-    description:"左右の前脚の外側から外側までを測ります。",
-    locations:["前脚の幅"]
+    description:
+`犬を前から見たときの前脚の脚と脚の間の幅です。
+体格の差や骨格の差や犬種にもより異なります。`,
+    locations:[
+      "前脚と前脚の間"
+    ]
   },
 
   {
     title:"首の真ん中",
-    description:"首の真ん中の位置を一周するように測ります。",
-    locations:["首の真ん中"]
+    description:
+`首の中でも一番細い部分を測ります`,
+    locations:[
+      "首の一番細い部分"
+    ]
   },
 
   {
     title:"尻尾の太さ",
-    description:"尻尾の付け根部分の太さを測ります。",
-    locations:["尻尾の付け根"]
+    description:
+`付け根の一番太い部分を測ります`,
+    locations:[
+      "尻尾の付け根"
+    ]
   }
 
 ];
 
 
-/* =========================
-   採寸前の6つのポイント
-========================= */
+/* =========================================================
+   採寸前・大切な6つのポイント
+========================================================= */
 
 const points = [
 
   {
     title:"❶ 採寸は最低3回は測る事",
-    text:"犬は動きますので、一度の採寸では確かな数字ではありません。できるだけ同じ場所を最低3回測り、安定した数値を確認しましょう。"
+    text:
+`犬は動きますので、一度の採寸では確かな数字ではありません。できるだけ同じ場所を最低3回測り、安定した数値を確認しましょう。`
   },
 
   {
     title:"❷ 測る際の立たせている場所",
-    text:"柔らかいソファーやクッション、ベッドなどの上では体が歪み、正しい採寸ができません。だからといって、フローリングで脚が滑りやすい状態も問題です。フローリングの上に滑り止めとして、薄手のブランケットやバスタオルなどを敷いて採寸してください。"
+    text:
+`柔らかいソファーやクッション、ベッドなどの上では体が歪み、正しい採寸ができません。だからといって、フローリングで脚が滑りやすい状態も問題です。フローリングの上に滑り止めとして、薄手のブランケットやバスタオルなどを敷いて採寸してください。`
   },
 
   {
     title:"❸ 測る際の愛犬の体調",
-    text:"寝起きではないですか？寝ていた直後は体が縮こまっている可能性があります。また、すぐに伏せをしてしまったり、怖がっていたりしていませんか？ついつい暴れないように高い所で測ろうとしてしまいたくなりますが、体も強張り、正確な数字とは言えません。寒くて震えていませんか？これもまた体も強張り、正確な数字とは言えません。疲れていませんか？怪我や、普段しないような行動をする可能性もあります。コンディションが悪いと採寸を嫌がりますので、避けましょう。"
+    text:
+`寝起きではないですか？寝ていた直後は体が縮こまっている可能性があります。また、すぐに伏せをしてしまったり、怖がっていたりしていませんか？ついつい暴れないように高い所で測ろうとしてしまいたくなりますが、体も強張り、正確な数字とは言えません。寒くて震えていませんか？これもまた体も強張り、正確な数字とは言えません。疲れていませんか？怪我や、普段しないような行動をする可能性もあります。コンディションが悪いと採寸を嫌がりますので、避けましょう。`
   },
 
   {
     title:"❹ 測る際の体勢",
-    text:"採寸時の犬の体勢をしっかり確認しましょう。4本の脚で立ち、まっすぐ前を見ている状態にします。何かを覗き込むように首を伸ばしたり、へっぴり腰になったり、お座りしたり、伏せたりしていない状態を作りましょう。伏せた状態やお座りした状態では、それぞれ数字が変わり、正しい採寸ができません。リラックスした自然な体勢がベストです。"
+    text:
+`採寸時の犬の体勢をしっかり確認しましょう。4本の脚で立ち、まっすぐ前を見ている状態にします。何かを覗き込むように首を伸ばしたり、へっぴり腰になったり、お座りしたり、伏せたりしていない状態を作りましょう。伏せた状態やお座りした状態では、それぞれ数字が変わり、正しい採寸ができません。リラックスした自然な体勢がベストです。`
   },
 
   {
     title:"❺ 独自の体型を理解する",
-    text:"お尻にかけてカーブが強い、胸板が厚い、前脚の間隔がとても広いなど、特徴的な体型の場合は、その特徴を意識して採寸しましょう。"
+    text:
+`お尻にかけてカーブが強い、胸板が厚い、前脚の間隔がとても広いなど、特徴的な体型の場合は、その特徴を意識して採寸しましょう。`
   },
 
   {
     title:"❻ 呼吸を感じる",
-    text:"呼吸と共に1.0cmから1.5cmほど、採寸時のサイズに変化が出ます。興奮状態ですと特に呼吸が大きくなるため、採寸に誤差が生じます。できる限り落ち着いた状態で採寸することがベストですが、大抵の犬はメジャーを少し怖がり、呼吸が大きくなります。ですので、呼吸を感じながら数字を読み取りましょう。"
+    text:
+`呼吸と共に1.0cmから1.5cmほど、採寸時のサイズに変化が出ます。興奮状態ですと特に呼吸が大きくなるため、採寸に誤差が生じます。できる限り落ち着いた状態で採寸することがベストですが、大抵の犬はメジャーを少し怖がり、呼吸が大きくなります。ですので、呼吸を感じながら数字を読み取りましょう。`
   }
 
 ];
 
 
-/* =========================
+/* =========================================================
    状態
-========================= */
+========================================================= */
 
 let step = 0;
 
@@ -632,41 +756,48 @@ let dogInfo = {
   photo:""
 };
 
+
+/*
+  各測定箇所につき3回
+*/
+
 let values = items.map(item =>
   item.locations.map(() => ["","",""])
 );
 
 
-/* =========================
-   画面リセット
-========================= */
+/* =========================================================
+   画面位置
+========================================================= */
 
 function scrollTop(){
 
-  window.scrollTo({
-    top:0,
-    left:0,
-    behavior:"instant"
-  });
+  window.scrollTo(0,0);
 
+  document.documentElement.scrollTop = 0;
   document.documentElement.scrollLeft = 0;
+
+  document.body.scrollTop = 0;
   document.body.scrollLeft = 0;
 
-  const main = document.getElementById("main");
+  const main =
+    document.getElementById("main");
 
   if(main){
+
     main.scrollTop = 0;
     main.scrollLeft = 0;
+
   }
 
 }
 
 
 /*
-  iPhone Safari用
-  ページ切り替え時に表示倍率を
-  通常状態へ戻すことを試みる
+  iPhone Safariでページ移動時に
+  表示倍率を通常状態へ戻すことを試みる
 */
+
 function resetViewport(){
 
   scrollTop();
@@ -676,20 +807,11 @@ function resetViewport(){
 
   if(!viewport) return;
 
-  const original =
-    viewport.getAttribute("content");
-
-  /*
-    一時的にズーム禁止
-  */
   viewport.setAttribute(
     "content",
     "width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"
   );
 
-  /*
-    Safariに再計算させる
-  */
   setTimeout(() => {
 
     viewport.setAttribute(
@@ -704,13 +826,14 @@ function resetViewport(){
 }
 
 
-/* =========================
-   画面描画
-========================= */
+/* =========================================================
+   全体描画
+========================================================= */
 
 function render(){
 
-  const main = document.getElementById("main");
+  const main =
+    document.getElementById("main");
 
   const pageNumber =
     document.getElementById("pageNumber");
@@ -765,7 +888,8 @@ function render(){
 
     renderMeasure();
 
-    const number = step - 1;
+    const number =
+      step - 1;
 
     pageNumber.textContent =
       `${number} / ${items.length}`;
@@ -824,17 +948,21 @@ function render(){
 }
 
 
-/* =========================
-   6つのポイント
-========================= */
+/* =========================================================
+   6つのポイント画面
+========================================================= */
 
 function renderPoints(){
 
-  const main = document.getElementById("main");
+  const main =
+    document.getElementById("main");
 
   main.innerHTML = `
 
-    <h1>採寸前に<br>大切な6つのポイント</h1>
+    <h1>
+      採寸前に<br>
+      大切な6つのポイント
+    </h1>
 
     <p class="lead">
       正確な採寸のために、必ずご確認ください。
@@ -855,6 +983,7 @@ function renderPoints(){
       </div>
 
     `).join("")}
+
 
     <div class="agree-box">
 
@@ -877,47 +1006,57 @@ function renderPoints(){
     .getElementById("agreeCheck")
     .addEventListener("change", e => {
 
-      agreed = e.target.checked;
+      agreed =
+        e.target.checked;
 
-      document.getElementById("nextButton").disabled =
-        !agreed;
+      document
+        .getElementById("nextButton")
+        .disabled = !agreed;
 
     });
 
 
-  document.getElementById("nextButton").disabled =
-    !agreed;
+  document
+    .getElementById("nextButton")
+    .disabled = !agreed;
 
 }
 
 
-/* =========================
+/* =========================================================
    基本情報
-========================= */
+========================================================= */
 
 function renderInfo(){
 
-  const main = document.getElementById("main");
+  const main =
+    document.getElementById("main");
 
   main.innerHTML = `
 
-    <h1>わんちゃんの基本情報</h1>
+    <h1>
+      わんちゃんの基本情報
+    </h1>
 
     <p class="lead">
       採寸するわんちゃんの情報を入力してください。
     </p>
 
+
     <div class="card">
+
 
       <div class="field">
 
-        <label>飼い主様のお名前</label>
+        <label>
+          飼い主様のお名前
+        </label>
 
         <input
           id="owner"
           type="text"
           placeholder="お名前"
-          value="${dogInfo.owner}"
+          value="${escapeHtml(dogInfo.owner)}"
         >
 
       </div>
@@ -925,13 +1064,15 @@ function renderInfo(){
 
       <div class="field">
 
-        <label>わんちゃんのお名前</label>
+        <label>
+          わんちゃんのお名前
+        </label>
 
         <input
           id="dogName"
           type="text"
           placeholder="わんちゃんのお名前"
-          value="${dogInfo.name}"
+          value="${escapeHtml(dogInfo.name)}"
         >
 
       </div>
@@ -939,18 +1080,24 @@ function renderInfo(){
 
       <div class="field">
 
-        <label>性別</label>
+        <label>
+          性別
+        </label>
 
         <select id="sex">
 
-          <option value="">選択してください</option>
+          <option value="">
+            選択してください
+          </option>
 
-          <option value="男の子"
+          <option
+            value="男の子"
             ${dogInfo.sex === "男の子" ? "selected" : ""}>
             男の子
           </option>
 
-          <option value="女の子"
+          <option
+            value="女の子"
             ${dogInfo.sex === "女の子" ? "selected" : ""}>
             女の子
           </option>
@@ -962,7 +1109,9 @@ function renderInfo(){
 
       <div class="field">
 
-        <label>生年月日</label>
+        <label>
+          生年月日
+        </label>
 
         <input
           id="birth"
@@ -975,11 +1124,14 @@ function renderInfo(){
 
       <div class="field">
 
-        <label>体重</label>
+        <label>
+          体重
+        </label>
 
         <input
           id="weight"
           type="number"
+          inputmode="decimal"
           step="0.01"
           placeholder="例：4.5"
           value="${dogInfo.weight}"
@@ -990,21 +1142,37 @@ function renderInfo(){
 
       <div class="field">
 
-        <label>わんちゃんの写真</label>
+        <label>
+          わんちゃんの写真
+        </label>
 
-        <div class="photo-box" id="photoBox">
+
+        <div
+          class="photo-box"
+          id="photoBox">
 
           ${
             dogInfo.photo
+
             ?
-            `<img src="${dogInfo.photo}" alt="わんちゃんの写真">`
+
+            `
+            <img
+              src="${dogInfo.photo}"
+              alt="わんちゃんの写真">
+            `
+
             :
-            `<div class="photo-placeholder">
+
+            `
+            <div class="photo-placeholder">
               写真を登録できます
-            </div>`
+            </div>
+            `
           }
 
         </div>
+
 
         <input
           id="photoInput"
@@ -1013,11 +1181,14 @@ function renderInfo(){
           style="display:none"
         >
 
+
         <button
           type="button"
           class="small-button"
           id="photoButton">
+
           写真を変更
+
         </button>
 
       </div>
@@ -1025,7 +1196,9 @@ function renderInfo(){
 
       <div class="card">
 
-        <h2>採寸時の注意点</h2>
+        <h2>
+          採寸時の注意点
+        </h2>
 
         <div class="point-text">
 
@@ -1061,20 +1234,23 @@ function renderInfo(){
     .getElementById("photoInput")
     .addEventListener("change", e => {
 
-      const file = e.target.files[0];
+      const file =
+        e.target.files[0];
 
       if(!file) return;
 
-      const reader = new FileReader();
+      const reader =
+        new FileReader();
 
-      reader.onload = event => {
+      reader.onload =
+        event => {
 
-        dogInfo.photo =
-          event.target.result;
+          dogInfo.photo =
+            event.target.result;
 
-        renderInfo();
+          renderInfo();
 
-      };
+        };
 
       reader.readAsDataURL(file);
 
@@ -1083,17 +1259,37 @@ function renderInfo(){
 }
 
 
-/* =========================
+/* =========================================================
+   HTMLエスケープ
+========================================================= */
+
+function escapeHtml(value){
+
+  return String(value || "")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
+
+}
+
+
+/* =========================================================
    採寸画面
-========================= */
+========================================================= */
 
 function renderMeasure(){
 
-  const main = document.getElementById("main");
+  const main =
+    document.getElementById("main");
 
-  const index = step - 2;
+  const index =
+    step - 2;
 
-  const item = items[index];
+  const item =
+    items[index];
+
 
   main.innerHTML = `
 
@@ -1114,106 +1310,149 @@ function renderMeasure(){
     </div>
 
 
-    ${item.locations.map((location, locationIndex) => {
+    ${item.locations.map(
+      (location, locationIndex) => {
 
-      const vals =
-        values[index][locationIndex];
+        const vals =
+          values[index][locationIndex];
 
-      return `
+        return `
 
-        <div class="location-card">
+          <div class="location-card">
 
-          <div class="location-title">
-            ${location}
+            <div class="location-title">
+              ${location}
+            </div>
+
+
+            <div class="measure-row">
+
+
+              ${vals.map(
+                (value, valueIndex) => `
+
+                  <div class="measure-input">
+
+                    <div class="measure-number-label">
+                      ${valueIndex + 1}回目
+                    </div>
+
+                    <input
+                      type="number"
+                      inputmode="decimal"
+                      step="0.1"
+                      placeholder="0.0"
+                      value="${value}"
+                      data-location="${locationIndex}"
+                      data-index="${valueIndex}"
+                    >
+
+                    <div class="measure-unit">
+                      cm
+                    </div>
+
+                  </div>
+
+                `
+              ).join("")}
+
+
+            </div>
+
+
+            <div
+              class="average"
+              id="average-${locationIndex}">
+            </div>
+
           </div>
 
-          <div class="measure-row">
+        `;
 
-            ${vals.map((value, valueIndex) => `
-
-              <input
-                type="number"
-                inputmode="decimal"
-                step="0.1"
-                placeholder="${valueIndex + 1}回目"
-                value="${value}"
-                data-location="${locationIndex}"
-                data-index="${valueIndex}"
-              >
-
-            `).join("")}
-
-          </div>
-
-          <div class="unit">
-            cm
-          </div>
-
-          <div
-            class="average"
-            id="average-${locationIndex}">
-          </div>
-
-        </div>
-
-      `;
-
-    }).join("")}
+      }
+    ).join("")}
 
   `;
 
 
   const inputs =
-    main.querySelectorAll("input[data-location]");
+    main.querySelectorAll(
+      "input[data-location]"
+    );
 
 
   inputs.forEach(input => {
 
-    input.addEventListener("input", e => {
+    input.addEventListener(
+      "input",
+      e => {
 
-      const location =
-        Number(e.target.dataset.location);
+        const location =
+          Number(
+            e.target.dataset.location
+          );
 
-      const valueIndex =
-        Number(e.target.dataset.index);
+        const valueIndex =
+          Number(
+            e.target.dataset.index
+          );
 
-      values[index][location][valueIndex] =
-        e.target.value;
+        values[index][location][valueIndex] =
+          e.target.value;
 
-      updateAverage(index, location);
+        updateAverage(
+          index,
+          location
+        );
 
-    });
+      }
+    );
 
   });
 
 
-  item.locations.forEach((_, locationIndex) => {
+  item.locations.forEach(
+    (_, locationIndex) => {
 
-    updateAverage(index, locationIndex);
+      updateAverage(
+        index,
+        locationIndex
+      );
 
-  });
+    }
+  );
 
 }
 
 
-/* =========================
+/* =========================================================
    平均値
-========================= */
+========================================================= */
 
-function updateAverage(itemIndex, locationIndex){
+function updateAverage(
+  itemIndex,
+  locationIndex
+){
 
   const vals =
     values[itemIndex][locationIndex];
 
+
   const numbers =
     vals
       .map(v => parseFloat(v))
-      .filter(v => Number.isFinite(v) && v > 0);
+      .filter(
+        v =>
+          Number.isFinite(v) &&
+          v > 0
+      );
+
 
   const target =
     document.getElementById(
       `average-${locationIndex}`
     );
+
 
   if(!target) return;
 
@@ -1224,32 +1463,35 @@ function updateAverage(itemIndex, locationIndex){
       "3回測定してください。";
 
     return;
+
   }
 
 
   const average =
-    numbers.reduce((a,b) => a + b, 0)
-    / numbers.length;
+    numbers.reduce(
+      (a,b) => a + b,
+      0
+    ) / numbers.length;
 
 
   if(numbers.length >= 3){
 
     target.textContent =
-      `平均 ${average.toFixed(1)} cm`;
-    
+      `3回の平均値：${average.toFixed(1)} cm`;
+
   }else{
 
     target.textContent =
-      `平均 ${average.toFixed(1)} cm　${numbers.length}回入力済み（最低3回がおすすめ）`;
+      `${numbers.length}回入力済み（最低3回がおすすめ）`;
 
   }
 
 }
 
 
-/* =========================
+/* =========================================================
    お礼画面
-========================= */
+========================================================= */
 
 function renderThanks(){
 
@@ -1279,13 +1521,13 @@ function renderThanks(){
 
       </p>
 
+
       <div class="card">
 
         <div class="point-text">
 
           いただいた採寸結果をもとに、
-          わんちゃんにより良いフィットのお洋服を
-          お届けできるよう活用させていただきます。
+          わんちゃんにより良いフィットのお洋服をお届けできるよう活用させていただきます。
 
           <br><br>
 
@@ -1302,9 +1544,9 @@ function renderThanks(){
 }
 
 
-/* =========================
+/* =========================================================
    結果画面
-========================= */
+========================================================= */
 
 function renderFinish(){
 
@@ -1333,30 +1575,37 @@ function renderFinish(){
 
     <div class="result-card">
 
+
       ${
         dogInfo.photo
+
         ?
+
         `
         <div class="result-photo">
+
           <img
             src="${dogInfo.photo}"
-            alt="わんちゃんの写真"
-          >
+            alt="わんちゃんの写真">
+
         </div>
         `
+
         :
+
         ""
       }
 
 
       <div class="result-info">
 
+
         <div class="result-label">
           飼い主様
         </div>
 
         <div class="result-value">
-          ${dogInfo.owner || "未入力"}
+          ${escapeHtml(dogInfo.owner) || "未入力"}
         </div>
 
 
@@ -1365,7 +1614,7 @@ function renderFinish(){
         </div>
 
         <div class="result-value">
-          ${dogInfo.name || "未入力"}
+          ${escapeHtml(dogInfo.name) || "未入力"}
         </div>
 
 
@@ -1374,7 +1623,7 @@ function renderFinish(){
         </div>
 
         <div class="result-value">
-          ${dogInfo.sex || "未入力"}
+          ${escapeHtml(dogInfo.sex) || "未入力"}
         </div>
 
 
@@ -1383,7 +1632,7 @@ function renderFinish(){
         </div>
 
         <div class="result-value">
-          ${dogInfo.birth || "未入力"}
+          ${escapeHtml(dogInfo.birth) || "未入力"}
         </div>
 
 
@@ -1392,93 +1641,108 @@ function renderFinish(){
         </div>
 
         <div class="result-value">
+
           ${
             dogInfo.weight
-            ? `${dogInfo.weight} kg`
-            : "未入力"
+              ? `${escapeHtml(dogInfo.weight)} kg`
+              : "未入力"
           }
+
         </div>
+
 
       </div>
 
     </div>
 
 
-    ${items.map((item, itemIndex) => `
+    ${items.map(
+      (item, itemIndex) => `
 
-      <div class="result-card">
+        <div class="result-card">
 
-        <div class="point-title">
-          ${itemIndex + 1}. ${item.title}
-        </div>
+          <div class="point-title">
+            ${itemIndex + 1}. ${item.title}
+          </div>
 
-        <div class="point-text">
-          ${item.description}
-        </div>
-
-
-        ${item.locations.map((location, locationIndex) => {
-
-          const vals =
-            values[itemIndex][locationIndex];
-
-          const numbers =
-            vals
-              .map(v => parseFloat(v))
-              .filter(v => Number.isFinite(v) && v > 0);
+          <div class="point-text">
+            ${item.description}
+          </div>
 
 
-          if(numbers.length === 0){
+          ${item.locations.map(
+            (location, locationIndex) => {
 
-            return `
+              const vals =
+                values[itemIndex][locationIndex];
 
-              <div class="result-location">
 
-                <div class="result-location-title">
-                  ${location}
+              const numbers =
+                vals
+                  .map(v => parseFloat(v))
+                  .filter(
+                    v =>
+                      Number.isFinite(v) &&
+                      v > 0
+                  );
+
+
+              if(numbers.length === 0){
+
+                return `
+
+                  <div class="result-location">
+
+                    <div class="result-location-title">
+                      ${location}
+                    </div>
+
+                    <div class="point-text">
+                      未入力
+                    </div>
+
+                  </div>
+
+                `;
+
+              }
+
+
+              const average =
+                numbers.reduce(
+                  (a,b) => a + b,
+                  0
+                ) / numbers.length;
+
+
+              return `
+
+                <div class="result-location">
+
+                  <div class="result-location-title">
+                    ${location}
+                  </div>
+
+                  <div class="result-value-big">
+                    ${average.toFixed(1)} cm
+                  </div>
+
+                  <div class="point-text">
+                    ${numbers.length}回測定
+                  </div>
+
                 </div>
 
-                <div class="point-text">
-                  未入力
-                </div>
+              `;
 
-              </div>
-
-            `;
-
-          }
+            }
+          ).join("")}
 
 
-          const average =
-            numbers.reduce((a,b) => a + b, 0)
-            / numbers.length;
+        </div>
 
-
-          return `
-
-            <div class="result-location">
-
-              <div class="result-location-title">
-                ${location}
-              </div>
-
-              <div class="result-value-big">
-                ${average.toFixed(1)} cm
-              </div>
-
-              <div class="point-text">
-                ${numbers.length}回測定
-              </div>
-
-            </div>
-
-          `;
-
-        }).join("")}
-
-      </div>
-
-    `).join("")}
+      `
+    ).join("")}
 
 
     <div class="note">
@@ -1493,159 +1757,193 @@ function renderFinish(){
 }
 
 
-/* =========================
+/* =========================================================
    次へ
-========================= */
+========================================================= */
 
 document
   .getElementById("nextButton")
-  .addEventListener("click", () => {
+  .addEventListener(
+    "click",
+    () => {
 
 
-    if(step === 0){
+      /* 6つのポイント */
 
-      if(!agreed) return;
+      if(step === 0){
 
-      step = 1;
+        if(!agreed) return;
 
-      render();
+        step = 1;
 
-      return;
+        render();
+
+        return;
+
+      }
+
+
+      /* 基本情報 */
+
+      if(step === 1){
+
+        dogInfo.owner =
+          document.getElementById("owner").value;
+
+        dogInfo.name =
+          document.getElementById("dogName").value;
+
+        dogInfo.sex =
+          document.getElementById("sex").value;
+
+        dogInfo.birth =
+          document.getElementById("birth").value;
+
+        dogInfo.weight =
+          document.getElementById("weight").value;
+
+        step = 2;
+
+        render();
+
+        return;
+
+      }
+
+
+      /* 15項目 */
+
+      if(step >= 2 && step <= 16){
+
+        step++;
+
+        render();
+
+        return;
+
+      }
+
+
+      /* お礼 */
+
+      if(step === 17){
+
+        step = 18;
+
+        render();
+
+        return;
+
+      }
+
+
+      /* 最初へ */
+
+      if(step === 18){
+
+        step = 0;
+
+        render();
+
+        return;
+
+      }
+
     }
+  );
 
 
-    if(step === 1){
-
-      dogInfo.owner =
-        document.getElementById("owner").value;
-
-      dogInfo.name =
-        document.getElementById("dogName").value;
-
-      dogInfo.sex =
-        document.getElementById("sex").value;
-
-      dogInfo.birth =
-        document.getElementById("birth").value;
-
-      dogInfo.weight =
-        document.getElementById("weight").value;
-
-      step = 2;
-
-      render();
-
-      return;
-    }
-
-
-    if(step >= 2 && step <= 16){
-
-      step++;
-
-      render();
-
-      return;
-    }
-
-
-    if(step === 17){
-
-      step = 18;
-
-      render();
-
-      return;
-    }
-
-
-    if(step === 18){
-
-      step = 0;
-
-      render();
-
-      return;
-    }
-
-  });
-
-
-/* =========================
+/* =========================================================
    戻る
-========================= */
+========================================================= */
 
 document
   .getElementById("backButton")
-  .addEventListener("click", () => {
+  .addEventListener(
+    "click",
+    () => {
 
 
-    if(step === 0){
+      if(step === 0){
 
-      return;
+        return;
+
+      }
+
+
+      /* 基本情報 → 6つのポイント */
+
+      if(step === 1){
+
+        dogInfo.owner =
+          document.getElementById("owner").value;
+
+        dogInfo.name =
+          document.getElementById("dogName").value;
+
+        dogInfo.sex =
+          document.getElementById("sex").value;
+
+        dogInfo.birth =
+          document.getElementById("birth").value;
+
+        dogInfo.weight =
+          document.getElementById("weight").value;
+
+        step = 0;
+
+        render();
+
+        return;
+
+      }
+
+
+      /* お礼 → 最後の採寸 */
+
+      if(step === 17){
+
+        step = 16;
+
+        render();
+
+        return;
+
+      }
+
+
+      /* 結果 → お礼 */
+
+      if(step === 18){
+
+        step = 17;
+
+        render();
+
+        return;
+
+      }
+
+
+      /* 採寸中 */
+
+      if(step >= 2){
+
+        step--;
+
+        render();
+
+        return;
+
+      }
+
     }
+  );
 
 
-    if(step === 1){
-
-      dogInfo.owner =
-        document.getElementById("owner").value;
-
-      dogInfo.name =
-        document.getElementById("dogName").value;
-
-      dogInfo.sex =
-        document.getElementById("sex").value;
-
-      dogInfo.birth =
-        document.getElementById("birth").value;
-
-      dogInfo.weight =
-        document.getElementById("weight").value;
-
-      step = 0;
-
-      render();
-
-      return;
-    }
-
-
-    if(step === 17){
-
-      step = 16;
-
-      render();
-
-      return;
-    }
-
-
-    if(step === 18){
-
-      step = 17;
-
-      render();
-
-      return;
-    }
-
-
-    if(step >= 2){
-
-      step--;
-
-      render();
-
-      return;
-    }
-
-  });
-
-
-/* =========================
+/* =========================================================
    初期表示
-========================= */
+========================================================= */
 
 render();
 
