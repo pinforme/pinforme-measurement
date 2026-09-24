@@ -30,6 +30,8 @@ body{margin:0;background:#eee;font-family:-apple-system,BlinkMacSystemFont,"Noto
 .avg-value small{font-size:16px;color:#777}
 .note{text-align:center;color:#777;font-size:13px;margin-top:10px}
 .buttons{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:22px}
+.finish-return-btn{display:none;grid-column:1 / -1;width:100%;height:52px;border-radius:26px;border:1px solid #222;background:#fff;color:#222;font-size:15px;font-weight:800}
+body.edit-from-finish .measure-step.active .finish-return-btn{display:block}
 button{height:72px;border-radius:36px;font-size:22px;font-weight:900}
 .back{background:#fff;border:2px solid #888;color:#168bd1}
 .next{background:#111;border:0;color:#fff}
@@ -888,15 +890,15 @@ button{height:72px;border-radius:36px;font-size:22px;font-weight:900}
 <button type="button" class="primary" onclick="openKartePage()">採寸カルテを見る</button>
 <div style="margin-top:12px;padding:14px;border:1px solid #ddd;border-radius:16px;background:#fafafa;">
       <div style="font-size:14px;font-weight:700;margin-bottom:8px;">修正する採寸項目を選ぶ</div>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <select id="editMeasureSelect" style="flex:1;height:48px;border:1px solid #bbb;border-radius:12px;background:#fff;padding:0 12px;font-size:16px;">
+      <div style="display:grid;grid-template-columns:minmax(0,1fr);gap:10px;align-items:stretch;width:100%;">
+        <select id="editMeasureSelect" style="width:100%;min-width:0;height:48px;border:1px solid #bbb;border-radius:12px;background:#fff;padding:0 12px;font-size:16px;">
           <option value="0">① 首まわり</option><option value="1">② 胴まわり</option><option value="2">③ ウエスト</option>
           <option value="3">④ 着丈</option><option value="4">⑤ 前身頃</option><option value="5">⑥ 前脚の太さ</option>
           <option value="6">⑦ 後脚の太さ</option><option value="7">⑧ 前脚の長さ</option><option value="8">⑨ 後脚の長さ</option>
           <option value="9">⑩ 首の長さ（ネック）</option><option value="10">⑪ 首の長さ（スヌーズ）</option><option value="11">⑫ 頭まわり</option>
           <option value="12">⑬ 前脚の間</option><option value="13">⑭ 首の真ん中</option><option value="14" selected>⑮ 尻尾の太さ</option>
         </select>
-        <button type="button" class="primary" onclick="goToSelectedMeasurement(event)" style="width:auto;min-width:88px;height:48px;padding:0 14px;border-radius:12px;">修正する</button>
+        <button type="button" class="primary" onclick="goToSelectedMeasurement(event)" style="display:block;width:100%;max-width:100%;height:48px;padding:0 14px;border-radius:12px;margin:0;box-sizing:border-box;">修正する</button>
       </div>
     </div>
 <button type="button" onclick="backToLastMeasurement(event)" style="width:100%;height:52px;margin-top:12px;border-radius:26px;">← ⑮ 尻尾の太さに戻る</button>
@@ -1455,9 +1457,10 @@ button{height:72px;border-radius:36px;font-size:22px;font-weight:900}
 const counts={1:1,2:1,3:1,4:1,5:1,6:2,7:2,8:3,9:3,10:1,11:1,12:1,13:1,14:1,15:1};
 function setPINFORMEKarte(d){
  const set=(id,v)=&gt;document.getElementById(id).textContent=v||&quot;—&quot;;
- set(&quot;breed&quot;,d.breed||&quot;犬種&quot;);set(&quot;owner&quot;,d.owner);set(&quot;dog&quot;,d.dog);set(&quot;sex&quot;,d.sex);set(&quot;birth&quot;,d.birthday);
+ const formatJPDate=(v)=&gt;{if(!v)return &quot;—&quot;;const m=String(v).match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);if(m)return m[1]+&quot;年&quot;+Number(m[2])+&quot;月&quot;+Number(m[3])+&quot;日&quot;;const dt=new Date(v);return isNaN(dt)?String(v):dt.getFullYear()+&quot;年&quot;+(dt.getMonth()+1)+&quot;月&quot;+dt.getDate()+&quot;日&quot;;};
+ set(&quot;breed&quot;,d.breed||&quot;犬種&quot;);set(&quot;owner&quot;,d.owner);set(&quot;dog&quot;,d.dog);set(&quot;sex&quot;,d.sex);set(&quot;birth&quot;,formatJPDate(d.birthday));
  document.getElementById(&quot;weight&quot;).textContent=d.weight?d.weight+&quot; kg&quot;:&quot;— kg&quot;;
- document.getElementById(&quot;date&quot;).textContent=d.date||new Date().toLocaleDateString(&quot;ja-JP&quot;);
+ document.getElementById(&quot;date&quot;).textContent=formatJPDate(d.date||new Date().toISOString().slice(0,10));
  if(d.photo){let p=document.getElementById(&quot;photo&quot;);p.src=d.photo;p.style.display=&quot;block&quot;;document.getElementById(&quot;photoBox&quot;).childNodes[0].nodeValue=&quot;&quot;}
  const a=d.averages||{};
  for(let i=1;i&lt;=15;i++)for(let j=1;j&lt;=counts[i];j++){let v=(a[&quot;m&quot;+i]||[])[j-1];document.getElementById(&quot;m&quot;+i+&quot;_&quot;+j).textContent=v?v+&quot; cm&quot;:&quot;未測定&quot;;}
@@ -1531,7 +1534,14 @@ document.addEventListener("click",e=>{
     showStep(current+1);
   }
   const backBtn=e.target.closest(".step .back");
-  if(backBtn) showStep(current-1);
+  if(backBtn){
+    showStep(current-1);
+  }
+  if(e.target.closest(".finish-return-btn")){
+    PINFORME_EDIT_FROM_FINISH=false;
+    document.body.classList.remove("edit-from-finish");
+    showFinish();
+  }
 });
 function bindAverage(section){
   const inputs=[...section.querySelectorAll('input[type="number"]')];
@@ -1601,6 +1611,8 @@ const KARTE_ROWS=[
  ["⑬","前脚の間",12,0],["⑭","首の真ん中",13,0],["⑮","尻尾の太さ",14,0]
 ];
 function showFinish(){
+  PINFORME_EDIT_FROM_FINISH=false;
+  document.body.classList.remove("edit-from-finish");
   hideAll();
   const data=collectKarte();
   try{
@@ -1612,7 +1624,20 @@ function showFinish(){
   window.scrollTo(0,0);
 }
 
+let PINFORME_EDIT_FROM_FINISH=false;
 function openMeasurementForEdit(index){
+  PINFORME_EDIT_FROM_FINISH=true;
+  document.body.classList.add("edit-from-finish");
+  steps.forEach(step=>{
+    const box=step.querySelector(".buttons");
+    if(box && !box.querySelector(".finish-return-btn")){
+      const btn=document.createElement("button");
+      btn.type="button";
+      btn.className="finish-return-btn";
+      btn.textContent="採寸完了画面へ戻る";
+      box.appendChild(btn);
+    }
+  });
   const n=Math.max(0,Math.min(steps.length-1,Number(index)||0));
   hideAll();
   current=n;
