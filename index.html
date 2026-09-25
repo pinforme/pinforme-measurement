@@ -220,6 +220,50 @@ button{height:72px;border-radius:36px;font-size:22px;font-weight:900}
 #kartePage.finish-step:not(.active){
   display:none!important;
 }
+
+/* PINFORME: 3桁＋小数入力の表示調整（例 123.5 cm） */
+.entry{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  gap:3px;
+}
+.entry input{
+  width:100%;
+  min-width:0;
+  padding:0 3px;
+  font-size:26px;
+  line-height:1;
+  -webkit-appearance:none;
+  appearance:textfield;
+}
+.entry input::-webkit-outer-spin-button,
+.entry input::-webkit-inner-spin-button{
+  -webkit-appearance:none;
+  margin:0;
+}
+.cm{
+  font-size:14px;
+  white-space:nowrap;
+}
+@media(max-width:390px){
+  .inputs{gap:6px}
+  .entry{gap:2px}
+  .entry input{
+    height:62px;
+    padding:0 2px;
+    font-size:24px;
+  }
+  .cm{font-size:13px}
+  .avg-value{
+    min-width:150px;
+    padding:10px 14px;
+    font-size:34px;
+    white-space:nowrap;
+  }
+  .avg-value small{font-size:14px}
+}
+
 </style>
 <style>
 .pin-first{padding:30px 18px 48px;background:#fff;color:#111}
