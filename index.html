@@ -1737,9 +1737,64 @@ function openKartePage(){
   try{localStorage.setItem("PINFORME_LAST_KARTE",JSON.stringify(data));}catch(e){}
   window.scrollTo(0,0);
 }
-function printFinalKarte(){
+async function printFinalKarte(){
   const frame=document.getElementById("finalKarteFrame");
-  if(frame && frame.contentWindow) frame.contentWindow.print();
+  if(!frame || !frame.contentDocument) return;
+
+  // 表示中の完成カルテを「トップレベルの印刷専用ページ」に複製する。
+  // iPhone Safari は iframe を直接 print() すると、絶対配置要素や画像が
+  // 欠落することがあるため、iframe 自体は印刷しない。
+  try{
+    const doc=frame.contentDocument;
+    const sheet=doc.getElementById("sheet");
+    if(!sheet) return;
+
+    const printWin=window.open("","_blank");
+    if(!printWin){
+      alert("PDF保存画面を開けませんでした。Safariのポップアップを許可して、もう一度お試しください。");
+      return;
+    }
+
+    // iframe 内で確定済みの見た目・入力値をそのままコピー
+    const styles=Array.from(doc.querySelectorAll("style")).map(el=>el.outerHTML).join("\n");
+    const cloned=sheet.cloneNode(true);
+    cloned.removeAttribute("style");
+
+    // canvas は使っていないが、画像は src/currentSrc を明示して iOS 印刷時の欠落を防ぐ
+    const srcImgs=sheet.querySelectorAll("img");
+    const dstImgs=cloned.querySelectorAll("img");
+    srcImgs.forEach((img,i)=>{
+      if(dstImgs[i]){
+        const u=img.currentSrc || img.src;
+        if(u) dstImgs[i].setAttribute("src",u);
+        dstImgs[i].style.display=getComputedStyle(img).display;
+      }
+    });
+
+    printWin.document.open();
+    printWin.document.write(`<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${styles}
+<style>
+@page{size:A4 landscape;margin:0!important}
+html,body{margin:0!important;padding:0!important;width:297mm!important;height:210mm!important;background:#fff!important;overflow:hidden!important}
+.view{width:297mm!important;height:210mm!important;margin:0!important;padding:0!important;overflow:hidden!important;background:#fff!important}
+.sheet{width:297mm!important;height:210mm!important;min-width:297mm!important;min-height:210mm!important;margin:0!important;padding:24px 30px!important;transform:none!important;transform-origin:top left!important;box-shadow:none!important;background:#fff!important;overflow:hidden!important}
+@media print{html,body,.view,.sheet{width:297mm!important;height:210mm!important;margin:0!important;transform:none!important}.view{padding:0!important;overflow:hidden!important}.sheet{page-break-after:avoid!important;break-after:avoid-page!important}}
+</style></head><body><div class="view">${cloned.outerHTML}</div></body></html>`);
+    printWin.document.close();
+
+    // base64画像・愛犬写真をすべて読み込んでから印刷する
+    const waitImages=()=>Promise.all(Array.from(printWin.document.images).map(img=>{
+      if(img.complete) return Promise.resolve();
+      return new Promise(resolve=>{img.onload=resolve;img.onerror=resolve;});
+    }));
+    await waitImages();
+    await new Promise(r=>setTimeout(r,350));
+    printWin.focus();
+    printWin.print();
+  }catch(err){
+    console.error(err);
+    alert("カルテのPDF保存画面を開けませんでした。もう一度お試しください。");
+  }
 }
 function backToFinish(){
   hideAll();
