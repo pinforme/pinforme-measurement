@@ -332,6 +332,11 @@ button{height:72px;border-radius:36px;font-size:22px;font-weight:900}
 
 </head>
 <body>
+
+<style>
+.admin-entry{margin-top:34px;text-align:center}.admin-entry button{border:0;background:none;text-decoration:underline;color:#666;font-weight:800;font-size:15px;padding:12px}
+#adminPage{padding:24px 18px 100px}.admin-shell{max-width:520px;margin:auto}.admin-card{background:#fff;border:1px solid #ddd;border-radius:14px;padding:20px;margin-bottom:16px}.admin-brand{font-size:24px;font-weight:900;letter-spacing:.04em}.admin-sub{font-size:11px;letter-spacing:.18em;color:#777;margin-top:2px}.admin-title{font-size:22px;margin:22px 0}.admin-note,.admin-status{font-size:13px;color:#666;line-height:1.6}.admin-field{margin:14px 0}.admin-field label{display:block;font-size:13px;font-weight:700;margin-bottom:6px}.admin-field input,.admin-toolbar input{width:100%;min-height:48px;border:1px solid #ccc;border-radius:9px;padding:10px 12px;font-size:16px}.admin-actions{display:flex;gap:10px;margin-top:18px}.admin-btn{flex:1;min-height:48px;border:0;border-radius:9px;font-weight:800;font-size:14px}.admin-btn.primary{background:#111;color:#fff}.admin-btn.light{background:#eee;color:#222}.admin-btn.danger{background:#333;color:#fff}.admin-hidden{display:none!important}.admin-toolbar{display:flex;gap:8px}.admin-toolbar button{min-width:72px;border:0;border-radius:9px;background:#111;color:#fff;font-weight:800}.admin-list{margin-top:12px}.admin-row{width:100%;display:flex;justify-content:space-between;align-items:center;text-align:left;background:#fff;border:0;border-top:1px solid #e5e5e5;padding:14px 4px}.admin-row strong{display:block;font-size:16px}.admin-row small{display:block;color:#666;line-height:1.5;margin-top:4px}.admin-row .arrow{font-size:28px;color:#999}.admin-detail-head{display:flex;justify-content:space-between;gap:12px;align-items:start}.admin-detail-head h2{margin:5px 0 0}.admin-detail-meta{font-size:13px;line-height:1.8;margin:15px 0}.admin-measures{width:100%;border-collapse:collapse;font-size:13px}.admin-measures td{border-top:1px solid #e5e5e5;padding:9px 4px}.admin-measures td:last-child{text-align:right;font-weight:800}
+</style>
 <section class="intro-step active" id="startPage">
 <div class="pin-first">
   <div class="pin-brand">
@@ -406,6 +411,7 @@ button{height:72px;border-radius:36px;font-size:22px;font-weight:900}
   </label>
 
   <button type="button" class="start-btn" onclick="goDogInfo()">採寸を始める</button>
+  <div class="admin-entry"><button type="button" onclick="openAdminPage()">PINFORME 管理者はこちら</button></div>
 </div>
 </section>
 
@@ -924,6 +930,19 @@ button{height:72px;border-radius:36px;font-size:22px;font-weight:900}
 
 </section>
 
+
+
+<section class="finish-step" id="adminPage">
+  <div class="admin-shell"><div class="admin-card">
+    <div class="admin-brand">PINFORME</div><div class="admin-sub">CARTE MANAGEMENT</div><h1 class="admin-title">カルテ管理</h1>
+    <div id="adminLoginBox"><p class="admin-note">PINFORME管理者アカウントでログインしてください。</p>
+      <div class="admin-field"><label>メールアドレス</label><input id="adminEmail" type="email" autocomplete="username"></div>
+      <div class="admin-field"><label>パスワード</label><input id="adminPassword" type="password" autocomplete="current-password"></div>
+      <div class="admin-actions"><button class="admin-btn primary" type="button" onclick="adminLogin()">ログイン</button><button class="admin-btn light" type="button" onclick="closeAdminPage()">採寸ナビへ戻る</button></div><div class="admin-status" id="adminLoginStatus"></div>
+    </div>
+    <div id="adminManagerBox" class="admin-hidden"><div class="admin-toolbar"><input id="adminSearch" type="search" placeholder="飼い主様名・わんちゃん名で検索" oninput="renderAdminList()"><button type="button" onclick="loadAdminCartes()">更新</button></div><div class="admin-status" id="adminListStatus"></div><div class="admin-list" id="adminList"></div><div class="admin-actions"><button class="admin-btn light" type="button" onclick="closeAdminPage()">採寸ナビへ戻る</button><button class="admin-btn danger" type="button" onclick="adminLogout()">ログアウト</button></div></div>
+  </div><div class="admin-card admin-hidden" id="adminDetail"></div></div>
+</section>
 
 <section class="finish-step" id="finishPage">
   <div class="finish-card">
@@ -1526,7 +1545,7 @@ function fit(){let s=document.getElementById(&quot;sheet&quot;),v=s.parentElemen
 </section>
 
 <script>
-const introPages=[document.getElementById("startPage"),document.getElementById("dogInfoPage"),document.getElementById("finishPage")];
+const introPages=[document.getElementById("startPage"),document.getElementById("dogInfoPage"),document.getElementById("finishPage"),document.getElementById("adminPage")];
 const steps=[...document.querySelectorAll(".step")];
 let current=0;
 
@@ -1777,10 +1796,10 @@ async function printFinalKarte(){
 @page{size:A4 landscape;margin:0!important}
 /* iPhone Safari対策：印刷ドキュメント自体には高さを持たせない。
    カルテを fixed で1枚目に描画することで、空白の2ページ目を作らせない。 */
-html,body{margin:0!important;padding:0!important;width:297mm!important;height:190mm!important;min-height:0!important;background:#fff!important;overflow:hidden!important}
-.view{position:relative!important;width:297mm!important;height:190mm!important;margin:0!important;padding:0!important;overflow:hidden!important;background:#fff!important}
-.sheet{position:absolute!important;left:0!important;top:0!important;width:1123px!important;height:794px!important;min-width:1123px!important;min-height:794px!important;margin:0!important;padding:24px 30px!important;transform:scale(.94)!important;transform-origin:top left!important;box-shadow:none!important;background:#fff!important;overflow:hidden!important}
-@media print{html,body{width:297mm!important;height:190mm!important;min-height:0!important;margin:0!important;padding:0!important;overflow:hidden!important}.view{position:relative!important;width:297mm!important;height:190mm!important;margin:0!important;padding:0!important;overflow:hidden!important}.sheet{position:absolute!important;left:0!important;top:0!important;width:1123px!important;height:794px!important;min-width:1123px!important;min-height:794px!important;margin:0!important;transform:scale(.94)!important;transform-origin:top left!important;overflow:hidden!important;page-break-inside:avoid!important;break-inside:avoid-page!important}}
+html,body{margin:0!important;padding:0!important;width:0!important;height:0!important;min-width:0!important;min-height:0!important;background:#fff!important;overflow:visible!important}
+.view{position:fixed!important;left:0!important;top:0!important;width:0!important;height:0!important;margin:0!important;padding:0!important;overflow:visible!important;background:#fff!important}
+.sheet{position:fixed!important;left:0!important;top:0!important;width:1123px!important;height:794px!important;min-width:1123px!important;min-height:794px!important;margin:0!important;padding:24px 30px!important;transform:scale(.94)!important;transform-origin:top left!important;box-shadow:none!important;background:#fff!important;overflow:hidden!important}
+@media print{html,body{width:0!important;height:0!important;min-width:0!important;min-height:0!important;margin:0!important;padding:0!important;overflow:visible!important}.view{position:fixed!important;left:0!important;top:0!important;width:0!important;height:0!important;margin:0!important;padding:0!important;overflow:visible!important}.sheet{position:fixed!important;left:0!important;top:0!important;width:1123px!important;height:794px!important;min-width:1123px!important;min-height:794px!important;margin:0!important;transform:scale(.94)!important;transform-origin:top left!important;overflow:hidden!important;page-break-inside:avoid!important;break-inside:avoid-page!important}}
 </style></head><body><div class="view">${cloned.outerHTML}</div></body></html>`);
     printWin.document.close();
 
@@ -1812,6 +1831,21 @@ function downloadKarte(){
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 }
+const PINFORME_AUTH_TOKEN_KEY="PINFORME_ADMIN_SESSION_V1";let PINFORME_ADMIN_ROWS=[];
+function getAdminSession(){try{return JSON.parse(sessionStorage.getItem(PINFORME_AUTH_TOKEN_KEY)||"null")}catch(e){return null}}
+function setAdminSession(v){try{v?sessionStorage.setItem(PINFORME_AUTH_TOKEN_KEY,JSON.stringify(v)):sessionStorage.removeItem(PINFORME_AUTH_TOKEN_KEY)}catch(e){}}
+function openAdminPage(){hideAll();document.getElementById("adminPage").classList.add("active");window.scrollTo(0,0);syncAdminUI()}
+function closeAdminPage(){hideAll();document.getElementById("startPage").classList.add("active");window.scrollTo(0,0)}
+function syncAdminUI(){const s=getAdminSession();document.getElementById("adminLoginBox").classList.toggle("admin-hidden",!!s?.access_token);document.getElementById("adminManagerBox").classList.toggle("admin-hidden",!s?.access_token);if(s?.access_token)loadAdminCartes()}
+async function adminLogin(){const email=document.getElementById("adminEmail").value.trim(),password=document.getElementById("adminPassword").value,st=document.getElementById("adminLoginStatus");if(!email||!password){st.textContent="メールアドレスとパスワードを入力してください。";return}st.textContent="ログインしています…";try{const base=PINFORME_SAVE_ENDPOINT.replace('/rest/v1/measurements','');const r=await fetch(base+"/auth/v1/token?grant_type=password",{method:"POST",headers:{apikey:PINFORME_SUPABASE_KEY,"Content-Type":"application/json"},body:JSON.stringify({email,password})});const j=await r.json();if(!r.ok)throw new Error(j?.msg||j?.error_description||"ログインできませんでした");setAdminSession(j);document.getElementById("adminPassword").value="";st.textContent="";syncAdminUI()}catch(e){st.textContent="ログインエラー："+e.message}}
+function adminLogout(){setAdminSession(null);PINFORME_ADMIN_ROWS=[];document.getElementById("adminDetail").classList.add("admin-hidden");syncAdminUI()}
+async function loadAdminCartes(){const s=getAdminSession(),st=document.getElementById("adminListStatus");if(!s?.access_token){syncAdminUI();return}st.textContent="カルテを読み込んでいます…";try{const r=await fetch(PINFORME_SAVE_ENDPOINT+"?select=*&order=created_at.desc&limit=500",{headers:{apikey:PINFORME_SUPABASE_KEY,Authorization:"Bearer "+s.access_token}});const j=await r.json();if(!r.ok)throw new Error(j?.message||"読み込みに失敗しました");PINFORME_ADMIN_ROWS=Array.isArray(j)?j:[];renderAdminList()}catch(e){st.textContent="読み込みエラー："+e.message}}
+function adminEsc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function adminDate(v){if(!v)return"日付不明";const d=new Date(v);return Number.isNaN(d.getTime())?String(v):d.toLocaleString("ja-JP")}
+function renderAdminList(){const box=document.getElementById("adminList"),st=document.getElementById("adminListStatus"),q=(document.getElementById("adminSearch").value||"").trim().toLowerCase();const rows=PINFORME_ADMIN_ROWS.filter(r=>!q||String(r.owner_name||"").toLowerCase().includes(q)||String(r.dog_name||"").toLowerCase().includes(q));st.textContent=`保存済み ${PINFORME_ADMIN_ROWS.length}件${q?` ／ 検索結果 ${rows.length}件`:""}`;box.innerHTML="";rows.forEach(r=>{const b=document.createElement("button");b.type="button";b.className="admin-row";b.innerHTML=`<span><strong>${adminEsc(r.dog_name||"名前未入力")}${adminEsc(r.dog_suffix||"")}</strong><small>飼い主様：${adminEsc(r.owner_name||"—")}<br>${adminEsc(adminDate(r.created_at))}</small></span><span class="arrow">›</span>`;b.onclick=()=>showAdminDetail(r);box.appendChild(b)});if(!rows.length)box.innerHTML='<div class="admin-note">該当するカルテはありません。</div>'}
+const ADMIN_FIELDS=[["① 首まわり","neck"],["② 胴まわり","chest"],["③ ウエスト","waist"],["④ 着丈","back_length"],["⑤ 前身頃","front_length"],["⑥ 前脚の太さ（上側）","front_leg_girth_up"],["⑥ 前脚の太さ（下側）","front_leg_girth_low"],["⑦ 後脚の太さ（上側）","hind_leg_girth_up"],["⑦ 後脚の太さ（下側）","hind_leg_girth_low"],["⑧ 前脚の長さ 1","front_leg_length_1"],["⑧ 前脚の長さ 2","front_leg_length_2"],["⑧ 前脚の長さ 3","front_leg_length_3"],["⑨ 後脚の長さ 1","hind_leg_length_1"],["⑨ 後脚の長さ 2","hind_leg_length_2"],["⑨ 後脚の長さ 3","hind_leg_length_3"],["⑩ 首の長さ（ネック）","neck_length"],["⑪ 首の長さ（スヌード）","snood_length"],["⑫ 頭まわり","head_girth"],["⑬ 前脚の間","front_leg_spacing"],["⑭ 首の真ん中","mid_neck"],["⑮ 尻尾の太さ","tail_girth"]];
+function showAdminDetail(r){const box=document.getElementById("adminDetail"),rows=ADMIN_FIELDS.map(([n,k])=>`<tr><td>${n}</td><td>${r[k]==null?"—":adminEsc(r[k])+" cm"}</td></tr>`).join("");box.innerHTML=`<div class="admin-detail-head"><div><div class="admin-sub">PINFORME CARTE</div><h2>${adminEsc(r.dog_name||"名前未入力")}${adminEsc(r.dog_suffix||"")}</h2></div><button type="button" class="admin-btn light" style="width:auto;min-height:42px" onclick="document.getElementById('adminDetail').classList.add('admin-hidden')">閉じる</button></div><div class="admin-detail-meta">飼い主様：${adminEsc(r.owner_name||"—")}<br>犬種：${adminEsc(r.breed||"—")} ／ 性別：${adminEsc(r.sex||"—")}<br>生年月日：${adminEsc(r.birth_date||"—")} ／ 体重：${r.weight==null?"—":adminEsc(r.weight)+" kg"}<br>採寸保存日時：${adminEsc(adminDate(r.created_at))}</div><table class="admin-measures">${rows}</table>`;box.classList.remove("admin-hidden");box.scrollIntoView({behavior:"smooth",block:"start"})}
+
 async function sendToPinforme(){
   const status=document.getElementById("sendStatus");
   const data=collectKarte();
