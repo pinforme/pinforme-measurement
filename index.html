@@ -968,6 +968,9 @@ button{height:72px;border-radius:36px;font-size:22px;font-weight:900}
     <div class="finish-actions">
       <button type="button" class="primary-action" onclick="printFinalKarte()">採寸カルテを保存（PDF）</button>
       <button type="button" class="primary-action" onclick="sendToPinforme()">PINFORMEへ送信・保存</button>
+      <button type="button" class="secondary" onclick="registerAnotherDog()" style="width:100%;margin-top:10px;">別のわんちゃんを新規登録する</button>
+      <div style="font-size:12px;color:#777;line-height:1.5;margin:7px 6px 0;">ご主人様の名前だけ引き継ぎ、別のわんちゃんを新しく採寸できます。</div>
+      <button type="button" class="secondary" onclick="backToStartKeepData()" style="width:100%;margin-top:10px;">最初の画面へ戻る</button>
     </div>
     <div class="send-status" id="sendStatus">PINFORMEへのオンライン保存は、保存先データベース接続後に有効になります。</div>
   </div>
@@ -1821,6 +1824,53 @@ function backToFinish(){
   hideAll();
   document.getElementById("finishPage").classList.add("active");
   window.scrollTo(0,0);
+}
+function backToStartKeepData(){
+  hideAll();
+  document.getElementById("startPage").classList.add("active");
+  try{ localStorage.setItem("PINFORME_CURRENT_VIEW","startPage"); }catch(e){}
+  window.scrollTo(0,0);
+}
+function registerAnotherDog(){
+  const owner=(document.getElementById("ownerName")?.value||"").trim();
+
+  // わんちゃん固有の基本情報をクリア（ご主人様だけ引き継ぐ）
+  const dogName=document.getElementById("dogName"); if(dogName) dogName.value="";
+  const dogBreed=document.getElementById("dogBreed"); if(dogBreed) dogBreed.value="";
+  const birth=document.getElementById("birthDate"); if(birth) birth.value="";
+  const weight=document.getElementById("weight"); if(weight) weight.value="";
+  document.querySelectorAll('input[name="sex"]').forEach(x=>x.checked=false);
+
+  // 呼び方を初期値「くん」に戻す
+  const suffix=document.getElementById("dogSuffix"); if(suffix) suffix.value="くん";
+  document.querySelectorAll('.pin-first .suffix').forEach(b=>b.classList.toggle('active',b.dataset.value==="くん"));
+
+  // 写真をクリア
+  const photo=document.getElementById("dogPhoto"); if(photo) photo.value="";
+  const preview=document.getElementById("photoPreview");
+  if(preview){ preview.removeAttribute("src"); preview.style.display="none"; }
+
+  // 15項目の採寸値をすべて新規状態へ
+  steps.forEach(section=>{
+    section.querySelectorAll('input[type="number"]').forEach(x=>x.value="");
+    section.querySelectorAll('.avg-value span').forEach(x=>x.textContent="0.0");
+  });
+
+  // ご主人様名と6つのポイント確認は引き継ぐ
+  if(document.getElementById("ownerName")) document.getElementById("ownerName").value=owner;
+  const tips=document.getElementById("tipsConfirmed"); if(tips) tips.checked=true;
+
+  PINFORME_EDIT_FROM_FINISH=false;
+  document.body.classList.remove("edit-from-finish");
+  try{
+    localStorage.removeItem("PINFORME_LAST_KARTE");
+    localStorage.setItem("PINFORME_CURRENT_VIEW","startPage");
+  }catch(e){}
+  hideAll();
+  document.getElementById("startPage").classList.add("active");
+  savePINFORMEState();
+  window.scrollTo(0,0);
+  setTimeout(()=>dogName?.focus(),100);
 }
 function downloadKarte(){
   const data=collectKarte();
