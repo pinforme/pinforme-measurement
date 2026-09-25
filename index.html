@@ -1526,7 +1526,7 @@ function setPINFORMEKarte(d){
  set(&quot;breed&quot;,d.breed||&quot;犬種&quot;);set(&quot;owner&quot;,d.owner);set(&quot;dog&quot;,d.dog);set(&quot;sex&quot;,d.sex);set(&quot;birth&quot;,formatJPDate(d.birthday));
  document.getElementById(&quot;weight&quot;).textContent=d.weight?d.weight+&quot; kg&quot;:&quot;— kg&quot;;
  document.getElementById(&quot;date&quot;).textContent=formatJPDate(d.date||new Date().toISOString().slice(0,10));
- if(d.photo){let p=document.getElementById(&quot;photo&quot;);p.src=d.photo;p.style.display=&quot;block&quot;;document.getElementById(&quot;photoBox&quot;).childNodes[0].nodeValue=&quot;&quot;}
+ {let p=document.getElementById(&quot;photo&quot;),box=document.getElementById(&quot;photoBox&quot;);if(d.photo){p.src=d.photo;p.style.display=&quot;block&quot;;box.style.color=&quot;transparent&quot;;}else{p.removeAttribute(&quot;src&quot;);p.style.display=&quot;none&quot;;box.style.color=&quot;#777&quot;;}}
  const a=d.averages||{};
  for(let i=1;i&lt;=15;i++)for(let j=1;j&lt;=counts[i];j++){let v=(a[&quot;m&quot;+i]||[])[j-1];document.getElementById(&quot;m&quot;+i+&quot;_&quot;+j).textContent=v?v+&quot; cm&quot;:&quot;未測定&quot;;}
 }
@@ -1622,9 +1622,17 @@ function bindAverage(section){
   });
 }
 steps.forEach(bindAverage);
+let PINFORME_DOG_PHOTO_DATA="";
 document.getElementById("dogPhoto").addEventListener("change",e=>{
  const f=e.target.files[0]; if(!f)return;
- const r=new FileReader(); r.onload=ev=>{const p=document.getElementById("photoPreview");p.src=ev.target.result;p.style.display="block"}; r.readAsDataURL(f);
+ const r=new FileReader();
+ r.onload=ev=>{
+   PINFORME_DOG_PHOTO_DATA=String(ev.target.result||"");
+   const p=document.getElementById("photoPreview");
+   p.src=PINFORME_DOG_PHOTO_DATA; p.style.display="block";
+   try{savePINFORMEState();}catch(err){}
+ };
+ r.readAsDataURL(f);
 });
 
 const PINFORME_SAVE_ENDPOINT = "https://dsbvaoqgvtoeukigdjdj.supabase.co/rest/v1/measurements";
@@ -1734,9 +1742,8 @@ function openKartePage(){
   data.date=new Date().toLocaleDateString("ja-JP");
 
   const preview=document.getElementById("photoPreview");
-  if(preview && preview.src && preview.style.display!=="none"){
-    data.photo=preview.src;
-  }
+  const photoData=PINFORME_DOG_PHOTO_DATA || ((preview && preview.getAttribute("src")||"").startsWith("data:image/") ? preview.getAttribute("src") : "");
+  if(photoData) data.photo=photoData;
 
   const averages={};
   (data.measurements||[]).forEach((m,i)=>{
@@ -1799,10 +1806,10 @@ async function printFinalKarte(){
 @page{size:A4 landscape;margin:0!important}
 /* iPhone Safari対策：印刷ドキュメント自体には高さを持たせない。
    カルテを fixed で1枚目に描画することで、空白の2ページ目を作らせない。 */
-html,body{margin:0!important;padding:0!important;width:0!important;height:0!important;min-width:0!important;min-height:0!important;background:#fff!important;overflow:visible!important}
-.view{position:fixed!important;left:0!important;top:0!important;width:0!important;height:0!important;margin:0!important;padding:0!important;overflow:visible!important;background:#fff!important}
-.sheet{position:fixed!important;left:0!important;top:0!important;width:1123px!important;height:794px!important;min-width:1123px!important;min-height:794px!important;margin:0!important;padding:24px 30px!important;transform:scale(.94)!important;transform-origin:top left!important;box-shadow:none!important;background:#fff!important;overflow:hidden!important}
-@media print{html,body{width:0!important;height:0!important;min-width:0!important;min-height:0!important;margin:0!important;padding:0!important;overflow:visible!important}.view{position:fixed!important;left:0!important;top:0!important;width:0!important;height:0!important;margin:0!important;padding:0!important;overflow:visible!important}.sheet{position:fixed!important;left:0!important;top:0!important;width:1123px!important;height:794px!important;min-width:1123px!important;min-height:794px!important;margin:0!important;transform:scale(.94)!important;transform-origin:top left!important;overflow:hidden!important;page-break-inside:avoid!important;break-inside:avoid-page!important}}
+html,body{margin:0!important;padding:0!important;width:297mm!important;height:210mm!important;min-width:297mm!important;min-height:210mm!important;background:#fff!important;overflow:hidden!important}
+.view{position:absolute!important;left:0!important;top:0!important;width:297mm!important;height:210mm!important;margin:0!important;padding:0!important;overflow:hidden!important;background:#fff!important}
+.sheet{position:absolute!important;left:0!important;top:0!important;width:1123px!important;height:794px!important;min-width:1123px!important;min-height:794px!important;margin:0!important;padding:24px 30px!important;transform:scale(.94)!important;transform-origin:top left!important;box-shadow:none!important;background:#fff!important;overflow:hidden!important}
+@media print{html,body,.view{width:297mm!important;height:210mm!important;min-width:297mm!important;min-height:210mm!important;margin:0!important;padding:0!important;overflow:hidden!important}.sheet{position:absolute!important;left:0!important;top:0!important;width:1123px!important;height:794px!important;min-width:1123px!important;min-height:794px!important;margin:0!important;transform:scale(.94)!important;transform-origin:top left!important;overflow:hidden!important;page-break-after:avoid!important;page-break-inside:avoid!important;break-inside:avoid-page!important}}
 </style></head><body><div class="view">${cloned.outerHTML}</div></body></html>`);
     printWin.document.close();
 
@@ -1812,7 +1819,7 @@ html,body{margin:0!important;padding:0!important;width:0!important;height:0!impo
       return new Promise(resolve=>{img.onload=resolve;img.onerror=resolve;});
     }));
     await waitImages();
-    await new Promise(r=>setTimeout(r,350));
+    await new Promise(r=>setTimeout(r,900));
     printWin.focus();
     printWin.print();
   }catch(err){
@@ -1848,6 +1855,7 @@ function registerAnotherDog(){
   // 写真をクリア
   const photo=document.getElementById("dogPhoto"); if(photo) photo.value="";
   const preview=document.getElementById("photoPreview");
+  PINFORME_DOG_PHOTO_DATA="";
   if(preview){ preview.removeAttribute("src"); preview.style.display="none"; }
 
   // 15項目の採寸値をすべて新規状態へ
@@ -2019,6 +2027,7 @@ function restorePINFORMEState(){
   });
 
   if(state.photo){
+    PINFORME_DOG_PHOTO_DATA=state.photo;
     const preview=document.getElementById("photoPreview");
     if(preview){
       preview.src=state.photo;
@@ -2063,4 +2072,50 @@ document.addEventListener("click",function(){
   setTimeout(savePINFORMEState,50);
 });
 </script>
-\n<script>\n/* PINFORME 平均値計算 修正版\n   各採寸画面の数値入力を3つずつ1組として平均を即時再計算する。\n   既存の計算処理とは独立して動作し、画面復元後の値にも対応。 */\n(function(){\n  function recalcSection(section){\n    if(!section) return;\n    const inputs = Array.from(section.querySelectorAll('input[type="number"]'));\n    const avgs = Array.from(section.querySelectorAll('.avg-value span'));\n    avgs.forEach(function(avg, idx){\n      const group = inputs.slice(idx * 3, idx * 3 + 3);\n      if(group.length !== 3) return;\n      const raw = group.map(function(el){ return String(el.value || '').trim(); });\n      if(raw.every(function(v){ return v !== ''; })){\n        const vals = raw.map(Number);\n        avg.textContent = vals.every(Number.isFinite)\n          ? (vals.reduce(function(a,b){ return a+b; },0) / 3).toFixed(1)\n          : '0.0';\n      } else {\n        avg.textContent = '0.0';\n      }\n    });\n  }\n\n  function recalcAll(){\n    document.querySelectorAll('.step').forEach(recalcSection);\n  }\n\n  document.addEventListener('input', function(e){\n    if(e.target && e.target.matches('.step input[type="number"]')){\n      recalcSection(e.target.closest('.step'));\n    }\n  }, true);\n  document.addEventListener('change', function(e){\n    if(e.target && e.target.matches('.step input[type="number"]')){\n      recalcSection(e.target.closest('.step'));\n    }\n  }, true);\n  window.addEventListener('DOMContentLoaded', function(){\n    recalcAll();\n    setTimeout(recalcAll, 100);\n    setTimeout(recalcAll, 500);\n  });\n})();\n</script>\n</body></html>
+
+<script>
+/* PINFORME 平均値計算 修正版
+   各採寸画面の数値入力を3つずつ1組として平均を即時再計算する。
+   既存の計算処理とは独立して動作し、画面復元後の値にも対応。 */
+(function(){
+  function recalcSection(section){
+    if(!section) return;
+    const inputs = Array.from(section.querySelectorAll('input[type="number"]'));
+    const avgs = Array.from(section.querySelectorAll('.avg-value span'));
+    avgs.forEach(function(avg, idx){
+      const group = inputs.slice(idx * 3, idx * 3 + 3);
+      if(group.length !== 3) return;
+      const raw = group.map(function(el){ return String(el.value || '').trim(); });
+      if(raw.every(function(v){ return v !== ''; })){
+        const vals = raw.map(Number);
+        avg.textContent = vals.every(Number.isFinite)
+          ? (vals.reduce(function(a,b){ return a+b; },0) / 3).toFixed(1)
+          : '0.0';
+      } else {
+        avg.textContent = '0.0';
+      }
+    });
+  }
+
+  function recalcAll(){
+    document.querySelectorAll('.step').forEach(recalcSection);
+  }
+
+  document.addEventListener('input', function(e){
+    if(e.target && e.target.matches('.step input[type="number"]')){
+      recalcSection(e.target.closest('.step'));
+    }
+  }, true);
+  document.addEventListener('change', function(e){
+    if(e.target && e.target.matches('.step input[type="number"]')){
+      recalcSection(e.target.closest('.step'));
+    }
+  }, true);
+  window.addEventListener('DOMContentLoaded', function(){
+    recalcAll();
+    setTimeout(recalcAll, 100);
+    setTimeout(recalcAll, 500);
+  });
+})();
+</script>
+</body></html>
