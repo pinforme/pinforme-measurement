@@ -1562,9 +1562,8 @@ document.getElementById("dogPhoto").addEventListener("change",e=>{
  const r=new FileReader(); r.onload=ev=>{const p=document.getElementById("photoPreview");p.src=ev.target.result;p.style.display="block"}; r.readAsDataURL(f);
 });
 
-const PINFORME_SUPABASE_URL = "https://dsbvaoqgvtoeukigdjdj.supabase.co";
-const PINFORME_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_403lLhKUQ9X9N1RaxaDduA_9ZQEZ6na";
-const PINFORME_SAVE_ENDPOINT = PINFORME_SUPABASE_URL + "/rest/v1/measurements";
+const PINFORME_SAVE_ENDPOINT = "https://dsbvaoqgvtoeukigdjdj.supabase.co/rest/v1/measurements";
+const PINFORME_SUPABASE_KEY = "sb_publishable_403lLhKUQ9X9N1RaxaDduA_9ZQEZ6na";
 
 function textValue(id){
   const el=document.getElementById(id);
@@ -1715,32 +1714,26 @@ function downloadKarte(){
 }
 async function sendToPinforme(){
   const status=document.getElementById("sendStatus");
-  const button=document.querySelector('button[onclick="sendToPinforme()"]');
-
   const data=collectKarte();
-  const avg=(measureIndex,groupIndex=0)=>{
-    const raw=data.measurements?.[measureIndex]?.groups?.[groupIndex]?.average;
+  const avg=(sectionIndex,groupIndex=0)=>{
+    const raw=data.measurements?.[sectionIndex]?.groups?.[groupIndex]?.average;
     if(raw===undefined || raw===null || raw==="") return null;
     const n=Number(raw);
     return Number.isFinite(n) ? n : null;
   };
-  const numberOrNull=(value)=>{
-    if(value===undefined || value===null || String(value).trim()==="") return null;
-    const n=Number(value);
+  const numericOrNull=(v)=>{
+    if(v===undefined || v===null || String(v).trim()==="") return null;
+    const n=Number(v);
     return Number.isFinite(n) ? n : null;
   };
-
-  // Supabase measurements テーブルの30列構成に対応。
-  // id / created_at はSupabase側の自動値を使用するため送信しない。
   const payload={
     owner_name:textValue("ownerName") || null,
     dog_name:textValue("dogName") || null,
     dog_suffix:getDogSuffix() || null,
     birth_date:textValue("birthDate") || null,
     breed:textValue("dogBreed") || null,
-    sex:data.sex || null,
-    weight:numberOrNull(data.weight),
-
+    sex:(document.querySelector('input[name="sex"]:checked')?.value) || null,
+    weight:numericOrNull(textValue("weight")),
     neck:avg(0),
     chest:avg(1),
     waist:avg(2),
@@ -1756,44 +1749,35 @@ async function sendToPinforme(){
     hind_leg_length_1:avg(8,0),
     hind_leg_length_2:avg(8,1),
     hind_leg_length_3:avg(8,2),
-    front_leg_spacing:avg(12),
-    tail_girth:avg(14),
     neck_length:avg(9),
     snood_length:avg(10),
     head_girth:avg(11),
-    mid_neck:avg(13)
+    front_leg_spacing:avg(12),
+    mid_neck:avg(13),
+    tail_girth:avg(14)
   };
 
   if(status) status.textContent="PINFORMEへ送信しています…";
-  if(button) button.disabled=true;
-
   try{
     const res=await fetch(PINFORME_SAVE_ENDPOINT,{
       method:"POST",
       headers:{
+        "apikey":PINFORME_SUPABASE_KEY,
         "Content-Type":"application/json",
-        "apikey":PINFORME_SUPABASE_PUBLISHABLE_KEY,
-        "Authorization":"Bearer "+PINFORME_SUPABASE_PUBLISHABLE_KEY,
         "Prefer":"return=minimal"
       },
       body:JSON.stringify(payload)
     });
-
     if(!res.ok){
       const detail=await res.text();
-      console.error("Supabase save error:",res.status,detail);
       throw new Error("HTTP "+res.status+" "+detail);
     }
-
-    if(status) status.textContent="PINFORMEへのオンライン保存が完了しました。";
-    try{localStorage.setItem("PINFORME_LAST_ONLINE_SAVE",new Date().toISOString());}catch(e){}
+    if(status) status.textContent="PINFORMEへのカルテ保存が完了しました。";
     alert("PINFORMEへの保存が完了しました。");
   }catch(err){
-    console.error(err);
-    if(status) status.textContent="保存できませんでした。通信環境またはSupabaseの設定を確認して、もう一度お試しください。";
-    alert("オンライン保存に失敗しました。入力内容はこの端末に保持されています。");
-  }finally{
-    if(button) button.disabled=false;
+    console.error("PINFORME Supabase save error:",err);
+    if(status) status.textContent="送信できませんでした。通信環境を確認して、もう一度お試しください。";
+    alert("保存できませんでした。もう一度お試しください。");
   }
 }
 
