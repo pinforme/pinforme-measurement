@@ -4314,4 +4314,50 @@ document.addEventListener("change",function(e){
 })();
 </script>
 
+
+<!-- ===== 管理者ページ：採寸完了ページを出さない ===== -->
+<style id="pinforme-admin-hide-finish-fix">
+  /* 管理者画面表示中は、お客様側の「採寸完了」だけ完全に非表示 */
+  body.pinforme-admin-view #finishPage{
+    display:none !important;
+  }
+</style>
+<script id="pinforme-admin-hide-finish-script">
+(function(){
+  function syncAdminView(){
+    var admin=document.getElementById('adminPage');
+    var finish=document.getElementById('finishPage');
+    if(!admin) return;
+
+    var active=admin.classList.contains('active');
+    document.body.classList.toggle('pinforme-admin-view',active);
+
+    if(active && finish){
+      finish.classList.remove('active');
+      finish.style.display='none';
+    }else if(finish){
+      finish.style.removeProperty('display');
+    }
+  }
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',function(){
+      syncAdminView();
+      var admin=document.getElementById('adminPage');
+      if(admin){
+        new MutationObserver(syncAdminView).observe(admin,{attributes:true,attributeFilter:['class']});
+      }
+    },{once:true});
+  }else{
+    syncAdminView();
+    var admin=document.getElementById('adminPage');
+    if(admin){
+      new MutationObserver(syncAdminView).observe(admin,{attributes:true,attributeFilter:['class']});
+    }
+  }
+
+  window.addEventListener('pageshow',syncAdminView);
+})();
+</script>
+
 </body></html>
