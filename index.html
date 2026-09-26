@@ -463,6 +463,8 @@ html.pinforme-restoring body{visibility:hidden!important}
 
   /* ?admin=login の時は採寸側を完全に隠す */
   html.pinforme-admin-route-early #entryChoicePage,
+  html.pinforme-admin-route-early #newOwnerChoicePage,
+  html.pinforme-admin-route-early #existingOwnerLookupPage,
   html.pinforme-admin-route-early #remeasureLookupPage,
   html.pinforme-admin-route-early #startPage,
   html.pinforme-admin-route-early #dogInfoPage,
@@ -857,6 +859,11 @@ html.pinforme-restoring body{visibility:hidden!important}
 .pin-entry-choice{width:100%;max-width:520px;min-height:100vh;margin:0 auto;padding:54px 22px 36px;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center}
 .pin-entry-choice .pin-brand{margin-bottom:28px;text-align:center}.pin-entry-copy{font-size:15px;font-weight:700;color:#555;margin:0 0 24px;text-align:center}.pin-entry-actions{width:100%;display:grid;gap:14px}.pin-entry-btn{width:100%;min-height:92px;border-radius:16px;padding:18px 16px;border:2px solid #111;font-family:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px}.pin-entry-btn.primary{background:#111;color:#fff}.pin-entry-btn.secondary{background:#fff;color:#111}.pin-entry-main{font-size:22px;font-weight:900;letter-spacing:.03em}.pin-entry-sub{font-size:12px;font-weight:700;opacity:.78}.pin-entry-message{min-height:22px;margin-top:16px;font-size:13px;line-height:1.6;text-align:center;color:#666}.pin-admin-entry-secret{margin-top:28px;border:0;background:transparent;color:#777;text-decoration:underline;font-size:12px;padding:8px 12px}@media(max-width:420px){.pin-entry-choice{padding:38px 18px 28px}.pin-entry-btn{min-height:88px}.pin-entry-main{font-size:21px}}
 .pin-remeasure-box{width:100%;max-width:520px;min-height:100vh;margin:0 auto;padding:46px 22px 36px;background:#fff;display:flex;flex-direction:column;justify-content:flex-start}
+.pin-owner-choice-box{width:100%;max-width:520px;min-height:100vh;margin:0 auto;padding:46px 22px 36px;background:#fff;display:flex;flex-direction:column;justify-content:center}
+.pin-owner-choice-box .pin-brand{text-align:center;margin-bottom:28px}
+.pin-owner-choice-title{font-size:24px;font-weight:900;text-align:center;margin:0 0 8px}
+.pin-owner-choice-desc{font-size:14px;line-height:1.75;color:#555;text-align:center;margin:0 0 24px}
+
 .pin-remeasure-box .pin-brand{text-align:center;margin-bottom:28px}.pin-remeasure-title{font-size:24px;font-weight:900;text-align:center;margin:0 0 8px}.pin-remeasure-desc{font-size:14px;line-height:1.75;color:#555;text-align:center;margin:0 0 24px}.pin-key-input{width:100%;height:56px;border:1.5px solid #bbb;border-radius:14px;padding:0 8px;font-size:clamp(13px,4.2vw,18px);font-weight:800;letter-spacing:.02em;text-transform:uppercase;background:#fff;text-align:center;white-space:nowrap}.pin-key-input::placeholder{font-size:inherit;letter-spacing:.01em}.pin-start-back{display:inline-flex;align-items:center;gap:6px;margin:0 0 18px;padding:10px 12px;border:1px solid #ddd;border-radius:12px;background:#fff;color:#333;font-size:13px;font-weight:800;font-family:inherit}.pin-start-back:active{background:#f4f4f4}.pin-support-line{margin-top:8px;padding-top:8px;border-top:1px solid #e4e4e4;font-weight:800;color:#333}.pin-remeasure-actions{display:grid;gap:10px;margin-top:12px}.pin-remeasure-action{width:100%;min-height:54px;border-radius:14px;border:0;font-size:17px;font-weight:900;font-family:inherit}.pin-remeasure-action.primary{background:#111;color:#fff}.pin-remeasure-action.light{background:#f1f1f1;color:#222}.pin-remeasure-status{min-height:24px;margin-top:12px;font-size:13px;line-height:1.6;text-align:center;color:#666}.pin-dog-list{display:grid;gap:12px;margin-top:18px}.pin-dog-card{width:100%;text-align:left;border:1px solid #ddd;border-radius:16px;background:#fff;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.04)}.pin-dog-card strong{display:block;font-size:20px;margin-bottom:7px}.pin-dog-card span{display:block;font-size:13px;line-height:1.65;color:#666}.pin-remeasure-key-box{display:none;margin-top:14px;padding:16px;border:1.5px solid #111;border-radius:16px;background:#fff;text-align:center}.pin-key-forgot{margin-top:18px;padding:14px 16px;border-radius:14px;background:#f6f6f6;font-size:12px;line-height:1.7;color:#555;text-align:left}.pin-key-forgot strong{display:block;color:#222;font-size:13px;margin-bottom:3px}.admin-recovery-card{margin:14px 0;padding:14px;border:1px solid #ddd;border-radius:14px;background:#fafafa}.admin-recovery-card h3{font-size:14px;margin:0 0 8px}.admin-recovery-contact{font-size:13px;line-height:1.75;color:#444}.admin-new-key{display:none;margin-top:12px;padding:12px;border:1.5px solid #111;border-radius:12px;background:#fff;text-align:center}.admin-new-key.show{display:block}.admin-new-key-value{font-size:20px;font-weight:900;letter-spacing:.06em;word-break:break-all;margin:8px 0}.pin-remeasure-key-box.show{display:block}.pin-remeasure-key-title{font-size:15px;font-weight:900;margin-bottom:6px}.pin-remeasure-key-note{font-size:12px;line-height:1.6;color:#666;margin-bottom:10px}.pin-remeasure-key-value{font-size:22px;font-weight:900;letter-spacing:.08em;word-break:break-all;margin:6px 0 12px}.pin-copy-key-btn{width:100%;height:46px;border:0;border-radius:12px;background:#111;color:#fff;font-weight:800;font-size:15px}
 #recoveryEmail::placeholder,#recoveryPhone::placeholder{font-size:14px;color:#aaa;opacity:1;letter-spacing:0}
 </style>
@@ -872,6 +879,41 @@ html.pinforme-restoring body{visibility:hidden!important}
     <div id="pinformeEntryMessage" class="pin-entry-message" aria-live="polite"></div>
   </div>
 </section>
+
+<section class="intro-step" id="newOwnerChoicePage">
+  <div class="pin-owner-choice-box">
+    <div class="pin-brand"><div class="paw">🐾</div><div class="pinforme">PINFORME</div><div class="navi">採寸ナビ</div></div>
+    <h1 class="pin-owner-choice-title">新規採寸</h1>
+    <p class="pin-owner-choice-desc">飼い主様の登録状況を選択してください。</p>
+    <div class="pin-entry-actions">
+      <button type="button" class="pin-entry-btn primary" onclick="pinformeStartFirstOwnerMeasurement()">
+        <span class="pin-entry-main">はじめての飼い主様</span>
+        <span class="pin-entry-sub">新しい飼い主様として登録して採寸する</span>
+      </button>
+      <button type="button" class="pin-entry-btn secondary" onclick="pinformeChooseExistingOwner()">
+        <span class="pin-entry-main">登録済みの飼い主様</span>
+        <span class="pin-entry-sub">登録済みの飼い主様に新しいわんちゃんを追加する</span>
+      </button>
+    </div>
+    <button type="button" class="pin-start-back" onclick="pinformeBackToEntry()" style="margin-top:18px;">← 採寸方法選択へ戻る</button>
+  </div>
+</section>
+
+<section class="intro-step" id="existingOwnerLookupPage">
+  <div class="pin-remeasure-box">
+    <div class="pin-brand"><div class="paw">🐾</div><div class="pinforme">PINFORME</div><div class="navi">採寸ナビ</div></div>
+    <h1 class="pin-remeasure-title">登録済みの飼い主様</h1>
+    <p class="pin-remeasure-desc">以前発行された<strong>再採寸キー</strong>を入力してください。<br>確認後、新しいわんちゃんを追加できます。</p>
+    <input id="pinformeExistingOwnerKeyInput" class="pin-key-input" type="text" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="XXXX-XXXX-XXXX-XXXX" maxlength="19">
+    <div class="pin-remeasure-actions">
+      <button type="button" class="pin-remeasure-action primary" onclick="pinformeConfirmExistingOwner()">飼い主様を確認する</button>
+      <button type="button" class="pin-remeasure-action light" onclick="pinformeBackToNewOwnerChoice()">戻る</button>
+    </div>
+    <div id="pinformeExistingOwnerStatus" class="pin-remeasure-status" aria-live="polite"></div>
+    <div class="pin-key-forgot"><strong>再採寸キーを忘れた方</strong>PINFORMEへお問い合わせください。本人確認後、管理者が新しい再採寸キーを発行します。<div class="pin-support-line">お問い合わせ先：PINFORME公式InstagramのDM</div></div>
+  </div>
+</section>
+
 <section class="intro-step" id="remeasureLookupPage">
   <div class="pin-remeasure-box">
     <div class="pin-brand"><div class="paw">🐾</div><div class="pinforme">PINFORME</div><div class="navi">採寸ナビ</div></div>
@@ -1562,10 +1604,9 @@ html.pinforme-restoring body{visibility:hidden!important}
     <div class="finish-actions">
       <button type="button" id="pinformeSubmitButton" class="primary-action" onclick="sendToPinforme()">PINFORMEへ送信・保存</button>
       
-      <div style="font-size:12px;color:#777;line-height:1.5;margin:7px 6px 0;">同じわんちゃんとして、今回の採寸を履歴に追加できます。</div>
-      
-      <div style="font-size:12px;color:#777;line-height:1.5;margin:7px 6px 0;">ご主人様の名前だけ引き継ぎ、別のわんちゃんを新しく採寸できます。</div>
-      <button type="button" class="secondary" onclick="backToStartKeepData()" style="width:100%;margin-top:10px;">最初の画面へ戻る</button>
+      <div id="pinformePostSaveChoice" style="display:none;margin-top:16px;">
+        <button type="button" class="secondary" onclick="backToStartKeepData()" style="width:100%;margin:0;">完了して最初の画面へ戻る</button>
+      </div>
     </div>
     <div class="send-status" id="sendStatus">PINFORMEへのオンライン保存は、保存先データベース接続後に有効になります。</div>
     <div id="pinformeRemeasureKeyBox" class="pin-remeasure-key-box">
@@ -2644,6 +2685,8 @@ function remeasureSameDog(){
     submitBtn.textContent="PINFORMEへ送信・保存";
     submitBtn.style.opacity="1";
   }
+  const postSaveChoice=document.getElementById("pinformePostSaveChoice");
+  if(postSaveChoice) postSaveChoice.style.display="none";
   const status=document.getElementById("sendStatus");
   if(status) status.textContent="再採寸の入力を開始できます。";
   PINFORME_EDIT_FROM_FINISH=false;
@@ -3259,25 +3302,33 @@ async function sendToPinforme(){
       ownerId=forcedOwnerId;
       if(status) status.textContent="既存のわんちゃんIDで再採寸を保存します…";
     }else{
-      // 新規採寸：必ず新規dog_codeを発行し、既存犬を表示情報だけで推測しない。
-      if(status) status.textContent="飼い主IDを確認しています…";
-      const ownerCode=getOrCreateActiveOwnerCode();
-      ownerRemeasureKey=getOrCreateOwnerRemeasureKey();
-      const ownerRes=await fetch(`${PINFORME_SUPABASE_BASE}/rest/v1/rpc/get_or_create_owner_id_with_key`,{
-        method:"POST",
-        headers:{
-          "apikey":PINFORME_SUPABASE_KEY,
-          "Authorization":"Bearer "+PINFORME_SUPABASE_KEY,
-          "Content-Type":"application/json"
-        },
-        body:JSON.stringify({p_owner_code:ownerCode,p_owner_name:payload.owner_name,p_remeasure_key:ownerRemeasureKey})
-      });
-      if(!ownerRes.ok){
-        const detail=await ownerRes.text();
-        throw new Error("飼い主ID取得失敗: HTTP "+ownerRes.status+" "+detail);
+      // 新規犬登録。
+      // forcedOwnerId がある場合は「登録済みの飼い主様」に新しいdog_idだけを追加する。
+      if(forcedOwnerId){
+        ownerId=forcedOwnerId;
+        try{ownerRemeasureKey=localStorage.getItem(PINFORME_OWNER_REMEASURE_KEY)||"";}catch(e){}
+        if(status) status.textContent="登録済みの飼い主様に新しいわんちゃんを追加します…";
+      }else{
+        // はじめての飼い主様：新しいowner_idを作成する。
+        if(status) status.textContent="飼い主IDを確認しています…";
+        const ownerCode=getOrCreateActiveOwnerCode();
+        ownerRemeasureKey=getOrCreateOwnerRemeasureKey();
+        const ownerRes=await fetch(`${PINFORME_SUPABASE_BASE}/rest/v1/rpc/get_or_create_owner_id_with_key`,{
+          method:"POST",
+          headers:{
+            "apikey":PINFORME_SUPABASE_KEY,
+            "Authorization":"Bearer "+PINFORME_SUPABASE_KEY,
+            "Content-Type":"application/json"
+          },
+          body:JSON.stringify({p_owner_code:ownerCode,p_owner_name:payload.owner_name,p_remeasure_key:ownerRemeasureKey})
+        });
+        if(!ownerRes.ok){
+          const detail=await ownerRes.text();
+          throw new Error("飼い主ID取得失敗: HTTP "+ownerRes.status+" "+detail);
+        }
+        ownerId=Number(await ownerRes.json());
+        if(!Number.isFinite(ownerId)) throw new Error("飼い主IDを取得できませんでした。");
       }
-      ownerId=Number(await ownerRes.json());
-      if(!Number.isFinite(ownerId)) throw new Error("飼い主IDを取得できませんでした。");
 
       if(status) status.textContent="わんちゃんIDを確認しています…";
       const dogCode=getOrCreateActiveDogCode();
@@ -3370,6 +3421,9 @@ async function sendToPinforme(){
     if(ownerRemeasureKey) pinformeShowRemeasureKey(ownerRemeasureKey);
     if(status) status.textContent="PINFORMEへの送信・保存が完了しました。";
     if(submitBtn){ submitBtn.textContent="送信・保存済み ✓"; submitBtn.disabled=true; submitBtn.style.opacity=".65"; }
+    const postSaveChoice=document.getElementById("pinformePostSaveChoice");
+    if(postSaveChoice) postSaveChoice.style.display="block";
+    try{savePINFORMEState();}catch(e){}
     alert("PINFORMEへの送信・保存が完了しました。");
   }catch(err){
     console.error("PINFORME Supabase save error:",err);
@@ -3403,7 +3457,7 @@ function savePINFORMEState(){
   document.querySelectorAll('input,select,textarea').forEach((el,i)=>{
     const key=el.id || el.name || ("field_"+i);
     if(el.type==="file") return;
-    if(el.id==="pinformeRemeasureKeyInput") return;
+    if(el.id==="pinformeRemeasureKeyInput" || el.id==="pinformeExistingOwnerKeyInput") return;
     state.fields[key]={
       value:el.value,
       checked:!!el.checked,
@@ -3453,7 +3507,7 @@ function restorePINFORMEState(){
   document.querySelectorAll('input,select,textarea').forEach((el,i)=>{
     const key=el.id || el.name || ("field_"+i);
     const saved=state.fields && state.fields[key];
-    if(el.id==="pinformeRemeasureKeyInput"){ el.value=""; return; }
+    if(el.id==="pinformeRemeasureKeyInput" || el.id==="pinformeExistingOwnerKeyInput"){ el.value=""; return; }
     if(!saved || el.type==="file") return;
     if(el.type==="checkbox" || el.type==="radio") el.checked=!!saved.checked;
     else el.value=saved.value ?? "";
@@ -3716,7 +3770,14 @@ document.addEventListener("click",function(){
   function clearRemeasureKeys(){try{localStorage.removeItem(PINFORME_REMEASURE_DOG_ID_KEY);localStorage.removeItem(PINFORME_REMEASURE_OWNER_ID_KEY);localStorage.removeItem(PINFORME_REMEASURE_PHOTO_PATH_KEY);}catch(e){}}
   window.pinformeChooseNewMeasurement=function(){
     clearRemeasureKeys();
-    try{clearActiveDogCode();clearActiveOwnerCode();}catch(e){}
+    const st=document.getElementById('pinformeExistingOwnerStatus'); if(st) st.textContent='';
+    const ki=document.getElementById('pinformeExistingOwnerKeyInput'); if(ki) ki.value='';
+    showOnly('newOwnerChoicePage');
+  };
+
+  window.pinformeStartFirstOwnerMeasurement=function(){
+    clearRemeasureKeys();
+    try{clearActiveDogCode();clearActiveOwnerCode();localStorage.removeItem(PINFORME_OWNER_REMEASURE_KEY);}catch(e){}
     try{
       var keepAdmin=localStorage.getItem(PINFORME_AUTH_TOKEN_KEY),keys=[];
       for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k.indexOf('PINFORME_')===0&&k!==PINFORME_AUTH_TOKEN_KEY)keys.push(k);}
@@ -3735,6 +3796,8 @@ document.addEventListener("click",function(){
       }
       var sendStatus=document.getElementById('sendStatus');
       if(sendStatus) sendStatus.textContent='';
+      var postSaveChoice=document.getElementById('pinformePostSaveChoice');
+      if(postSaveChoice) postSaveChoice.style.display='none';
     }catch(e){}
 
     // 画面上に残っている旧入力値も新規用にクリアする。管理者ログイン欄は触らない。
@@ -3749,6 +3812,93 @@ document.addEventListener("click",function(){
     }catch(e){}
     showOnly('startPage');try{savePINFORMEState();}catch(e){}
   };
+
+  window.pinformeChooseExistingOwner=function(){
+    clearRemeasureKeys();
+    try{clearActiveDogCode();clearActiveOwnerCode();}catch(e){}
+    const input=document.getElementById('pinformeExistingOwnerKeyInput');
+    if(input) input.value='';
+    const status=document.getElementById('pinformeExistingOwnerStatus');
+    if(status) status.textContent='';
+    showOnly('existingOwnerLookupPage');
+  };
+
+  window.pinformeBackToNewOwnerChoice=function(){
+    const input=document.getElementById('pinformeExistingOwnerKeyInput');
+    if(input) input.value='';
+    const status=document.getElementById('pinformeExistingOwnerStatus');
+    if(status) status.textContent='';
+    showOnly('newOwnerChoicePage');
+  };
+
+  window.pinformeConfirmExistingOwner=async function(){
+    const input=document.getElementById('pinformeExistingOwnerKeyInput');
+    const status=document.getElementById('pinformeExistingOwnerStatus');
+    const key=pinformeNormalizeRemeasureKey(input?.value||'');
+    if(input) input.value=key;
+    if(key.replace(/-/g,'').length<16){
+      if(status) status.textContent='16文字の再採寸キーを入力してください。';
+      return;
+    }
+    if(status) status.textContent='登録情報を確認しています…';
+    try{
+      const res=await fetch(`${PINFORME_SUPABASE_BASE}/rest/v1/rpc/get_remeasure_dogs`,{
+        method:'POST',
+        headers:{
+          apikey:PINFORME_SUPABASE_KEY,
+          Authorization:'Bearer '+PINFORME_SUPABASE_KEY,
+          'Content-Type':'application/json'
+        },
+        body:JSON.stringify({p_key:key})
+      });
+      if(!res.ok) throw new Error('HTTP '+res.status+' '+await res.text());
+      const dogs=await res.json();
+      if(!Array.isArray(dogs)||!dogs.length){
+        if(status) status.textContent='一致する登録情報が見つかりません。キーをご確認ください。';
+        return;
+      }
+
+      const ownerId=Number(dogs[0].owner_id);
+      const ownerName=dogs[0].owner_name||'';
+      if(!(ownerId>0)) throw new Error('owner_idを確認できませんでした。');
+
+      // 既存owner_idだけを保持し、新しいdog_idを発行する。
+      try{
+        localStorage.removeItem(PINFORME_REMEASURE_DOG_ID_KEY);
+        localStorage.setItem(PINFORME_REMEASURE_OWNER_ID_KEY,String(ownerId));
+        localStorage.setItem(PINFORME_OWNER_REMEASURE_KEY,key);
+        clearActiveDogCode();
+        clearActiveOwnerCode();
+      }catch(e){}
+
+      // 新しいわんちゃん用に画面を初期化し、飼い主名だけ反映。
+      try{
+        PINFORME_SUBMITTED=false;
+        PINFORME_SUBMITTING=false;
+        document.querySelectorAll('#startPage input,#startPage select,#startPage textarea,#dogInfoPage input,#dogInfoPage select,#dogInfoPage textarea').forEach(function(el){
+          if(el.type==='file'){el.value='';return;}
+          if(el.type==='checkbox'||el.type==='radio')el.checked=false;else el.value='';
+        });
+        const owner=document.getElementById('ownerName'); if(owner) owner.value=ownerName;
+        const suffix=document.getElementById('dogSuffix'); if(suffix) suffix.value='くん';
+        document.querySelectorAll('.pin-first .suffix').forEach(b=>b.classList.toggle('active',b.dataset.value==='くん'));
+        const pp=document.getElementById('photoPreview'); if(pp){pp.removeAttribute('src');pp.style.display='none';}
+        if(typeof PINFORME_DOG_PHOTO_DATA!=='undefined') PINFORME_DOG_PHOTO_DATA='';
+        const submitBtn=document.getElementById('pinformeSubmitButton');
+        if(submitBtn){submitBtn.disabled=false;submitBtn.textContent='PINFORMEへ送信・保存';submitBtn.style.opacity='1';}
+        const sendStatus=document.getElementById('sendStatus'); if(sendStatus) sendStatus.textContent='';
+      }catch(e){}
+
+      if(input) input.value='';
+      if(status) status.textContent='';
+      showOnly('startPage');
+      try{savePINFORMEState();}catch(e){}
+    }catch(e){
+      console.error(e);
+      if(status) status.textContent='登録情報の確認中にエラーが発生しました。';
+    }
+  };
+
   window.pinformeChooseRemeasurement=function(){
     const input=document.getElementById('pinformeRemeasureKeyInput');
     // 再採寸画面を開くたびに入力欄は空欄から開始する。
@@ -3773,6 +3923,8 @@ document.addEventListener("click",function(){
   window.pinformeBackToEntry=function(){
     const status=document.getElementById('pinformeRemeasureStatus');if(status)status.textContent='';
     const list=document.getElementById('pinformeRemeasureDogList');if(list)list.innerHTML='';
+    const eStatus=document.getElementById('pinformeExistingOwnerStatus');if(eStatus)eStatus.textContent='';
+    const eInput=document.getElementById('pinformeExistingOwnerKeyInput');if(eInput)eInput.value='';
     showOnly('entryChoicePage');
   };
   window.pinformeLookupRemeasureDogs=async function(){
@@ -3977,6 +4129,8 @@ document.addEventListener("change",function(e){
 <!-- ===== PINFORME 管理者ルート表示分離・最終修正 ===== -->
 <style id="pinforme-admin-route-exclusive-style">
   body.pinforme-admin-route #entryChoicePage,
+  body.pinforme-admin-route #newOwnerChoicePage,
+  body.pinforme-admin-route #existingOwnerLookupPage,
   body.pinforme-admin-route #remeasureLookupPage,
   body.pinforme-admin-route #startPage,
   body.pinforme-admin-route #dogInfoPage,
@@ -4036,7 +4190,7 @@ document.addEventListener("change",function(e){
 (function(){
   function hideEveryPINFORMEPage(){
     document.querySelectorAll(
-      '#entryChoicePage,#remeasureLookupPage,#startPage,#dogInfoPage,#adminPage,#finishPage,#kartePage,.step'
+      '#entryChoicePage,#newOwnerChoicePage,#existingOwnerLookupPage,#remeasureLookupPage,#startPage,#dogInfoPage,#adminPage,#finishPage,#kartePage,.step'
     ).forEach(function(el){
       el.classList.remove('active');
     });
@@ -4047,7 +4201,7 @@ document.addEventListener("change",function(e){
 
   function detectCurrentPINFORMEView(){
     var candidates = Array.from(document.querySelectorAll(
-      '#entryChoicePage.active,#remeasureLookupPage.active,#startPage.active,#dogInfoPage.active,#finishPage.active,#kartePage.active,#adminPage.active,.step.active'
+      '#entryChoicePage.active,#newOwnerChoicePage.active,#existingOwnerLookupPage.active,#remeasureLookupPage.active,#startPage.active,#dogInfoPage.active,#finishPage.active,#kartePage.active,#adminPage.active,.step.active'
     )).filter(function(el){
       var cs = window.getComputedStyle(el);
       return cs.display !== 'none' && cs.visibility !== 'hidden';
