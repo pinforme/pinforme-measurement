@@ -475,6 +475,15 @@ html.pinforme-restoring body{visibility:hidden!important}
   html.pinforme-admin-route-early #adminPage{display:block !important;}
 </style>
 
+
+<style id="pinforme-admin-hide-finish-hard">
+#adminPage.active ~ #finishPage{
+  display:none !important;
+}
+#adminPage.active ~ #finishPage.active{
+  display:none !important;
+}
+</style>
 </head>
 <body>
 
@@ -2790,7 +2799,19 @@ async function verifyAdminAccess(accessToken){
     return j===true;
   }catch(e){return false}
 }
-function openAdminPage(){hideAll();document.getElementById("adminPage").classList.add("active");window.scrollTo(0,0);syncAdminUI()}
+function openAdminPage(){
+  hideAll();
+  const finish=document.getElementById("finishPage");
+  if(finish){
+    finish.classList.remove("active");
+    finish.style.display="none";
+  }
+  const admin=document.getElementById("adminPage");
+  if(admin) admin.classList.add("active");
+  document.body.classList.add("pinforme-admin-view");
+  window.scrollTo(0,0);
+  syncAdminUI();
+}
 function closeAdminPage(){
   try{
     // 管理者URL(?admin=login)を完全に外し、お客様用入口へ戻す。
@@ -4357,6 +4378,23 @@ document.addEventListener("change",function(e){
   }
 
   window.addEventListener('pageshow',syncAdminView);
+})();
+</script>
+
+
+<script id="pinforme-admin-finish-reset">
+(function(){
+  function resetFinishWhenLeavingAdmin(){
+    const admin=document.getElementById('adminPage');
+    const finish=document.getElementById('finishPage');
+    const isAdmin=!!(admin && admin.classList.contains('active'));
+    if(!isAdmin){
+      document.body.classList.remove('pinforme-admin-view');
+      if(finish) finish.style.removeProperty('display');
+    }
+  }
+  document.addEventListener('click',function(){setTimeout(resetFinishWhenLeavingAdmin,0);},true);
+  window.addEventListener('pageshow',resetFinishWhenLeavingAdmin);
 })();
 </script>
 
