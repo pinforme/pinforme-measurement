@@ -2014,6 +2014,38 @@ async function sendToPinforme(){
     }else{
       payload.photo_path=null;
     }
+    // わんちゃんマスター(dogs)へ登録し、返されたIDを採寸履歴へ紐付ける
+    if(status) status.textContent="わんちゃん情報を登録しています…";
+    const dogCode=(window.crypto && crypto.randomUUID)
+      ? crypto.randomUUID()
+      : (Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,12));
+    const dogRes=await fetch(`${PINFORME_SUPABASE_BASE}/rest/v1/rpc/create_dog_and_get_id`,{
+      method:"POST",
+      headers:{
+        "apikey":PINFORME_SUPABASE_KEY,
+        "Authorization":"Bearer "+PINFORME_SUPABASE_KEY,
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify({
+        p_owner_name:payload.owner_name,
+        p_dog_name:payload.dog_name,
+        p_breed:payload.breed,
+        p_sex:payload.sex,
+        p_birth_date:payload.birth_date,
+        p_weight:payload.weight,
+        p_photo_path:payload.photo_path,
+        p_dog_code:dogCode
+      })
+    });
+    if(!dogRes.ok){
+      const detail=await dogRes.text();
+      throw new Error("わんちゃん登録失敗: HTTP "+dogRes.status+" "+detail);
+    }
+    const newDogId=await dogRes.json();
+    const dogId=Number(newDogId);
+    if(!Number.isFinite(dogId)) throw new Error("わんちゃんIDを取得できませんでした。");
+    payload.dog_id=dogId;
+
     if(status) status.textContent="カルテを保存しています…";
     const res=await fetch(PINFORME_SAVE_ENDPOINT,{
       method:"POST",
