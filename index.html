@@ -3323,6 +3323,7 @@ function savePINFORMEState(){
   document.querySelectorAll('input,select,textarea').forEach((el,i)=>{
     const key=el.id || el.name || ("field_"+i);
     if(el.type==="file") return;
+    if(el.id==="pinformeRemeasureKeyInput") return;
     state.fields[key]={
       value:el.value,
       checked:!!el.checked,
@@ -3372,6 +3373,7 @@ function restorePINFORMEState(){
   document.querySelectorAll('input,select,textarea').forEach((el,i)=>{
     const key=el.id || el.name || ("field_"+i);
     const saved=state.fields && state.fields[key];
+    if(el.id==="pinformeRemeasureKeyInput"){ el.value=""; return; }
     if(!saved || el.type==="file") return;
     if(el.type==="checkbox" || el.type==="radio") el.checked=!!saved.checked;
     else el.value=saved.value ?? "";
@@ -3654,11 +3656,24 @@ document.addEventListener("click",function(){
   };
   window.pinformeChooseRemeasurement=function(){
     const input=document.getElementById('pinformeRemeasureKeyInput');
-    let saved='';try{saved=localStorage.getItem(PINFORME_OWNER_REMEASURE_KEY)||'';}catch(e){}
-    if(input && saved) input.value=pinformeNormalizeRemeasureKey(saved);
+    // 再採寸画面を開くたびに入力欄は空欄から開始する。
+    // 端末内に前回キーが残っていても自動表示しない。
+    if(input) input.value='';
+    try{
+      const raw=localStorage.getItem(PINFORME_FORM_STATE_KEY);
+      if(raw){
+        const st=JSON.parse(raw);
+        if(st && st.fields) delete st.fields.pinformeRemeasureKeyInput;
+        localStorage.setItem(PINFORME_FORM_STATE_KEY,JSON.stringify(st));
+      }
+    }catch(e){}
     const status=document.getElementById('pinformeRemeasureStatus');if(status)status.textContent='';
     const list=document.getElementById('pinformeRemeasureDogList');if(list)list.innerHTML='';
     showOnly('remeasureLookupPage');
+    setTimeout(function(){
+      const el=document.getElementById('pinformeRemeasureKeyInput');
+      if(el) el.value='';
+    },0);
   };
   window.pinformeBackToEntry=function(){
     const status=document.getElementById('pinformeRemeasureStatus');if(status)status.textContent='';
@@ -3678,8 +3693,11 @@ document.addEventListener("click",function(){
       if(!res.ok) throw new Error('HTTP '+res.status+' '+await res.text());
       const dogs=await res.json();
       if(!Array.isArray(dogs)||!dogs.length){if(status)status.textContent='一致する登録情報が見つかりません。キーをご確認ください。';return;}
-      try{localStorage.setItem(PINFORME_OWNER_REMEASURE_KEY,key);}catch(e){}
+      // キー確認に成功したら、画面上のキーは残さない。
+      // 実際にわんちゃんを選択した時だけ、そのキーを内部保存する。
+      if(input) input.value='';
       if(status)status.textContent='再採寸するわんちゃんを選んでください。';
+      try{savePINFORMEState();}catch(e){}
       dogs.forEach(function(d){
         const btn=document.createElement('button');btn.type='button';btn.className='pin-dog-card';
         const suffix=d.dog_suffix||'';const breed=d.breed||'犬種未登録';const birth=d.birth_date||'生年月日未登録';const weight=d.latest_weight?` ／ ${d.latest_weight} kg`:'';
@@ -3713,6 +3731,8 @@ document.addEventListener("click",function(){
   }
   async function init(){
     bindRemeasureKeyFormatting();
+    const remeasureKeyField=document.getElementById('pinformeRemeasureKeyInput');
+    if(remeasureKeyField) remeasureKeyField.value='';
     syncSecretAdminEntry();
     var adminRoute=false;
     try{adminRoute=(new URLSearchParams(location.search)).get('admin')==='login';}catch(e){}
