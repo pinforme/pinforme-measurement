@@ -1599,7 +1599,29 @@ function goDogInfo(){
   hideAll(); document.getElementById("dogInfoPage").classList.add("active"); window.scrollTo(0,0);
 }
 function backStart(){hideAll();document.getElementById("startPage").classList.add("active");window.scrollTo(0,0)}
-function startMeasurements(){hideAll();current=0;steps[0].classList.add("active");window.scrollTo(0,0)}
+function startMeasurements(){
+  let mustReset=false;
+  try{
+    mustReset=localStorage.getItem("PINFORME_FRESH_MEASUREMENT_REQUIRED_V1")==="1";
+    // 旧版から更新した既存犬の移行用：
+    // dog_codeがあり、まだ移行済みでなければ最初の1回だけ旧採寸値を消す。
+    const hasDogCode=!!(localStorage.getItem(PINFORME_ACTIVE_DOG_CODE_KEY)||"").trim();
+    const migrated=localStorage.getItem("PINFORME_REMEASURE_RESET_MIGRATED_V1")==="1";
+    if(hasDogCode && !migrated){
+      mustReset=true;
+      localStorage.setItem("PINFORME_REMEASURE_RESET_MIGRATED_V1","1");
+    }
+  }catch(e){}
+  if(mustReset){
+    resetMeasurementInputsOnly();
+    try{localStorage.setItem("PINFORME_FRESH_MEASUREMENT_REQUIRED_V1","0");}catch(e){}
+  }
+  hideAll();
+  current=0;
+  steps[0].classList.add("active");
+  try{savePINFORMEState();}catch(e){}
+  window.scrollTo(0,0);
+}
 function showStep(n){
   if(n<0){hideAll();document.getElementById("dogInfoPage").classList.add("active");window.scrollTo(0,0);return}
   if(n>=steps.length){showFinish();return;}
@@ -1921,43 +1943,28 @@ function clearActiveDogCode(){
 }
 
 function resetMeasurementInputsOnly(){
-  // ①〜⑮の採寸入力だけを空にする。飼い主様・わんちゃん基本情報は残す。
+  // ①〜⑮だけを完全に初期化。基本情報・写真・dog_codeは触らない。
   steps.forEach(section=>{
-    section.querySelectorAll('input[type="number"]').forEach(x=>{
-      x.value="";
-      x.removeAttribute("value");
-      x.dispatchEvent(new Event("input",{bubbles:true}));
-      x.dispatchEvent(new Event("change",{bubbles:true}));
+    section.querySelectorAll('input,select,textarea').forEach(el=>{
+      if(el.type==="button" || el.type==="submit" || el.type==="file") return;
+      if(el.type==="checkbox" || el.type==="radio"){
+        el.checked=false;
+      }else{
+        el.value="";
+        el.removeAttribute("value");
+      }
     });
     section.querySelectorAll('.avg-value span').forEach(x=>x.textContent="0.0");
   });
 
-  // 保存済みフォーム状態のうち、採寸ステップ内の数値だけも空にする。
-  try{
-    const raw=localStorage.getItem(PINFORME_FORM_STATE_KEY);
-    if(raw){
-      const state=JSON.parse(raw);
-      if(state && state.fields){
-        steps.forEach(section=>{
-          section.querySelectorAll('input[type="number"]').forEach((el,i)=>{
-            const key=el.id || el.name;
-            if(key && state.fields[key]){
-              state.fields[key].value="";
-              state.fields[key].checked=false;
-            }
-          });
-        });
-        localStorage.setItem(PINFORME_FORM_STATE_KEY,JSON.stringify(state));
-      }
-    }
-  }catch(e){
-    console.warn("measurement reset state cleanup:",e);
-  }
+  // DOMの空欄状態をそのまま保存し直すことで、
+  // id/nameのない入力欄も含めて前回値が復元されないようにする。
+  try{ savePINFORMEState(); }catch(e){}
 }
-
 function remeasureSameDog(){
   // 基本情報・写真・dog_codeはそのまま。同じdogs.idへ新しい採寸履歴を追加する。
   resetMeasurementInputsOnly();
+  try{ localStorage.setItem("PINFORME_FRESH_MEASUREMENT_REQUIRED_V1","0"); }catch(e){}
   PINFORME_SUBMITTED=false;
   PINFORME_SUBMITTING=false;
   const submitBtn=document.getElementById("pinformeSubmitButton");
@@ -1983,6 +1990,10 @@ function remeasureSameDog(){
 function registerAnotherDog(){
   const owner=(document.getElementById("ownerName")?.value||"").trim();
   clearActiveDogCode();
+  try{
+    localStorage.removeItem("PINFORME_FRESH_MEASUREMENT_REQUIRED_V1");
+    localStorage.removeItem("PINFORME_REMEASURE_RESET_MIGRATED_V1");
+  }catch(e){}
   PINFORME_SUBMITTED=false;
   PINFORME_SUBMITTING=false;
   const submitBtn=document.getElementById("pinformeSubmitButton");
@@ -2172,6 +2183,7 @@ async function sendToPinforme(){
       throw new Error("HTTP "+res.status+" "+detail);
     }
     PINFORME_SUBMITTED=true;
+    try{ localStorage.setItem("PINFORME_FRESH_MEASUREMENT_REQUIRED_V1","1"); }catch(e){}
     if(status) status.textContent="PINFORMEへの送信・保存が完了しました。";
     if(submitBtn){ submitBtn.textContent="送信・保存済み ✓"; submitBtn.disabled=true; submitBtn.style.opacity=".65"; }
     alert("PINFORMEへの送信・保存が完了しました。");
