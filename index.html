@@ -517,6 +517,112 @@ html.pinforme-restoring body{visibility:hidden!important}
   #adminPage .admin-row small{font-size:12px !important}
 }
 
+
+/* ===== 管理カルテ：採寸詳細の見やすさ改善 ===== */
+#adminPage .admin-measure-sticky{
+  position:sticky;
+  top:0;
+  z-index:20;
+  margin:-16px -16px 14px;
+  padding:12px 16px;
+  background:rgba(255,255,255,.96);
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+  border-bottom:1px solid #e8e8e8;
+}
+#adminPage .admin-measure-sticky-top{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+#adminPage .admin-back-link{
+  flex:0 0 auto;
+  width:auto !important;
+  min-width:0 !important;
+  height:40px !important;
+  min-height:40px !important;
+  padding:0 12px !important;
+  border:0;
+  border-radius:10px !important;
+  background:#f0f0f0;
+  color:#222;
+  font-size:13px !important;
+  font-weight:800;
+}
+#adminPage .admin-measure-sticky-name{
+  min-width:0;
+  font-size:17px;
+  line-height:1.3;
+  font-weight:900;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+#adminPage .admin-measure-summary{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin-top:10px;
+}
+#adminPage .admin-measure-summary > div{
+  background:#f6f6f6;
+  border-radius:10px;
+  padding:8px 10px;
+}
+#adminPage .admin-measure-summary small{
+  display:block;
+  font-size:10px;
+  color:#888;
+  margin-bottom:2px;
+}
+#adminPage .admin-measure-summary strong{
+  display:block;
+  font-size:13px;
+  line-height:1.35;
+  color:#222;
+}
+#adminPage .admin-measure-owner{
+  margin:12px 0 14px;
+  padding:12px 13px;
+  background:#fafafa;
+  border:1px solid #e7e7e7;
+  border-radius:13px;
+  font-size:13px;
+  line-height:1.75;
+}
+#adminPage .admin-measure-grid{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:8px;
+}
+#adminPage .admin-measure-item{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  gap:12px;
+  padding:13px 14px;
+  border:1px solid #e6e6e6;
+  border-radius:13px;
+  background:#fff;
+}
+#adminPage .admin-measure-item .label{
+  min-width:0;
+  font-size:14px;
+  line-height:1.4;
+  color:#333;
+}
+#adminPage .admin-measure-item .value{
+  white-space:nowrap;
+  font-size:16px;
+  font-weight:900;
+  color:#111;
+}
+#adminPage .admin-measure-section-title{
+  margin:18px 0 10px;
+  font-size:17px;
+  font-weight:900;
+}
+
 </style>
 <section class="intro-step active" id="startPage">
 <div class="pin-first">
@@ -2265,10 +2371,16 @@ function showAdminDog(d){
 }
 function showAdminMeasurementById(mid,did){const r=PINFORME_ADMIN_ROWS.find(x=>String(x.id)===String(mid));const d=PINFORME_ADMIN_DOGS.find(x=>String(x.id)===String(did));if(r)showAdminMeasurement(r,d)}
 function showAdminMeasurement(r,d){
- const box=document.getElementById("adminDetail"),rows=ADMIN_FIELDS.map(([n,k])=>`<tr><td>${n}</td><td>${r[k]==null?"—":adminEsc(r[k])+" cm"}</td></tr>`).join(""),photoPath=r.photo_path||d?.photo_path;
+ const box=document.getElementById("adminDetail");
+ const dogName=`${adminEsc(r.dog_name||d?.dog_name||"名前未入力")}${adminEsc(r.dog_suffix||"")}`;
+ const measureCards=ADMIN_FIELDS.map(([n,k])=>`<div class="admin-measure-item"><div class="label">${n}</div><div class="value">${r[k]==null?"—":adminEsc(r[k])+" cm"}</div></div>`).join("");
+ const photoPath=r.photo_path||d?.photo_path;
  const photoHtml=photoPath?`<div class="admin-photo-wrap"><img id="adminDogPhoto" alt="わんちゃんの写真" style="display:none;max-width:100%;max-height:280px;object-fit:contain;border-radius:12px"><div id="adminPhotoStatus" class="admin-note">写真を読み込んでいます…</div></div>`:'<div class="admin-note">写真なし</div>';
- box.innerHTML=`<div class="admin-detail-head"><div><div class="admin-sub">PINFORME MEASUREMENT</div><h2>${adminEsc(r.dog_name||d?.dog_name||"名前未入力")}${adminEsc(r.dog_suffix||"")}</h2></div><button type="button" class="admin-btn light" style="width:auto;min-height:42px" onclick="${d?`showAdminDog(PINFORME_ADMIN_DOGS.find(x=>String(x.id)==='${adminEsc(d.id)}'))`:`document.getElementById('adminDetail').classList.add('admin-hidden')`}">${d?"履歴へ戻る":"閉じる"}</button></div>${photoHtml}<div class="admin-detail-meta">飼い主様：${adminEsc(r.owner_name||d?.owner_name||"—")}<br>犬種：${adminEsc(r.breed||d?.breed||"—")} ／ 性別：${adminEsc(r.sex||d?.sex||"—")}<br>生年月日：${adminEsc(r.birth_date||d?.birth_date||"—")} ／ 採寸時体重：${r.weight==null?"—":adminEsc(r.weight)+" kg"}<br>採寸保存日時：${adminEsc(adminDate(r.created_at))}</div><table class="admin-measures">${rows}</table>`;
- box.classList.remove("admin-hidden");box.scrollIntoView({behavior:"smooth",block:"start"});if(photoPath)loadAdminPhoto(photoPath,document.getElementById("adminDogPhoto"),document.getElementById("adminPhotoStatus"));
+ const backAction=d?`showAdminDog(PINFORME_ADMIN_DOGS.find(x=>String(x.id)==='${adminEsc(d.id)}'))`:`document.getElementById('adminDetail').classList.add('admin-hidden')`;
+ box.innerHTML=`<div class="admin-measure-sticky"><div class="admin-measure-sticky-top"><button type="button" class="admin-back-link" onclick="${backAction}">← ${d?"カルテへ戻る":"閉じる"}</button><div class="admin-measure-sticky-name">${dogName}</div></div><div class="admin-measure-summary"><div><small>採寸日</small><strong>${adminEsc(adminDate(r.created_at))}</strong></div><div><small>採寸時体重</small><strong>${r.weight==null?"—":adminEsc(r.weight)+" kg"}</strong></div></div></div>${photoHtml}<div class="admin-measure-owner">飼い主様：${adminEsc(r.owner_name||d?.owner_name||"—")}<br>犬種：${adminEsc(r.breed||d?.breed||"—")} ／ 性別：${adminEsc(r.sex||d?.sex||"—")}<br>生年月日：${adminEsc(r.birth_date||d?.birth_date||"—")}</div><div class="admin-measure-section-title">採寸結果</div><div class="admin-measure-grid">${measureCards}</div>`;
+ box.classList.remove("admin-hidden");
+ box.scrollIntoView({behavior:"auto",block:"start"});
+ if(photoPath)loadAdminPhoto(photoPath,document.getElementById("adminDogPhoto"),document.getElementById("adminPhotoStatus"));
 }
 
 let PINFORME_SUBMITTING=false;
