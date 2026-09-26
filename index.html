@@ -378,6 +378,145 @@ html.pinforme-restoring body{visibility:hidden!important}
 <style>
 .admin-entry{margin-top:34px;text-align:center}.admin-entry button{border:0;background:none;text-decoration:underline;color:#666;font-weight:800;font-size:15px;padding:12px}
 #adminPage{padding:24px 18px 100px}.admin-shell{max-width:520px;margin:auto}.admin-card{background:#fff;border:1px solid #ddd;border-radius:14px;padding:20px;margin-bottom:16px}.admin-brand{font-size:24px;font-weight:900;letter-spacing:.04em}.admin-sub{font-size:11px;letter-spacing:.18em;color:#777;margin-top:2px}.admin-title{font-size:22px;margin:22px 0}.admin-note,.admin-status{font-size:13px;color:#666;line-height:1.6}.admin-field{margin:14px 0}.admin-field label{display:block;font-size:13px;font-weight:700;margin-bottom:6px}.admin-field input,.admin-toolbar input{width:100%;min-height:48px;border:1px solid #ccc;border-radius:9px;padding:10px 12px;font-size:16px}.admin-actions{display:flex;gap:10px;margin-top:18px}.admin-btn{flex:1;min-height:48px;border:0;border-radius:9px;font-weight:800;font-size:14px}.admin-btn.primary{background:#111;color:#fff}.admin-btn.light{background:#eee;color:#222}.admin-btn.danger{background:#333;color:#fff}.admin-hidden{display:none!important}.admin-toolbar{display:flex;gap:8px}.admin-toolbar button{min-width:72px;border:0;border-radius:9px;background:#111;color:#fff;font-weight:800}.admin-list{margin-top:12px}.admin-row{width:100%;display:flex;justify-content:space-between;align-items:center;text-align:left;background:#fff;border:0;border-top:1px solid #e5e5e5;padding:14px 4px}.admin-row strong{display:block;font-size:16px}.admin-row small{display:block;color:#666;line-height:1.5;margin-top:4px}.admin-row .arrow{font-size:28px;color:#999}.admin-detail-head{display:flex;justify-content:space-between;gap:12px;align-items:start}.admin-detail-head h2{margin:5px 0 0}.admin-detail-meta{font-size:13px;line-height:1.8;margin:15px 0}.admin-measures{width:100%;border-collapse:collapse;font-size:13px}.admin-measures td{border-top:1px solid #e5e5e5;padding:9px 4px}.admin-measures td:last-child{text-align:right;font-weight:800}
+
+/* ===== PINFORME 管理カルテ：スマホ表示修正 ===== */
+#adminPage button{
+  height:auto;
+  border-radius:12px;
+  font-size:15px;
+  line-height:1.35;
+  font-weight:800;
+}
+#adminPage .admin-card{
+  overflow:hidden;
+}
+#adminPage .admin-toolbar{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 92px;
+  gap:10px;
+  align-items:stretch;
+}
+#adminPage .admin-toolbar input{
+  min-width:0;
+  height:52px;
+  min-height:52px;
+  font-size:16px;
+}
+#adminPage .admin-toolbar button{
+  width:92px;
+  min-width:92px;
+  height:52px;
+  min-height:52px;
+  padding:0 12px;
+  border-radius:12px;
+  font-size:16px;
+}
+#adminPage .admin-status{
+  margin:10px 2px 4px;
+  font-size:13px;
+  line-height:1.5;
+}
+#adminPage .admin-list{
+  margin-top:6px;
+  display:grid;
+  gap:10px;
+}
+#adminPage .admin-row{
+  width:100%;
+  min-width:0;
+  height:auto !important;
+  min-height:92px;
+  margin:0 !important;
+  padding:14px 14px !important;
+  border:1px solid #e3e3e3 !important;
+  border-radius:16px !important;
+  background:#fff;
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) 28px;
+  gap:10px;
+  align-items:center;
+  text-align:left;
+  box-sizing:border-box;
+  overflow:hidden;
+}
+#adminPage .admin-row > span:first-child{
+  min-width:0;
+  display:block;
+}
+#adminPage .admin-row strong{
+  display:block;
+  margin:0;
+  font-size:17px !important;
+  line-height:1.35 !important;
+  font-weight:900;
+  color:#222;
+  overflow-wrap:anywhere;
+}
+#adminPage .admin-row strong small{
+  display:inline;
+  font-size:11px !important;
+  font-weight:700;
+  color:#888;
+}
+#adminPage .admin-row small{
+  display:block;
+  margin-top:7px;
+  font-size:13px !important;
+  line-height:1.55 !important;
+  font-weight:600;
+  color:#666;
+  overflow-wrap:anywhere;
+}
+#adminPage .admin-row .arrow{
+  width:28px;
+  font-size:30px !important;
+  line-height:1 !important;
+  text-align:center;
+  color:#999;
+}
+#adminPage .admin-actions{
+  gap:10px;
+}
+#adminPage .admin-btn{
+  min-height:48px;
+  height:48px !important;
+  padding:0 14px;
+  font-size:14px !important;
+  border-radius:12px !important;
+}
+#adminPage .admin-detail-head button{
+  width:auto !important;
+  min-width:82px;
+  min-height:42px;
+  height:42px !important;
+  padding:0 12px;
+  font-size:13px !important;
+}
+#adminPage .admin-photo-wrap{
+  margin:16px 0;
+  padding:12px;
+  border:1px solid #e6e6e6;
+  border-radius:16px;
+  background:#fafafa;
+  text-align:center;
+}
+#adminPage .admin-measures{
+  margin-top:10px;
+}
+#adminPage .admin-measures td{
+  padding:11px 4px;
+  line-height:1.4;
+}
+@media(max-width:390px){
+  #adminPage{padding:18px 12px 90px}
+  #adminPage .admin-card{padding:16px}
+  #adminPage .admin-toolbar{grid-template-columns:minmax(0,1fr) 78px}
+  #adminPage .admin-toolbar button{width:78px;min-width:78px;font-size:15px}
+  #adminPage .admin-row{padding:13px 12px !important;min-height:88px}
+  #adminPage .admin-row strong{font-size:16px !important}
+  #adminPage .admin-row small{font-size:12px !important}
+}
+
 </style>
 <section class="intro-step active" id="startPage">
 <div class="pin-first">
