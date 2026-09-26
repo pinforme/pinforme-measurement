@@ -264,6 +264,46 @@ button{height:72px;border-radius:36px;font-size:22px;font-weight:900}
   .avg-value small{font-size:14px}
 }
 
+
+/* ===== 生年月日：年・月・日スクロール選択＋直接入力 ===== */
+.pin-birth-wrap{width:100%;}
+.pin-birth-selects{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto minmax(0,.72fr) auto minmax(0,.72fr) auto;
+  gap:5px;
+  align-items:center;
+  width:100%;
+}
+.pin-birth-selects select{
+  width:100%;
+  min-width:0;
+  height:46px;
+  padding:0 7px;
+  border:1px solid #cfcfcf;
+  border-radius:10px;
+  background:#fff;
+  color:#222;
+  font-size:16px;
+}
+.pin-birth-selects span{font-size:14px;white-space:nowrap;}
+.pin-birth-direct{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  margin-top:8px;
+  font-size:12px;
+  color:#666;
+}
+.pin-birth-direct input{
+  flex:1;
+  min-width:0;
+  height:40px;
+  padding:0 10px;
+  border:1px solid #d7d7d7;
+  border-radius:9px;
+  font-size:16px;
+}
+
 </style>
 <style>
 .pin-first{padding:30px 18px 48px;background:#fff;color:#111}
@@ -433,7 +473,21 @@ button{height:72px;border-radius:36px;font-size:22px;font-weight:900}
         <label class="suffix grow"><input type="radio" name="sex" value="女の子"><span>女の子</span></label>
       </div>
     </div>
-    <div class="form-field"><label>生年月日</label><input type="date" id="birthDate"></div>
+    <div class="form-field"><label>生年月日</label><div class="pin-birth-wrap">
+          <div class="pin-birth-selects" aria-label="生年月日">
+            <select id="birthYear" aria-label="生年月日の年"><option value="">年</option></select>
+            <span>年</span>
+            <select id="birthMonth" aria-label="生年月日の月"><option value="">月</option></select>
+            <span>月</span>
+            <select id="birthDay" aria-label="生年月日の日"><option value="">日</option></select>
+            <span>日</span>
+          </div>
+          <div class="pin-birth-direct">
+            <span>直接入力：</span>
+            <input id="birthDateDirect" type="text" inputmode="numeric" placeholder="例 20240816" maxlength="10" autocomplete="bday">
+          </div>
+          <input id="birthDate" type="hidden" value="">
+        </div></div>
     <div class="form-field"><label>体重</label><div class="weight-row"><input type="number" inputmode="decimal" step="0.1" id="weight"><span>kg</span></div></div>
     <div class="form-field"><label>わんちゃんの写真</label><input type="file" id="dogPhoto" accept="image/*"><img id="photoPreview" class="photo-preview"></div>
 
@@ -1850,7 +1904,95 @@ html,body{margin:0!important;padding:0!important;width:297mm!important;height:21
 .view{position:absolute!important;left:0!important;top:0!important;width:297mm!important;height:210mm!important;margin:0!important;padding:0!important;overflow:hidden!important;background:#fff!important}
 .sheet{position:absolute!important;left:0!important;top:0!important;width:1123px!important;height:794px!important;min-width:1123px!important;min-height:794px!important;margin:0!important;padding:24px 30px!important;transform:scale(.94)!important;transform-origin:top left!important;box-shadow:none!important;background:#fff!important;overflow:hidden!important}
 @media print{html,body,.view{width:297mm!important;height:210mm!important;min-width:297mm!important;min-height:210mm!important;margin:0!important;padding:0!important;overflow:hidden!important}.sheet{position:absolute!important;left:0!important;top:0!important;width:1123px!important;height:794px!important;min-width:1123px!important;min-height:794px!important;margin:0!important;transform:scale(.94)!important;transform-origin:top left!important;overflow:hidden!important;page-break-after:avoid!important;page-break-inside:avoid!important;break-inside:avoid-page!important}}
-</style></head><body><div class="view">${cloned.outerHTML}</div></body></html>`);
+</style></head><body><div class="view">${cloned.outerHTML}</div>
+<script>
+/* ===== 生年月日入力改善：スクロール選択＋直接入力 ===== */
+(function(){
+  const year=document.getElementById("birthYear");
+  const month=document.getElementById("birthMonth");
+  const day=document.getElementById("birthDay");
+  const direct=document.getElementById("birthDateDirect");
+  const hidden=document.getElementById("birthDate");
+  if(!year||!month||!day||!direct||!hidden) return;
+
+  const currentYear=2026;
+  for(let y=currentYear;y>=1990;y--){
+    const o=document.createElement("option");
+    o.value=String(y); o.textContent=String(y);
+    year.appendChild(o);
+  }
+  for(let m=1;m<=12;m++){
+    const o=document.createElement("option");
+    o.value=String(m).padStart(2,"0"); o.textContent=String(m);
+    month.appendChild(o);
+  }
+
+  function daysInMonth(y,m){
+    if(!y||!m) return 31;
+    return new Date(Number(y),Number(m),0).getDate();
+  }
+  function refillDays(selected){
+    const max=daysInMonth(year.value,month.value);
+    day.innerHTML='<option value="">日</option>';
+    for(let d=1;d<=max;d++){
+      const o=document.createElement("option");
+      o.value=String(d).padStart(2,"0"); o.textContent=String(d);
+      day.appendChild(o);
+    }
+    if(selected && Number(selected)<=max) day.value=String(selected).padStart(2,"0");
+  }
+  function isoFromParts(){
+    if(!year.value||!month.value||!day.value) return "";
+    return `${year.value}-${month.value}-${day.value}`;
+  }
+  function syncFromSelects(){
+    hidden.value=isoFromParts();
+    if(hidden.value) direct.value=hidden.value.replaceAll("-","");
+    hidden.dispatchEvent(new Event("input",{bubbles:true}));
+    hidden.dispatchEvent(new Event("change",{bubbles:true}));
+  }
+  function applyISO(iso){
+    const mm=/^(\d{4})-(\d{2})-(\d{2})$/.exec(iso||"");
+    if(!mm) return;
+    year.value=mm[1];
+    month.value=mm[2];
+    refillDays(mm[3]);
+    day.value=mm[3];
+    hidden.value=iso;
+    direct.value=iso.replaceAll("-","");
+  }
+  function parseDirect(){
+    const digits=direct.value.replace(/\D/g,"").slice(0,8);
+    direct.value=digits;
+    if(digits.length!==8) return;
+    const y=Number(digits.slice(0,4));
+    const m=Number(digits.slice(4,6));
+    const d=Number(digits.slice(6,8));
+    if(y<1990||y>currentYear||m<1||m>12||d<1||d>daysInMonth(y,m)) return;
+    applyISO(`${String(y).padStart(4,"0")}-${String(m).padStart(2,"0")}-${String(d).padStart(2,"0")}`);
+    hidden.dispatchEvent(new Event("input",{bubbles:true}));
+    hidden.dispatchEvent(new Event("change",{bubbles:true}));
+  }
+
+  year.addEventListener("change",()=>{ const old=day.value; refillDays(old); syncFromSelects(); });
+  month.addEventListener("change",()=>{ const old=day.value; refillDays(old); syncFromSelects(); });
+  day.addEventListener("change",syncFromSelects);
+  direct.addEventListener("input",parseDirect);
+  direct.addEventListener("blur",parseDirect);
+
+  refillDays("");
+
+  // 既存の保存データが復元された後にも選択欄へ反映。
+  function restoreBirthUI(){
+    if(hidden.value) applyISO(hidden.value);
+  }
+  setTimeout(restoreBirthUI,0);
+  setTimeout(restoreBirthUI,250);
+  window.addEventListener("pageshow",restoreBirthUI);
+})();
+</script>
+
+</body></html>`);
     printWin.document.close();
 
     // base64画像・愛犬写真をすべて読み込んでから印刷する
@@ -1897,10 +2039,38 @@ function clearActiveDogCode(){
 }
 
 function resetMeasurementInputsOnly(){
+  // ①〜⑮の採寸入力だけを空にする。飼い主様・わんちゃん基本情報は残す。
   steps.forEach(section=>{
-    section.querySelectorAll('input[type="number"]').forEach(x=>x.value="");
+    section.querySelectorAll('input[type="number"]').forEach(x=>{
+      x.value="";
+      x.removeAttribute("value");
+      x.dispatchEvent(new Event("input",{bubbles:true}));
+      x.dispatchEvent(new Event("change",{bubbles:true}));
+    });
     section.querySelectorAll('.avg-value span').forEach(x=>x.textContent="0.0");
   });
+
+  // 保存済みフォーム状態のうち、採寸ステップ内の数値だけも空にする。
+  try{
+    const raw=localStorage.getItem(PINFORME_FORM_STATE_KEY);
+    if(raw){
+      const state=JSON.parse(raw);
+      if(state && state.fields){
+        steps.forEach(section=>{
+          section.querySelectorAll('input[type="number"]').forEach((el,i)=>{
+            const key=el.id || el.name;
+            if(key && state.fields[key]){
+              state.fields[key].value="";
+              state.fields[key].checked=false;
+            }
+          });
+        });
+        localStorage.setItem(PINFORME_FORM_STATE_KEY,JSON.stringify(state));
+      }
+    }
+  }catch(e){
+    console.warn("measurement reset state cleanup:",e);
+  }
 }
 
 function remeasureSameDog(){
@@ -1924,6 +2094,7 @@ function remeasureSameDog(){
   }catch(e){}
   hideAll();
   document.getElementById("startPage").classList.add("active");
+  // リセット後の空欄状態を保存して、ページ更新でも前回値を復元させない。
   savePINFORMEState();
   window.scrollTo(0,0);
 }
