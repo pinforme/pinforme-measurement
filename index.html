@@ -966,8 +966,7 @@ button{height:72px;border-radius:36px;font-size:22px;font-weight:900}
     </div>
 
     <div class="finish-actions">
-      <button type="button" class="primary-action" onclick="printFinalKarte()">採寸カルテを保存（PDF）</button>
-      <button type="button" class="primary-action" onclick="sendToPinforme()">PINFORMEへ送信・保存</button>
+      <button type="button" id="pinformeSubmitButton" class="primary-action" onclick="sendToPinforme()">PINFORMEへ送信・保存</button>
       <button type="button" class="secondary" onclick="registerAnotherDog()" style="width:100%;margin-top:10px;">別のわんちゃんを新規登録する</button>
       <div style="font-size:12px;color:#777;line-height:1.5;margin:7px 6px 0;">ご主人様の名前だけ引き継ぎ、別のわんちゃんを新しく採寸できます。</div>
       <button type="button" class="secondary" onclick="backToStartKeepData()" style="width:100%;margin-top:10px;">最初の画面へ戻る</button>
@@ -1951,7 +1950,18 @@ function showAdminDetail(r){
   if(r.photo_path) loadAdminPhoto(r.photo_path,document.getElementById("adminDogPhoto"),document.getElementById("adminPhotoStatus"));
 }
 
+let PINFORME_SUBMITTING=false;
+let PINFORME_SUBMITTED=false;
+
 async function sendToPinforme(){
+  const submitBtn=document.getElementById("pinformeSubmitButton");
+  if(PINFORME_SUBMITTING) return;
+  if(PINFORME_SUBMITTED){
+    alert("このカルテはすでにPINFORMEへ送信・保存済みです。");
+    return;
+  }
+  PINFORME_SUBMITTING=true;
+  if(submitBtn){ submitBtn.disabled=true; submitBtn.textContent="送信・保存中…"; submitBtn.style.opacity=".65"; }
   const status=document.getElementById("sendStatus");
   const data=collectKarte();
   const avg=(sectionIndex,groupIndex=0)=>{
@@ -2018,13 +2028,18 @@ async function sendToPinforme(){
       const detail=await res.text();
       throw new Error("HTTP "+res.status+" "+detail);
     }
-    if(status) status.textContent="PINFORMEへのカルテ保存が完了しました。";
-    alert("PINFORMEへの保存が完了しました。");
+    PINFORME_SUBMITTED=true;
+    if(status) status.textContent="PINFORMEへの送信・保存が完了しました。";
+    if(submitBtn){ submitBtn.textContent="送信・保存済み ✓"; submitBtn.disabled=true; submitBtn.style.opacity=".65"; }
+    alert("PINFORMEへの送信・保存が完了しました。");
   }catch(err){
     console.error("PINFORME Supabase save error:",err);
     const detail=(err && err.message) ? err.message : String(err);
     if(status) status.textContent="保存エラー："+detail;
     alert("保存エラー\n"+detail);
+  }finally{
+    PINFORME_SUBMITTING=false;
+    if(!PINFORME_SUBMITTED && submitBtn){ submitBtn.disabled=false; submitBtn.textContent="PINFORMEへ送信・保存"; submitBtn.style.opacity="1"; }
   }
 }
 
