@@ -289,6 +289,30 @@ button{height:72px;border-radius:36px;font-size:22px;font-weight:900}
   cursor:pointer
 }
 .pinforme-new-start-btn:active{opacity:.6}
+
+/* ===== 管理画面：ログインボタン横並び位置修正 ===== */
+#adminPage .admin-actions{
+  display:flex;
+  align-items:stretch;
+  gap:10px;
+}
+#adminPage .admin-actions .admin-btn{
+  flex:1 1 0;
+  width:auto;
+  min-height:52px;
+  height:52px;
+  margin:0 !important;
+  padding:0 12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-sizing:border-box;
+  line-height:1.2;
+}
+#adminPage .admin-actions .admin-btn.primary{
+  width:auto !important;
+  margin-top:0 !important;
+}
 </style>
 <style>
 .pin-first{padding:30px 18px 48px;background:#fff;color:#111}
@@ -312,6 +336,15 @@ button{height:72px;border-radius:36px;font-size:22px;font-weight:900}
 .pin-first .point-body{padding:14px 13px;font-size:13px;line-height:1.8}
 .pin-first .confirm{display:flex;gap:10px;border:1px solid #ccc;border-radius:8px;padding:14px 13px;margin:20px 0 28px;font-size:12px;line-height:1.65}
 .pin-first .confirm input{width:20px;height:20px;accent-color:#111;flex:0 0 auto;margin-top:0}
+
+.pin-first .privacy-box{border:1px solid #cfcfcf;border-radius:10px;padding:16px 15px;margin:18px 0 10px;background:#fafafa}
+.pin-first .privacy-title{font-size:15px;font-weight:900;margin-bottom:8px}
+.pin-first .privacy-text{font-size:12px;line-height:1.75;color:#444}
+.pin-first .privacy-text strong{color:#111}
+.pin-first .privacy-confirm{margin:12px 0 28px}
+.photo-consent{display:flex;align-items:flex-start;gap:9px;margin-top:10px;padding:12px 13px;border:1px solid #ddd;border-radius:9px;background:#fafafa;font-size:12px;line-height:1.6}
+.photo-consent input{width:20px;height:20px;accent-color:#111;flex:0 0 auto;margin-top:1px}
+.photo-consent .optional{display:inline-block;font-size:10px;font-weight:800;background:#e9e9e9;color:#333;border-radius:4px;padding:2px 6px;margin-left:4px}
 .pin-first .start-btn{width:100%;height:53px;border:0;border-radius:7px;background:#111;color:#fff;font-size:15px;font-weight:800}
 </style>
 
@@ -518,6 +551,134 @@ html.pinforme-restoring body{visibility:hidden!important}
 }
 
 
+/* ===== 管理カルテ：犬種 + 体重範囲 2段階フィルター ===== */
+#adminPage .admin-filter-panel{
+  margin:14px 0 8px;
+  padding:14px;
+  border:1px solid #e1e1e1;
+  border-radius:16px;
+  background:#fafafa;
+}
+#adminPage .admin-filter-title{
+  font-size:14px;
+  font-weight:900;
+  margin-bottom:12px;
+}
+#adminPage .admin-filter-grid{
+  display:grid;
+  gap:12px;
+}
+#adminPage .admin-filter-field label{
+  display:block;
+  margin-bottom:6px;
+  font-size:12px;
+  font-weight:800;
+  color:#444;
+}
+#adminPage .admin-filter-field select,
+#adminPage .admin-filter-field input{
+  width:100%;
+  min-width:0;
+  height:48px;
+  border:1px solid #ccc;
+  border-radius:11px;
+  background:#fff;
+  padding:0 11px;
+  font-size:16px;
+  color:#222;
+  box-sizing:border-box;
+}
+#adminPage .admin-filter-field input:disabled{
+  background:#f0f0f0;
+  color:#999;
+}
+#adminPage .admin-weight-filter{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+  gap:8px;
+  align-items:center;
+}
+#adminPage .admin-weight-filter span{
+  font-size:15px;
+  font-weight:800;
+  color:#666;
+}
+#adminPage .admin-filter-hint{
+  margin-top:6px;
+  font-size:11px;
+  line-height:1.5;
+  color:#777;
+}
+#adminPage .admin-filter-reset{
+  width:100%;
+  min-height:42px;
+  margin-top:12px;
+  border:1px solid #d5d5d5;
+  border-radius:11px;
+  background:#fff;
+  color:#444;
+  font-size:13px !important;
+  font-weight:800;
+}
+
+
+
+/* ===== 管理カルテ：絞り込み集計カルテ ===== */
+#adminPage .admin-summary-open{
+  width:100%;
+  min-height:48px;
+  margin-top:10px;
+  border:0;
+  border-radius:12px;
+  background:#111;
+  color:#fff;
+  font-size:15px !important;
+  font-weight:900;
+}
+#adminPage .admin-summary-open:disabled{
+  opacity:.35;
+}
+#adminPage .admin-summary-card{
+  border:1px solid #dfdfdf;
+  border-radius:18px;
+  overflow:hidden;
+  background:#fff;
+}
+#adminPage .admin-summary-head{
+  padding:18px 16px 14px;
+  border-bottom:1px solid #e8e8e8;
+  background:#fafafa;
+}
+#adminPage .admin-summary-head h2{margin:2px 0 6px;font-size:22px;line-height:1.3}
+#adminPage .admin-summary-head p{margin:0;font-size:12px;line-height:1.6;color:#666}
+#adminPage .admin-summary-kpis{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+  padding:14px;
+}
+#adminPage .admin-summary-kpi{
+  background:#f6f6f6;
+  border-radius:12px;
+  padding:10px 8px;
+  text-align:center;
+}
+#adminPage .admin-summary-kpi small{display:block;font-size:10px;color:#777;margin-bottom:4px}
+#adminPage .admin-summary-kpi strong{display:block;font-size:15px;line-height:1.3}
+#adminPage .admin-summary-table{width:100%;border-collapse:collapse;font-size:12px}
+#adminPage .admin-summary-table th,
+#adminPage .admin-summary-table td{padding:10px 8px;border-top:1px solid #eee;text-align:right;vertical-align:middle}
+#adminPage .admin-summary-table th:first-child,
+#adminPage .admin-summary-table td:first-child{text-align:left}
+#adminPage .admin-summary-table thead th{font-size:10px;color:#666;background:#fcfcfc;border-top:0}
+#adminPage .admin-summary-table td strong{font-size:13px}
+#adminPage .admin-summary-note{padding:12px 14px 16px;font-size:11px;line-height:1.65;color:#777}
+@media(max-width:390px){
+  #adminPage .admin-summary-table th,#adminPage .admin-summary-table td{padding:9px 5px;font-size:11px}
+  #adminPage .admin-summary-kpis{gap:6px;padding:12px}
+  #adminPage .admin-summary-kpi strong{font-size:13px}
+}
+
 /* ===== 管理カルテ：採寸詳細の見やすさ改善 ===== */
 #adminPage .admin-measure-sticky{
   position:sticky;
@@ -697,6 +858,19 @@ html.pinforme-restoring body{visibility:hidden!important}
     <span>上記の内容を確認しました。 愛犬の状態を確認してから採寸を開始します。</span>
   </label>
 
+  <div class="privacy-box">
+    <div class="privacy-title">個人情報・写真・採寸データの取扱いについて</div>
+    <div class="privacy-text">
+      ご入力いただいたご主人様情報、わんちゃんの写真、身体情報・採寸データは、<strong>PINFORMEの商品開発、サイズ設計、品質向上および採寸データの分析</strong>のために保存・利用します。<br>
+      取得した情報は上記目的の範囲内で適切に管理し、法令に基づく場合を除き、ご本人の同意なく第三者へ提供しません。商品開発・分析の際は、個人を特定する目的では使用しません。
+    </div>
+  </div>
+
+  <label class="confirm privacy-confirm">
+    <input type="checkbox" id="dataConsent">
+    <span>上記の個人情報・写真・採寸データの取扱いに同意します。 <b>必須</b></span>
+  </label>
+
   <button type="button" class="start-btn" onclick="goDogInfo()">採寸を始める</button>
   <div class="admin-entry"><button type="button" onclick="openAdminPage()">PINFORME 管理者はこちら</button></div>
 </div>
@@ -734,7 +908,12 @@ html.pinforme-restoring body{visibility:hidden!important}
   <input id="birthDate" type="hidden" value="">
 </div></div>
     <div class="form-field"><label>体重</label><div class="weight-row"><input type="number" inputmode="decimal" step="0.1" id="weight"><span>kg</span></div></div>
-    <div class="form-field"><label>わんちゃんの写真</label><input type="file" id="dogPhoto" accept="image/*"><img id="photoPreview" class="photo-preview"></div>
+    <div class="form-field"><label>わんちゃんの写真</label><input type="file" id="dogPhoto" accept="image/*"><img id="photoPreview" class="photo-preview">
+      <label class="photo-consent">
+        <input type="checkbox" id="photoPromoConsent">
+        <span>わんちゃんの写真をPINFORMEのSNS・Webサイト・販促物等で使用することに同意します。<span class="optional">任意</span></span>
+      </label>
+    </div>
 
     <div class="intro-nav"><button class="secondary" onclick="backStart()">← 戻る</button><button class="primary half" onclick="startMeasurements()">次へ ›</button></div>
   </div>
@@ -1239,7 +1418,7 @@ html.pinforme-restoring body{visibility:hidden!important}
       <div class="admin-field"><label>パスワード</label><input id="adminPassword" type="password" autocomplete="current-password"></div>
       <div class="admin-actions"><button class="admin-btn primary" type="button" onclick="adminLogin()">ログイン</button><button class="admin-btn light" type="button" onclick="closeAdminPage()">採寸ナビへ戻る</button></div><div class="admin-status" id="adminLoginStatus"></div>
     </div>
-    <div id="adminManagerBox" class="admin-hidden"><div class="admin-toolbar"><input id="adminSearch" type="search" placeholder="飼い主様名・わんちゃん名で検索" oninput="renderAdminList()"><button type="button" onclick="loadAdminCartes()">更新</button></div><div class="admin-status" id="adminListStatus"></div><div class="admin-list" id="adminList"></div><div class="admin-actions"><button class="admin-btn light" type="button" onclick="closeAdminPage()">採寸ナビへ戻る</button><button class="admin-btn danger" type="button" onclick="adminLogout()">ログアウト</button></div></div>
+    <div id="adminManagerBox" class="admin-hidden"><div class="admin-toolbar"><input id="adminSearch" type="search" placeholder="飼い主様名・わんちゃん名で検索" oninput="renderAdminList()"><button type="button" onclick="loadAdminCartes()">更新</button></div><div class="admin-filter-panel"><div class="admin-filter-title">絞り込み</div><div class="admin-filter-grid"><div class="admin-filter-field"><label for="adminBreedFilter">① 犬種</label><select id="adminBreedFilter" onchange="onAdminBreedFilterChange()"><option value="">すべての犬種</option></select></div><div class="admin-filter-field"><label>② 体重範囲（採寸時）</label><div class="admin-weight-filter"><input id="adminWeightMin" type="number" inputmode="decimal" step="0.1" min="0" placeholder="最小 kg" oninput="renderAdminList()" disabled><span>〜</span><input id="adminWeightMax" type="number" inputmode="decimal" step="0.1" min="0" placeholder="最大 kg" oninput="renderAdminList()" disabled></div><div class="admin-filter-hint" id="adminWeightHint">犬種を選ぶと体重範囲で絞り込めます。</div></div></div><button type="button" class="admin-filter-reset" onclick="resetAdminFilters()">絞り込みを解除</button><button type="button" id="adminSummaryButton" class="admin-summary-open" onclick="showAdminSummary()" disabled>絞り込み結果の集計カルテを見る</button></div><div class="admin-status" id="adminListStatus"></div><div class="admin-list" id="adminList"></div><div class="admin-actions"><button class="admin-btn light" type="button" onclick="closeAdminPage()">採寸ナビへ戻る</button><button class="admin-btn danger" type="button" onclick="adminLogout()">ログアウト</button></div></div>
   </div><div class="admin-card admin-hidden" id="adminDetail"></div></div>
 </section>
 
@@ -1863,10 +2042,12 @@ function goDogInfo(){
   const dog=document.getElementById("dogName").value.trim();
   const breed=document.getElementById("dogBreed").value.trim();
   const ok=document.getElementById("tipsConfirmed").checked;
+  const dataConsent=document.getElementById("dataConsent")?.checked;
   if(!owner){alert("ご主人様の名前を入力してください。");return}
   if(!dog){alert("わんちゃんの名前を入力してください。");return}
   if(!breed){alert("犬種を入力してください。");return}
   if(!ok){alert("6つのポイントを確認してチェックを入れてください。");return}
+  if(!dataConsent){alert("個人情報・写真・採寸データの取扱いを確認し、同意にチェックを入れてください。");return}
   const suffix=document.getElementById("dogSuffix").value;
   document.getElementById("ownerDisplay").textContent=owner;
   document.getElementById("dogDisplay").textContent=dog+suffix;
@@ -2171,7 +2352,44 @@ html,body{margin:0!important;padding:0!important;width:297mm!important;height:21
 .view{position:absolute!important;left:0!important;top:0!important;width:297mm!important;height:210mm!important;margin:0!important;padding:0!important;overflow:hidden!important;background:#fff!important}
 .sheet{position:absolute!important;left:0!important;top:0!important;width:1123px!important;height:794px!important;min-width:1123px!important;min-height:794px!important;margin:0!important;padding:24px 30px!important;transform:scale(.94)!important;transform-origin:top left!important;box-shadow:none!important;background:#fff!important;overflow:hidden!important}
 @media print{html,body,.view{width:297mm!important;height:210mm!important;min-width:297mm!important;min-height:210mm!important;margin:0!important;padding:0!important;overflow:hidden!important}.sheet{position:absolute!important;left:0!important;top:0!important;width:1123px!important;height:794px!important;min-width:1123px!important;min-height:794px!important;margin:0!important;transform:scale(.94)!important;transform-origin:top left!important;overflow:hidden!important;page-break-after:avoid!important;page-break-inside:avoid!important;break-inside:avoid-page!important}}
-</style></head><body><div class="view">${cloned.outerHTML}</div></body></html>`);
+</style></head><body><div class="view">${cloned.outerHTML}</div>
+<!-- ===== PINFORME 管理ログイン：最終固定（Safari/iPhone含む） ===== -->
+<style id="pinforme-admin-login-final-alignment-fix">
+#adminPage #adminLoginBox .admin-actions{
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important;
+  gap:10px !important;
+  align-items:stretch !important;
+  margin-top:18px !important;
+}
+#adminPage #adminLoginBox .admin-actions > .admin-btn{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  width:100% !important;
+  min-width:0 !important;
+  height:52px !important;
+  min-height:52px !important;
+  margin:0 !important;
+  margin-top:0 !important;
+  margin-bottom:0 !important;
+  padding:0 12px !important;
+  box-sizing:border-box !important;
+  align-self:stretch !important;
+  position:static !important;
+  transform:none !important;
+  line-height:1.2 !important;
+}
+#adminPage #adminLoginBox .admin-actions > .admin-btn.primary,
+#adminPage #adminLoginBox .admin-actions > .admin-btn.light{
+  margin:0 !important;
+  margin-top:0 !important;
+  height:52px !important;
+  min-height:52px !important;
+}
+</style>
+
+</body></html>`);
     printWin.document.close();
 
     // base64画像・愛犬写真をすべて読み込んでから印刷する
@@ -2301,9 +2519,11 @@ function registerAnotherDog(){
     section.querySelectorAll('.avg-value span').forEach(x=>x.textContent="0.0");
   });
 
-  // ご主人様名と6つのポイント確認は引き継ぐ
+  // ご主人様名と6つのポイント確認は引き継ぐ。データ利用同意は新しい登録ごとに再確認する。
   if(document.getElementById("ownerName")) document.getElementById("ownerName").value=owner;
   const tips=document.getElementById("tipsConfirmed"); if(tips) tips.checked=true;
+  const dataConsent=document.getElementById("dataConsent"); if(dataConsent) dataConsent.checked=false;
+  const photoPromoConsent=document.getElementById("photoPromoConsent"); if(photoPromoConsent) photoPromoConsent.checked=false;
 
   PINFORME_EDIT_FROM_FINISH=false;
   document.body.classList.remove("edit-from-finish");
@@ -2346,20 +2566,111 @@ async function loadAdminCartes(){
   const [mj,dj]=await Promise.all([mr.json(),dr.json()]);
   if(!mr.ok)throw new Error(mj?.message||"採寸履歴の読み込みに失敗しました");
   if(!dr.ok)throw new Error(dj?.message||"わんちゃん情報の読み込みに失敗しました");
-  PINFORME_ADMIN_ROWS=Array.isArray(mj)?mj:[];PINFORME_ADMIN_DOGS=Array.isArray(dj)?dj:[];renderAdminList();
+  PINFORME_ADMIN_ROWS=Array.isArray(mj)?mj:[];PINFORME_ADMIN_DOGS=Array.isArray(dj)?dj:[];updateAdminBreedFilter();renderAdminList();
  }catch(e){st.textContent="読み込みエラー："+e.message}
 }
 function adminEsc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function adminDate(v){if(!v)return"日付不明";const d=new Date(v);return Number.isNaN(d.getTime())?String(v):d.toLocaleString("ja-JP")}
 function adminDogHistory(id){return PINFORME_ADMIN_ROWS.filter(r=>String(r.dog_id)===String(id)).sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0))}
+function adminNormalizeBreed(v){return String(v??"").trim()}
+function adminLatestWeightForDog(d){
+ const hist=adminDogHistory(d.id),latest=hist[0];
+ const v=latest?.weight??d.weight;
+ const n=Number(v);
+ return Number.isFinite(n)?n:null;
+}
+function adminBreedForDog(d){
+ const hist=adminDogHistory(d.id),latest=hist[0];
+ return adminNormalizeBreed(d.breed||latest?.breed||"");
+}
+function updateAdminBreedFilter(){
+ const sel=document.getElementById("adminBreedFilter");if(!sel)return;
+ const current=sel.value;
+ const breeds=[...new Set([
+  ...PINFORME_ADMIN_DOGS.map(adminBreedForDog),
+  ...PINFORME_ADMIN_ROWS.filter(r=>r.dog_id==null).map(r=>adminNormalizeBreed(r.breed))
+ ].filter(Boolean))].sort((a,b)=>a.localeCompare(b,"ja"));
+ sel.innerHTML='<option value="">すべての犬種</option>'+breeds.map(b=>`<option value="${adminEsc(b)}">${adminEsc(b)}</option>`).join("");
+ if(breeds.includes(current))sel.value=current;
+ onAdminBreedFilterChange(false);
+}
+function onAdminBreedFilterChange(shouldRender=true){
+ const breed=(document.getElementById("adminBreedFilter")?.value||"").trim();
+ const min=document.getElementById("adminWeightMin"),max=document.getElementById("adminWeightMax"),hint=document.getElementById("adminWeightHint");
+ const enabled=!!breed;
+ if(min)min.disabled=!enabled;if(max)max.disabled=!enabled;
+ if(!enabled){if(min)min.value="";if(max)max.value="";if(hint)hint.textContent="犬種を選ぶと体重範囲で絞り込めます。"}
+ else if(hint)hint.textContent="選択した犬種の中から、採寸時体重でさらに絞り込みます。";
+ if(shouldRender)renderAdminList();
+}
+function resetAdminFilters(){
+ const breed=document.getElementById("adminBreedFilter"),min=document.getElementById("adminWeightMin"),max=document.getElementById("adminWeightMax");
+ if(breed)breed.value="";if(min)min.value="";if(max)max.value="";onAdminBreedFilterChange(false);renderAdminList();
+}
+function getAdminFilteredData(){
+ const q=(document.getElementById("adminSearch")?.value||"").trim().toLowerCase();
+ const breed=(document.getElementById("adminBreedFilter")?.value||"").trim();
+ const minRaw=document.getElementById("adminWeightMin")?.value??"",maxRaw=document.getElementById("adminWeightMax")?.value??"";
+ const minWeight=minRaw===""?null:Number(minRaw),maxWeight=maxRaw===""?null:Number(maxRaw);
+ const weightMatches=w=>{
+  if(!breed)return true;
+  if((minWeight!==null||maxWeight!==null)&&w===null)return false;
+  if(minWeight!==null&&Number.isFinite(minWeight)&&w<minWeight)return false;
+  if(maxWeight!==null&&Number.isFinite(maxWeight)&&w>maxWeight)return false;
+  return true;
+ };
+ const dogs=PINFORME_ADMIN_DOGS.filter(d=>{
+  if(q&&!String(d.owner_name||"").toLowerCase().includes(q)&&!String(d.dog_name||"").toLowerCase().includes(q))return false;
+  if(breed&&adminBreedForDog(d)!==breed)return false;
+  return weightMatches(adminLatestWeightForDog(d));
+ });
+ const legacy=PINFORME_ADMIN_ROWS.filter(r=>{
+  if(r.dog_id!=null)return false;
+  if(q&&!String(r.owner_name||"").toLowerCase().includes(q)&&!String(r.dog_name||"").toLowerCase().includes(q))return false;
+  if(breed&&adminNormalizeBreed(r.breed)!==breed)return false;
+  const n=Number(r.weight),w=Number.isFinite(n)?n:null;
+  return weightMatches(w);
+ });
+ return {q,breed,minRaw,maxRaw,minWeight,maxWeight,dogs,legacy,filtering:!!(q||breed||minRaw!==""||maxRaw!=="")};
+}
 function renderAdminList(){
- const box=document.getElementById("adminList"),st=document.getElementById("adminListStatus"),q=(document.getElementById("adminSearch").value||"").trim().toLowerCase();
- const dogs=PINFORME_ADMIN_DOGS.filter(d=>!q||String(d.owner_name||"").toLowerCase().includes(q)||String(d.dog_name||"").toLowerCase().includes(q));
- const legacy=PINFORME_ADMIN_ROWS.filter(r=>r.dog_id==null&&(!q||String(r.owner_name||"").toLowerCase().includes(q)||String(r.dog_name||"").toLowerCase().includes(q)));
- st.textContent=`わんちゃん ${PINFORME_ADMIN_DOGS.length}頭 ／ 採寸履歴 ${PINFORME_ADMIN_ROWS.length}件${q?` ／ 検索結果 ${dogs.length}頭`:""}`;box.innerHTML="";
- dogs.forEach(d=>{const hist=adminDogHistory(d.id),latest=hist[0]||{},b=document.createElement("button");b.type="button";b.className="admin-row";b.innerHTML=`<span><strong>${adminEsc(d.dog_name||"名前未入力")}${adminEsc(latest.dog_suffix||"")}</strong><small>飼い主様：${adminEsc(d.owner_name||"—")}<br>採寸履歴：${hist.length}件${hist[0]?` ／ 最新 ${adminEsc(adminDate(hist[0].created_at))}`:""}</small></span><span class="arrow">›</span>`;b.onclick=()=>showAdminDog(d);box.appendChild(b)});
- legacy.forEach(r=>{const b=document.createElement("button");b.type="button";b.className="admin-row";b.innerHTML=`<span><strong>${adminEsc(r.dog_name||"名前未入力")}${adminEsc(r.dog_suffix||"")} <small>（旧データ）</small></strong><small>飼い主様：${adminEsc(r.owner_name||"—")}<br>${adminEsc(adminDate(r.created_at))}</small></span><span class="arrow">›</span>`;b.onclick=()=>showAdminMeasurement(r,null);box.appendChild(b)});
+ const box=document.getElementById("adminList"),st=document.getElementById("adminListStatus");
+ const filtered=getAdminFilteredData();
+ const {q,breed,minRaw,maxRaw,dogs,legacy,filtering}=filtered;
+ st.textContent=`わんちゃん ${PINFORME_ADMIN_DOGS.length}頭 ／ 採寸履歴 ${PINFORME_ADMIN_ROWS.length}件${filtering?` ／ 絞り込み結果 ${dogs.length+legacy.length}件`:""}`;box.innerHTML="";
+ dogs.forEach(d=>{const hist=adminDogHistory(d.id),latest=hist[0]||{},w=adminLatestWeightForDog(d),b=document.createElement("button");b.type="button";b.className="admin-row";b.innerHTML=`<span><strong>${adminEsc(d.dog_name||"名前未入力")}${adminEsc(latest.dog_suffix||"")}</strong><small>飼い主様：${adminEsc(d.owner_name||"—")}<br>犬種：${adminEsc(adminBreedForDog(d)||"—")}${w==null?"":` ／ 最新体重 ${adminEsc(w)} kg`}<br>採寸履歴：${hist.length}件${hist[0]?` ／ 最新 ${adminEsc(adminDate(hist[0].created_at))}`:""}</small></span><span class="arrow">›</span>`;b.onclick=()=>showAdminDog(d);box.appendChild(b)});
+ legacy.forEach(r=>{const b=document.createElement("button");b.type="button";b.className="admin-row";b.innerHTML=`<span><strong>${adminEsc(r.dog_name||"名前未入力")}${adminEsc(r.dog_suffix||"")} <small>（旧データ）</small></strong><small>飼い主様：${adminEsc(r.owner_name||"—")}<br>犬種：${adminEsc(r.breed||"—")}${r.weight==null?"":` ／ 体重 ${adminEsc(r.weight)} kg`}<br>${adminEsc(adminDate(r.created_at))}</small></span><span class="arrow">›</span>`;b.onclick=()=>showAdminMeasurement(r,null);box.appendChild(b)});
  if(!dogs.length&&!legacy.length)box.innerHTML='<div class="admin-note">該当するカルテはありません。</div>';
+ const summaryBtn=document.getElementById("adminSummaryButton");
+ if(summaryBtn){summaryBtn.disabled=(dogs.length+legacy.length)===0;summaryBtn.textContent=`絞り込み結果の集計カルテを見る（${dogs.length+legacy.length}頭）`;}
+}
+function adminSummaryRows(){
+ const f=getAdminFilteredData(),rows=[];
+ f.dogs.forEach(d=>{const h=adminDogHistory(d.id);if(h[0])rows.push(h[0]);});
+ f.legacy.forEach(r=>rows.push(r));
+ return {filter:f,rows};
+}
+function adminNum(v){const n=Number(v);return Number.isFinite(n)?n:null}
+function adminStats(rows,key){
+ const vals=rows.map(r=>adminNum(r[key])).filter(v=>v!==null);
+ if(!vals.length)return null;
+ return {count:vals.length,avg:vals.reduce((a,b)=>a+b,0)/vals.length,min:Math.min(...vals),max:Math.max(...vals)};
+}
+function adminFmtStat(v){return v==null?"—":Number(v).toFixed(1)}
+function showAdminSummary(){
+ const {filter,rows}=adminSummaryRows(),box=document.getElementById("adminDetail");
+ if(!rows.length){alert("集計できる採寸データがありません。");return}
+ const weights=rows.map(r=>adminNum(r.weight)).filter(v=>v!==null);
+ const weightAvg=weights.length?weights.reduce((a,b)=>a+b,0)/weights.length:null;
+ const breedLabel=filter.breed||"すべての犬種";
+ let rangeLabel="指定なし";
+ if(filter.minRaw!==""||filter.maxRaw!=="")rangeLabel=`${filter.minRaw!==""?adminEsc(filter.minRaw):"下限なし"} 〜 ${filter.maxRaw!==""?adminEsc(filter.maxRaw):"上限なし"} kg`;
+ const statRows=ADMIN_FIELDS.map(([label,key])=>{
+   const st=adminStats(rows,key);
+   return `<tr><td>${adminEsc(label)}</td><td><strong>${st?adminFmtStat(st.avg):"—"}</strong></td><td>${st?adminFmtStat(st.min):"—"}</td><td>${st?adminFmtStat(st.max):"—"}</td><td>${st?st.count:"0"}</td></tr>`;
+ }).join("");
+ box.innerHTML=`<div class="admin-measure-sticky"><div class="admin-measure-sticky-top"><button type="button" class="admin-back-link" onclick="document.getElementById('adminDetail').classList.add('admin-hidden')">← 一覧へ戻る</button><div class="admin-measure-sticky-name">集計カルテ</div></div></div><div class="admin-summary-card"><div class="admin-summary-head"><div class="admin-sub">PINFORME SIZE ANALYSIS</div><h2>${adminEsc(breedLabel)}</h2><p>体重範囲：${rangeLabel}<br>対象は絞り込み結果の各わんちゃんの「最新採寸」1件ずつです。</p></div><div class="admin-summary-kpis"><div class="admin-summary-kpi"><small>対象</small><strong>${rows.length}頭</strong></div><div class="admin-summary-kpi"><small>平均体重</small><strong>${weightAvg==null?"—":adminFmtStat(weightAvg)+" kg"}</strong></div><div class="admin-summary-kpi"><small>体重実績範囲</small><strong>${weights.length?adminFmtStat(Math.min(...weights))+"〜"+adminFmtStat(Math.max(...weights))+" kg":"—"}</strong></div></div><table class="admin-summary-table"><thead><tr><th>採寸項目</th><th>平均</th><th>最小</th><th>最大</th><th>件数</th></tr></thead><tbody>${statRows}</tbody></table><div class="admin-summary-note">単位：cm。未入力の項目はその項目の集計件数から除外しています。平均値だけでサイズを確定せず、最小・最大の幅もあわせて確認してください。</div></div>`;
+ box.classList.remove("admin-hidden");box.scrollIntoView({behavior:"auto",block:"start"});
 }
 const ADMIN_FIELDS=[["① 首まわり","neck"],["② 胴まわり","chest"],["③ ウエスト","waist"],["④ 着丈","back_length"],["⑤ 前身頃","front_length"],["⑥ 前脚の太さ（上側）","front_leg_girth_up"],["⑥ 前脚の太さ（下側）","front_leg_girth_low"],["⑦ 後脚の太さ（上側）","hind_leg_girth_up"],["⑦ 後脚の太さ（下側）","hind_leg_girth_low"],["⑧ 前脚の長さ 1","front_leg_length_1"],["⑧ 前脚の長さ 2","front_leg_length_2"],["⑧ 前脚の長さ 3","front_leg_length_3"],["⑨ 後脚の長さ 1","hind_leg_length_1"],["⑨ 後脚の長さ 2","hind_leg_length_2"],["⑨ 後脚の長さ 3","hind_leg_length_3"],["⑩ 首の長さ（ネック）","neck_length"],["⑪ 首の長さ（スヌード）","snood_length"],["⑫ 頭まわり","head_girth"],["⑬ 前脚の間","front_leg_spacing"],["⑭ 首の真ん中","mid_neck"],["⑮ 尻尾の太さ","tail_girth"]];
 function showAdminDog(d){
@@ -2387,6 +2698,10 @@ let PINFORME_SUBMITTING=false;
 let PINFORME_SUBMITTED=false;
 
 async function sendToPinforme(){
+  if(!document.getElementById("dataConsent")?.checked){
+    alert("データの取扱いへの同意が確認できません。最初の画面で同意内容をご確認ください。");
+    return;
+  }
   const submitBtn=document.getElementById("pinformeSubmitButton");
   if(PINFORME_SUBMITTING) return;
   if(PINFORME_SUBMITTED){
