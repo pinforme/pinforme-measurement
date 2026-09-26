@@ -484,6 +484,18 @@ html.pinforme-restoring body{visibility:hidden!important}
   display:none !important;
 }
 </style>
+
+<style id="pinforme-admin-a4-karte-style">
+  body.pinforme-admin-route.pinforme-admin-karte-open #adminPage{
+    display:none !important;
+  }
+  body.pinforme-admin-route.pinforme-admin-karte-open #kartePage{
+    display:block !important;
+  }
+  body.pinforme-admin-route.pinforme-admin-karte-open #finishPage{
+    display:none !important;
+  }
+</style>
 </head>
 <body>
 
@@ -2193,7 +2205,7 @@ function fit(){let s=document.getElementById(&quot;sheet&quot;),v=s.parentElemen
 &lt;/script&gt;&lt;/body&gt;&lt;/html&gt;"></iframe>
   </div>
   <div class="finish-actions karte-actions">
-    <button type="button" class="secondary" onclick="backToFinish()">← 採寸終了ページへ戻る</button>
+    <button type="button" class="secondary" onclick="backFromKartePage()">← 戻る</button>
     <button type="button" class="primary" onclick="printFinalKarte()">カルテをPDF保存・印刷</button>
   </div>
 </section>
@@ -3224,10 +3236,118 @@ function showAdminMeasurement(r,d){
  const photoPath=r.photo_path||d?.photo_path;
  const photoHtml=photoPath?`<div class="admin-photo-wrap"><img id="adminDogPhoto" alt="わんちゃんの写真" style="display:none;max-width:100%;max-height:280px;object-fit:contain;border-radius:12px"><div id="adminPhotoStatus" class="admin-note">写真を読み込んでいます…</div></div>`:'<div class="admin-note">写真なし</div>';
  const backAction=d?`showAdminDog(PINFORME_ADMIN_ACTIVE_DOG_GROUP)`:`document.getElementById('adminDetail').classList.add('admin-hidden')`;
- box.innerHTML=`<div class="admin-measure-sticky"><div class="admin-measure-sticky-top"><button type="button" class="admin-back-link" onclick="${backAction}">← ${d?"カルテへ戻る":"閉じる"}</button><div class="admin-measure-sticky-name">${dogName}</div></div><div class="admin-measure-summary"><div><small>採寸日</small><strong>${adminEsc(adminDate(r.created_at))}</strong></div><div><small>採寸時体重</small><strong>${r.weight==null?"—":adminEsc(r.weight)+" kg"}</strong></div></div></div>${photoHtml}<div class="admin-measure-owner">飼い主様：${adminEsc(r.owner_name||d?.owner_name||"—")}<br>犬種：${adminEsc(r.breed||d?.breed||"—")} ／ 性別：${adminEsc(r.sex||d?.sex||"—")}<br>生年月日：${adminEsc(r.birth_date||d?.birth_date||"—")}<br>写真販促利用：<strong>${adminPhotoConsentLabel(adminPhotoConsentForRow(r))}</strong></div><div class="admin-measure-section-title">採寸結果</div><div class="admin-measure-grid">${measureCards}</div>`;
+ box.innerHTML=`<div class="admin-measure-sticky"><div class="admin-measure-sticky-top"><button type="button" class="admin-back-link" onclick="${backAction}">← ${d?"カルテへ戻る":"閉じる"}</button><div class="admin-measure-sticky-name">${dogName}</div></div><div class="admin-measure-summary"><div><small>採寸日</small><strong>${adminEsc(adminDate(r.created_at))}</strong></div><div><small>採寸時体重</small><strong>${r.weight==null?"—":adminEsc(r.weight)+" kg"}</strong></div></div></div>${photoHtml}<div class="admin-measure-owner">飼い主様：${adminEsc(r.owner_name||d?.owner_name||"—")}<br>犬種：${adminEsc(r.breed||d?.breed||"—")} ／ 性別：${adminEsc(r.sex||d?.sex||"—")}<br>生年月日：${adminEsc(r.birth_date||d?.birth_date||"—")}<br>写真販促利用：<strong>${adminPhotoConsentLabel(adminPhotoConsentForRow(r))}</strong></div>
+<div style="margin:14px 0 18px">
+  <button type="button" class="admin-btn primary" onclick="openAdminA4KarteById('${adminEsc(r.id)}')">A4採寸カルテを見る</button>
+</div>
+<div class="admin-measure-section-title">採寸結果</div><div class="admin-measure-grid">${measureCards}</div>`;
  box.classList.remove("admin-hidden");
  box.scrollIntoView({behavior:"auto",block:"start"});
  if(photoPath)loadAdminPhoto(photoPath,document.getElementById("adminDogPhoto"),document.getElementById("adminPhotoStatus"));
+}
+
+
+async function pinformeAdminPhotoUrl(photoPath){
+  if(!photoPath) return "";
+  const sess=getAdminSession();
+  if(!sess?.access_token) return "";
+  try{
+    const res=await fetch(
+      `${PINFORME_SUPABASE_BASE}/storage/v1/object/authenticated/${PINFORME_PHOTO_BUCKET}/${encodeURI(photoPath)}`,
+      {headers:{apikey:PINFORME_SUPABASE_KEY,Authorization:"Bearer "+sess.access_token}}
+    );
+    if(!res.ok) return "";
+    const blob=await res.blob();
+    return URL.createObjectURL(blob);
+  }catch(e){
+    return "";
+  }
+}
+
+function pinformeAdminKarteValue(v){
+  if(v===undefined || v===null || String(v).trim()==="") return "";
+  const n=Number(v);
+  return Number.isFinite(n) ? String(v) : String(v);
+}
+
+async function openAdminA4KarteById(mid){
+  const r=PINFORME_ADMIN_ROWS.find(x=>String(x.id)===String(mid));
+  if(!r){
+    alert("採寸データを確認できませんでした。");
+    return;
+  }
+
+  const d=PINFORME_ADMIN_ACTIVE_DOG_GROUP||null;
+  const data={
+    owner:r.owner_name || d?.owner_name || "",
+    dog:(r.dog_name || d?.dog_name || "") + (r.dog_suffix || ""),
+    breed:r.breed || d?.breed || "",
+    sex:r.sex || d?.sex || "",
+    birthday:r.birth_date || d?.birth_date || "",
+    weight:r.weight==null ? "" : String(r.weight),
+    date:r.created_at || "",
+    photo:"",
+    averages:{
+      m1:[pinformeAdminKarteValue(r.neck)],
+      m2:[pinformeAdminKarteValue(r.chest)],
+      m3:[pinformeAdminKarteValue(r.waist)],
+      m4:[pinformeAdminKarteValue(r.back_length)],
+      m5:[pinformeAdminKarteValue(r.front_length)],
+      m6:[pinformeAdminKarteValue(r.front_leg_girth_up),pinformeAdminKarteValue(r.front_leg_girth_low)],
+      m7:[pinformeAdminKarteValue(r.hind_leg_girth_up),pinformeAdminKarteValue(r.hind_leg_girth_low)],
+      m8:[pinformeAdminKarteValue(r.front_leg_length_1),pinformeAdminKarteValue(r.front_leg_length_2),pinformeAdminKarteValue(r.front_leg_length_3)],
+      m9:[pinformeAdminKarteValue(r.hind_leg_length_1),pinformeAdminKarteValue(r.hind_leg_length_2),pinformeAdminKarteValue(r.hind_leg_length_3)],
+      m10:[pinformeAdminKarteValue(r.neck_length)],
+      m11:[pinformeAdminKarteValue(r.snood_length)],
+      m12:[pinformeAdminKarteValue(r.head_girth)],
+      m13:[pinformeAdminKarteValue(r.front_leg_spacing)],
+      m14:[pinformeAdminKarteValue(r.mid_neck)],
+      m15:[pinformeAdminKarteValue(r.tail_girth)]
+    }
+  };
+
+  const photoPath=r.photo_path || d?.photo_path || "";
+  if(photoPath) data.photo=await pinformeAdminPhotoUrl(photoPath);
+
+  const page=document.getElementById("kartePage");
+  const admin=document.getElementById("adminPage");
+  if(!page) return;
+
+  document.body.classList.add("pinforme-admin-karte-open");
+  if(admin) admin.classList.remove("active");
+  page.classList.add("active");
+  page.style.removeProperty("display");
+
+  const frame=document.getElementById("finalKarteFrame");
+  const apply=()=>{
+    try{
+      if(frame?.contentWindow && typeof frame.contentWindow.setPINFORMEKarte==="function"){
+        frame.contentWindow.setPINFORMEKarte(data);
+        if(typeof frame.contentWindow.fit==="function") frame.contentWindow.fit();
+      }
+    }catch(e){console.error(e);}
+  };
+
+  if(frame?.contentDocument?.readyState==="complete") apply();
+  else frame?.addEventListener("load",apply,{once:true});
+
+  try{localStorage.setItem("PINFORME_LAST_KARTE",JSON.stringify(data));}catch(e){}
+  window.scrollTo(0,0);
+}
+
+function backFromKartePage(){
+  if(document.body.classList.contains("pinforme-admin-karte-open")){
+    document.body.classList.remove("pinforme-admin-karte-open");
+    const page=document.getElementById("kartePage");
+    const admin=document.getElementById("adminPage");
+    if(page) page.classList.remove("active");
+    if(admin) admin.classList.add("active");
+    const detail=document.getElementById("adminDetail");
+    if(detail) detail.scrollIntoView({behavior:"auto",block:"start"});
+    else window.scrollTo(0,0);
+    return;
+  }
+  backToFinish();
 }
 
 let PINFORME_SUBMITTING=false;
