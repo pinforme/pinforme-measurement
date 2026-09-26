@@ -3474,8 +3474,17 @@ document.addEventListener("click",function(){
 /* ===== 入口2択 / 管理者入口の通常非表示 ===== */
 (function(){
   function showOnly(id){
-    try{hideAll();}catch(e){document.querySelectorAll('.intro-step,.step,.finish-step').forEach(function(el){el.classList.remove('active')});}
-    var el=document.getElementById(id);if(el)el.classList.add('active');window.scrollTo(0,0);
+    // 入口画面(entryChoicePage)も含め、いったん全画面を確実に非表示にする。
+    // 旧hideAll()はentryChoicePageを対象に含めていないため、
+    // 新規採寸を押しても入口画面が残る問題が起きていた。
+    document.querySelectorAll('.intro-step,.step,.finish-step').forEach(function(el){
+      el.classList.remove('active');
+    });
+    var kp=document.getElementById('kartePage');
+    if(kp)kp.classList.remove('active');
+    var el=document.getElementById(id);
+    if(el)el.classList.add('active');
+    try{window.scrollTo(0,0);}catch(e){}
   }
   function clearRemeasureKeys(){try{localStorage.removeItem(PINFORME_REMEASURE_DOG_ID_KEY);localStorage.removeItem(PINFORME_REMEASURE_OWNER_ID_KEY);localStorage.removeItem(PINFORME_REMEASURE_PHOTO_PATH_KEY);}catch(e){}}
   window.pinformeChooseNewMeasurement=function(){
