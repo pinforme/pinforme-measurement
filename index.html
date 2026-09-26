@@ -1637,6 +1637,45 @@ document.getElementById("dogPhoto").addEventListener("change",e=>{
 
 const PINFORME_SAVE_ENDPOINT = "https://dsbvaoqgvtoeukigdjdj.supabase.co/rest/v1/measurements";
 const PINFORME_SUPABASE_KEY = "sb_publishable_403lLhKUQ9X9N1RaxaDduA_9ZQEZ6na";
+const PINFORME_SUPABASE_BASE = PINFORME_SAVE_ENDPOINT.replace("/rest/v1/measurements","");
+const PINFORME_PHOTO_BUCKET = "dog-photos";
+
+async function uploadDogPhotoToSupabase(){
+  const input=document.getElementById("dogPhoto");
+  const file=input?.files?.[0];
+  if(!file) return null;
+  const safeExt=((file.name||"").split(".").pop()||"jpg").toLowerCase().replace(/[^a-z0-9]/g,"") || "jpg";
+  const path=`measurements/${Date.now()}_${Math.random().toString(36).slice(2,10)}.${safeExt}`;
+  const r=await fetch(`${PINFORME_SUPABASE_BASE}/storage/v1/object/${PINFORME_PHOTO_BUCKET}/${path}`,{
+    method:"POST",
+    headers:{
+      apikey:PINFORME_SUPABASE_KEY,
+      Authorization:"Bearer "+PINFORME_SUPABASE_KEY,
+      "Content-Type":file.type||"image/jpeg",
+      "x-upsert":"false"
+    },
+    body:file
+  });
+  if(!r.ok){ throw new Error("写真アップロード失敗: HTTP "+r.status+" "+await r.text()); }
+  return path;
+}
+
+async function loadAdminPhoto(photoPath,img,status){
+  if(!photoPath||!img) return;
+  const sess=getAdminSession();
+  if(!sess?.access_token) return;
+  try{
+    if(status) status.textContent="写真を読み込んでいます…";
+    const r=await fetch(`${PINFORME_SUPABASE_BASE}/storage/v1/object/authenticated/${PINFORME_PHOTO_BUCKET}/${encodeURI(photoPath)}`,{
+      headers:{apikey:PINFORME_SUPABASE_KEY,Authorization:"Bearer "+sess.access_token}
+    });
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    const blob=await r.blob();
+    const url=URL.createObjectURL(blob);
+    img.onload=()=>{ if(status) status.textContent=""; };
+    img.src=url; img.style.display="block";
+  }catch(e){ if(status) status.textContent="写真を読み込めませんでした。"; }
+}
 
 function textValue(id){
   const el=document.getElementById(id);
@@ -1902,7 +1941,15 @@ function adminEsc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<
 function adminDate(v){if(!v)return"日付不明";const d=new Date(v);return Number.isNaN(d.getTime())?String(v):d.toLocaleString("ja-JP")}
 function renderAdminList(){const box=document.getElementById("adminList"),st=document.getElementById("adminListStatus"),q=(document.getElementById("adminSearch").value||"").trim().toLowerCase();const rows=PINFORME_ADMIN_ROWS.filter(r=>!q||String(r.owner_name||"").toLowerCase().includes(q)||String(r.dog_name||"").toLowerCase().includes(q));st.textContent=`保存済み ${PINFORME_ADMIN_ROWS.length}件${q?` ／ 検索結果 ${rows.length}件`:""}`;box.innerHTML="";rows.forEach(r=>{const b=document.createElement("button");b.type="button";b.className="admin-row";b.innerHTML=`<span><strong>${adminEsc(r.dog_name||"名前未入力")}${adminEsc(r.dog_suffix||"")}</strong><small>飼い主様：${adminEsc(r.owner_name||"—")}<br>${adminEsc(adminDate(r.created_at))}</small></span><span class="arrow">›</span>`;b.onclick=()=>showAdminDetail(r);box.appendChild(b)});if(!rows.length)box.innerHTML='<div class="admin-note">該当するカルテはありません。</div>'}
 const ADMIN_FIELDS=[["① 首まわり","neck"],["② 胴まわり","chest"],["③ ウエスト","waist"],["④ 着丈","back_length"],["⑤ 前身頃","front_length"],["⑥ 前脚の太さ（上側）","front_leg_girth_up"],["⑥ 前脚の太さ（下側）","front_leg_girth_low"],["⑦ 後脚の太さ（上側）","hind_leg_girth_up"],["⑦ 後脚の太さ（下側）","hind_leg_girth_low"],["⑧ 前脚の長さ 1","front_leg_length_1"],["⑧ 前脚の長さ 2","front_leg_length_2"],["⑧ 前脚の長さ 3","front_leg_length_3"],["⑨ 後脚の長さ 1","hind_leg_length_1"],["⑨ 後脚の長さ 2","hind_leg_length_2"],["⑨ 後脚の長さ 3","hind_leg_length_3"],["⑩ 首の長さ（ネック）","neck_length"],["⑪ 首の長さ（スヌード）","snood_length"],["⑫ 頭まわり","head_girth"],["⑬ 前脚の間","front_leg_spacing"],["⑭ 首の真ん中","mid_neck"],["⑮ 尻尾の太さ","tail_girth"]];
-function showAdminDetail(r){const box=document.getElementById("adminDetail"),rows=ADMIN_FIELDS.map(([n,k])=>`<tr><td>${n}</td><td>${r[k]==null?"—":adminEsc(r[k])+" cm"}</td></tr>`).join("");box.innerHTML=`<div class="admin-detail-head"><div><div class="admin-sub">PINFORME CARTE</div><h2>${adminEsc(r.dog_name||"名前未入力")}${adminEsc(r.dog_suffix||"")}</h2></div><button type="button" class="admin-btn light" style="width:auto;min-height:42px" onclick="document.getElementById('adminDetail').classList.add('admin-hidden')">閉じる</button></div><div class="admin-detail-meta">飼い主様：${adminEsc(r.owner_name||"—")}<br>犬種：${adminEsc(r.breed||"—")} ／ 性別：${adminEsc(r.sex||"—")}<br>生年月日：${adminEsc(r.birth_date||"—")} ／ 体重：${r.weight==null?"—":adminEsc(r.weight)+" kg"}<br>採寸保存日時：${adminEsc(adminDate(r.created_at))}</div><table class="admin-measures">${rows}</table>`;box.classList.remove("admin-hidden");box.scrollIntoView({behavior:"smooth",block:"start"})}
+function showAdminDetail(r){
+  const box=document.getElementById("adminDetail");
+  const rows=ADMIN_FIELDS.map(([n,k])=>`<tr><td>${n}</td><td>${r[k]==null?"—":adminEsc(r[k])+" cm"}</td></tr>`).join("");
+  const photoHtml=r.photo_path ? `<div class="admin-photo-wrap"><img id="adminDogPhoto" alt="わんちゃんの写真" style="display:none;max-width:100%;max-height:280px;object-fit:contain;border-radius:12px"><div id="adminPhotoStatus" class="admin-note">写真を読み込んでいます…</div></div>` : `<div class="admin-note">写真なし</div>`;
+  box.innerHTML=`<div class="admin-detail-head"><div><div class="admin-sub">PINFORME CARTE</div><h2>${adminEsc(r.dog_name||"名前未入力")}${adminEsc(r.dog_suffix||"")}</h2></div><button type="button" class="admin-btn light" style="width:auto;min-height:42px" onclick="document.getElementById('adminDetail').classList.add('admin-hidden')">閉じる</button></div>${photoHtml}<div class="admin-detail-meta">飼い主様：${adminEsc(r.owner_name||"—")}<br>犬種：${adminEsc(r.breed||"—")} ／ 性別：${adminEsc(r.sex||"—")}<br>生年月日：${adminEsc(r.birth_date||"—")} ／ 体重：${r.weight==null?"—":adminEsc(r.weight)+" kg"}<br>採寸保存日時：${adminEsc(adminDate(r.created_at))}</div><table class="admin-measures">${rows}</table>`;
+  box.classList.remove("admin-hidden");
+  box.scrollIntoView({behavior:"smooth",block:"start"});
+  if(r.photo_path) loadAdminPhoto(r.photo_path,document.getElementById("adminDogPhoto"),document.getElementById("adminPhotoStatus"));
+}
 
 async function sendToPinforme(){
   const status=document.getElementById("sendStatus");
@@ -1951,6 +1998,13 @@ async function sendToPinforme(){
 
   if(status) status.textContent="PINFORMEへ送信しています…";
   try{
+    if(document.getElementById("dogPhoto")?.files?.[0]){
+      if(status) status.textContent="写真をアップロードしています…";
+      payload.photo_path=await uploadDogPhotoToSupabase();
+    }else{
+      payload.photo_path=null;
+    }
+    if(status) status.textContent="カルテを保存しています…";
     const res=await fetch(PINFORME_SAVE_ENDPOINT,{
       method:"POST",
       headers:{
