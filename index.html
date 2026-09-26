@@ -3956,15 +3956,56 @@ document.addEventListener("click",function(){
   window.pinformeSelectRemeasureDog=function(d,key){
     const dogId=Number(d?.dog_id),ownerId=Number(d?.owner_id);if(!(dogId>0&&ownerId>0))return;
     try{
-      localStorage.setItem(PINFORME_REMEASURE_DOG_ID_KEY,String(dogId));localStorage.setItem(PINFORME_REMEASURE_OWNER_ID_KEY,String(ownerId));
-      if(d.photo_path)localStorage.setItem(PINFORME_REMEASURE_PHOTO_PATH_KEY,String(d.photo_path));else localStorage.removeItem(PINFORME_REMEASURE_PHOTO_PATH_KEY);
+      localStorage.setItem(PINFORME_REMEASURE_DOG_ID_KEY,String(dogId));
+      localStorage.setItem(PINFORME_REMEASURE_OWNER_ID_KEY,String(ownerId));
+      if(d.photo_path)localStorage.setItem(PINFORME_REMEASURE_PHOTO_PATH_KEY,String(d.photo_path));
+      else localStorage.removeItem(PINFORME_REMEASURE_PHOTO_PATH_KEY);
       localStorage.setItem(PINFORME_OWNER_REMEASURE_KEY,pinformeNormalizeRemeasureKey(key));
     }catch(e){}
-    const setv=(id,v)=>{const el=document.getElementById(id);if(el&&v!=null)el.value=String(v)};
-    setv('ownerName',d.owner_name||'');setv('dogName',d.dog_name||'');setv('dogSuffix',d.dog_suffix||'くん');
-    setv('breed',d.breed||'');setv('sex',d.sex||'');setv('birthDate',d.birth_date||'');setv('weight',d.latest_weight||'');
-    try{resetMeasurementInputsOnly();localStorage.setItem('PINFORME_FRESH_MEASUREMENT_REQUIRED_V1','0');}catch(e){}
-    showOnly('startPage');try{savePINFORMEState();}catch(e){}
+
+    // 前に表示していた別のわんちゃんの基本情報が残らないよう、
+    // 選択したdog_idの情報で各入力欄を明示的に上書きする。
+    const owner=document.getElementById('ownerName');
+    if(owner) owner.value=d.owner_name||'';
+
+    const dog=document.getElementById('dogName');
+    if(dog) dog.value=d.dog_name||'';
+
+    const suffixValue=d.dog_suffix||'くん';
+    const suffix=document.getElementById('dogSuffix');
+    if(suffix) suffix.value=suffixValue;
+    document.querySelectorAll('.pin-first .suffix').forEach(function(b){
+      b.classList.toggle('active',b.dataset.value===suffixValue);
+    });
+
+    const breed=document.getElementById('dogBreed');
+    if(breed) breed.value=d.breed||'';
+
+    const sex=d.sex||'';
+    document.querySelectorAll('input[name="sex"]').forEach(function(r){
+      r.checked=(r.value===sex);
+    });
+
+    const birth=d.birth_date||'';
+    const birthHidden=document.getElementById('birthDate');
+    if(birthHidden) birthHidden.value=birth;
+
+    const birthDirect=document.getElementById('birthDateDirect');
+    if(birthDirect){
+      birthDirect.value=birth ? String(birth).replace(/\D/g,'').slice(0,8) : '';
+      birthDirect.dispatchEvent(new Event('input',{bubbles:true}));
+    }
+
+    const weight=document.getElementById('weight');
+    if(weight) weight.value=(d.latest_weight==null?'':String(d.latest_weight));
+
+    try{
+      resetMeasurementInputsOnly();
+      localStorage.setItem('PINFORME_FRESH_MEASUREMENT_REQUIRED_V1','0');
+    }catch(e){}
+
+    showOnly('startPage');
+    try{savePINFORMEState();}catch(e){}
   };
   window.syncSecretAdminEntry=function(){
     var btn=document.getElementById('pinformeAdminEntryButton');if(!btn)return;var verified=false;
