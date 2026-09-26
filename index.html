@@ -2060,6 +2060,7 @@ function fit(){let s=document.getElementById(&quot;sheet&quot;),v=s.parentElemen
 const introPages=[document.getElementById("startPage"),document.getElementById("dogInfoPage"),document.getElementById("finishPage"),document.getElementById("adminPage")];
 const steps=[...document.querySelectorAll(".step")];
 let current=0;
+let PINFORME_PHOTO_PROMO_CONSENT=false;
 
 function hideAll(){
   introPages.forEach(x=>x.classList.remove("active"));
@@ -2086,6 +2087,10 @@ function goDogInfo(){
 }
 function backStart(){hideAll();document.getElementById("startPage").classList.add("active");window.scrollTo(0,0)}
 function startMeasurements(){
+  PINFORME_PHOTO_PROMO_CONSENT = document.getElementById("photoPromoConsent")?.checked === true;
+  try{
+    localStorage.setItem("PINFORME_PHOTO_PROMO_CONSENT_V1", PINFORME_PHOTO_PROMO_CONSENT ? "1" : "0");
+  }catch(e){}
   let mustReset=false;
   try{
     mustReset=localStorage.getItem("PINFORME_FRESH_MEASUREMENT_REQUIRED_V1")==="1";
@@ -2244,7 +2249,7 @@ function collectKarte(){
     sex:sexChecked ? sexChecked.value : "",
     birthday:textValue("birthDate"),
     weight:textValue("weight"),
-    photoPromoConsent:!!document.getElementById("photoPromoConsent")?.checked,
+    photoPromoConsent:PINFORME_PHOTO_PROMO_CONSENT === true,
     measurements
   };
 }
@@ -2420,6 +2425,7 @@ html,body{margin:0!important;padding:0!important;width:297mm!important;height:21
 }
 </style>
 
+
 </body></html>`);
     printWin.document.close();
 
@@ -2555,6 +2561,8 @@ function registerAnotherDog(){
   const tips=document.getElementById("tipsConfirmed"); if(tips) tips.checked=true;
   const dataConsent=document.getElementById("dataConsent"); if(dataConsent) dataConsent.checked=false;
   const photoPromoConsent=document.getElementById("photoPromoConsent"); if(photoPromoConsent) photoPromoConsent.checked=false;
+  PINFORME_PHOTO_PROMO_CONSENT=false;
+  try{ localStorage.setItem("PINFORME_PHOTO_PROMO_CONSENT_V1","0"); }catch(e){}
 
   PINFORME_EDIT_FROM_FINISH=false;
   document.body.classList.remove("edit-from-finish");
@@ -2783,7 +2791,7 @@ async function sendToPinforme(){
     breed:textValue("dogBreed") || null,
     sex:(document.querySelector('input[name="sex"]:checked')?.value) || null,
     weight:numericOrNull(textValue("weight")),
-    photo_promo_consent:document.getElementById("photoPromoConsent")?.checked === true,
+    photo_promo_consent:PINFORME_PHOTO_PROMO_CONSENT === true,
     neck:avg(0),
     chest:avg(1),
     waist:avg(2),
@@ -2925,6 +2933,9 @@ function savePINFORMEState(){
 }
 
 function restorePINFORMEState(){
+  try{
+    PINFORME_PHOTO_PROMO_CONSENT = localStorage.getItem("PINFORME_PHOTO_PROMO_CONSENT_V1")==="1";
+  }catch(e){}
   let state=null;
   try{state=JSON.parse(localStorage.getItem(PINFORME_FORM_STATE_KEY)||"null");}catch(e){}
   if(!state) return;
@@ -3256,6 +3267,18 @@ setTimeout(function(){
   }else bindNewStartButton();
   window.addEventListener("pageshow",bindNewStartButton);
 })();
+</script>
+
+
+<script id="pinforme-photo-consent-lock">
+document.addEventListener("change",function(e){
+  if(e.target && e.target.id==="photoPromoConsent"){
+    PINFORME_PHOTO_PROMO_CONSENT = e.target.checked === true;
+    try{
+      localStorage.setItem("PINFORME_PHOTO_PROMO_CONSENT_V1", PINFORME_PHOTO_PROMO_CONSENT ? "1" : "0");
+    }catch(err){}
+  }
+});
 </script>
 
 </body></html>
