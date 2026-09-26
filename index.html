@@ -2748,7 +2748,16 @@ async function verifyAdminAccess(accessToken){
   }catch(e){return false}
 }
 function openAdminPage(){hideAll();document.getElementById("adminPage").classList.add("active");window.scrollTo(0,0);syncAdminUI()}
-function closeAdminPage(){try{location.href=location.pathname;}catch(e){hideAll();document.getElementById('entryChoicePage')?.classList.add('active');window.scrollTo(0,0)}}
+function closeAdminPage(){
+  try{
+    // 管理者URL(?admin=login)を完全に外し、お客様用入口へ戻す。
+    location.href=location.pathname+'?customer=1';
+  }catch(e){
+    hideAll();
+    document.getElementById('entryChoicePage')?.classList.add('active');
+    window.scrollTo(0,0);
+  }
+}
 async function syncAdminUI(){
   const s=getAdminSession();
   let verified=!!s?.access_token && isAdminVerified();
@@ -3757,12 +3766,37 @@ document.addEventListener("click",function(){
     const remeasureKeyField=document.getElementById('pinformeRemeasureKeyInput');
     if(remeasureKeyField) remeasureKeyField.value='';
     syncSecretAdminEntry();
-    var adminRoute=false;
-    try{adminRoute=(new URLSearchParams(location.search)).get('admin')==='login';}catch(e){}
+    var adminRoute=false, customerRoute=false;
+    try{
+      const qs=new URLSearchParams(location.search);
+      adminRoute=qs.get('admin')==='login';
+      customerRoute=qs.get('customer')==='1';
+    }catch(e){}
     if(adminRoute){
-      // URLを知っていても表示されるのはログイン画面だけ。権限確認が通るまで管理データは表示しない。
+      // 管理者専用URLでは管理者ログイン/管理画面だけを表示。
       openAdminPage();
+    }else if(customerRoute){
+      // 管理者画面から戻った時は、お客様用の最初の2択画面を必ず表示。
+      try{
+        localStorage.setItem('PINFORME_CURRENT_VIEW','entryChoicePage');
+        const raw=localStorage.getItem('PINFORME_FORM_STATE_V1');
+        if(raw){
+          const st=JSON.parse(raw);
+          if(st && typeof st==='object'){
+            st.view='entryChoicePage';
+            localStorage.setItem('PINFORME_FORM_STATE_V1',JSON.stringify(st));
+          }
+        }
+      }catch(e){}
+      try{hideAll();}catch(e){}
+      const entry=document.getElementById('entryChoicePage');
+      if(entry) entry.classList.add('active');
+      try{history.replaceState(null,'',location.pathname);}catch(e){}
+      try{window.scrollTo(0,0);}catch(e){}
     }else{
+      // 通常URLは常にお客様用。管理者ログイン済みでも自動で管理画面へは飛ばさない。
+      var admin=document.getElementById('adminPage');
+      if(admin) admin.classList.remove('active');
       var sess=null;try{sess=getAdminSession();}catch(e){}
       if(sess?.access_token && !isAdminVerified()){await syncAdminUI();syncSecretAdminEntry();}
     }
