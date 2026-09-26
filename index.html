@@ -289,6 +289,30 @@ button{height:72px;border-radius:36px;font-size:22px;font-weight:900}
   cursor:pointer
 }
 .pinforme-new-start-btn:active{opacity:.6}
+
+/* ===== 管理画面：ログインボタン横並び位置修正 ===== */
+#adminPage .admin-actions{
+  display:flex;
+  align-items:stretch;
+  gap:10px;
+}
+#adminPage .admin-actions .admin-btn{
+  flex:1 1 0;
+  width:auto;
+  min-height:52px;
+  height:52px;
+  margin:0 !important;
+  padding:0 12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-sizing:border-box;
+  line-height:1.2;
+}
+#adminPage .admin-actions .admin-btn.primary{
+  width:auto !important;
+  margin-top:0 !important;
+}
 </style>
 <style>
 .pin-first{padding:30px 18px 48px;background:#fff;color:#111}
