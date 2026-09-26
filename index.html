@@ -276,6 +276,9 @@ button{height:72px;border-radius:36px;font-size:22px;font-weight:900}
 .pin-birth-direct[hidden]{display:none!important}
 .pin-birth-direct{display:flex;align-items:center;gap:7px;margin-top:8px;font-size:12px;color:#666}
 .pin-birth-direct input{flex:1;min-width:0;height:40px;padding:0 10px;border:1px solid #d7d7d7;border-radius:9px;font-size:16px}
+
+.pinforme-home-link{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.pinforme-home-link:active{opacity:.65}
 </style>
 <style>
 .pin-first{padding:30px 18px 48px;background:#fff;color:#111}
@@ -430,7 +433,7 @@ button{height:72px;border-radius:36px;font-size:22px;font-weight:900}
 
 <section class="intro-step" id="dogInfoPage">
   <div class="start-card">
-    <div class="brand">PINFORME</div>
+    <div class="brand pinforme-home-link" role="button" tabindex="0" aria-label="ホームへ戻る" onclick="goPINFORMEHome()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goPINFORMEHome();}">PINFORME</div>
     <div class="brand-sub">DOG WEAR MEASUREMENT NAVI</div>
     <h1 id="dogInfoTitle">わんちゃんの情報</h1>
 
@@ -991,9 +994,9 @@ button{height:72px;border-radius:36px;font-size:22px;font-weight:900}
 
     <div class="finish-actions">
       <button type="button" id="pinformeSubmitButton" class="primary-action" onclick="sendToPinforme()">PINFORMEへ送信・保存</button>
-      <button type="button" class="secondary" onclick="remeasureSameDog()" style="width:100%;margin-top:10px;">このわんちゃんを再採寸する</button>
+      
       <div style="font-size:12px;color:#777;line-height:1.5;margin:7px 6px 0;">同じわんちゃんとして、今回の採寸を履歴に追加できます。</div>
-      <button type="button" class="secondary" onclick="registerAnotherDog()" style="width:100%;margin-top:10px;">別のわんちゃんを新規登録する</button>
+      
       <div style="font-size:12px;color:#777;line-height:1.5;margin:7px 6px 0;">ご主人様の名前だけ引き継ぎ、別のわんちゃんを新しく採寸できます。</div>
       <button type="button" class="secondary" onclick="backToStartKeepData()" style="width:100%;margin-top:10px;">最初の画面へ戻る</button>
     </div>
@@ -2394,6 +2397,92 @@ document.addEventListener("click",function(){
   fillDays();
   const restore=()=>{if(hidden.value) applyISO(hidden.value)};
   setTimeout(restore,0); setTimeout(restore,300); window.addEventListener("pageshow",restore);
+})();
+</script>
+
+
+<script>
+(function(){
+  const NAV_KEY="PINFORME_NAV_STATE_V1";
+
+  function detectPINFORMEPage(){
+    try{
+      if(typeof steps!=="undefined"){
+        for(let i=0;i<steps.length;i++){
+          if(steps[i] && steps[i].classList.contains("active")) return {type:"measurement",index:i};
+        }
+      }
+      const candidates=[
+        ["start","start"],
+        ["info","info"],
+        ["thanks","thanks"],
+        ["result","result"]
+      ];
+      for(const [id,type] of candidates){
+        const el=document.getElementById(id);
+        if(el && el.classList.contains("active")) return {type:type};
+      }
+    }catch(e){}
+    return {type:"start"};
+  }
+
+  function savePINFORMENav(){
+    try{
+      localStorage.setItem(NAV_KEY,JSON.stringify(detectPINFORMEPage()));
+      if(typeof savePINFORMEState==="function") savePINFORMEState();
+    }catch(e){}
+  }
+
+  window.goPINFORMEHome=function(){
+    try{
+      localStorage.setItem(NAV_KEY,JSON.stringify({type:"start"}));
+      if(typeof savePINFORMEState==="function") savePINFORMEState();
+    }catch(e){}
+    if(typeof hideAll==="function"){
+      hideAll();
+      const start=document.getElementById("start");
+      if(start) start.classList.add("active");
+      window.scrollTo(0,0);
+    }else{
+      location.href=location.pathname;
+    }
+  };
+
+  function restorePINFORMENav(){
+    let nav=null;
+    try{nav=JSON.parse(localStorage.getItem(NAV_KEY)||"null");}catch(e){}
+    if(!nav || !nav.type || nav.type==="start") return;
+
+    setTimeout(()=>{
+      try{
+        if(typeof hideAll!=="function") return;
+        hideAll();
+
+        if(nav.type==="measurement" && typeof steps!=="undefined" && steps.length){
+          let idx=Number(nav.index);
+          if(!Number.isInteger(idx) || idx<0 || idx>=steps.length) idx=0;
+          if(typeof current!=="undefined") current=idx;
+          steps[idx].classList.add("active");
+        }else{
+          const el=document.getElementById(nav.type);
+          if(el) el.classList.add("active");
+          else {
+            const start=document.getElementById("start");
+            if(start) start.classList.add("active");
+          }
+        }
+        window.scrollTo(0,0);
+      }catch(e){}
+    },80);
+  }
+
+  // Capture taps that change screens, after the original click handler has run.
+  document.addEventListener("click",function(){
+    setTimeout(savePINFORMENav,50);
+  },true);
+  window.addEventListener("pagehide",savePINFORMENav);
+  window.addEventListener("beforeunload",savePINFORMENav);
+  window.addEventListener("load",restorePINFORMENav);
 })();
 </script>
 
