@@ -405,6 +405,22 @@ button{height:72px;border-radius:36px;font-size:22px;font-weight:900}
 html.pinforme-restoring body{visibility:hidden!important}
 </style>
 
+
+<style id="pinforme-photo-purpose-note-style">
+.photo-purpose-note{
+  margin:-2px 0 10px;
+  font-size:12px;
+  line-height:1.6;
+  color:#666;
+}
+.photo-consent-note{
+  margin:8px 2px 0;
+  font-size:11px;
+  line-height:1.6;
+  color:#777;
+}
+</style>
+
 </head>
 <body>
 
@@ -908,11 +924,14 @@ html.pinforme-restoring body{visibility:hidden!important}
   <input id="birthDate" type="hidden" value="">
 </div></div>
     <div class="form-field"><label>体重</label><div class="weight-row"><input type="number" inputmode="decimal" step="0.1" id="weight"><span>kg</span></div></div>
-    <div class="form-field"><label>わんちゃんの写真</label><input type="file" id="dogPhoto" accept="image/*"><img id="photoPreview" class="photo-preview">
+    <div class="form-field"><label>わんちゃんの写真</label>
+      <div class="photo-purpose-note">※ カルテ管理・わんちゃんの識別のために使用します。</div>
+      <input type="file" id="dogPhoto" accept="image/*"><img id="photoPreview" class="photo-preview">
       <label class="photo-consent">
         <input type="checkbox" id="photoPromoConsent">
-        <span>わんちゃんの写真をPINFORMEのSNS・Webサイト・販促物等で使用することに同意します。<span class="optional">任意</span></span>
+        <span>この写真をPINFORMEのSNS・Webサイト・販促物等で使用することに同意します。<span class="optional">任意</span></span>
       </label>
+      <div class="photo-consent-note">※ 写真の登録と販促利用への同意は別です。同意いただかなくても採寸・カルテ保存には影響ありません。</div>
     </div>
 
     <div class="intro-nav"><button class="secondary" onclick="backStart()">← 戻る</button><button class="primary half" onclick="startMeasurements()">次へ ›</button></div>
@@ -2214,6 +2233,7 @@ function collectKarte(){
     sex:sexChecked ? sexChecked.value : "",
     birthday:textValue("birthDate"),
     weight:textValue("weight"),
+    photoPromoConsent:!!document.getElementById("photoPromoConsent")?.checked,
     measurements
   };
 }
