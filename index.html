@@ -967,6 +967,8 @@ button{height:72px;border-radius:36px;font-size:22px;font-weight:900}
 
     <div class="finish-actions">
       <button type="button" id="pinformeSubmitButton" class="primary-action" onclick="sendToPinforme()">PINFORMEへ送信・保存</button>
+      <button type="button" class="secondary" onclick="remeasureSameDog()" style="width:100%;margin-top:10px;">このわんちゃんを再採寸する</button>
+      <div style="font-size:12px;color:#777;line-height:1.5;margin:7px 6px 0;">同じわんちゃんとして、今回の採寸を履歴に追加できます。</div>
       <button type="button" class="secondary" onclick="registerAnotherDog()" style="width:100%;margin-top:10px;">別のわんちゃんを新規登録する</button>
       <div style="font-size:12px;color:#777;line-height:1.5;margin:7px 6px 0;">ご主人様の名前だけ引き継ぎ、別のわんちゃんを新しく採寸できます。</div>
       <button type="button" class="secondary" onclick="backToStartKeepData()" style="width:100%;margin-top:10px;">最初の画面へ戻る</button>
@@ -1876,8 +1878,66 @@ function backToStartKeepData(){
   try{ localStorage.setItem("PINFORME_CURRENT_VIEW","startPage"); }catch(e){}
   window.scrollTo(0,0);
 }
+const PINFORME_ACTIVE_DOG_CODE_KEY="PINFORME_ACTIVE_DOG_CODE_V1";
+
+function getOrCreateActiveDogCode(){
+  let code="";
+  try{ code=(localStorage.getItem(PINFORME_ACTIVE_DOG_CODE_KEY)||"").trim(); }catch(e){}
+  if(!code){
+    code=(window.crypto && crypto.randomUUID)
+      ? crypto.randomUUID()
+      : (Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,12));
+    try{ localStorage.setItem(PINFORME_ACTIVE_DOG_CODE_KEY,code); }catch(e){}
+  }
+  return code;
+}
+
+function clearActiveDogCode(){
+  try{ localStorage.removeItem(PINFORME_ACTIVE_DOG_CODE_KEY); }catch(e){}
+}
+
+function resetMeasurementInputsOnly(){
+  steps.forEach(section=>{
+    section.querySelectorAll('input[type="number"]').forEach(x=>x.value="");
+    section.querySelectorAll('.avg-value span').forEach(x=>x.textContent="0.0");
+  });
+}
+
+function remeasureSameDog(){
+  // 基本情報・写真・dog_codeはそのまま。同じdogs.idへ新しい採寸履歴を追加する。
+  resetMeasurementInputsOnly();
+  PINFORME_SUBMITTED=false;
+  PINFORME_SUBMITTING=false;
+  const submitBtn=document.getElementById("pinformeSubmitButton");
+  if(submitBtn){
+    submitBtn.disabled=false;
+    submitBtn.textContent="PINFORMEへ送信・保存";
+    submitBtn.style.opacity="1";
+  }
+  const status=document.getElementById("sendStatus");
+  if(status) status.textContent="再採寸の入力を開始できます。";
+  PINFORME_EDIT_FROM_FINISH=false;
+  document.body.classList.remove("edit-from-finish");
+  try{
+    localStorage.removeItem("PINFORME_LAST_KARTE");
+    localStorage.setItem("PINFORME_CURRENT_VIEW","startPage");
+  }catch(e){}
+  hideAll();
+  document.getElementById("startPage").classList.add("active");
+  savePINFORMEState();
+  window.scrollTo(0,0);
+}
 function registerAnotherDog(){
   const owner=(document.getElementById("ownerName")?.value||"").trim();
+  clearActiveDogCode();
+  PINFORME_SUBMITTED=false;
+  PINFORME_SUBMITTING=false;
+  const submitBtn=document.getElementById("pinformeSubmitButton");
+  if(submitBtn){
+    submitBtn.disabled=false;
+    submitBtn.textContent="PINFORMEへ送信・保存";
+    submitBtn.style.opacity="1";
+  }
 
   // わんちゃん固有の基本情報をクリア（ご主人様だけ引き継ぐ）
   const dogName=document.getElementById("dogName"); if(dogName) dogName.value="";
@@ -2016,9 +2076,7 @@ async function sendToPinforme(){
     }
     // わんちゃんマスター(dogs)へ登録し、返されたIDを採寸履歴へ紐付ける
     if(status) status.textContent="わんちゃん情報を登録しています…";
-    const dogCode=(window.crypto && crypto.randomUUID)
-      ? crypto.randomUUID()
-      : (Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,12));
+    const dogCode=getOrCreateActiveDogCode();
     const dogRes=await fetch(`${PINFORME_SUPABASE_BASE}/rest/v1/rpc/create_dog_and_get_id`,{
       method:"POST",
       headers:{
