@@ -2242,7 +2242,7 @@ function savePINFORMEState(){
   if(preview && preview.src && preview.src.startsWith("data:image/")){
     state.photo=preview.src;
   }
-  const active=document.querySelector('.intro-page.active,.measure-step.active,.finish-step.active');
+  const active=document.querySelector('.intro-step.active,.step.active,.finish-step.active');
   if(active && active.id) state.view=active.id;
   try{
     localStorage.setItem(PINFORME_FORM_STATE_KEY,JSON.stringify(state));
@@ -2289,7 +2289,7 @@ function restorePINFORMEState(){
     if(target){
       hideAll();
       target.classList.add("active");
-      if(target.classList.contains("measure-step")){
+      if(target.classList.contains("step")){
         const idx=steps.indexOf(target);
         if(idx>=0) current=idx;
       }
@@ -2415,166 +2415,70 @@ document.addEventListener("click",function(){
 
 
 
+
 <script>
 (function(){
-  const NAV_KEY="PINFORME_NAV_STATE_V2";
-
-  function panels(){
-    const found=[];
-    document.querySelectorAll('.screen,.page,.step,[id="start"],[id="info"],[id="thanks"],[id="result"]').forEach(el=>{
-      if(!found.includes(el)) found.push(el);
-    });
-    return found;
-  }
-
-  function isVisible(el){
-    if(!el) return false;
-    const s=getComputedStyle(el);
-    return s.display!=="none" && s.visibility!=="hidden" && !el.hidden;
-  }
-
-  function detectPage(){
+  function goHome(){
     try{
-      if(typeof steps!=="undefined"){
-        for(let i=0;i<steps.length;i++){
-          if(steps[i] && (steps[i].classList.contains("active") || isVisible(steps[i])))
-            return {type:"measurement",index:i};
-        }
-      }
-      for(const id of ["start","info","thanks","result"]){
-        const el=document.getElementById(id);
-        if(el && (el.classList.contains("active") || isVisible(el))) return {type:id};
-      }
-    }catch(e){}
-    return {type:"start"};
-  }
-
-  function saveNav(){
-    try{
-      localStorage.setItem(NAV_KEY,JSON.stringify(detectPage()));
+      hideAll();
+      const home=document.getElementById("startPage");
+      if(home) home.classList.add("active");
+      current=0;
       if(typeof savePINFORMEState==="function") savePINFORMEState();
-    }catch(e){}
-  }
-
-  function showStart(){
-    try{
-      if(typeof hideAll==="function") hideAll();
-      else panels().forEach(el=>{
-        el.classList.remove("active");
-        el.style.display="none";
-      });
-
-      const start=document.getElementById("start");
-      if(start){
-        start.hidden=false;
-        start.style.removeProperty("display");
-        start.classList.add("active");
-      }
-      try{ current=0; }catch(e){}
-      localStorage.setItem(NAV_KEY,JSON.stringify({type:"start"}));
-      history.replaceState({pinforme:"start"},"",location.pathname+location.search);
       window.scrollTo(0,0);
     }catch(e){}
   }
-  window.goPINFORMEHome=showStart;
+  window.goPINFORMEHome=goHome;
 
-  function bindEveryLogo(){
-    // Bind both text/logo containers and logo images, including headers created later.
-    const selectors=[
-      ".brand",".logo",".header-brand",".brand-logo",
-      "header img",".header img",
-      'img[alt*="PINFORME" i]','[aria-label*="PINFORME" i]'
-    ];
-    document.querySelectorAll(selectors.join(",")).forEach(el=>{
+  function bindLogos(){
+    document.querySelectorAll(
+      '.brand,.pinforme-unified-header img,.pinforme-unified-header'
+    ).forEach(function(el){
       if(el.dataset.pinformeHomeBound==="1") return;
       el.dataset.pinformeHomeBound="1";
       el.classList.add("pinforme-home-link");
       el.setAttribute("role","button");
       el.setAttribute("tabindex","0");
+      el.setAttribute("aria-label","ホームへ戻る");
       el.addEventListener("click",function(ev){
         ev.preventDefault();
         ev.stopPropagation();
-        showStart();
+        goHome();
       });
       el.addEventListener("keydown",function(ev){
         if(ev.key==="Enter" || ev.key===" "){
           ev.preventDefault();
-          showStart();
+          goHome();
         }
       });
     });
   }
 
-  function restoreNav(){
-    let nav=null;
-    try{nav=JSON.parse(localStorage.getItem(NAV_KEY)||"null");}catch(e){}
-    if(!nav || !nav.type || nav.type==="start") return;
-
-    try{
-      if(typeof hideAll==="function") hideAll();
-
-      if(nav.type==="measurement" && typeof steps!=="undefined" && steps.length){
-        let idx=parseInt(nav.index,10);
-        if(!Number.isInteger(idx)||idx<0||idx>=steps.length) idx=0;
-        try{current=idx;}catch(e){}
-        steps[idx].hidden=false;
-        steps[idx].style.removeProperty("display");
-        steps[idx].classList.add("active");
-      }else{
-        const el=document.getElementById(nav.type);
-        if(el){
-          el.hidden=false;
-          el.style.removeProperty("display");
-          el.classList.add("active");
-        }else{
-          showStart();
-        }
-      }
-      window.scrollTo(0,0);
-    }catch(e){}
-  }
-
-  function addNewStartButton(){
-    const start=document.getElementById("start");
-    if(!start || document.getElementById("pinformeNewStartBtn")) return;
+  function addNewStart(){
+    const home=document.getElementById("startPage");
+    if(!home || document.getElementById("pinformeNewStartBtn")) return;
     const wrap=document.createElement("div");
     wrap.className="pinforme-new-start-wrap";
     wrap.innerHTML='<button type="button" id="pinformeNewStartBtn" class="pinforme-new-start-btn">新しく採寸をはじめる</button>';
-    start.appendChild(wrap);
+    home.appendChild(wrap);
     wrap.querySelector("button").addEventListener("click",function(){
       if(!confirm("入力中の内容をすべて消して、新しい採寸をはじめますか？")) return;
       try{
-        Object.keys(localStorage).forEach(k=>{
-          if(k.startsWith("PINFORME_")) localStorage.removeItem(k);
+        Object.keys(localStorage).forEach(function(k){
+          if(k.indexOf("PINFORME_")===0) localStorage.removeItem(k);
         });
       }catch(e){}
-      location.replace(location.pathname+location.search);
+      location.reload();
     });
   }
 
-  // Run immediately as well as on load. This prevents the "blank until refresh" symptom.
   function init(){
-    bindEveryLogo();
-    addNewStartButton();
-    restoreNav();
+    bindLogos();
+    addNewStart();
   }
-
-  if(document.readyState==="loading"){
-    document.addEventListener("DOMContentLoaded",init,{once:true});
-  }else{
-    init();
-  }
-  window.addEventListener("pageshow",function(){
-    bindEveryLogo();
-    addNewStartButton();
-  });
-
-  // Some screens/headers are rendered dynamically, so bind newly appearing logos too.
-  const observer=new MutationObserver(()=>bindEveryLogo());
-  observer.observe(document.documentElement,{childList:true,subtree:true});
-
-  document.addEventListener("click",()=>setTimeout(saveNav,80),true);
-  window.addEventListener("pagehide",saveNav);
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",init,{once:true});
+  else init();
+  window.addEventListener("pageshow",init);
 })();
 </script>
 
