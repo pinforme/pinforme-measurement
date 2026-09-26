@@ -355,6 +355,23 @@ button{height:72px;border-radius:36px;font-size:22px;font-weight:900}
 #karte td{padding:10px 6px}
 </style>
 
+
+<script>
+(function(){
+  try{
+    var raw=localStorage.getItem("PINFORME_FORM_STATE_V1");
+    var state=raw ? JSON.parse(raw) : null;
+    var view=(state && state.view) || localStorage.getItem("PINFORME_VIEW_V1");
+    if(view && view!=="startPage"){
+      document.documentElement.classList.add("pinforme-restoring");
+    }
+  }catch(e){}
+})();
+</script>
+<style>
+html.pinforme-restoring body{visibility:hidden!important}
+</style>
+
 </head>
 <body>
 
@@ -2313,7 +2330,10 @@ document.addEventListener("input",savePINFORMEState);
 document.addEventListener("change",()=>setTimeout(savePINFORMEState,0));
 document.addEventListener("click",()=>setTimeout(savePINFORMEState,0));
 window.addEventListener("beforeunload",savePINFORMEState);
-window.addEventListener("DOMContentLoaded",()=>setTimeout(restorePINFORMEState,0));
+window.addEventListener("DOMContentLoaded",()=>setTimeout(()=>{
+  restorePINFORMEState();
+  document.documentElement.classList.remove("pinforme-restoring");
+},0));
 </script>
 <script>
 /* 画面遷移後の現在位置も保存 */
@@ -2494,5 +2514,17 @@ document.addEventListener("click",function(){
 })();
 </script>
 
+
+
+<script>
+window.addEventListener("load",function(){
+  setTimeout(function(){
+    document.documentElement.classList.remove("pinforme-restoring");
+  },80);
+});
+setTimeout(function(){
+  document.documentElement.classList.remove("pinforme-restoring");
+},1500);
+</script>
 
 </body></html>
