@@ -279,6 +279,16 @@ button{height:72px;border-radius:36px;font-size:22px;font-weight:900}
 
 .pinforme-home-link{cursor:pointer;-webkit-tap-highlight-color:transparent}
 .pinforme-home-link:active{opacity:.65}
+
+.pinforme-home-link{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.pinforme-home-link:active{opacity:.65}
+.pinforme-new-start-wrap{text-align:center;margin:18px 0 4px}
+.pinforme-new-start-btn{
+  appearance:none;-webkit-appearance:none;border:0;background:transparent;
+  padding:8px 10px;color:#777;font:inherit;font-size:13px;text-decoration:underline;
+  cursor:pointer
+}
+.pinforme-new-start-btn:active{opacity:.6}
 </style>
 <style>
 .pin-first{padding:30px 18px 48px;background:#fff;color:#111}
@@ -433,7 +443,7 @@ button{height:72px;border-radius:36px;font-size:22px;font-weight:900}
 
 <section class="intro-step" id="dogInfoPage">
   <div class="start-card">
-    <div class="brand pinforme-home-link" role="button" tabindex="0" aria-label="ホームへ戻る" onclick="goPINFORMEHome()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goPINFORMEHome();}">PINFORME</div>
+    <div class="brand">PINFORME</div>
     <div class="brand-sub">DOG WEAR MEASUREMENT NAVI</div>
     <h1 id="dogInfoTitle">わんちゃんの情報</h1>
 
@@ -2401,34 +2411,43 @@ document.addEventListener("click",function(){
 </script>
 
 
+
+
+
 <script>
 (function(){
   const NAV_KEY="PINFORME_NAV_STATE_V1";
 
-  function detectPINFORMEPage(){
+  function allAppPanels(){
+    const arr=[];
+    ["start","info","thanks","result"].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el) arr.push(el);
+    });
+    try{
+      if(typeof steps!=="undefined") steps.forEach(el=>{if(el) arr.push(el);});
+    }catch(e){}
+    return arr;
+  }
+
+  function detectPage(){
     try{
       if(typeof steps!=="undefined"){
         for(let i=0;i<steps.length;i++){
           if(steps[i] && steps[i].classList.contains("active")) return {type:"measurement",index:i};
         }
       }
-      const candidates=[
-        ["start","start"],
-        ["info","info"],
-        ["thanks","thanks"],
-        ["result","result"]
-      ];
-      for(const [id,type] of candidates){
+      for(const id of ["start","info","thanks","result"]){
         const el=document.getElementById(id);
-        if(el && el.classList.contains("active")) return {type:type};
+        if(el && el.classList.contains("active")) return {type:id};
       }
     }catch(e){}
     return {type:"start"};
   }
 
-  function savePINFORMENav(){
+  function saveNav(){
     try{
-      localStorage.setItem(NAV_KEY,JSON.stringify(detectPINFORMEPage()));
+      localStorage.setItem(NAV_KEY,JSON.stringify(detectPage()));
       if(typeof savePINFORMEState==="function") savePINFORMEState();
     }catch(e){}
   }
@@ -2438,51 +2457,131 @@ document.addEventListener("click",function(){
       localStorage.setItem(NAV_KEY,JSON.stringify({type:"start"}));
       if(typeof savePINFORMEState==="function") savePINFORMEState();
     }catch(e){}
-    if(typeof hideAll==="function"){
-      hideAll();
+    try{
+      if(typeof hideAll==="function") hideAll();
+      else allAppPanels().forEach(el=>el.classList.remove("active"));
       const start=document.getElementById("start");
       if(start) start.classList.add("active");
       window.scrollTo(0,0);
-    }else{
-      location.href=location.pathname;
-    }
+    }catch(e){}
   };
 
-  function restorePINFORMENav(){
+  window.startBrandNewPINFORME=function(){
+    const ok=window.confirm("入力中の内容をすべて消して、新しい採寸をはじめますか？");
+    if(!ok) return;
+
+    try{
+      // Clear only PINFORME app state. Do not touch unrelated browser/site storage.
+      [
+        "PINFORME_NAV_STATE_V1",
+        "PINFORME_FRESH_MEASUREMENT_REQUIRED_V1",
+        "PINFORME_REMEASURE_RESET_MIGRATED_V1"
+      ].forEach(k=>localStorage.removeItem(k));
+
+      if(typeof PINFORME_FORM_STATE_KEY!=="undefined") localStorage.removeItem(PINFORME_FORM_STATE_KEY);
+      if(typeof PINFORME_ACTIVE_DOG_CODE_KEY!=="undefined") localStorage.removeItem(PINFORME_ACTIVE_DOG_CODE_KEY);
+
+      // Clear all customer-entered controls, including photo input.
+      document.querySelectorAll('input,select,textarea').forEach(el=>{
+        if(el.type==="button" || el.type==="submit") return;
+        if(el.type==="checkbox" || el.type==="radio") el.checked=false;
+        else if(el.tagName==="SELECT") el.selectedIndex=0;
+        else el.value="";
+      });
+
+      // Clear common photo previews without removing layout containers.
+      document.querySelectorAll('img').forEach(img=>{
+        const id=(img.id||"").toLowerCase(), cls=(img.className||"").toString().toLowerCase();
+        if(id.includes("photo") || id.includes("preview") || cls.includes("photo") || cls.includes("preview")){
+          img.removeAttribute("src");
+          img.style.display="none";
+        }
+      });
+
+      document.querySelectorAll('.avg-value span').forEach(x=>x.textContent="0.0");
+
+      if(typeof PINFORME_SUBMITTED!=="undefined") PINFORME_SUBMITTED=false;
+      if(typeof PINFORME_SUBMITTING!=="undefined") PINFORME_SUBMITTING=false;
+
+      // Reinitialize birth-date controls after clearing.
+      try{
+        const y=document.getElementById("birthYear");
+        const m=document.getElementById("birthMonth");
+        const d=document.getElementById("birthDay");
+        if(y) y.value=String(new Date().getFullYear());
+        if(m) m.value="";
+        if(d) d.value="";
+        const hidden=document.getElementById("birthDate");
+        const direct=document.getElementById("birthDateDirect");
+        if(hidden) hidden.value="";
+        if(direct) direct.value="";
+      }catch(e){}
+
+      localStorage.setItem(NAV_KEY,JSON.stringify({type:"start"}));
+    }catch(e){}
+
+    // Reload to guarantee no stale in-memory state survives.
+    location.reload();
+  };
+
+  function makeAllBrandsHomeLinks(){
+    document.querySelectorAll(".brand").forEach(el=>{
+      el.classList.add("pinforme-home-link");
+      el.setAttribute("role","button");
+      el.setAttribute("tabindex","0");
+      el.setAttribute("aria-label","ホームへ戻る");
+      el.onclick=()=>window.goPINFORMEHome();
+      el.onkeydown=(ev)=>{
+        if(ev.key==="Enter" || ev.key===" "){
+          ev.preventDefault();
+          window.goPINFORMEHome();
+        }
+      };
+    });
+  }
+
+  function addNewStartButton(){
+    const start=document.getElementById("start");
+    if(!start || document.getElementById("pinformeNewStartBtn")) return;
+    const wrap=document.createElement("div");
+    wrap.className="pinforme-new-start-wrap";
+    wrap.innerHTML='<button type="button" id="pinformeNewStartBtn" class="pinforme-new-start-btn">新しく採寸をはじめる</button>';
+    start.appendChild(wrap);
+    wrap.querySelector("button").addEventListener("click",window.startBrandNewPINFORME);
+  }
+
+  function restoreNav(){
     let nav=null;
     try{nav=JSON.parse(localStorage.getItem(NAV_KEY)||"null");}catch(e){}
     if(!nav || !nav.type || nav.type==="start") return;
-
     setTimeout(()=>{
       try{
-        if(typeof hideAll!=="function") return;
-        hideAll();
+        if(typeof hideAll==="function") hideAll();
+        else allAppPanels().forEach(el=>el.classList.remove("active"));
 
         if(nav.type==="measurement" && typeof steps!=="undefined" && steps.length){
           let idx=Number(nav.index);
-          if(!Number.isInteger(idx) || idx<0 || idx>=steps.length) idx=0;
+          if(!Number.isInteger(idx)||idx<0||idx>=steps.length) idx=0;
           if(typeof current!=="undefined") current=idx;
           steps[idx].classList.add("active");
         }else{
           const el=document.getElementById(nav.type);
           if(el) el.classList.add("active");
-          else {
-            const start=document.getElementById("start");
-            if(start) start.classList.add("active");
-          }
+          else document.getElementById("start")?.classList.add("active");
         }
         window.scrollTo(0,0);
       }catch(e){}
     },80);
   }
 
-  // Capture taps that change screens, after the original click handler has run.
-  document.addEventListener("click",function(){
-    setTimeout(savePINFORMENav,50);
-  },true);
-  window.addEventListener("pagehide",savePINFORMENav);
-  window.addEventListener("beforeunload",savePINFORMENav);
-  window.addEventListener("load",restorePINFORMENav);
+  window.addEventListener("load",()=>{
+    makeAllBrandsHomeLinks();
+    addNewStartButton();
+    restoreNav();
+  });
+  document.addEventListener("click",()=>setTimeout(saveNav,60),true);
+  window.addEventListener("pagehide",saveNav);
+  window.addEventListener("beforeunload",saveNav);
 })();
 </script>
 
