@@ -432,6 +432,33 @@ html.pinforme-restoring body{visibility:hidden!important}
 }
 </style>
 
+
+<!-- ===== PINFORME 管理者入口 完全分離 ===== -->
+<script>
+(function(){
+  try{
+    var p=new URLSearchParams(location.search);
+    var isAdmin=p.get('admin')==='login';
+    if(isAdmin) document.documentElement.classList.add('pinforme-admin-route-early');
+    else document.documentElement.classList.add('pinforme-public-route-early');
+  }catch(e){}
+})();
+</script>
+<style>
+  /* 公開画面には管理者入口を一切出さない */
+  #pinformeAdminEntryButton{display:none !important;}
+
+  /* ?admin=login の時は採寸側を完全に隠す */
+  html.pinforme-admin-route-early #entryChoicePage,
+  html.pinforme-admin-route-early #startPage,
+  html.pinforme-admin-route-early #dogInfoPage,
+  html.pinforme-admin-route-early .step,
+  html.pinforme-admin-route-early #finishPage,
+  html.pinforme-admin-route-early #kartePage{display:none !important;}
+
+  html.pinforme-admin-route-early #adminPage{display:block !important;}
+</style>
+
 </head>
 <body>
 
@@ -2642,7 +2669,7 @@ async function verifyAdminAccess(accessToken){
   }catch(e){return false}
 }
 function openAdminPage(){hideAll();document.getElementById("adminPage").classList.add("active");window.scrollTo(0,0);syncAdminUI()}
-function closeAdminPage(){hideAll();document.getElementById("entryChoicePage")?.classList.add("active");window.scrollTo(0,0)}
+function closeAdminPage(){try{location.href=location.pathname;}catch(e){hideAll();document.getElementById('entryChoicePage')?.classList.add('active');window.scrollTo(0,0)}}
 async function syncAdminUI(){
   const s=getAdminSession();
   let verified=!!s?.access_token && isAdminVerified();
@@ -3481,7 +3508,7 @@ document.addEventListener("click",function(){
     var btn=document.getElementById('pinformeAdminEntryButton');if(!btn)return;var verified=false;
     try{verified=!!getAdminSession()?.access_token && isAdminVerified();}catch(e){}
     // 一般利用者には管理者ボタンを一切表示しない。Supabaseで管理者確認済みの時だけ表示する。
-    btn.hidden=!verified;btn.textContent='管理者ページ';
+    btn.hidden=true;btn.style.display='none';btn.textContent='管理者ページ';
   };
   async function init(){
     syncSecretAdminEntry();
@@ -3610,13 +3637,13 @@ document.addEventListener("change",function(e){
   body.pinforme-admin-route #entryChoicePage,
   body.pinforme-admin-route #startPage,
   body.pinforme-admin-route #dogInfoPage,
-  body.pinforme-admin-route main,
+  body.pinforme-admin-route .step,
   body.pinforme-admin-route #finishPage,
   body.pinforme-admin-route #kartePage,
   body.pinforme-admin-route #pinformeAdminEntryButton {
     display:none !important;
   }
-  body.pinforme-admin-route #adminPage.active {
+  body.pinforme-admin-route #adminPage {
     display:block !important;
   }
 </style>
@@ -3630,7 +3657,7 @@ document.addEventListener("change",function(e){
     var adminRoute=isAdminRoute();
     document.body.classList.toggle('pinforme-admin-route',adminRoute);
     var adminBtn=document.getElementById('pinformeAdminEntryButton');
-    if(adminRoute && adminBtn) adminBtn.hidden=true;
+    if(adminBtn){adminBtn.hidden=true;adminBtn.style.display='none';}
     if(adminRoute){
       document.querySelectorAll('.intro-step,.step,.finish-step').forEach(function(el){el.classList.remove('active');});
       var admin=document.getElementById('adminPage');
