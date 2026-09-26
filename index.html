@@ -421,6 +421,17 @@ html.pinforme-restoring body{visibility:hidden!important}
 }
 </style>
 
+
+<style id="pinforme-photo-consent-admin-style">
+#adminPage #adminPhotoConsentFilter{
+  width:100%;
+}
+#adminPage .admin-detail-meta strong,
+#adminPage .admin-measure-owner strong{
+  font-weight:900;
+}
+</style>
+
 </head>
 <body>
 
@@ -1437,7 +1448,7 @@ html.pinforme-restoring body{visibility:hidden!important}
       <div class="admin-field"><label>パスワード</label><input id="adminPassword" type="password" autocomplete="current-password"></div>
       <div class="admin-actions"><button class="admin-btn primary" type="button" onclick="adminLogin()">ログイン</button><button class="admin-btn light" type="button" onclick="closeAdminPage()">採寸ナビへ戻る</button></div><div class="admin-status" id="adminLoginStatus"></div>
     </div>
-    <div id="adminManagerBox" class="admin-hidden"><div class="admin-toolbar"><input id="adminSearch" type="search" placeholder="飼い主様名・わんちゃん名で検索" oninput="renderAdminList()"><button type="button" onclick="loadAdminCartes()">更新</button></div><div class="admin-filter-panel"><div class="admin-filter-title">絞り込み</div><div class="admin-filter-grid"><div class="admin-filter-field"><label for="adminBreedFilter">① 犬種</label><select id="adminBreedFilter" onchange="onAdminBreedFilterChange()"><option value="">すべての犬種</option></select></div><div class="admin-filter-field"><label>② 体重範囲（採寸時）</label><div class="admin-weight-filter"><input id="adminWeightMin" type="number" inputmode="decimal" step="0.1" min="0" placeholder="最小 kg" oninput="renderAdminList()" disabled><span>〜</span><input id="adminWeightMax" type="number" inputmode="decimal" step="0.1" min="0" placeholder="最大 kg" oninput="renderAdminList()" disabled></div><div class="admin-filter-hint" id="adminWeightHint">犬種を選ぶと体重範囲で絞り込めます。</div></div></div><button type="button" class="admin-filter-reset" onclick="resetAdminFilters()">絞り込みを解除</button><button type="button" id="adminSummaryButton" class="admin-summary-open" onclick="showAdminSummary()" disabled>絞り込み結果の集計カルテを見る</button></div><div class="admin-status" id="adminListStatus"></div><div class="admin-list" id="adminList"></div><div class="admin-actions"><button class="admin-btn light" type="button" onclick="closeAdminPage()">採寸ナビへ戻る</button><button class="admin-btn danger" type="button" onclick="adminLogout()">ログアウト</button></div></div>
+    <div id="adminManagerBox" class="admin-hidden"><div class="admin-toolbar"><input id="adminSearch" type="search" placeholder="飼い主様名・わんちゃん名で検索" oninput="renderAdminList()"><button type="button" onclick="loadAdminCartes()">更新</button></div><div class="admin-filter-panel"><div class="admin-filter-title">絞り込み</div><div class="admin-filter-grid"><div class="admin-filter-field"><label for="adminBreedFilter">① 犬種</label><select id="adminBreedFilter" onchange="onAdminBreedFilterChange()"><option value="">すべての犬種</option></select></div><div class="admin-filter-field"><label>② 体重範囲（採寸時）</label><div class="admin-weight-filter"><input id="adminWeightMin" type="number" inputmode="decimal" step="0.1" min="0" placeholder="最小 kg" oninput="renderAdminList()" disabled><span>〜</span><input id="adminWeightMax" type="number" inputmode="decimal" step="0.1" min="0" placeholder="最大 kg" oninput="renderAdminList()" disabled></div><div class="admin-filter-hint" id="adminWeightHint">犬種を選ぶと体重範囲で絞り込めます。</div></div><div class="admin-filter-field"><label for="adminPhotoConsentFilter">③ 写真の販促利用</label><select id="adminPhotoConsentFilter" onchange="renderAdminList()"><option value="">すべて</option><option value="yes">同意あり</option><option value="no">同意なし</option></select><div class="admin-filter-hint">SNS・Webサイト・販促物等への写真使用同意で仕分けます。</div></div></div><button type="button" class="admin-filter-reset" onclick="resetAdminFilters()">絞り込みを解除</button><button type="button" id="adminSummaryButton" class="admin-summary-open" onclick="showAdminSummary()" disabled>絞り込み結果の集計カルテを見る</button></div><div class="admin-status" id="adminListStatus"></div><div class="admin-list" id="adminList"></div><div class="admin-actions"><button class="admin-btn light" type="button" onclick="closeAdminPage()">採寸ナビへ戻る</button><button class="admin-btn danger" type="button" onclick="adminLogout()">ログアウト</button></div></div>
   </div><div class="admin-card admin-hidden" id="adminDetail"></div></div>
 </section>
 
@@ -2603,6 +2614,16 @@ function adminBreedForDog(d){
  const hist=adminDogHistory(d.id),latest=hist[0];
  return adminNormalizeBreed(d.breed||latest?.breed||"");
 }
+function adminPhotoConsentForRow(r){
+ return r?.photo_promo_consent === true;
+}
+function adminPhotoConsentForDog(d){
+ const hist=adminDogHistory(d.id),latest=hist[0];
+ return adminPhotoConsentForRow(latest);
+}
+function adminPhotoConsentLabel(v){
+ return v === true ? "同意あり" : "同意なし";
+}
 function updateAdminBreedFilter(){
  const sel=document.getElementById("adminBreedFilter");if(!sel)return;
  const current=sel.value;
@@ -2624,12 +2645,13 @@ function onAdminBreedFilterChange(shouldRender=true){
  if(shouldRender)renderAdminList();
 }
 function resetAdminFilters(){
- const breed=document.getElementById("adminBreedFilter"),min=document.getElementById("adminWeightMin"),max=document.getElementById("adminWeightMax");
- if(breed)breed.value="";if(min)min.value="";if(max)max.value="";onAdminBreedFilterChange(false);renderAdminList();
+ const breed=document.getElementById("adminBreedFilter"),min=document.getElementById("adminWeightMin"),max=document.getElementById("adminWeightMax"),photoConsent=document.getElementById("adminPhotoConsentFilter");
+ if(breed)breed.value="";if(min)min.value="";if(max)max.value="";if(photoConsent)photoConsent.value="";onAdminBreedFilterChange(false);renderAdminList();
 }
 function getAdminFilteredData(){
  const q=(document.getElementById("adminSearch")?.value||"").trim().toLowerCase();
  const breed=(document.getElementById("adminBreedFilter")?.value||"").trim();
+ const photoConsent=(document.getElementById("adminPhotoConsentFilter")?.value||"").trim();
  const minRaw=document.getElementById("adminWeightMin")?.value??"",maxRaw=document.getElementById("adminWeightMax")?.value??"";
  const minWeight=minRaw===""?null:Number(minRaw),maxWeight=maxRaw===""?null:Number(maxRaw);
  const weightMatches=w=>{
@@ -2639,27 +2661,37 @@ function getAdminFilteredData(){
   if(maxWeight!==null&&Number.isFinite(maxWeight)&&w>maxWeight)return false;
   return true;
  };
+ const consentMatches=v=>{
+  if(!photoConsent)return true;
+  if(photoConsent==="yes")return v===true;
+  if(photoConsent==="no")return v!==true;
+  return true;
+ };
  const dogs=PINFORME_ADMIN_DOGS.filter(d=>{
   if(q&&!String(d.owner_name||"").toLowerCase().includes(q)&&!String(d.dog_name||"").toLowerCase().includes(q))return false;
   if(breed&&adminBreedForDog(d)!==breed)return false;
-  return weightMatches(adminLatestWeightForDog(d));
+  if(!weightMatches(adminLatestWeightForDog(d)))return false;
+  if(!consentMatches(adminPhotoConsentForDog(d)))return false;
+  return true;
  });
  const legacy=PINFORME_ADMIN_ROWS.filter(r=>{
   if(r.dog_id!=null)return false;
   if(q&&!String(r.owner_name||"").toLowerCase().includes(q)&&!String(r.dog_name||"").toLowerCase().includes(q))return false;
   if(breed&&adminNormalizeBreed(r.breed)!==breed)return false;
   const n=Number(r.weight),w=Number.isFinite(n)?n:null;
-  return weightMatches(w);
+  if(!weightMatches(w))return false;
+  if(!consentMatches(adminPhotoConsentForRow(r)))return false;
+  return true;
  });
- return {q,breed,minRaw,maxRaw,minWeight,maxWeight,dogs,legacy,filtering:!!(q||breed||minRaw!==""||maxRaw!=="")};
+ return {q,breed,photoConsent,minRaw,maxRaw,minWeight,maxWeight,dogs,legacy,filtering:!!(q||breed||photoConsent||minRaw!==""||maxRaw!=="")};
 }
 function renderAdminList(){
  const box=document.getElementById("adminList"),st=document.getElementById("adminListStatus");
  const filtered=getAdminFilteredData();
  const {q,breed,minRaw,maxRaw,dogs,legacy,filtering}=filtered;
  st.textContent=`わんちゃん ${PINFORME_ADMIN_DOGS.length}頭 ／ 採寸履歴 ${PINFORME_ADMIN_ROWS.length}件${filtering?` ／ 絞り込み結果 ${dogs.length+legacy.length}件`:""}`;box.innerHTML="";
- dogs.forEach(d=>{const hist=adminDogHistory(d.id),latest=hist[0]||{},w=adminLatestWeightForDog(d),b=document.createElement("button");b.type="button";b.className="admin-row";b.innerHTML=`<span><strong>${adminEsc(d.dog_name||"名前未入力")}${adminEsc(latest.dog_suffix||"")}</strong><small>飼い主様：${adminEsc(d.owner_name||"—")}<br>犬種：${adminEsc(adminBreedForDog(d)||"—")}${w==null?"":` ／ 最新体重 ${adminEsc(w)} kg`}<br>採寸履歴：${hist.length}件${hist[0]?` ／ 最新 ${adminEsc(adminDate(hist[0].created_at))}`:""}</small></span><span class="arrow">›</span>`;b.onclick=()=>showAdminDog(d);box.appendChild(b)});
- legacy.forEach(r=>{const b=document.createElement("button");b.type="button";b.className="admin-row";b.innerHTML=`<span><strong>${adminEsc(r.dog_name||"名前未入力")}${adminEsc(r.dog_suffix||"")} <small>（旧データ）</small></strong><small>飼い主様：${adminEsc(r.owner_name||"—")}<br>犬種：${adminEsc(r.breed||"—")}${r.weight==null?"":` ／ 体重 ${adminEsc(r.weight)} kg`}<br>${adminEsc(adminDate(r.created_at))}</small></span><span class="arrow">›</span>`;b.onclick=()=>showAdminMeasurement(r,null);box.appendChild(b)});
+ dogs.forEach(d=>{const hist=adminDogHistory(d.id),latest=hist[0]||{},w=adminLatestWeightForDog(d),b=document.createElement("button");b.type="button";b.className="admin-row";b.innerHTML=`<span><strong>${adminEsc(d.dog_name||"名前未入力")}${adminEsc(latest.dog_suffix||"")}</strong><small>飼い主様：${adminEsc(d.owner_name||"—")}<br>犬種：${adminEsc(adminBreedForDog(d)||"—")}${w==null?"":` ／ 最新体重 ${adminEsc(w)} kg`}<br>採寸履歴：${hist.length}件${hist[0]?` ／ 最新 ${adminEsc(adminDate(hist[0].created_at))}`:""}<br>写真販促利用：${adminPhotoConsentLabel(adminPhotoConsentForDog(d))}</small></span><span class="arrow">›</span>`;b.onclick=()=>showAdminDog(d);box.appendChild(b)});
+ legacy.forEach(r=>{const b=document.createElement("button");b.type="button";b.className="admin-row";b.innerHTML=`<span><strong>${adminEsc(r.dog_name||"名前未入力")}${adminEsc(r.dog_suffix||"")} <small>（旧データ）</small></strong><small>飼い主様：${adminEsc(r.owner_name||"—")}<br>犬種：${adminEsc(r.breed||"—")}${r.weight==null?"":` ／ 体重 ${adminEsc(r.weight)} kg`}<br>${adminEsc(adminDate(r.created_at))}<br>写真販促利用：${adminPhotoConsentLabel(adminPhotoConsentForRow(r))}</small></span><span class="arrow">›</span>`;b.onclick=()=>showAdminMeasurement(r,null);box.appendChild(b)});
  if(!dogs.length&&!legacy.length)box.innerHTML='<div class="admin-note">該当するカルテはありません。</div>';
  const summaryBtn=document.getElementById("adminSummaryButton");
  if(summaryBtn){summaryBtn.disabled=(dogs.length+legacy.length)===0;summaryBtn.textContent=`絞り込み結果の集計カルテを見る（${dogs.length+legacy.length}頭）`;}
@@ -2697,7 +2729,7 @@ function showAdminDog(d){
  const hist=adminDogHistory(d.id),latest=hist[0]||{},box=document.getElementById("adminDetail"),photoPath=d.photo_path||latest.photo_path;
  const historyHtml=hist.length?hist.map((r,i)=>`<button type="button" class="admin-row" style="margin-top:8px" onclick="showAdminMeasurementById('${adminEsc(r.id)}','${adminEsc(d.id)}')"><span><strong>${i===0?"最新の採寸":"過去の採寸"}</strong><small>${adminEsc(adminDate(r.created_at))} ／ ${r.weight==null?"体重 —":adminEsc(r.weight)+" kg"}</small></span><span class="arrow">›</span></button>`).join(""):'<div class="admin-note">採寸履歴はまだありません。</div>';
  const photoHtml=photoPath?`<div class="admin-photo-wrap"><img id="adminDogPhoto" alt="わんちゃんの写真" style="display:none;max-width:100%;max-height:280px;object-fit:contain;border-radius:12px"><div id="adminPhotoStatus" class="admin-note">写真を読み込んでいます…</div></div>`:'<div class="admin-note">写真なし</div>';
- box.innerHTML=`<div class="admin-detail-head"><div><div class="admin-sub">PINFORME DOG CARTE</div><h2>${adminEsc(d.dog_name||"名前未入力")}${adminEsc(latest.dog_suffix||"")}</h2></div><button type="button" class="admin-btn light" style="width:auto;min-height:42px" onclick="document.getElementById('adminDetail').classList.add('admin-hidden')">閉じる</button></div>${photoHtml}<div class="admin-detail-meta">飼い主様：${adminEsc(d.owner_name||"—")}<br>犬種：${adminEsc(d.breed||"—")} ／ 性別：${adminEsc(d.sex||"—")}<br>生年月日：${adminEsc(d.birth_date||"—")} ／ 現在登録体重：${d.weight==null?"—":adminEsc(d.weight)+" kg"}<br>カルテID：${adminEsc(d.id)}</div><h3 style="margin:22px 0 8px">採寸履歴（${hist.length}件）</h3>${historyHtml}`;
+ box.innerHTML=`<div class="admin-detail-head"><div><div class="admin-sub">PINFORME DOG CARTE</div><h2>${adminEsc(d.dog_name||"名前未入力")}${adminEsc(latest.dog_suffix||"")}</h2></div><button type="button" class="admin-btn light" style="width:auto;min-height:42px" onclick="document.getElementById('adminDetail').classList.add('admin-hidden')">閉じる</button></div>${photoHtml}<div class="admin-detail-meta">飼い主様：${adminEsc(d.owner_name||"—")}<br>犬種：${adminEsc(d.breed||"—")} ／ 性別：${adminEsc(d.sex||"—")}<br>生年月日：${adminEsc(d.birth_date||"—")} ／ 現在登録体重：${d.weight==null?"—":adminEsc(d.weight)+" kg"}<br>写真販促利用：<strong>${adminPhotoConsentLabel(adminPhotoConsentForDog(d))}</strong><br>カルテID：${adminEsc(d.id)}</div><h3 style="margin:22px 0 8px">採寸履歴（${hist.length}件）</h3>${historyHtml}`;
  box.classList.remove("admin-hidden");box.scrollIntoView({behavior:"smooth",block:"start"});if(photoPath)loadAdminPhoto(photoPath,document.getElementById("adminDogPhoto"),document.getElementById("adminPhotoStatus"));
 }
 function showAdminMeasurementById(mid,did){const r=PINFORME_ADMIN_ROWS.find(x=>String(x.id)===String(mid));const d=PINFORME_ADMIN_DOGS.find(x=>String(x.id)===String(did));if(r)showAdminMeasurement(r,d)}
@@ -2708,7 +2740,7 @@ function showAdminMeasurement(r,d){
  const photoPath=r.photo_path||d?.photo_path;
  const photoHtml=photoPath?`<div class="admin-photo-wrap"><img id="adminDogPhoto" alt="わんちゃんの写真" style="display:none;max-width:100%;max-height:280px;object-fit:contain;border-radius:12px"><div id="adminPhotoStatus" class="admin-note">写真を読み込んでいます…</div></div>`:'<div class="admin-note">写真なし</div>';
  const backAction=d?`showAdminDog(PINFORME_ADMIN_DOGS.find(x=>String(x.id)==='${adminEsc(d.id)}'))`:`document.getElementById('adminDetail').classList.add('admin-hidden')`;
- box.innerHTML=`<div class="admin-measure-sticky"><div class="admin-measure-sticky-top"><button type="button" class="admin-back-link" onclick="${backAction}">← ${d?"カルテへ戻る":"閉じる"}</button><div class="admin-measure-sticky-name">${dogName}</div></div><div class="admin-measure-summary"><div><small>採寸日</small><strong>${adminEsc(adminDate(r.created_at))}</strong></div><div><small>採寸時体重</small><strong>${r.weight==null?"—":adminEsc(r.weight)+" kg"}</strong></div></div></div>${photoHtml}<div class="admin-measure-owner">飼い主様：${adminEsc(r.owner_name||d?.owner_name||"—")}<br>犬種：${adminEsc(r.breed||d?.breed||"—")} ／ 性別：${adminEsc(r.sex||d?.sex||"—")}<br>生年月日：${adminEsc(r.birth_date||d?.birth_date||"—")}</div><div class="admin-measure-section-title">採寸結果</div><div class="admin-measure-grid">${measureCards}</div>`;
+ box.innerHTML=`<div class="admin-measure-sticky"><div class="admin-measure-sticky-top"><button type="button" class="admin-back-link" onclick="${backAction}">← ${d?"カルテへ戻る":"閉じる"}</button><div class="admin-measure-sticky-name">${dogName}</div></div><div class="admin-measure-summary"><div><small>採寸日</small><strong>${adminEsc(adminDate(r.created_at))}</strong></div><div><small>採寸時体重</small><strong>${r.weight==null?"—":adminEsc(r.weight)+" kg"}</strong></div></div></div>${photoHtml}<div class="admin-measure-owner">飼い主様：${adminEsc(r.owner_name||d?.owner_name||"—")}<br>犬種：${adminEsc(r.breed||d?.breed||"—")} ／ 性別：${adminEsc(r.sex||d?.sex||"—")}<br>生年月日：${adminEsc(r.birth_date||d?.birth_date||"—")}<br>写真販促利用：<strong>${adminPhotoConsentLabel(adminPhotoConsentForRow(r))}</strong></div><div class="admin-measure-section-title">採寸結果</div><div class="admin-measure-grid">${measureCards}</div>`;
  box.classList.remove("admin-hidden");
  box.scrollIntoView({behavior:"auto",block:"start"});
  if(photoPath)loadAdminPhoto(photoPath,document.getElementById("adminDogPhoto"),document.getElementById("adminPhotoStatus"));
@@ -2751,6 +2783,7 @@ async function sendToPinforme(){
     breed:textValue("dogBreed") || null,
     sex:(document.querySelector('input[name="sex"]:checked')?.value) || null,
     weight:numericOrNull(textValue("weight")),
+    photo_promo_consent:document.getElementById("photoPromoConsent")?.checked === true,
     neck:avg(0),
     chest:avg(1),
     waist:avg(2),
@@ -2824,6 +2857,9 @@ async function sendToPinforme(){
     });
     if(!res.ok){
       const detail=await res.text();
+      if(detail.includes("photo_promo_consent")){
+        throw new Error("Supabase側に写真同意の保存項目がまだありません。写真同意用SQLを1回実行してください。");
+      }
       throw new Error("HTTP "+res.status+" "+detail);
     }
     PINFORME_SUBMITTED=true;
