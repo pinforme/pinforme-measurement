@@ -2519,103 +2519,6 @@ html,body{margin:0!important;padding:0!important;width:297mm!important;height:21
 
 
 
-<script id="pinforme-refresh-position-stability-fix">
-/* ===== 更新時の表示ページ安定化 =====
-   入口画面が旧 hideAll() の対象外だったため、
-   入口と次ページが同時に active になることがあり、
-   更新時に保存ページが入れ替わる問題を修正する。
-*/
-(function(){
-  function hideEveryPINFORMEPage(){
-    document.querySelectorAll(
-      '#entryChoicePage,#remeasureLookupPage,#startPage,#dogInfoPage,#adminPage,#finishPage,#kartePage,.step'
-    ).forEach(function(el){
-      el.classList.remove('active');
-    });
-  }
-
-  // 既存の全画面遷移が必ず入口画面も消すよう、hideAllを統一。
-  try{ hideAll = hideEveryPINFORMEPage; }catch(e){}
-  window.hideAll = hideEveryPINFORMEPage;
-
-  function detectCurrentPINFORMEView(){
-    var candidates = Array.from(document.querySelectorAll(
-      '#entryChoicePage.active,#remeasureLookupPage.active,#startPage.active,#dogInfoPage.active,#finishPage.active,#kartePage.active,#adminPage.active,.step.active'
-    )).filter(function(el){
-      var cs = window.getComputedStyle(el);
-      return cs.display !== 'none' && cs.visibility !== 'hidden';
-    });
-
-    if(!candidates.length) return null;
-
-    // 万一旧状態で複数activeが残っていても、画面上で最後に表示されているものを採用。
-    var active = candidates[candidates.length - 1];
-
-    if(active.classList.contains('step')){
-      var idx = (typeof steps !== 'undefined' && Array.isArray(steps)) ? steps.indexOf(active) : -1;
-      if(idx >= 0) return 'measure:' + idx;
-    }
-    return active.id || null;
-  }
-
-  function saveExactPINFORMEView(){
-    try{
-      var view = detectCurrentPINFORMEView();
-      if(!view) return;
-
-      localStorage.setItem('PINFORME_CURRENT_VIEW', view);
-
-      var state = null;
-      try{ state = JSON.parse(localStorage.getItem('PINFORME_FORM_STATE_V1') || 'null'); }catch(e){}
-      if(state && typeof state === 'object'){
-        state.view = view;
-        localStorage.setItem('PINFORME_FORM_STATE_V1', JSON.stringify(state));
-      }
-    }catch(e){}
-  }
-
-  // Safariではbeforeunloadだけでは保存順が不安定な場合があるため、
-  // 画面が隠れる瞬間にも現在位置を確定保存する。
-  window.addEventListener('pagehide', saveExactPINFORMEView);
-  document.addEventListener('visibilitychange', function(){
-    if(document.visibilityState === 'hidden') saveExactPINFORMEView();
-  });
-
-  // 復元後に複数activeが残っていた場合は、保存viewだけを残す。
-  function normalizeAfterRestore(){
-    try{
-      var state = null;
-      try{ state = JSON.parse(localStorage.getItem('PINFORME_FORM_STATE_V1') || 'null'); }catch(e){}
-      var wanted = (state && state.view) || localStorage.getItem('PINFORME_CURRENT_VIEW');
-      if(!wanted) return;
-
-      var target = null;
-      if(String(wanted).indexOf('measure:') === 0){
-        var idx = parseInt(String(wanted).split(':')[1], 10);
-        if(typeof steps !== 'undefined' && Number.isInteger(idx) && idx >= 0 && idx < steps.length){
-          target = steps[idx];
-          try{ current = idx; }catch(e){}
-        }
-      }else{
-        target = document.getElementById(String(wanted));
-      }
-
-      if(target){
-        hideEveryPINFORMEPage();
-        target.classList.add('active');
-      }
-    }catch(e){}
-  }
-
-  window.addEventListener('DOMContentLoaded', function(){
-    setTimeout(normalizeAfterRestore, 80);
-    setTimeout(normalizeAfterRestore, 250);
-  });
-  window.addEventListener('pageshow', function(){
-    setTimeout(normalizeAfterRestore, 80);
-  });
-})();
-</script>
 
 </body></html>`);
     printWin.document.close();
@@ -3988,4 +3891,92 @@ document.addEventListener("change",function(e){
   window.addEventListener('pageshow',function(){setTimeout(enforceExclusiveRoute,0);});
 })();
 </script>
+
+<script id="pinforme-refresh-position-stability-fix">
+(function(){
+  function hideEveryPINFORMEPage(){
+    document.querySelectorAll(
+      '#entryChoicePage,#remeasureLookupPage,#startPage,#dogInfoPage,#adminPage,#finishPage,#kartePage,.step'
+    ).forEach(function(el){
+      el.classList.remove('active');
+    });
+  }
+
+  try{ hideAll = hideEveryPINFORMEPage; }catch(e){}
+  window.hideAll = hideEveryPINFORMEPage;
+
+  function detectCurrentPINFORMEView(){
+    var candidates = Array.from(document.querySelectorAll(
+      '#entryChoicePage.active,#remeasureLookupPage.active,#startPage.active,#dogInfoPage.active,#finishPage.active,#kartePage.active,#adminPage.active,.step.active'
+    )).filter(function(el){
+      var cs = window.getComputedStyle(el);
+      return cs.display !== 'none' && cs.visibility !== 'hidden';
+    });
+
+    if(!candidates.length) return null;
+    var active = candidates[candidates.length - 1];
+
+    if(active.classList.contains('step')){
+      var idx = (typeof steps !== 'undefined' && Array.isArray(steps)) ? steps.indexOf(active) : -1;
+      if(idx >= 0) return 'measure:' + idx;
+    }
+    return active.id || null;
+  }
+
+  function saveExactPINFORMEView(){
+    try{
+      var view = detectCurrentPINFORMEView();
+      if(!view) return;
+
+      localStorage.setItem('PINFORME_CURRENT_VIEW', view);
+
+      var state = null;
+      try{ state = JSON.parse(localStorage.getItem('PINFORME_FORM_STATE_V1') || 'null'); }catch(e){}
+      if(state && typeof state === 'object'){
+        state.view = view;
+        localStorage.setItem('PINFORME_FORM_STATE_V1', JSON.stringify(state));
+      }
+    }catch(e){}
+  }
+
+  window.addEventListener('pagehide', saveExactPINFORMEView);
+  document.addEventListener('visibilitychange', function(){
+    if(document.visibilityState === 'hidden') saveExactPINFORMEView();
+  });
+
+  function normalizeAfterRestore(){
+    try{
+      var state = null;
+      try{ state = JSON.parse(localStorage.getItem('PINFORME_FORM_STATE_V1') || 'null'); }catch(e){}
+      var wanted = (state && state.view) || localStorage.getItem('PINFORME_CURRENT_VIEW');
+      if(!wanted) return;
+
+      var target = null;
+      if(String(wanted).indexOf('measure:') === 0){
+        var idx = parseInt(String(wanted).split(':')[1], 10);
+        if(typeof steps !== 'undefined' && Number.isInteger(idx) && idx >= 0 && idx < steps.length){
+          target = steps[idx];
+          try{ current = idx; }catch(e){}
+        }
+      }else{
+        target = document.getElementById(String(wanted));
+      }
+
+      if(target){
+        hideEveryPINFORMEPage();
+        target.classList.add('active');
+      }
+    }catch(e){}
+  }
+
+  window.addEventListener('DOMContentLoaded', function(){
+    setTimeout(normalizeAfterRestore, 80);
+    setTimeout(normalizeAfterRestore, 250);
+  });
+  window.addEventListener('pageshow', function(){
+    setTimeout(normalizeAfterRestore, 80);
+  });
+})();
+</script>
+
 </body></html>
