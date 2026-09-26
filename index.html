@@ -2454,7 +2454,24 @@ function backToStartKeepData(){
   try{ localStorage.setItem("PINFORME_CURRENT_VIEW","startPage"); }catch(e){}
   window.scrollTo(0,0);
 }
+const PINFORME_ACTIVE_OWNER_CODE_KEY="PINFORME_ACTIVE_OWNER_CODE_V1";
 const PINFORME_ACTIVE_DOG_CODE_KEY="PINFORME_ACTIVE_DOG_CODE_V1";
+
+function getOrCreateActiveOwnerCode(){
+  let code="";
+  try{ code=(localStorage.getItem(PINFORME_ACTIVE_OWNER_CODE_KEY)||"").trim(); }catch(e){}
+  if(!code){
+    code=(window.crypto && crypto.randomUUID)
+      ? crypto.randomUUID()
+      : ("owner-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,12));
+    try{ localStorage.setItem(PINFORME_ACTIVE_OWNER_CODE_KEY,code); }catch(e){}
+  }
+  return code;
+}
+function clearActiveOwnerCode(){
+  try{ localStorage.removeItem(PINFORME_ACTIVE_OWNER_CODE_KEY); }catch(e){}
+}
+
 
 function getOrCreateActiveDogCode(){
   let code="";
@@ -2519,6 +2536,7 @@ function remeasureSameDog(){
 }
 function registerAnotherDog(){
   const owner=(document.getElementById("ownerName")?.value||"").trim();
+  // 同じ飼い主様の別のわんちゃん：owner_codeは保持し、dog_codeだけ新規発行する。
   clearActiveDogCode();
   try{
     localStorage.removeItem("PINFORME_FRESH_MEASUREMENT_REQUIRED_V1");
@@ -2614,36 +2632,13 @@ function adminIdentityText(v){
  return String(v??"").trim().replace(/\s+/g," ").toLowerCase();
 }
 function adminDogLogicalKey(v){
- const owner=adminIdentityText(v?.owner_name),name=adminIdentityText(v?.dog_name),birth=adminIdentityText(v?.birth_date);
- const breed=adminIdentityText(v?.breed),sex=adminIdentityText(v?.sex);
- // 飼い主様が違えば必ず別のわんちゃん。
- // 同じ飼い主様＋同じ名前は、生年月日があれば生年月日まで一致したときだけ同一犬としてまとめる。
- // 生年月日がない旧データは、犬種・性別まで一致したものを同一犬として扱う。
- if(owner || name){
-   if(birth) return `identity:${owner}|${name}|birth:${birth}`;
-   return `identity:${owner}|${name}|breed:${breed}|sex:${sex}`;
- }
- const code=adminIdentityText(v?.dog_code);
- return code?`code:${code}`:`id:${String(v?.id??"")}`;
+ // 正式仕様：同一犬判定は dogs.id（dog_id）のみ。
+ // 飼い主名・犬名・生年月日・犬種などの表示情報では自動統合しない。
+ return `id:${String(v?.id??"")}`;
 }
 function adminCanonicalDogGroups(){
- const map=new Map();
- const sorted=PINFORME_ADMIN_DOGS.slice().sort((a,b)=>new Date(b.updated_at||b.created_at||0)-new Date(a.updated_at||a.created_at||0));
- for(const d of sorted){
-   const key=adminDogLogicalKey(d);
-   if(!map.has(key)){
-     map.set(key,{...d,_dog_ids:[d.id],_group_key:key,_source_dogs:[d]});
-   }else{
-     const g=map.get(key);
-     if(!g._dog_ids.some(id=>String(id)===String(d.id))) g._dog_ids.push(d.id);
-     g._source_dogs.push(d);
-     // 欠けている基本情報だけ補完する。最新側の値は優先して残す。
-     for(const k of ['owner_name','dog_name','breed','sex','birth_date','weight','photo_path','dog_code']){
-       if((g[k]===null||g[k]===undefined||String(g[k]).trim()==='') && d[k]!=null && String(d[k]).trim()!=='') g[k]=d[k];
-     }
-   }
- }
- return [...map.values()];
+ // 1 dogs.id = 1頭。名前や誕生日が同じでも別IDなら別のわんちゃん。
+ return PINFORME_ADMIN_DOGS.map(d=>({...d,_dog_ids:[d.id],_group_key:`id:${String(d.id??"")}`,_source_dogs:[d]}));
 }
 function adminDogHistory(idOrDog){
  const ids=(idOrDog && typeof idOrDog==='object')
@@ -2810,7 +2805,7 @@ function showAdminDog(d){
  const hist=adminDogHistory(d),latest=hist[0]||{},box=document.getElementById("adminDetail"),photoPath=d.photo_path||latest.photo_path;
  const historyHtml=hist.length?hist.map((r,i)=>`<button type="button" class="admin-row" style="margin-top:8px" onclick="showAdminMeasurementById('${adminEsc(r.id)}')"><span><strong>${i===0?"最新の採寸":"過去の採寸"}</strong><small>${adminEsc(adminDate(r.created_at))} ／ ${r.weight==null?"体重 —":adminEsc(r.weight)+" kg"}</small></span><span class="arrow">›</span></button>`).join(""):'<div class="admin-note">採寸履歴はまだありません。</div>';
  const photoHtml=photoPath?`<div class="admin-photo-wrap"><img id="adminDogPhoto" alt="わんちゃんの写真" style="display:none;max-width:100%;max-height:280px;object-fit:contain;border-radius:12px"><div id="adminPhotoStatus" class="admin-note">写真を読み込んでいます…</div></div>`:'<div class="admin-note">写真なし</div>';
- const mergedNote=(Array.isArray(d._dog_ids)&&d._dog_ids.length>1)?`<br><span style="font-size:.86em;color:#777">同一犬として ${d._dog_ids.length}件の登録IDをまとめて表示</span>`:"";
+ const mergedNote="";
  box.innerHTML=`<div class="admin-detail-head"><div><div class="admin-sub">PINFORME DOG CARTE</div><h2>${adminEsc(d.dog_name||"名前未入力")}${adminEsc(latest.dog_suffix||"")}</h2></div><button type="button" class="admin-btn light" style="width:auto;min-height:42px" onclick="document.getElementById('adminDetail').classList.add('admin-hidden')">閉じる</button></div>${photoHtml}<div class="admin-detail-meta">飼い主様：${adminEsc(d.owner_name||"—")}<br>犬種：${adminEsc(adminBreedForDog(d)||"—")} ／ 性別：${adminEsc(d.sex||latest.sex||"—")}<br>生年月日：${adminEsc(d.birth_date||latest.birth_date||"—")} ／ 最新体重：${adminLatestWeightForDog(d)==null?"—":adminEsc(adminLatestWeightForDog(d))+" kg"}<br>写真販促利用：<strong>${adminPhotoConsentLabel(adminPhotoConsentForDog(d))}</strong>${mergedNote}</div><h3 style="margin:22px 0 8px">採寸履歴（${hist.length}件）</h3>${historyHtml}`;
  box.classList.remove("admin-hidden");box.scrollIntoView({behavior:"smooth",block:"start"});if(photoPath)loadAdminPhoto(photoPath,document.getElementById("adminDogPhoto"),document.getElementById("adminPhotoStatus"));
 }
@@ -2900,8 +2895,27 @@ async function sendToPinforme(){
     }else{
       payload.photo_path=null;
     }
-    // わんちゃんマスター(dogs)へ登録し、返されたIDを採寸履歴へ紐付ける
-    if(status) status.textContent="わんちゃん情報を登録しています…";
+    // 正式ID管理：表示情報では同一人物・同一犬を推測しない。
+    // owner_code は飼い主セッション、dog_code はそのわんちゃん固有。
+    if(status) status.textContent="飼い主IDを確認しています…";
+    const ownerCode=getOrCreateActiveOwnerCode();
+    const ownerRes=await fetch(`${PINFORME_SUPABASE_BASE}/rest/v1/rpc/get_or_create_owner_id`,{
+      method:"POST",
+      headers:{
+        "apikey":PINFORME_SUPABASE_KEY,
+        "Authorization":"Bearer "+PINFORME_SUPABASE_KEY,
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify({p_owner_code:ownerCode,p_owner_name:payload.owner_name})
+    });
+    if(!ownerRes.ok){
+      const detail=await ownerRes.text();
+      throw new Error("飼い主ID取得失敗: HTTP "+ownerRes.status+" "+detail);
+    }
+    const ownerId=Number(await ownerRes.json());
+    if(!Number.isFinite(ownerId)) throw new Error("飼い主IDを取得できませんでした。");
+
+    if(status) status.textContent="わんちゃんIDを確認しています…";
     const dogCode=getOrCreateActiveDogCode();
     const dogRes=await fetch(`${PINFORME_SUPABASE_BASE}/rest/v1/rpc/create_dog_and_get_id`,{
       method:"POST",
@@ -2925,9 +2939,24 @@ async function sendToPinforme(){
       const detail=await dogRes.text();
       throw new Error("わんちゃん登録失敗: HTTP "+dogRes.status+" "+detail);
     }
-    const newDogId=await dogRes.json();
-    const dogId=Number(newDogId);
+    const dogId=Number(await dogRes.json());
     if(!Number.isFinite(dogId)) throw new Error("わんちゃんIDを取得できませんでした。");
+
+    // dogs.owner_id をIDで固定。名前・誕生日変更ではdog_idを変えない。
+    const linkRes=await fetch(`${PINFORME_SUPABASE_BASE}/rest/v1/rpc/link_dog_to_owner`,{
+      method:"POST",
+      headers:{
+        "apikey":PINFORME_SUPABASE_KEY,
+        "Authorization":"Bearer "+PINFORME_SUPABASE_KEY,
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify({p_dog_id:dogId,p_owner_id:ownerId})
+    });
+    if(!linkRes.ok){
+      const detail=await linkRes.text();
+      throw new Error("飼い主・わんちゃん紐付け失敗: HTTP "+linkRes.status+" "+detail);
+    }
+    payload.owner_id=ownerId;
     payload.dog_id=dogId;
 
     if(status) status.textContent="カルテを保存しています…";
