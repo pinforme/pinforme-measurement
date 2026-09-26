@@ -3331,7 +3331,12 @@ function savePINFORMEState(){
   if(preview && preview.src && preview.src.startsWith("data:image/")){
     state.photo=preview.src;
   }
-  const active=document.querySelector('.intro-step.active,.step.active,.finish-step.active');
+  const activeCandidates=Array.from(document.querySelectorAll('.intro-step.active,.step.active,.finish-step.active'));
+  const active=activeCandidates.find(function(el){
+    if(el.id==='entryChoicePage' && activeCandidates.length>1) return false;
+    const cs=window.getComputedStyle(el);
+    return cs.display!=='none' && cs.visibility!=='hidden';
+  }) || activeCandidates[activeCandidates.length-1] || null;
   if(active){
     if(active.classList.contains("step")){
       const idx=steps.indexOf(active);
@@ -3395,14 +3400,22 @@ function restorePINFORMEState(){
     if(String(wanted).startsWith("measure:")){
       const idx=parseInt(String(wanted).split(":")[1],10);
       if(Number.isInteger(idx) && idx>=0 && idx<steps.length){
-        hideAll();
+        document.querySelectorAll('.intro-step,.step,.finish-step').forEach(function(el){
+          el.classList.remove('active');
+        });
+        var kp=document.getElementById('kartePage');
+        if(kp) kp.classList.remove('active');
         current=idx;
         steps[idx].classList.add("active");
       }
     }else{
       const target=document.getElementById(wanted);
       if(target){
-        hideAll();
+        document.querySelectorAll('.intro-step,.step,.finish-step').forEach(function(el){
+          el.classList.remove('active');
+        });
+        var kp=document.getElementById('kartePage');
+        if(kp) kp.classList.remove('active');
         target.classList.add("active");
       }
     }
