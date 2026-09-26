@@ -613,6 +613,63 @@ html.pinforme-restoring body{visibility:hidden!important}
 }
 
 
+
+/* ===== 管理カルテ：絞り込み集計カルテ ===== */
+#adminPage .admin-summary-open{
+  width:100%;
+  min-height:48px;
+  margin-top:10px;
+  border:0;
+  border-radius:12px;
+  background:#111;
+  color:#fff;
+  font-size:15px !important;
+  font-weight:900;
+}
+#adminPage .admin-summary-open:disabled{
+  opacity:.35;
+}
+#adminPage .admin-summary-card{
+  border:1px solid #dfdfdf;
+  border-radius:18px;
+  overflow:hidden;
+  background:#fff;
+}
+#adminPage .admin-summary-head{
+  padding:18px 16px 14px;
+  border-bottom:1px solid #e8e8e8;
+  background:#fafafa;
+}
+#adminPage .admin-summary-head h2{margin:2px 0 6px;font-size:22px;line-height:1.3}
+#adminPage .admin-summary-head p{margin:0;font-size:12px;line-height:1.6;color:#666}
+#adminPage .admin-summary-kpis{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+  padding:14px;
+}
+#adminPage .admin-summary-kpi{
+  background:#f6f6f6;
+  border-radius:12px;
+  padding:10px 8px;
+  text-align:center;
+}
+#adminPage .admin-summary-kpi small{display:block;font-size:10px;color:#777;margin-bottom:4px}
+#adminPage .admin-summary-kpi strong{display:block;font-size:15px;line-height:1.3}
+#adminPage .admin-summary-table{width:100%;border-collapse:collapse;font-size:12px}
+#adminPage .admin-summary-table th,
+#adminPage .admin-summary-table td{padding:10px 8px;border-top:1px solid #eee;text-align:right;vertical-align:middle}
+#adminPage .admin-summary-table th:first-child,
+#adminPage .admin-summary-table td:first-child{text-align:left}
+#adminPage .admin-summary-table thead th{font-size:10px;color:#666;background:#fcfcfc;border-top:0}
+#adminPage .admin-summary-table td strong{font-size:13px}
+#adminPage .admin-summary-note{padding:12px 14px 16px;font-size:11px;line-height:1.65;color:#777}
+@media(max-width:390px){
+  #adminPage .admin-summary-table th,#adminPage .admin-summary-table td{padding:9px 5px;font-size:11px}
+  #adminPage .admin-summary-kpis{gap:6px;padding:12px}
+  #adminPage .admin-summary-kpi strong{font-size:13px}
+}
+
 /* ===== 管理カルテ：採寸詳細の見やすさ改善 ===== */
 #adminPage .admin-measure-sticky{
   position:sticky;
@@ -1334,7 +1391,7 @@ html.pinforme-restoring body{visibility:hidden!important}
       <div class="admin-field"><label>パスワード</label><input id="adminPassword" type="password" autocomplete="current-password"></div>
       <div class="admin-actions"><button class="admin-btn primary" type="button" onclick="adminLogin()">ログイン</button><button class="admin-btn light" type="button" onclick="closeAdminPage()">採寸ナビへ戻る</button></div><div class="admin-status" id="adminLoginStatus"></div>
     </div>
-    <div id="adminManagerBox" class="admin-hidden"><div class="admin-toolbar"><input id="adminSearch" type="search" placeholder="飼い主様名・わんちゃん名で検索" oninput="renderAdminList()"><button type="button" onclick="loadAdminCartes()">更新</button></div><div class="admin-filter-panel"><div class="admin-filter-title">絞り込み</div><div class="admin-filter-grid"><div class="admin-filter-field"><label for="adminBreedFilter">① 犬種</label><select id="adminBreedFilter" onchange="onAdminBreedFilterChange()"><option value="">すべての犬種</option></select></div><div class="admin-filter-field"><label>② 体重範囲（採寸時）</label><div class="admin-weight-filter"><input id="adminWeightMin" type="number" inputmode="decimal" step="0.1" min="0" placeholder="最小 kg" oninput="renderAdminList()" disabled><span>〜</span><input id="adminWeightMax" type="number" inputmode="decimal" step="0.1" min="0" placeholder="最大 kg" oninput="renderAdminList()" disabled></div><div class="admin-filter-hint" id="adminWeightHint">犬種を選ぶと体重範囲で絞り込めます。</div></div></div><button type="button" class="admin-filter-reset" onclick="resetAdminFilters()">絞り込みを解除</button></div><div class="admin-status" id="adminListStatus"></div><div class="admin-list" id="adminList"></div><div class="admin-actions"><button class="admin-btn light" type="button" onclick="closeAdminPage()">採寸ナビへ戻る</button><button class="admin-btn danger" type="button" onclick="adminLogout()">ログアウト</button></div></div>
+    <div id="adminManagerBox" class="admin-hidden"><div class="admin-toolbar"><input id="adminSearch" type="search" placeholder="飼い主様名・わんちゃん名で検索" oninput="renderAdminList()"><button type="button" onclick="loadAdminCartes()">更新</button></div><div class="admin-filter-panel"><div class="admin-filter-title">絞り込み</div><div class="admin-filter-grid"><div class="admin-filter-field"><label for="adminBreedFilter">① 犬種</label><select id="adminBreedFilter" onchange="onAdminBreedFilterChange()"><option value="">すべての犬種</option></select></div><div class="admin-filter-field"><label>② 体重範囲（採寸時）</label><div class="admin-weight-filter"><input id="adminWeightMin" type="number" inputmode="decimal" step="0.1" min="0" placeholder="最小 kg" oninput="renderAdminList()" disabled><span>〜</span><input id="adminWeightMax" type="number" inputmode="decimal" step="0.1" min="0" placeholder="最大 kg" oninput="renderAdminList()" disabled></div><div class="admin-filter-hint" id="adminWeightHint">犬種を選ぶと体重範囲で絞り込めます。</div></div></div><button type="button" class="admin-filter-reset" onclick="resetAdminFilters()">絞り込みを解除</button><button type="button" id="adminSummaryButton" class="admin-summary-open" onclick="showAdminSummary()" disabled>絞り込み結果の集計カルテを見る</button></div><div class="admin-status" id="adminListStatus"></div><div class="admin-list" id="adminList"></div><div class="admin-actions"><button class="admin-btn light" type="button" onclick="closeAdminPage()">採寸ナビへ戻る</button><button class="admin-btn danger" type="button" onclick="adminLogout()">ログアウト</button></div></div>
   </div><div class="admin-card admin-hidden" id="adminDetail"></div></div>
 </section>
 
@@ -2482,8 +2539,8 @@ function resetAdminFilters(){
  const breed=document.getElementById("adminBreedFilter"),min=document.getElementById("adminWeightMin"),max=document.getElementById("adminWeightMax");
  if(breed)breed.value="";if(min)min.value="";if(max)max.value="";onAdminBreedFilterChange(false);renderAdminList();
 }
-function renderAdminList(){
- const box=document.getElementById("adminList"),st=document.getElementById("adminListStatus"),q=(document.getElementById("adminSearch").value||"").trim().toLowerCase();
+function getAdminFilteredData(){
+ const q=(document.getElementById("adminSearch")?.value||"").trim().toLowerCase();
  const breed=(document.getElementById("adminBreedFilter")?.value||"").trim();
  const minRaw=document.getElementById("adminWeightMin")?.value??"",maxRaw=document.getElementById("adminWeightMax")?.value??"";
  const minWeight=minRaw===""?null:Number(minRaw),maxWeight=maxRaw===""?null:Number(maxRaw);
@@ -2506,11 +2563,46 @@ function renderAdminList(){
   const n=Number(r.weight),w=Number.isFinite(n)?n:null;
   return weightMatches(w);
  });
- const filtering=!!(q||breed||minRaw!==""||maxRaw!=="");
+ return {q,breed,minRaw,maxRaw,minWeight,maxWeight,dogs,legacy,filtering:!!(q||breed||minRaw!==""||maxRaw!=="")};
+}
+function renderAdminList(){
+ const box=document.getElementById("adminList"),st=document.getElementById("adminListStatus");
+ const filtered=getAdminFilteredData();
+ const {q,breed,minRaw,maxRaw,dogs,legacy,filtering}=filtered;
  st.textContent=`わんちゃん ${PINFORME_ADMIN_DOGS.length}頭 ／ 採寸履歴 ${PINFORME_ADMIN_ROWS.length}件${filtering?` ／ 絞り込み結果 ${dogs.length+legacy.length}件`:""}`;box.innerHTML="";
  dogs.forEach(d=>{const hist=adminDogHistory(d.id),latest=hist[0]||{},w=adminLatestWeightForDog(d),b=document.createElement("button");b.type="button";b.className="admin-row";b.innerHTML=`<span><strong>${adminEsc(d.dog_name||"名前未入力")}${adminEsc(latest.dog_suffix||"")}</strong><small>飼い主様：${adminEsc(d.owner_name||"—")}<br>犬種：${adminEsc(adminBreedForDog(d)||"—")}${w==null?"":` ／ 最新体重 ${adminEsc(w)} kg`}<br>採寸履歴：${hist.length}件${hist[0]?` ／ 最新 ${adminEsc(adminDate(hist[0].created_at))}`:""}</small></span><span class="arrow">›</span>`;b.onclick=()=>showAdminDog(d);box.appendChild(b)});
  legacy.forEach(r=>{const b=document.createElement("button");b.type="button";b.className="admin-row";b.innerHTML=`<span><strong>${adminEsc(r.dog_name||"名前未入力")}${adminEsc(r.dog_suffix||"")} <small>（旧データ）</small></strong><small>飼い主様：${adminEsc(r.owner_name||"—")}<br>犬種：${adminEsc(r.breed||"—")}${r.weight==null?"":` ／ 体重 ${adminEsc(r.weight)} kg`}<br>${adminEsc(adminDate(r.created_at))}</small></span><span class="arrow">›</span>`;b.onclick=()=>showAdminMeasurement(r,null);box.appendChild(b)});
  if(!dogs.length&&!legacy.length)box.innerHTML='<div class="admin-note">該当するカルテはありません。</div>';
+ const summaryBtn=document.getElementById("adminSummaryButton");
+ if(summaryBtn){summaryBtn.disabled=(dogs.length+legacy.length)===0;summaryBtn.textContent=`絞り込み結果の集計カルテを見る（${dogs.length+legacy.length}頭）`;}
+}
+function adminSummaryRows(){
+ const f=getAdminFilteredData(),rows=[];
+ f.dogs.forEach(d=>{const h=adminDogHistory(d.id);if(h[0])rows.push(h[0]);});
+ f.legacy.forEach(r=>rows.push(r));
+ return {filter:f,rows};
+}
+function adminNum(v){const n=Number(v);return Number.isFinite(n)?n:null}
+function adminStats(rows,key){
+ const vals=rows.map(r=>adminNum(r[key])).filter(v=>v!==null);
+ if(!vals.length)return null;
+ return {count:vals.length,avg:vals.reduce((a,b)=>a+b,0)/vals.length,min:Math.min(...vals),max:Math.max(...vals)};
+}
+function adminFmtStat(v){return v==null?"—":Number(v).toFixed(1)}
+function showAdminSummary(){
+ const {filter,rows}=adminSummaryRows(),box=document.getElementById("adminDetail");
+ if(!rows.length){alert("集計できる採寸データがありません。");return}
+ const weights=rows.map(r=>adminNum(r.weight)).filter(v=>v!==null);
+ const weightAvg=weights.length?weights.reduce((a,b)=>a+b,0)/weights.length:null;
+ const breedLabel=filter.breed||"すべての犬種";
+ let rangeLabel="指定なし";
+ if(filter.minRaw!==""||filter.maxRaw!=="")rangeLabel=`${filter.minRaw!==""?adminEsc(filter.minRaw):"下限なし"} 〜 ${filter.maxRaw!==""?adminEsc(filter.maxRaw):"上限なし"} kg`;
+ const statRows=ADMIN_FIELDS.map(([label,key])=>{
+   const st=adminStats(rows,key);
+   return `<tr><td>${adminEsc(label)}</td><td><strong>${st?adminFmtStat(st.avg):"—"}</strong></td><td>${st?adminFmtStat(st.min):"—"}</td><td>${st?adminFmtStat(st.max):"—"}</td><td>${st?st.count:"0"}</td></tr>`;
+ }).join("");
+ box.innerHTML=`<div class="admin-measure-sticky"><div class="admin-measure-sticky-top"><button type="button" class="admin-back-link" onclick="document.getElementById('adminDetail').classList.add('admin-hidden')">← 一覧へ戻る</button><div class="admin-measure-sticky-name">集計カルテ</div></div></div><div class="admin-summary-card"><div class="admin-summary-head"><div class="admin-sub">PINFORME SIZE ANALYSIS</div><h2>${adminEsc(breedLabel)}</h2><p>体重範囲：${rangeLabel}<br>対象は絞り込み結果の各わんちゃんの「最新採寸」1件ずつです。</p></div><div class="admin-summary-kpis"><div class="admin-summary-kpi"><small>対象</small><strong>${rows.length}頭</strong></div><div class="admin-summary-kpi"><small>平均体重</small><strong>${weightAvg==null?"—":adminFmtStat(weightAvg)+" kg"}</strong></div><div class="admin-summary-kpi"><small>体重実績範囲</small><strong>${weights.length?adminFmtStat(Math.min(...weights))+"〜"+adminFmtStat(Math.max(...weights))+" kg":"—"}</strong></div></div><table class="admin-summary-table"><thead><tr><th>採寸項目</th><th>平均</th><th>最小</th><th>最大</th><th>件数</th></tr></thead><tbody>${statRows}</tbody></table><div class="admin-summary-note">単位：cm。未入力の項目はその項目の集計件数から除外しています。平均値だけでサイズを確定せず、最小・最大の幅もあわせて確認してください。</div></div>`;
+ box.classList.remove("admin-hidden");box.scrollIntoView({behavior:"auto",block:"start"});
 }
 const ADMIN_FIELDS=[["① 首まわり","neck"],["② 胴まわり","chest"],["③ ウエスト","waist"],["④ 着丈","back_length"],["⑤ 前身頃","front_length"],["⑥ 前脚の太さ（上側）","front_leg_girth_up"],["⑥ 前脚の太さ（下側）","front_leg_girth_low"],["⑦ 後脚の太さ（上側）","hind_leg_girth_up"],["⑦ 後脚の太さ（下側）","hind_leg_girth_low"],["⑧ 前脚の長さ 1","front_leg_length_1"],["⑧ 前脚の長さ 2","front_leg_length_2"],["⑧ 前脚の長さ 3","front_leg_length_3"],["⑨ 後脚の長さ 1","hind_leg_length_1"],["⑨ 後脚の長さ 2","hind_leg_length_2"],["⑨ 後脚の長さ 3","hind_leg_length_3"],["⑩ 首の長さ（ネック）","neck_length"],["⑪ 首の長さ（スヌード）","snood_length"],["⑫ 頭まわり","head_girth"],["⑬ 前脚の間","front_leg_spacing"],["⑭ 首の真ん中","mid_neck"],["⑮ 尻尾の太さ","tail_girth"]];
 function showAdminDog(d){
