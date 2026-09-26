@@ -269,6 +269,11 @@ button{height:72px;border-radius:36px;font-size:22px;font-weight:900}
 .pin-birth-selects{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,.72fr) auto minmax(0,.72fr) auto;gap:5px;align-items:center;width:100%}
 .pin-birth-selects select{width:100%;min-width:0;height:46px;padding:0 7px;border:1px solid #cfcfcf;border-radius:10px;background:#fff;color:#222;font-size:16px}
 .pin-birth-selects span{font-size:14px;white-space:nowrap}
+.pin-birth-direct-toggle{
+  margin-top:8px;padding:0;border:0;background:transparent;color:#666;
+  font-size:13px;text-decoration:underline;cursor:pointer
+}
+.pin-birth-direct[hidden]{display:none!important}
 .pin-birth-direct{display:flex;align-items:center;gap:7px;margin-top:8px;font-size:12px;color:#666}
 .pin-birth-direct input{flex:1;min-width:0;height:40px;padding:0 10px;border:1px solid #d7d7d7;border-radius:9px;font-size:16px}
 </style>
@@ -446,7 +451,8 @@ button{height:72px;border-radius:36px;font-size:22px;font-weight:900}
     <select id="birthMonth" aria-label="月"><option value="">月</option></select><span>月</span>
     <select id="birthDay" aria-label="日"><option value="">日</option></select><span>日</span>
   </div>
-  <div class="pin-birth-direct">
+  <button type="button" id="birthDirectToggle" class="pin-birth-direct-toggle" aria-expanded="false">直接入力する</button>
+  <div class="pin-birth-direct" id="birthDirectArea" hidden>
     <span>直接入力：</span>
     <input id="birthDateDirect" type="text" inputmode="numeric" placeholder="例 20240816" maxlength="8" autocomplete="bday">
   </div>
@@ -2331,7 +2337,18 @@ document.addEventListener("click",function(){
         day=document.getElementById("birthDay"), direct=document.getElementById("birthDateDirect"),
         hidden=document.getElementById("birthDate");
   if(!year||!month||!day||!direct||!hidden) return;
-  const currentYear=2026;
+  const toggle=document.getElementById("birthDirectToggle");
+  const directArea=document.getElementById("birthDirectArea");
+  if(toggle && directArea){
+    toggle.addEventListener("click",()=>{
+      const willOpen=directArea.hidden;
+      directArea.hidden=!willOpen;
+      toggle.setAttribute("aria-expanded",String(willOpen));
+      toggle.textContent=willOpen ? "直接入力を閉じる" : "直接入力する";
+      if(willOpen) direct.focus();
+    });
+  }
+  const currentYear=new Date().getFullYear();
   for(let y=currentYear;y>=1990;y--) year.add(new Option(String(y),String(y)));
   for(let m=1;m<=12;m++) month.add(new Option(String(m),String(m).padStart(2,"0")));
   const dim=(y,m)=>y&&m?new Date(Number(y),Number(m),0).getDate():31;
