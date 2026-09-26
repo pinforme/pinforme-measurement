@@ -2610,23 +2610,64 @@ async function loadAdminCartes(){
 }
 function adminEsc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function adminDate(v){if(!v)return"日付不明";const d=new Date(v);return Number.isNaN(d.getTime())?String(v):d.toLocaleString("ja-JP")}
-function adminDogHistory(id){return PINFORME_ADMIN_ROWS.filter(r=>String(r.dog_id)===String(id)).sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0))}
+function adminIdentityText(v){
+ return String(v??"").trim().replace(/\s+/g," ").toLowerCase();
+}
+function adminDogLogicalKey(v){
+ const owner=adminIdentityText(v?.owner_name),name=adminIdentityText(v?.dog_name),birth=adminIdentityText(v?.birth_date);
+ const breed=adminIdentityText(v?.breed),sex=adminIdentityText(v?.sex);
+ // 飼い主様が違えば必ず別のわんちゃん。
+ // 同じ飼い主様＋同じ名前は、生年月日があれば生年月日まで一致したときだけ同一犬としてまとめる。
+ // 生年月日がない旧データは、犬種・性別まで一致したものを同一犬として扱う。
+ if(owner || name){
+   if(birth) return `identity:${owner}|${name}|birth:${birth}`;
+   return `identity:${owner}|${name}|breed:${breed}|sex:${sex}`;
+ }
+ const code=adminIdentityText(v?.dog_code);
+ return code?`code:${code}`:`id:${String(v?.id??"")}`;
+}
+function adminCanonicalDogGroups(){
+ const map=new Map();
+ const sorted=PINFORME_ADMIN_DOGS.slice().sort((a,b)=>new Date(b.updated_at||b.created_at||0)-new Date(a.updated_at||a.created_at||0));
+ for(const d of sorted){
+   const key=adminDogLogicalKey(d);
+   if(!map.has(key)){
+     map.set(key,{...d,_dog_ids:[d.id],_group_key:key,_source_dogs:[d]});
+   }else{
+     const g=map.get(key);
+     if(!g._dog_ids.some(id=>String(id)===String(d.id))) g._dog_ids.push(d.id);
+     g._source_dogs.push(d);
+     // 欠けている基本情報だけ補完する。最新側の値は優先して残す。
+     for(const k of ['owner_name','dog_name','breed','sex','birth_date','weight','photo_path','dog_code']){
+       if((g[k]===null||g[k]===undefined||String(g[k]).trim()==='') && d[k]!=null && String(d[k]).trim()!=='') g[k]=d[k];
+     }
+   }
+ }
+ return [...map.values()];
+}
+function adminDogHistory(idOrDog){
+ const ids=(idOrDog && typeof idOrDog==='object')
+   ? (Array.isArray(idOrDog._dog_ids)?idOrDog._dog_ids:[idOrDog.id])
+   : [idOrDog];
+ const set=new Set(ids.map(x=>String(x)));
+ return PINFORME_ADMIN_ROWS.filter(r=>r.dog_id!=null && set.has(String(r.dog_id))).sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0));
+}
 function adminNormalizeBreed(v){return String(v??"").trim()}
 function adminLatestWeightForDog(d){
- const hist=adminDogHistory(d.id),latest=hist[0];
+ const hist=adminDogHistory(d),latest=hist[0];
  const v=latest?.weight??d.weight;
  const n=Number(v);
  return Number.isFinite(n)?n:null;
 }
 function adminBreedForDog(d){
- const hist=adminDogHistory(d.id),latest=hist[0];
+ const hist=adminDogHistory(d),latest=hist[0];
  return adminNormalizeBreed(d.breed||latest?.breed||"");
 }
 function adminPhotoConsentForRow(r){
  return r?.photo_promo_consent === true;
 }
 function adminPhotoConsentForDog(d){
- const hist=adminDogHistory(d.id),latest=hist[0];
+ const hist=adminDogHistory(d),latest=hist[0];
  return adminPhotoConsentForRow(latest);
 }
 function adminPhotoConsentLabel(v){
@@ -2636,7 +2677,7 @@ function updateAdminBreedFilter(){
  const sel=document.getElementById("adminBreedFilter");if(!sel)return;
  const current=sel.value;
  const breeds=[...new Set([
-  ...PINFORME_ADMIN_DOGS.map(adminBreedForDog),
+  ...adminCanonicalDogGroups().map(adminBreedForDog),
   ...PINFORME_ADMIN_ROWS.filter(r=>r.dog_id==null).map(r=>adminNormalizeBreed(r.breed))
  ].filter(Boolean))].sort((a,b)=>a.localeCompare(b,"ja"));
  sel.innerHTML='<option value="">すべての犬種</option>'+breeds.map(b=>`<option value="${adminEsc(b)}">${adminEsc(b)}</option>`).join("");
@@ -2656,9 +2697,6 @@ function resetAdminFilters(){
  const breed=document.getElementById("adminBreedFilter"),min=document.getElementById("adminWeightMin"),max=document.getElementById("adminWeightMax"),photoConsent=document.getElementById("adminPhotoConsentFilter");
  if(breed)breed.value="";if(min)min.value="";if(max)max.value="";if(photoConsent)photoConsent.value="";onAdminBreedFilterChange(false);renderAdminList();
 }
-function adminIdentityText(v){
- return String(v??"").trim().replace(/\s+/g," ").toLowerCase();
-}
 function adminFallbackDogKey(v){
  const owner=adminIdentityText(v?.owner_name),name=adminIdentityText(v?.dog_name),birth=adminIdentityText(v?.birth_date);
  return `${owner}|${name}|${birth}`;
@@ -2672,20 +2710,18 @@ function adminDogCodeKey(v){
 }
 function adminLegacyUniqueLatestRows(){
  const rows=PINFORME_ADMIN_ROWS.filter(r=>r.dog_id==null).slice().sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0));
+ const modernGroups=adminCanonicalDogGroups();
  const modernCodeKeys=new Set(PINFORME_ADMIN_DOGS.map(adminDogCodeKey).filter(Boolean));
- const modernExactKeys=new Set(PINFORME_ADMIN_DOGS.map(adminFallbackDogKey));
- const modernBaseKeys=new Set(PINFORME_ADMIN_DOGS.map(adminFallbackDogBaseKey));
+ const modernLogicalKeys=new Set(modernGroups.map(adminDogLogicalKey));
+ const modernBaseKeys=new Set(modernGroups.map(adminFallbackDogBaseKey));
  const seen=new Set(),unique=[];
  for(const r of rows){
-  const codeKey=adminDogCodeKey(r),exactKey=adminFallbackDogKey(r),baseKey=adminFallbackDogBaseKey(r);
-  // 既にdogs側へ登録済みのわんちゃんの旧データは、別の1頭として数えない。
-  // dog_codeがあれば最優先。旧データでdog_codeが無い場合だけ飼い主様＋わんちゃん名＋生年月日で照合する。
+  const codeKey=adminDogCodeKey(r),logicalKey=adminDogLogicalKey(r),baseKey=adminFallbackDogBaseKey(r);
   const alreadyModern=codeKey
     ? modernCodeKeys.has(codeKey)
-    : (modernExactKeys.has(exactKey) || (!adminIdentityText(r?.birth_date) && modernBaseKeys.has(baseKey)));
+    : (modernLogicalKeys.has(logicalKey) || (!adminIdentityText(r?.birth_date) && modernBaseKeys.has(baseKey)));
   if(alreadyModern)continue;
-  // 旧データだけの場合も、同じわんちゃんの複数採寸は最新1件にまとめる。
-  const groupKey=codeKey||`legacy:${exactKey||baseKey}`;
+  const groupKey=codeKey||`legacy:${logicalKey}`;
   if(seen.has(groupKey))continue;
   seen.add(groupKey);unique.push(r);
  }
@@ -2710,7 +2746,7 @@ function getAdminFilteredData(){
   if(photoConsent==="no")return v!==true;
   return true;
  };
- const dogs=PINFORME_ADMIN_DOGS.filter(d=>{
+ const dogs=adminCanonicalDogGroups().filter(d=>{
   if(q&&!String(d.owner_name||"").toLowerCase().includes(q)&&!String(d.dog_name||"").toLowerCase().includes(q))return false;
   if(breed&&adminBreedForDog(d)!==breed)return false;
   if(!weightMatches(adminLatestWeightForDog(d)))return false;
@@ -2730,10 +2766,10 @@ function getAdminFilteredData(){
 function renderAdminList(){
  const box=document.getElementById("adminList"),st=document.getElementById("adminListStatus");
  const filtered=getAdminFilteredData();
- const {q,breed,minRaw,maxRaw,dogs,legacy,filtering}=filtered;
- const totalDogCount=PINFORME_ADMIN_DOGS.length+adminLegacyUniqueLatestRows().length;
+ const {dogs,legacy,filtering}=filtered;
+ const totalDogCount=adminCanonicalDogGroups().length+adminLegacyUniqueLatestRows().length;
  st.textContent=`わんちゃん ${totalDogCount}頭 ／ 採寸履歴 ${PINFORME_ADMIN_ROWS.length}件${filtering?` ／ 絞り込み結果 ${dogs.length+legacy.length}頭`:""}`;box.innerHTML="";
- dogs.forEach(d=>{const hist=adminDogHistory(d.id),latest=hist[0]||{},w=adminLatestWeightForDog(d),b=document.createElement("button");b.type="button";b.className="admin-row";b.innerHTML=`<span><strong>${adminEsc(d.dog_name||"名前未入力")}${adminEsc(latest.dog_suffix||"")}</strong><small>飼い主様：${adminEsc(d.owner_name||"—")}<br>犬種：${adminEsc(adminBreedForDog(d)||"—")}${w==null?"":` ／ 最新体重 ${adminEsc(w)} kg`}<br>採寸履歴：${hist.length}件${hist[0]?` ／ 最新 ${adminEsc(adminDate(hist[0].created_at))}`:""}<br>写真販促利用：${adminPhotoConsentLabel(adminPhotoConsentForDog(d))}</small></span><span class="arrow">›</span>`;b.onclick=()=>showAdminDog(d);box.appendChild(b)});
+ dogs.forEach(d=>{const hist=adminDogHistory(d),latest=hist[0]||{},w=adminLatestWeightForDog(d),b=document.createElement("button");b.type="button";b.className="admin-row";b.innerHTML=`<span><strong>${adminEsc(d.dog_name||"名前未入力")}${adminEsc(latest.dog_suffix||"")}</strong><small>飼い主様：${adminEsc(d.owner_name||"—")}<br>犬種：${adminEsc(adminBreedForDog(d)||"—")}${w==null?"":` ／ 最新体重 ${adminEsc(w)} kg`}<br>採寸履歴：${hist.length}件${hist[0]?` ／ 最新 ${adminEsc(adminDate(hist[0].created_at))}`:""}<br>写真販促利用：${adminPhotoConsentLabel(adminPhotoConsentForDog(d))}</small></span><span class="arrow">›</span>`;b.onclick=()=>showAdminDog(d);box.appendChild(b)});
  legacy.forEach(r=>{const b=document.createElement("button");b.type="button";b.className="admin-row";b.innerHTML=`<span><strong>${adminEsc(r.dog_name||"名前未入力")}${adminEsc(r.dog_suffix||"")} <small>（旧データ）</small></strong><small>飼い主様：${adminEsc(r.owner_name||"—")}<br>犬種：${adminEsc(r.breed||"—")}${r.weight==null?"":` ／ 体重 ${adminEsc(r.weight)} kg`}<br>${adminEsc(adminDate(r.created_at))}<br>写真販促利用：${adminPhotoConsentLabel(adminPhotoConsentForRow(r))}</small></span><span class="arrow">›</span>`;b.onclick=()=>showAdminMeasurement(r,null);box.appendChild(b)});
  if(!dogs.length&&!legacy.length)box.innerHTML='<div class="admin-note">該当するカルテはありません。</div>';
  const summaryBtn=document.getElementById("adminSummaryButton");
@@ -2741,7 +2777,7 @@ function renderAdminList(){
 }
 function adminSummaryRows(){
  const f=getAdminFilteredData(),rows=[];
- f.dogs.forEach(d=>{const h=adminDogHistory(d.id);if(h[0])rows.push(h[0]);});
+ f.dogs.forEach(d=>{const h=adminDogHistory(d);if(h[0])rows.push(h[0]);});
  f.legacy.forEach(r=>rows.push(r));
  return {filter:f,rows};
 }
@@ -2768,21 +2804,27 @@ function showAdminSummary(){
  box.classList.remove("admin-hidden");box.scrollIntoView({behavior:"auto",block:"start"});
 }
 const ADMIN_FIELDS=[["① 首まわり","neck"],["② 胴まわり","chest"],["③ ウエスト","waist"],["④ 着丈","back_length"],["⑤ 前身頃","front_length"],["⑥ 前脚の太さ（上側）","front_leg_girth_up"],["⑥ 前脚の太さ（下側）","front_leg_girth_low"],["⑦ 後脚の太さ（上側）","hind_leg_girth_up"],["⑦ 後脚の太さ（下側）","hind_leg_girth_low"],["⑧ 前脚の長さ 1","front_leg_length_1"],["⑧ 前脚の長さ 2","front_leg_length_2"],["⑧ 前脚の長さ 3","front_leg_length_3"],["⑨ 後脚の長さ 1","hind_leg_length_1"],["⑨ 後脚の長さ 2","hind_leg_length_2"],["⑨ 後脚の長さ 3","hind_leg_length_3"],["⑩ 首の長さ（ネック）","neck_length"],["⑪ 首の長さ（スヌード）","snood_length"],["⑫ 頭まわり","head_girth"],["⑬ 前脚の間","front_leg_spacing"],["⑭ 首の真ん中","mid_neck"],["⑮ 尻尾の太さ","tail_girth"]];
+let PINFORME_ADMIN_ACTIVE_DOG_GROUP=null;
 function showAdminDog(d){
- const hist=adminDogHistory(d.id),latest=hist[0]||{},box=document.getElementById("adminDetail"),photoPath=d.photo_path||latest.photo_path;
- const historyHtml=hist.length?hist.map((r,i)=>`<button type="button" class="admin-row" style="margin-top:8px" onclick="showAdminMeasurementById('${adminEsc(r.id)}','${adminEsc(d.id)}')"><span><strong>${i===0?"最新の採寸":"過去の採寸"}</strong><small>${adminEsc(adminDate(r.created_at))} ／ ${r.weight==null?"体重 —":adminEsc(r.weight)+" kg"}</small></span><span class="arrow">›</span></button>`).join(""):'<div class="admin-note">採寸履歴はまだありません。</div>';
+ PINFORME_ADMIN_ACTIVE_DOG_GROUP=d;
+ const hist=adminDogHistory(d),latest=hist[0]||{},box=document.getElementById("adminDetail"),photoPath=d.photo_path||latest.photo_path;
+ const historyHtml=hist.length?hist.map((r,i)=>`<button type="button" class="admin-row" style="margin-top:8px" onclick="showAdminMeasurementById('${adminEsc(r.id)}')"><span><strong>${i===0?"最新の採寸":"過去の採寸"}</strong><small>${adminEsc(adminDate(r.created_at))} ／ ${r.weight==null?"体重 —":adminEsc(r.weight)+" kg"}</small></span><span class="arrow">›</span></button>`).join(""):'<div class="admin-note">採寸履歴はまだありません。</div>';
  const photoHtml=photoPath?`<div class="admin-photo-wrap"><img id="adminDogPhoto" alt="わんちゃんの写真" style="display:none;max-width:100%;max-height:280px;object-fit:contain;border-radius:12px"><div id="adminPhotoStatus" class="admin-note">写真を読み込んでいます…</div></div>`:'<div class="admin-note">写真なし</div>';
- box.innerHTML=`<div class="admin-detail-head"><div><div class="admin-sub">PINFORME DOG CARTE</div><h2>${adminEsc(d.dog_name||"名前未入力")}${adminEsc(latest.dog_suffix||"")}</h2></div><button type="button" class="admin-btn light" style="width:auto;min-height:42px" onclick="document.getElementById('adminDetail').classList.add('admin-hidden')">閉じる</button></div>${photoHtml}<div class="admin-detail-meta">飼い主様：${adminEsc(d.owner_name||"—")}<br>犬種：${adminEsc(d.breed||"—")} ／ 性別：${adminEsc(d.sex||"—")}<br>生年月日：${adminEsc(d.birth_date||"—")} ／ 現在登録体重：${d.weight==null?"—":adminEsc(d.weight)+" kg"}<br>写真販促利用：<strong>${adminPhotoConsentLabel(adminPhotoConsentForDog(d))}</strong><br>カルテID：${adminEsc(d.id)}</div><h3 style="margin:22px 0 8px">採寸履歴（${hist.length}件）</h3>${historyHtml}`;
+ const mergedNote=(Array.isArray(d._dog_ids)&&d._dog_ids.length>1)?`<br><span style="font-size:.86em;color:#777">同一犬として ${d._dog_ids.length}件の登録IDをまとめて表示</span>`:"";
+ box.innerHTML=`<div class="admin-detail-head"><div><div class="admin-sub">PINFORME DOG CARTE</div><h2>${adminEsc(d.dog_name||"名前未入力")}${adminEsc(latest.dog_suffix||"")}</h2></div><button type="button" class="admin-btn light" style="width:auto;min-height:42px" onclick="document.getElementById('adminDetail').classList.add('admin-hidden')">閉じる</button></div>${photoHtml}<div class="admin-detail-meta">飼い主様：${adminEsc(d.owner_name||"—")}<br>犬種：${adminEsc(adminBreedForDog(d)||"—")} ／ 性別：${adminEsc(d.sex||latest.sex||"—")}<br>生年月日：${adminEsc(d.birth_date||latest.birth_date||"—")} ／ 最新体重：${adminLatestWeightForDog(d)==null?"—":adminEsc(adminLatestWeightForDog(d))+" kg"}<br>写真販促利用：<strong>${adminPhotoConsentLabel(adminPhotoConsentForDog(d))}</strong>${mergedNote}</div><h3 style="margin:22px 0 8px">採寸履歴（${hist.length}件）</h3>${historyHtml}`;
  box.classList.remove("admin-hidden");box.scrollIntoView({behavior:"smooth",block:"start"});if(photoPath)loadAdminPhoto(photoPath,document.getElementById("adminDogPhoto"),document.getElementById("adminPhotoStatus"));
 }
-function showAdminMeasurementById(mid,did){const r=PINFORME_ADMIN_ROWS.find(x=>String(x.id)===String(mid));const d=PINFORME_ADMIN_DOGS.find(x=>String(x.id)===String(did));if(r)showAdminMeasurement(r,d)}
+function showAdminMeasurementById(mid){
+ const r=PINFORME_ADMIN_ROWS.find(x=>String(x.id)===String(mid));
+ if(r)showAdminMeasurement(r,PINFORME_ADMIN_ACTIVE_DOG_GROUP);
+}
 function showAdminMeasurement(r,d){
  const box=document.getElementById("adminDetail");
  const dogName=`${adminEsc(r.dog_name||d?.dog_name||"名前未入力")}${adminEsc(r.dog_suffix||"")}`;
  const measureCards=ADMIN_FIELDS.map(([n,k])=>`<div class="admin-measure-item"><div class="label">${n}</div><div class="value">${r[k]==null?"—":adminEsc(r[k])+" cm"}</div></div>`).join("");
  const photoPath=r.photo_path||d?.photo_path;
  const photoHtml=photoPath?`<div class="admin-photo-wrap"><img id="adminDogPhoto" alt="わんちゃんの写真" style="display:none;max-width:100%;max-height:280px;object-fit:contain;border-radius:12px"><div id="adminPhotoStatus" class="admin-note">写真を読み込んでいます…</div></div>`:'<div class="admin-note">写真なし</div>';
- const backAction=d?`showAdminDog(PINFORME_ADMIN_DOGS.find(x=>String(x.id)==='${adminEsc(d.id)}'))`:`document.getElementById('adminDetail').classList.add('admin-hidden')`;
+ const backAction=d?`showAdminDog(PINFORME_ADMIN_ACTIVE_DOG_GROUP)`:`document.getElementById('adminDetail').classList.add('admin-hidden')`;
  box.innerHTML=`<div class="admin-measure-sticky"><div class="admin-measure-sticky-top"><button type="button" class="admin-back-link" onclick="${backAction}">← ${d?"カルテへ戻る":"閉じる"}</button><div class="admin-measure-sticky-name">${dogName}</div></div><div class="admin-measure-summary"><div><small>採寸日</small><strong>${adminEsc(adminDate(r.created_at))}</strong></div><div><small>採寸時体重</small><strong>${r.weight==null?"—":adminEsc(r.weight)+" kg"}</strong></div></div></div>${photoHtml}<div class="admin-measure-owner">飼い主様：${adminEsc(r.owner_name||d?.owner_name||"—")}<br>犬種：${adminEsc(r.breed||d?.breed||"—")} ／ 性別：${adminEsc(r.sex||d?.sex||"—")}<br>生年月日：${adminEsc(r.birth_date||d?.birth_date||"—")}<br>写真販促利用：<strong>${adminPhotoConsentLabel(adminPhotoConsentForRow(r))}</strong></div><div class="admin-measure-section-title">採寸結果</div><div class="admin-measure-grid">${measureCards}</div>`;
  box.classList.remove("admin-hidden");
  box.scrollIntoView({behavior:"auto",block:"start"});
