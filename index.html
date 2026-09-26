@@ -3036,7 +3036,7 @@ function showAdminDog(d){
  const photoHtml=photoPath?`<div class="admin-photo-wrap"><img id="adminDogPhoto" alt="わんちゃんの写真" style="display:none;max-width:100%;max-height:280px;object-fit:contain;border-radius:12px"><div id="adminPhotoStatus" class="admin-note">写真を読み込んでいます…</div></div>`:'<div class="admin-note">写真なし</div>';
  const mergedNote="";
  const ownerId=Number(d.owner_id||latest.owner_id||0);
- box.innerHTML=`<div class="admin-detail-head"><div><div class="admin-sub">PINFORME DOG CARTE</div><h2>${adminEsc(d.dog_name||"名前未入力")}${adminEsc(latest.dog_suffix||"")}</h2></div><button type="button" class="admin-btn light" style="width:auto;min-height:42px" onclick="document.getElementById('adminDetail').classList.add('admin-hidden')">閉じる</button></div>${photoHtml}<div class="admin-detail-meta">飼い主様：${adminEsc(d.owner_name||"—")}<br>犬種：${adminEsc(adminBreedForDog(d)||"—")} ／ 性別：${adminEsc(d.sex||latest.sex||"—")}<br>生年月日：${adminEsc(d.birth_date||latest.birth_date||"—")} ／ 最新体重：${adminLatestWeightForDog(d)==null?"—":adminEsc(adminLatestWeightForDog(d))+" kg"}<br>写真販促利用：<strong>${adminPhotoConsentLabel(adminPhotoConsentForDog(d))}</strong>${mergedNote}</div><div class="admin-recovery-card"><h3>再採寸キー紛失時の本人確認</h3><div id="adminRecoveryContact" class="admin-recovery-contact">登録情報を確認しています…</div><div class="admin-actions" style="margin:10px 0 0"><button type="button" class="admin-btn light" ${ownerId>0?'':'disabled'} onclick="adminReissueRemeasureKey(${ownerId})">再採寸キーを再発行</button></div><div id="adminNewRemeasureKey" class="admin-new-key"><div style="font-size:12px;color:#666">新しい再採寸キー</div><div id="adminNewRemeasureKeyValue" class="admin-new-key-value"></div><button type="button" class="admin-btn primary" onclick="adminCopyNewRemeasureKey()">新しいキーをコピー</button><div style="font-size:11px;color:#777;line-height:1.5;margin-top:8px">再発行した時点で古いキーは無効です。同じ飼い主様に紐づくすべてのわんちゃんで新しいキーを使用します。</div></div></div><div class="admin-actions" style="margin:18px 0 8px"><button type="button" class="admin-btn primary" onclick="adminStartRemeasure()">このわんちゃんを再採寸</button><button type="button" class="admin-btn light" onclick="adminStartNewMeasurement()">新規採寸</button></div><h3 style="margin:22px 0 8px">採寸履歴（${hist.length}件）</h3>${historyHtml}`;
+ box.innerHTML=`<div class="admin-detail-head"><div><div class="admin-sub">PINFORME DOG CARTE</div><h2>${adminEsc(d.dog_name||"名前未入力")}${adminEsc(latest.dog_suffix||"")}</h2></div><button type="button" class="admin-btn light" style="width:auto;min-height:42px" onclick="document.getElementById('adminDetail').classList.add('admin-hidden')">閉じる</button></div>${photoHtml}<div class="admin-detail-meta">飼い主様：${adminEsc(d.owner_name||"—")}<br>犬種：${adminEsc(adminBreedForDog(d)||"—")} ／ 性別：${adminEsc(d.sex||latest.sex||"—")}<br>生年月日：${adminEsc(d.birth_date||latest.birth_date||"—")} ／ 最新体重：${adminLatestWeightForDog(d)==null?"—":adminEsc(adminLatestWeightForDog(d))+" kg"}<br>写真販促利用：<strong>${adminPhotoConsentLabel(adminPhotoConsentForDog(d))}</strong>${mergedNote}</div><div class="admin-recovery-card"><h3>再採寸のご案内</h3><div id="adminRecoveryContact" class="admin-recovery-contact">登録情報を確認しています…</div><div class="admin-actions" style="margin:12px 0 0"><button type="button" class="admin-btn primary" ${ownerId>0?'':'disabled'} onclick="adminReissueRemeasureKey(${ownerId})">再採寸キーを発行</button></div><div id="adminNewRemeasureKey" class="admin-new-key"><div style="font-size:12px;color:#666">飼い主様へ送る再採寸キー</div><div id="adminNewRemeasureKeyValue" class="admin-new-key-value"></div><div class="admin-actions" style="margin:10px 0 0"><button type="button" class="admin-btn primary" onclick="adminCopyNewRemeasureKey()">キーをコピー</button><button type="button" class="admin-btn light" onclick="adminShareNewRemeasureKey()">共有する</button></div><div style="font-size:11px;color:#777;line-height:1.5;margin-top:8px">新しいキーを発行すると、それまでのキーは無効になります。同じ飼い主様に紐づくすべてのわんちゃんで、この新しいキーを使用します。</div></div></div><h3 style="margin:22px 0 8px">採寸履歴（${hist.length}件）</h3>${historyHtml}`;
  box.classList.remove("admin-hidden");box.scrollIntoView({behavior:"smooth",block:"start"});if(photoPath)loadAdminPhoto(photoPath,document.getElementById("adminDogPhoto"),document.getElementById("adminPhotoStatus"));
  if(ownerId>0) adminLoadRecoveryContact(ownerId); else { const rc=document.getElementById('adminRecoveryContact'); if(rc) rc.textContent='この旧データにはowner_idがありません。'; }
 }
@@ -3048,25 +3048,48 @@ async function adminLoadRecoveryContact(ownerId){
   if(!res.ok) throw new Error(await res.text());
   const rows=await res.json(),r=Array.isArray(rows)?rows[0]:rows;
   const email=(r?.recovery_email||'').trim(),phone=(r?.recovery_phone||'').trim();
-  el.innerHTML=`メールアドレス：<strong>${adminEsc(email||'未登録')}</strong><br>電話番号：<strong>${adminEsc(phone||'未登録')}</strong><br><span style="font-size:11px;color:#777">本人確認ができた場合のみ、下の再発行を使用してください。</span>`;
+  el.innerHTML=`メールアドレス：<strong>${adminEsc(email||'未登録')}</strong><br>電話番号：<strong>${adminEsc(phone||'未登録')}</strong><br><span style="font-size:11px;color:#777">必要に応じて本人確認に利用できます。再採寸をお願いする場合は下のボタンから新しいキーを発行してください。</span>`;
  }catch(e){console.error(e);el.textContent='本人確認情報の読み込みに失敗しました。';}
 }
 async function adminReissueRemeasureKey(ownerId){
  if(!(Number(ownerId)>0))return;
  const sess=getAdminSession();if(!sess?.access_token||!isAdminVerified()){alert('管理者ログインが必要です。');return;}
- if(!confirm('本人確認は完了していますか？\n\n再発行すると、現在の再採寸キーはすぐに無効になります。\n同じ飼い主様に紐づくすべてのわんちゃんで新しいキーを使用します。'))return;
+ if(!confirm('飼い主様へ送る新しい再採寸キーを発行しますか？\n\n発行すると、現在の再採寸キーはすぐに無効になります。\n同じ飼い主様に紐づくすべてのわんちゃんで新しいキーを使用します。'))return;
  try{
   const res=await fetch(`${PINFORME_SUPABASE_BASE}/rest/v1/rpc/admin_reissue_remeasure_key`,{method:'POST',headers:{apikey:PINFORME_SUPABASE_KEY,Authorization:'Bearer '+sess.access_token,'Content-Type':'application/json'},body:JSON.stringify({p_owner_id:Number(ownerId)})});
   if(!res.ok) throw new Error(await res.text());
   let key=await res.json();if(Array.isArray(key))key=key[0];if(key&&typeof key==='object')key=key.admin_reissue_remeasure_key||key.key||Object.values(key)[0];
   key=String(key||'').replace(/^"|"$/g,'');
   const val=document.getElementById('adminNewRemeasureKeyValue'),box=document.getElementById('adminNewRemeasureKey');if(val)val.textContent=key;if(box)box.classList.add('show');
-  alert('新しい再採寸キーを発行しました。古いキーは無効になっています。');
+  alert('飼い主様へ送る再採寸キーを発行しました。以前のキーは無効になっています。');
  }catch(e){console.error(e);alert('再発行に失敗しました。\n'+(e?.message||e));}
 }
 async function adminCopyNewRemeasureKey(){
  const key=(document.getElementById('adminNewRemeasureKeyValue')?.textContent||'').trim();if(!key)return;
  try{await navigator.clipboard.writeText(key);alert('新しい再採寸キーをコピーしました。');}catch(e){prompt('このキーをコピーしてください。',key);}
+}
+async function adminShareNewRemeasureKey(){
+ const key=(document.getElementById('adminNewRemeasureKeyValue')?.textContent||'').trim();
+ if(!key)return;
+ const d=PINFORME_ADMIN_ACTIVE_DOG_GROUP||{};
+ const hist=adminDogHistory(d);
+ const latest=hist[0]||{};
+ const dogLabel=`${d.dog_name||'わんちゃん'}${latest.dog_suffix||''}`;
+ const message=`PINFORMEより再採寸のお願いです。\n${dogLabel}の再採寸キー：${key}\n\nPINFORME採寸ナビの「再採寸」から、このキーを入力してください。`;
+ if(navigator.share){
+   try{
+     await navigator.share({title:'PINFORME 再採寸キー',text:message});
+     return;
+   }catch(e){
+     if(e && e.name==='AbortError') return;
+   }
+ }
+ try{
+   await navigator.clipboard.writeText(message);
+   alert('再採寸案内をコピーしました。送信先へ貼り付けてください。');
+ }catch(e){
+   prompt('この再採寸案内をコピーしてください。',message);
+ }
 }
 
 function showAdminMeasurementById(mid){
