@@ -2482,4 +2482,81 @@ document.addEventListener("click",function(){
 })();
 </script>
 
+
+<script>
+(function(){
+  const PAGE_KEY="PINFORME_CURRENT_PAGE_V3";
+
+  function getCurrentPage(){
+    try{
+      if(typeof steps!=="undefined"){
+        for(let i=0;i<steps.length;i++){
+          if(steps[i] && steps[i].classList.contains("active")){
+            return {type:"measurement",index:i};
+          }
+        }
+      }
+      const ids=["startPage","infoPage","thanksPage","resultPage"];
+      for(const id of ids){
+        const el=document.getElementById(id);
+        if(el && el.classList.contains("active")) return {type:"screen",id:id};
+      }
+    }catch(e){}
+    return null;
+  }
+
+  function saveCurrentPage(){
+    try{
+      const p=getCurrentPage();
+      if(p) localStorage.setItem(PAGE_KEY,JSON.stringify(p));
+      if(typeof savePINFORMEState==="function") savePINFORMEState();
+    }catch(e){}
+  }
+
+  function restoreCurrentPage(){
+    let p=null;
+    try{p=JSON.parse(localStorage.getItem(PAGE_KEY)||"null");}catch(e){}
+    if(!p) return;
+
+    try{
+      if(typeof hideAll==="function") hideAll();
+
+      if(p.type==="measurement" && typeof steps!=="undefined" && steps.length){
+        let idx=Number(p.index);
+        if(!Number.isInteger(idx) || idx<0 || idx>=steps.length) return;
+        try{current=idx;}catch(e){}
+        steps[idx].classList.add("active");
+        window.scrollTo(0,0);
+        return;
+      }
+
+      if(p.type==="screen" && p.id){
+        const el=document.getElementById(p.id);
+        if(el){
+          el.classList.add("active");
+          window.scrollTo(0,0);
+        }
+      }
+    }catch(e){}
+  }
+
+  // Save immediately whenever navigation has finished.
+  document.addEventListener("click",function(){
+    setTimeout(saveCurrentPage,120);
+  },true);
+
+  // Safari refresh/reload lifecycle.
+  window.addEventListener("pagehide",saveCurrentPage);
+  window.addEventListener("beforeunload",saveCurrentPage);
+
+  // Restore only after the app's own initialization has completed.
+  window.addEventListener("load",function(){
+    setTimeout(restoreCurrentPage,180);
+  });
+  window.addEventListener("pageshow",function(){
+    setTimeout(restoreCurrentPage,220);
+  });
+})();
+</script>
+
 </body></html>
