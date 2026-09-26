@@ -2656,6 +2656,41 @@ function resetAdminFilters(){
  const breed=document.getElementById("adminBreedFilter"),min=document.getElementById("adminWeightMin"),max=document.getElementById("adminWeightMax"),photoConsent=document.getElementById("adminPhotoConsentFilter");
  if(breed)breed.value="";if(min)min.value="";if(max)max.value="";if(photoConsent)photoConsent.value="";onAdminBreedFilterChange(false);renderAdminList();
 }
+function adminIdentityText(v){
+ return String(v??"").trim().replace(/\s+/g," ").toLowerCase();
+}
+function adminFallbackDogKey(v){
+ const owner=adminIdentityText(v?.owner_name),name=adminIdentityText(v?.dog_name),birth=adminIdentityText(v?.birth_date);
+ return `${owner}|${name}|${birth}`;
+}
+function adminFallbackDogBaseKey(v){
+ return `${adminIdentityText(v?.owner_name)}|${adminIdentityText(v?.dog_name)}`;
+}
+function adminDogCodeKey(v){
+ const code=adminIdentityText(v?.dog_code);
+ return code?`code:${code}`:"";
+}
+function adminLegacyUniqueLatestRows(){
+ const rows=PINFORME_ADMIN_ROWS.filter(r=>r.dog_id==null).slice().sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0));
+ const modernCodeKeys=new Set(PINFORME_ADMIN_DOGS.map(adminDogCodeKey).filter(Boolean));
+ const modernExactKeys=new Set(PINFORME_ADMIN_DOGS.map(adminFallbackDogKey));
+ const modernBaseKeys=new Set(PINFORME_ADMIN_DOGS.map(adminFallbackDogBaseKey));
+ const seen=new Set(),unique=[];
+ for(const r of rows){
+  const codeKey=adminDogCodeKey(r),exactKey=adminFallbackDogKey(r),baseKey=adminFallbackDogBaseKey(r);
+  // 既にdogs側へ登録済みのわんちゃんの旧データは、別の1頭として数えない。
+  // dog_codeがあれば最優先。旧データでdog_codeが無い場合だけ飼い主様＋わんちゃん名＋生年月日で照合する。
+  const alreadyModern=codeKey
+    ? modernCodeKeys.has(codeKey)
+    : (modernExactKeys.has(exactKey) || (!adminIdentityText(r?.birth_date) && modernBaseKeys.has(baseKey)));
+  if(alreadyModern)continue;
+  // 旧データだけの場合も、同じわんちゃんの複数採寸は最新1件にまとめる。
+  const groupKey=codeKey||`legacy:${exactKey||baseKey}`;
+  if(seen.has(groupKey))continue;
+  seen.add(groupKey);unique.push(r);
+ }
+ return unique;
+}
 function getAdminFilteredData(){
  const q=(document.getElementById("adminSearch")?.value||"").trim().toLowerCase();
  const breed=(document.getElementById("adminBreedFilter")?.value||"").trim();
@@ -2682,8 +2717,7 @@ function getAdminFilteredData(){
   if(!consentMatches(adminPhotoConsentForDog(d)))return false;
   return true;
  });
- const legacy=PINFORME_ADMIN_ROWS.filter(r=>{
-  if(r.dog_id!=null)return false;
+ const legacy=adminLegacyUniqueLatestRows().filter(r=>{
   if(q&&!String(r.owner_name||"").toLowerCase().includes(q)&&!String(r.dog_name||"").toLowerCase().includes(q))return false;
   if(breed&&adminNormalizeBreed(r.breed)!==breed)return false;
   const n=Number(r.weight),w=Number.isFinite(n)?n:null;
@@ -2697,7 +2731,8 @@ function renderAdminList(){
  const box=document.getElementById("adminList"),st=document.getElementById("adminListStatus");
  const filtered=getAdminFilteredData();
  const {q,breed,minRaw,maxRaw,dogs,legacy,filtering}=filtered;
- st.textContent=`わんちゃん ${PINFORME_ADMIN_DOGS.length}頭 ／ 採寸履歴 ${PINFORME_ADMIN_ROWS.length}件${filtering?` ／ 絞り込み結果 ${dogs.length+legacy.length}件`:""}`;box.innerHTML="";
+ const totalDogCount=PINFORME_ADMIN_DOGS.length+adminLegacyUniqueLatestRows().length;
+ st.textContent=`わんちゃん ${totalDogCount}頭 ／ 採寸履歴 ${PINFORME_ADMIN_ROWS.length}件${filtering?` ／ 絞り込み結果 ${dogs.length+legacy.length}頭`:""}`;box.innerHTML="";
  dogs.forEach(d=>{const hist=adminDogHistory(d.id),latest=hist[0]||{},w=adminLatestWeightForDog(d),b=document.createElement("button");b.type="button";b.className="admin-row";b.innerHTML=`<span><strong>${adminEsc(d.dog_name||"名前未入力")}${adminEsc(latest.dog_suffix||"")}</strong><small>飼い主様：${adminEsc(d.owner_name||"—")}<br>犬種：${adminEsc(adminBreedForDog(d)||"—")}${w==null?"":` ／ 最新体重 ${adminEsc(w)} kg`}<br>採寸履歴：${hist.length}件${hist[0]?` ／ 最新 ${adminEsc(adminDate(hist[0].created_at))}`:""}<br>写真販促利用：${adminPhotoConsentLabel(adminPhotoConsentForDog(d))}</small></span><span class="arrow">›</span>`;b.onclick=()=>showAdminDog(d);box.appendChild(b)});
  legacy.forEach(r=>{const b=document.createElement("button");b.type="button";b.className="admin-row";b.innerHTML=`<span><strong>${adminEsc(r.dog_name||"名前未入力")}${adminEsc(r.dog_suffix||"")} <small>（旧データ）</small></strong><small>飼い主様：${adminEsc(r.owner_name||"—")}<br>犬種：${adminEsc(r.breed||"—")}${r.weight==null?"":` ／ 体重 ${adminEsc(r.weight)} kg`}<br>${adminEsc(adminDate(r.created_at))}<br>写真販促利用：${adminPhotoConsentLabel(adminPhotoConsentForRow(r))}</small></span><span class="arrow">›</span>`;b.onclick=()=>showAdminMeasurement(r,null);box.appendChild(b)});
  if(!dogs.length&&!legacy.length)box.innerHTML='<div class="admin-note">該当するカルテはありません。</div>';
