@@ -2527,4 +2527,85 @@ setTimeout(function(){
 },1500);
 </script>
 
+
+<script>
+(function(){
+  const RESET_FLAG="pinforme_new=1";
+
+  function clearPINFORMEData(){
+    try{
+      // Remove every PINFORME-owned localStorage entry, regardless of version/key name.
+      const remove=[];
+      for(let i=0;i<localStorage.length;i++){
+        const k=localStorage.key(i);
+        if(k && k.toUpperCase().indexOf("PINFORME")!==-1) remove.push(k);
+      }
+      remove.forEach(k=>localStorage.removeItem(k));
+
+      // Also clear session-scoped PINFORME state if any is added later.
+      const sremove=[];
+      for(let i=0;i<sessionStorage.length;i++){
+        const k=sessionStorage.key(i);
+        if(k && k.toUpperCase().indexOf("PINFORME")!==-1) sremove.push(k);
+      }
+      sremove.forEach(k=>sessionStorage.removeItem(k));
+    }catch(e){}
+  }
+
+  window.startBrandNewPINFORME=function(){
+    if(!confirm("入力中の内容をすべて消して、新しい採寸をはじめますか？")) return;
+    clearPINFORMEData();
+
+    // The query flag survives the reload but is not customer data.
+    // It lets startup clear again BEFORE restore code can repopulate old values.
+    const sep=location.search ? "&" : "?";
+    location.replace(location.pathname + location.search + sep + RESET_FLAG);
+  };
+
+  // If arriving from the new-measurement action, clear before the app restores saved state.
+  if(new URLSearchParams(location.search).get("pinforme_new")==="1"){
+    clearPINFORMEData();
+    document.addEventListener("DOMContentLoaded",function(){
+      try{
+        // Explicitly blank every customer input as a second safety layer.
+        document.querySelectorAll("input,select,textarea").forEach(function(el){
+          if(el.type==="button" || el.type==="submit") return;
+          if(el.type==="checkbox" || el.type==="radio") el.checked=false;
+          else if(el.tagName==="SELECT") el.selectedIndex=0;
+          else el.value="";
+        });
+        document.querySelectorAll(".avg-value span").forEach(el=>el.textContent="0.0");
+        if(typeof hideAll==="function") hideAll();
+        const home=document.getElementById("startPage");
+        if(home) home.classList.add("active");
+        window.scrollTo(0,0);
+      }catch(e){}
+
+      // Remove the reset flag from the address bar without another reload.
+      try{
+        const clean=location.pathname;
+        history.replaceState(null,"",clean);
+      }catch(e){}
+    },{once:true});
+  }
+
+  function bindNewStartButton(){
+    const btn=document.getElementById("pinformeNewStartBtn");
+    if(!btn || btn.dataset.clearBound==="1") return;
+    btn.dataset.clearBound="1";
+    // Capture phase prevents older click handlers from running first.
+    btn.addEventListener("click",function(ev){
+      ev.preventDefault();
+      ev.stopImmediatePropagation();
+      window.startBrandNewPINFORME();
+    },true);
+  }
+
+  if(document.readyState==="loading"){
+    document.addEventListener("DOMContentLoaded",bindNewStartButton,{once:true});
+  }else bindNewStartButton();
+  window.addEventListener("pageshow",bindNewStartButton);
+})();
+</script>
+
 </body></html>
