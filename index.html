@@ -336,6 +336,15 @@ button{height:72px;border-radius:36px;font-size:22px;font-weight:900}
 .pin-first .point-body{padding:14px 13px;font-size:13px;line-height:1.8}
 .pin-first .confirm{display:flex;gap:10px;border:1px solid #ccc;border-radius:8px;padding:14px 13px;margin:20px 0 28px;font-size:12px;line-height:1.65}
 .pin-first .confirm input{width:20px;height:20px;accent-color:#111;flex:0 0 auto;margin-top:0}
+
+.pin-first .privacy-box{border:1px solid #cfcfcf;border-radius:10px;padding:16px 15px;margin:18px 0 10px;background:#fafafa}
+.pin-first .privacy-title{font-size:15px;font-weight:900;margin-bottom:8px}
+.pin-first .privacy-text{font-size:12px;line-height:1.75;color:#444}
+.pin-first .privacy-text strong{color:#111}
+.pin-first .privacy-confirm{margin:12px 0 28px}
+.photo-consent{display:flex;align-items:flex-start;gap:9px;margin-top:10px;padding:12px 13px;border:1px solid #ddd;border-radius:9px;background:#fafafa;font-size:12px;line-height:1.6}
+.photo-consent input{width:20px;height:20px;accent-color:#111;flex:0 0 auto;margin-top:1px}
+.photo-consent .optional{display:inline-block;font-size:10px;font-weight:800;background:#e9e9e9;color:#333;border-radius:4px;padding:2px 6px;margin-left:4px}
 .pin-first .start-btn{width:100%;height:53px;border:0;border-radius:7px;background:#111;color:#fff;font-size:15px;font-weight:800}
 </style>
 
@@ -849,6 +858,19 @@ html.pinforme-restoring body{visibility:hidden!important}
     <span>上記の内容を確認しました。 愛犬の状態を確認してから採寸を開始します。</span>
   </label>
 
+  <div class="privacy-box">
+    <div class="privacy-title">個人情報・写真・採寸データの取扱いについて</div>
+    <div class="privacy-text">
+      ご入力いただいたご主人様情報、わんちゃんの写真、身体情報・採寸データは、<strong>PINFORMEの商品開発、サイズ設計、品質向上および採寸データの分析</strong>のために保存・利用します。<br>
+      取得した情報は上記目的の範囲内で適切に管理し、法令に基づく場合を除き、ご本人の同意なく第三者へ提供しません。商品開発・分析の際は、個人を特定する目的では使用しません。
+    </div>
+  </div>
+
+  <label class="confirm privacy-confirm">
+    <input type="checkbox" id="dataConsent">
+    <span>上記の個人情報・写真・採寸データの取扱いに同意します。 <b>必須</b></span>
+  </label>
+
   <button type="button" class="start-btn" onclick="goDogInfo()">採寸を始める</button>
   <div class="admin-entry"><button type="button" onclick="openAdminPage()">PINFORME 管理者はこちら</button></div>
 </div>
@@ -886,7 +908,12 @@ html.pinforme-restoring body{visibility:hidden!important}
   <input id="birthDate" type="hidden" value="">
 </div></div>
     <div class="form-field"><label>体重</label><div class="weight-row"><input type="number" inputmode="decimal" step="0.1" id="weight"><span>kg</span></div></div>
-    <div class="form-field"><label>わんちゃんの写真</label><input type="file" id="dogPhoto" accept="image/*"><img id="photoPreview" class="photo-preview"></div>
+    <div class="form-field"><label>わんちゃんの写真</label><input type="file" id="dogPhoto" accept="image/*"><img id="photoPreview" class="photo-preview">
+      <label class="photo-consent">
+        <input type="checkbox" id="photoPromoConsent">
+        <span>わんちゃんの写真をPINFORMEのSNS・Webサイト・販促物等で使用することに同意します。<span class="optional">任意</span></span>
+      </label>
+    </div>
 
     <div class="intro-nav"><button class="secondary" onclick="backStart()">← 戻る</button><button class="primary half" onclick="startMeasurements()">次へ ›</button></div>
   </div>
@@ -2015,10 +2042,12 @@ function goDogInfo(){
   const dog=document.getElementById("dogName").value.trim();
   const breed=document.getElementById("dogBreed").value.trim();
   const ok=document.getElementById("tipsConfirmed").checked;
+  const dataConsent=document.getElementById("dataConsent")?.checked;
   if(!owner){alert("ご主人様の名前を入力してください。");return}
   if(!dog){alert("わんちゃんの名前を入力してください。");return}
   if(!breed){alert("犬種を入力してください。");return}
   if(!ok){alert("6つのポイントを確認してチェックを入れてください。");return}
+  if(!dataConsent){alert("個人情報・写真・採寸データの取扱いを確認し、同意にチェックを入れてください。");return}
   const suffix=document.getElementById("dogSuffix").value;
   document.getElementById("ownerDisplay").textContent=owner;
   document.getElementById("dogDisplay").textContent=dog+suffix;
@@ -2453,9 +2482,11 @@ function registerAnotherDog(){
     section.querySelectorAll('.avg-value span').forEach(x=>x.textContent="0.0");
   });
 
-  // ご主人様名と6つのポイント確認は引き継ぐ
+  // ご主人様名と6つのポイント確認は引き継ぐ。データ利用同意は新しい登録ごとに再確認する。
   if(document.getElementById("ownerName")) document.getElementById("ownerName").value=owner;
   const tips=document.getElementById("tipsConfirmed"); if(tips) tips.checked=true;
+  const dataConsent=document.getElementById("dataConsent"); if(dataConsent) dataConsent.checked=false;
+  const photoPromoConsent=document.getElementById("photoPromoConsent"); if(photoPromoConsent) photoPromoConsent.checked=false;
 
   PINFORME_EDIT_FROM_FINISH=false;
   document.body.classList.remove("edit-from-finish");
@@ -2630,6 +2661,10 @@ let PINFORME_SUBMITTING=false;
 let PINFORME_SUBMITTED=false;
 
 async function sendToPinforme(){
+  if(!document.getElementById("dataConsent")?.checked){
+    alert("データの取扱いへの同意が確認できません。最初の画面で同意内容をご確認ください。");
+    return;
+  }
   const submitBtn=document.getElementById("pinformeSubmitButton");
   if(PINFORME_SUBMITTING) return;
   if(PINFORME_SUBMITTED){
