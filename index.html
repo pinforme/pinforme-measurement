@@ -3603,4 +3603,62 @@ document.addEventListener("change",function(e){
 });
 </script>
 
+
+
+<!-- ===== PINFORME 管理者ルート表示分離・最終修正 ===== -->
+<style id="pinforme-admin-route-exclusive-style">
+  body.pinforme-admin-route #entryChoicePage,
+  body.pinforme-admin-route #startPage,
+  body.pinforme-admin-route #dogInfoPage,
+  body.pinforme-admin-route main,
+  body.pinforme-admin-route #finishPage,
+  body.pinforme-admin-route #kartePage,
+  body.pinforme-admin-route #pinformeAdminEntryButton {
+    display:none !important;
+  }
+  body.pinforme-admin-route #adminPage.active {
+    display:block !important;
+  }
+</style>
+<script>
+(function(){
+  function isAdminRoute(){
+    try{return new URLSearchParams(location.search).get('admin')==='login';}
+    catch(e){return false;}
+  }
+  function enforceExclusiveRoute(){
+    var adminRoute=isAdminRoute();
+    document.body.classList.toggle('pinforme-admin-route',adminRoute);
+    var adminBtn=document.getElementById('pinformeAdminEntryButton');
+    if(adminRoute && adminBtn) adminBtn.hidden=true;
+    if(adminRoute){
+      document.querySelectorAll('.intro-step,.step,.finish-step').forEach(function(el){el.classList.remove('active');});
+      var admin=document.getElementById('adminPage');
+      if(admin) admin.classList.add('active');
+      try{window.scrollTo(0,0);}catch(e){}
+    }else{
+      var admin=document.getElementById('adminPage');
+      if(admin) admin.classList.remove('active');
+      // 通常URLでは、初期表示時だけ採寸方法選択を表示する。
+      var any=document.querySelector('.intro-step.active,.step.active,.finish-step.active');
+      if(!any){
+        var entry=document.getElementById('entryChoicePage');
+        if(entry) entry.classList.add('active');
+      }
+    }
+  }
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',function(){
+      enforceExclusiveRoute();
+      setTimeout(enforceExclusiveRoute,0);
+      setTimeout(enforceExclusiveRoute,150);
+    },{once:true});
+  }else{
+    enforceExclusiveRoute();
+    setTimeout(enforceExclusiveRoute,0);
+    setTimeout(enforceExclusiveRoute,150);
+  }
+  window.addEventListener('pageshow',function(){setTimeout(enforceExclusiveRoute,0);});
+})();
+</script>
 </body></html>
