@@ -6,7 +6,7 @@
 <meta http-equiv="Expires" content="0">
 <script id="pinforme-latest-version-guard">
 (function(){
-  const PINFORME_BUILD_ID="20260927-2305";
+  const PINFORME_BUILD_ID="20260927-2322";
 
   function forceFresh(reason){
     try{
@@ -549,7 +549,7 @@ body.pinforme-admin-route.pinforme-admin-karte-open #kartePage .karte-actions bu
   display:block !important;
 }
 </style>
-<meta name="pinforme-build" content="auto-key-recovery-ui-20260927">
+<meta name="pinforme-build" content="recovery-ownername-contact-20260927-2322">
 
 <style id="pinforme-brand-logo-style">
 .pinforme-brand-lockup{
@@ -689,6 +689,9 @@ body.pinforme-admin-route.pinforme-admin-karte-open #kartePage .karte-actions bu
   border-radius:14px;
   background:#fff;
   font-size:16px;
+}
+.pin-key-recovery-input + .pin-key-recovery-input{
+  margin-top:10px;
 }
 .pin-key-recovery-submit,
 .pin-key-recovery-close{
@@ -1197,7 +1200,7 @@ body.pinforme-admin-route.pinforme-admin-karte-open #kartePage .karte-actions bu
     <div id="pinformeExistingOwnerStatus" class="pin-remeasure-status" aria-live="polite"></div>
     <div class="pin-key-forgot">
       <strong>再採寸キーを忘れた方</strong>
-      登録時にメールアドレスまたは電話番号を登録している場合は、新しい再採寸キーを自動で受け取れます。
+      登録時のご主人様のお名前と、メールアドレスまたは電話番号を入力すると、新しい再採寸キーを自動で受け取れます。
       <button type="button" class="pin-key-recovery-open" onclick="pinformeOpenKeyRecovery()">再採寸キーを再発行する</button>
       <div class="pin-key-recovery-note">連絡先を登録していない場合や届かない場合は、PINFORME公式InstagramのDMへお問い合わせください。</div>
     </div>
@@ -1218,7 +1221,7 @@ body.pinforme-admin-route.pinforme-admin-karte-open #kartePage .karte-actions bu
     <div id="pinformeRemeasureDogList" class="pin-dog-list"></div>
     <div class="pin-key-forgot">
       <strong>再採寸キーを忘れた方</strong>
-      登録時にメールアドレスまたは電話番号を登録している場合は、新しい再採寸キーを自動で受け取れます。再発行すると古いキーは使えなくなります。
+      登録時のご主人様のお名前と、メールアドレスまたは電話番号を入力すると、新しい再採寸キーを自動で受け取れます。再発行すると古いキーは使えなくなります。
       <button type="button" class="pin-key-recovery-open" onclick="pinformeOpenKeyRecovery()">再採寸キーを再発行する</button>
       <div class="pin-key-recovery-note">連絡先を登録していない場合や届かない場合は、PINFORME公式InstagramのDMへお問い合わせください。</div>
     </div>
@@ -4981,9 +4984,15 @@ document.addEventListener("change",function(e){
   <div class="pin-key-recovery-card">
     <h2 id="pinformeKeyRecoveryTitle">再採寸キーの再発行</h2>
     <p>
-      登録時のメールアドレスまたは電話番号を入力してください。<br>
-      登録情報と一致した場合、新しい再採寸キーを自動で送信します。
+      登録時の<strong>ご主人様のお名前</strong>と、メールアドレスまたは電話番号を入力してください。<br>
+      2つの登録情報が一致した場合、新しい再採寸キーを自動で送信します。
     </p>
+    <input id="pinformeKeyRecoveryOwnerName"
+           class="pin-key-recovery-input"
+           type="text"
+           inputmode="text"
+           autocomplete="name"
+           placeholder="ご主人様のお名前">
     <input id="pinformeKeyRecoveryContact"
            class="pin-key-recovery-input"
            type="text"
@@ -5007,18 +5016,20 @@ document.addEventListener("change",function(e){
 <script id="pinforme-key-recovery-script">
 (function(){
   const GENERIC_MESSAGE =
-    "入力いただいた情報を確認しました。登録済みの連絡先の場合は、新しい再採寸キーをお送りします。届かない場合はPINFORME公式InstagramのDMへお問い合わせください。";
+    "入力いただいた情報を確認しました。登録情報が一致した場合は、新しい再採寸キーをお送りします。届かない場合はPINFORME公式InstagramのDMへお問い合わせください。";
 
   window.pinformeOpenKeyRecovery=function(){
     const modal=document.getElementById("pinformeKeyRecoveryModal");
-    const input=document.getElementById("pinformeKeyRecoveryContact");
+    const ownerNameInput=document.getElementById("pinformeKeyRecoveryOwnerName");
+    const contactInput=document.getElementById("pinformeKeyRecoveryContact");
     const status=document.getElementById("pinformeKeyRecoveryStatus");
     const btn=document.getElementById("pinformeKeyRecoverySubmit");
     if(status) status.textContent="";
     if(btn){ btn.disabled=false; btn.textContent="新しいキーを送信する"; }
-    if(input) input.value="";
+    if(ownerNameInput) ownerNameInput.value="";
+    if(contactInput) contactInput.value="";
     if(modal) modal.classList.add("open");
-    setTimeout(()=>{ try{ input && input.focus(); }catch(e){} },80);
+    setTimeout(()=>{ try{ ownerNameInput && ownerNameInput.focus(); }catch(e){} },80);
   };
 
   window.pinformeCloseKeyRecovery=function(){
@@ -5027,13 +5038,21 @@ document.addEventListener("change",function(e){
   };
 
   window.pinformeSubmitKeyRecovery=async function(){
-    const input=document.getElementById("pinformeKeyRecoveryContact");
+    const ownerNameInput=document.getElementById("pinformeKeyRecoveryOwnerName");
+    const contactInput=document.getElementById("pinformeKeyRecoveryContact");
     const status=document.getElementById("pinformeKeyRecoveryStatus");
     const btn=document.getElementById("pinformeKeyRecoverySubmit");
-    const contact=(input?.value||"").trim();
+    const ownerName=(ownerNameInput?.value||"").trim();
+    const contact=(contactInput?.value||"").trim();
 
+    if(!ownerName){
+      if(status) status.textContent="ご主人様のお名前を入力してください。";
+      try{ ownerNameInput && ownerNameInput.focus(); }catch(e){}
+      return;
+    }
     if(!contact){
       if(status) status.textContent="メールアドレスまたは電話番号を入力してください。";
+      try{ contactInput && contactInput.focus(); }catch(e){}
       return;
     }
 
@@ -5048,7 +5067,7 @@ document.addEventListener("change",function(e){
           "Authorization":"Bearer "+PINFORME_SUPABASE_KEY,
           "Content-Type":"application/json"
         },
-        body:JSON.stringify({contact})
+        body:JSON.stringify({ownerName,contact})
       });
 
       // 登録有無を画面から推測できないよう、成功/不一致とも同じ案内を出す。
