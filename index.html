@@ -1,5 +1,47 @@
 <!DOCTYPE html>
-<html lang="ja"><head><meta charset="UTF-8">
+<html lang="ja"><head>
+<!-- ===== PINFORME 最新版自動取得・キャッシュ再発防止 ===== -->
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<script id="pinforme-latest-version-guard">
+(function(){
+  const PINFORME_BUILD_ID="20260927-2305";
+
+  function forceFresh(reason){
+    try{
+      const u=new URL(window.location.href);
+      u.searchParams.set("pv",PINFORME_BUILD_ID);
+      u.searchParams.set("_pinforme_refresh",Date.now().toString());
+      if(reason) u.searchParams.set("_pinforme_reason",reason);
+      window.location.replace(u.toString());
+    }catch(e){
+      window.location.reload();
+    }
+  }
+
+  try{
+    const u=new URL(window.location.href);
+    const current=u.searchParams.get("pv");
+
+    // URLにこのビルドIDが無ければ、必ず一度だけキャッシュバスター付きで再取得。
+    // 古いHTMLがSafariキャッシュから復元された場合でも、固有URLでGitHub Pagesへ取り直す。
+    if(current!==PINFORME_BUILD_ID){
+      forceFresh("version");
+      return;
+    }
+  }catch(e){}
+
+  // iPhone Safariの「戻る」「タブ復元」などBFCacheから戻った時は、
+  // その場の古いHTMLを使い続けず、最新ファイルを取り直す。
+  window.addEventListener("pageshow",function(ev){
+    if(ev && ev.persisted){
+      forceFresh("bfcache");
+    }
+  });
+})();
+</script>
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>PINFORME 採寸ナビ 完全版</title>
 <style>
