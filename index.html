@@ -1122,7 +1122,7 @@ body.pinforme-admin-route.pinforme-admin-karte-open #kartePage .karte-actions bu
     <div id="pinformeExistingOwnerStatus" class="pin-remeasure-status" aria-live="polite"></div>
     <div class="pin-key-forgot">
       <strong>再採寸キーを忘れた方</strong>
-      登録時にメールアドレスまたは電話番号を登録している場合は、新しい再採寸キーを自動で受け取れます。
+      登録時に保存した同じメールアドレスまたは電話番号を入力すると、新しい再採寸キーを自動で受け取れます。
       <button type="button" class="pin-key-recovery-open" onclick="pinformeOpenKeyRecovery()">再採寸キーを再発行する</button>
       <div class="pin-key-recovery-note">連絡先を登録していない場合や届かない場合は、PINFORME公式InstagramのDMへお問い合わせください。</div>
     </div>
@@ -1143,7 +1143,7 @@ body.pinforme-admin-route.pinforme-admin-karte-open #kartePage .karte-actions bu
     <div id="pinformeRemeasureDogList" class="pin-dog-list"></div>
     <div class="pin-key-forgot">
       <strong>再採寸キーを忘れた方</strong>
-      登録時にメールアドレスまたは電話番号を登録している場合は、新しい再採寸キーを自動で受け取れます。再発行すると古いキーは使えなくなります。
+      登録時に保存した同じメールアドレスまたは電話番号を入力すると、新しい再採寸キーを自動で受け取れます。再発行すると古いキーは使えなくなります。
       <button type="button" class="pin-key-recovery-open" onclick="pinformeOpenKeyRecovery()">再採寸キーを再発行する</button>
       <div class="pin-key-recovery-note">連絡先を登録していない場合や届かない場合は、PINFORME公式InstagramのDMへお問い合わせください。</div>
     </div>
@@ -1169,14 +1169,16 @@ body.pinforme-admin-route.pinforme-admin-karte-open #kartePage .karte-actions bu
   </div>
 
   <div class="field">
-    <label>メールアドレス <span style="font-size:12px;color:#777;font-weight:600;">任意</span></label>
-    <input id="recoveryEmail" type="email" autocomplete="email" placeholder="例）name@example.com">
+    <label>再採寸キー受信用メールアドレス <span style="font-size:12px;color:#777;font-weight:600;">任意</span></label>
+    <input id="recoveryEmail" type="email" autocomplete="email" placeholder="例）name@example.com" oninput="pinformeCheckRecoveryEmail()" onblur="pinformeCheckRecoveryEmail()">
+    <div style="font-size:11px;color:#777;line-height:1.55;margin-top:6px;">再採寸キーを紛失した際に、新しいキーを受け取れるメールアドレスを入力してください。</div>
+    <div id="pinformeRecoveryEmailWarning" style="display:none;font-size:11px;color:#9a5b00;line-height:1.55;margin-top:6px;padding:8px 10px;background:#fff7e6;border-radius:8px;">iPhoneの「メールを非公開」で作成されたアドレスが入力されています。再発行時もこのアドレスと完全に同じ文字列の入力が必要です。普段使っている受信可能なメールアドレスを登録したい場合は、ここで変更してください。</div>
   </div>
 
   <div class="field">
-    <label>電話番号 <span style="font-size:12px;color:#777;font-weight:600;">任意</span></label>
+    <label>再採寸キー受信用電話番号 <span style="font-size:12px;color:#777;font-weight:600;">任意</span></label>
     <input id="recoveryPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="例）09012345678">
-    <div style="font-size:11px;color:#777;line-height:1.55;margin-top:6px;">メールアドレス・電話番号は、再採寸キーを紛失した際の本人確認に使用します。</div>
+    <div style="font-size:11px;color:#777;line-height:1.55;margin-top:6px;">メールアドレスまたは電話番号を登録しておくと、再採寸キーを紛失した際に自動で再発行できます。</div>
   </div>
 
   <div class="field">
@@ -3629,6 +3631,18 @@ function backFromKartePage(){
 let PINFORME_SUBMITTING=false;
 let PINFORME_SUBMITTED=false;
 
+function pinformeIsApplePrivateRelayEmail(value){
+  const v=String(value||"").trim().toLowerCase();
+  return /@privaterelay\.appleid\.com$/.test(v);
+}
+
+function pinformeCheckRecoveryEmail(){
+  const input=document.getElementById("recoveryEmail");
+  const warning=document.getElementById("pinformeRecoveryEmailWarning");
+  if(!warning) return;
+  warning.style.display=pinformeIsApplePrivateRelayEmail(input?.value) ? "block" : "none";
+}
+
 async function sendToPinforme(){
   if(!document.getElementById("dataConsent")?.checked){
     alert("データの取扱いへの同意が確認できません。最初の画面で同意内容をご確認ください。");
@@ -3639,6 +3653,17 @@ async function sendToPinforme(){
   if(PINFORME_SUBMITTED){
     alert("このカルテはすでにPINFORMEへ送信・保存済みです。");
     return;
+  }
+  const recoveryEmailForCheck=textValue("recoveryEmail") || "";
+  if(pinformeIsApplePrivateRelayEmail(recoveryEmailForCheck)){
+    const proceed=confirm(
+      "iPhoneの『メールを非公開』で作成されたアドレスが入力されています。\n\n再採寸キーを忘れた場合、この非公開アドレスと完全に同じ文字列を入力する必要があります。\n\nこのアドレスを登録したまま送信しますか？\n『キャンセル』を押すとメール欄に戻れます。"
+    );
+    if(!proceed){
+      const emailInput=document.getElementById("recoveryEmail");
+      try{ emailInput?.focus(); emailInput?.scrollIntoView({behavior:"smooth",block:"center"}); }catch(e){}
+      return;
+    }
   }
   PINFORME_SUBMITTING=true;
   if(submitBtn){ submitBtn.disabled=true; submitBtn.textContent="送信・保存中…"; submitBtn.style.opacity=".65"; }
@@ -4921,8 +4946,8 @@ document.addEventListener("change",function(e){
   <div class="pin-key-recovery-card">
     <h2 id="pinformeKeyRecoveryTitle">再採寸キーの再発行</h2>
     <p>
-      登録時のメールアドレスまたは電話番号を入力してください。<br>
-      登録情報と一致した場合、新しい再採寸キーを自動で送信します。
+      登録時に保存した<strong>同じメールアドレスまたは電話番号</strong>を入力してください。<br>
+      登録情報と完全に一致した場合、新しい再採寸キーを自動で送信します。
     </p>
     <input id="pinformeKeyRecoveryContact"
            class="pin-key-recovery-input"
