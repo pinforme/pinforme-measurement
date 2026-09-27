@@ -3571,7 +3571,11 @@ async function sendToPinforme(){
           "Authorization":"Bearer "+PINFORME_SUPABASE_KEY,
           "Content-Type":"application/json"
         },
-        body:JSON.stringify({p_dog_id:dogId,p_owner_id:ownerId})
+        body:JSON.stringify({
+          p_dog_id:dogId,
+          p_owner_id:ownerId,
+          p_remeasure_key:ownerRemeasureKey
+        })
       });
       if(!linkRes.ok){
         const detail=await linkRes.text();
