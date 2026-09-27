@@ -507,7 +507,7 @@ body.pinforme-admin-route.pinforme-admin-karte-open #kartePage .karte-actions bu
   display:block !important;
 }
 </style>
-<meta name="pinforme-build" content="remeasure-repeat-save-20260927-1200">
+<meta name="pinforme-build" content="full-submit-reset-20260927-1215">
 </head>
 <body>
 
@@ -2617,6 +2617,29 @@ function backToFinish(){
   window.scrollTo(0,0);
 }
 function backToStartKeepData(){
+  // いま保存したカルテ自体は二重送信防止のため保存済みのまま扱うが、
+  // 次の「新規採寸 / 再採寸」を開始できるよう送信ロックはここで解除する。
+  PINFORME_SUBMITTED=false;
+  PINFORME_SUBMITTING=false;
+
+  try{
+    localStorage.removeItem("PINFORME_SUBMITTED");
+    localStorage.removeItem("PINFORME_SUBMITTING");
+  }catch(e){}
+
+  const submitBtn=document.getElementById("pinformeSubmitButton");
+  if(submitBtn){
+    submitBtn.disabled=false;
+    submitBtn.textContent="PINFORMEへ送信・保存";
+    submitBtn.style.opacity="1";
+  }
+
+  const status=document.getElementById("sendStatus");
+  if(status) status.textContent="";
+
+  const postSaveChoice=document.getElementById("pinformePostSaveChoice");
+  if(postSaveChoice) postSaveChoice.style.display="none";
+
   hideAll();
   document.getElementById("entryChoicePage").classList.add("active");
   try{ localStorage.setItem("PINFORME_CURRENT_VIEW","entryChoicePage"); }catch(e){}
