@@ -6,7 +6,7 @@
 <meta http-equiv="Expires" content="0">
 <script id="pinforme-latest-version-guard">
 (function(){
-  const PINFORME_BUILD_ID="20260928-0350-close-stable";
+  const PINFORME_BUILD_ID="20260928-0418-close-final";
 
   function forceFresh(reason){
     try{
@@ -716,6 +716,8 @@ body.pinforme-admin-route.pinforme-admin-karte-open #kartePage .karte-actions bu
   pointer-events:auto !important;
   touch-action:manipulation;
   -webkit-tap-highlight-color:rgba(0,0,0,0);
+  -webkit-user-select:none;
+  user-select:none;
 }
 .pin-key-recovery-submit:disabled{opacity:.5;}
 #pinformeKeyRecoveryStatus{
@@ -5032,7 +5034,8 @@ document.addEventListener("change",function(e){
     <button id="pinformeKeyRecoveryClose"
             type="button"
             class="pin-key-recovery-close"
-            onclick="pinformeCloseKeyRecovery(); return false;">閉じる</button>
+            onpointerdown="event.preventDefault(); event.stopPropagation(); pinformeCloseKeyRecovery();"
+            onclick="event.preventDefault(); event.stopPropagation(); pinformeCloseKeyRecovery(); return false;">閉じる</button>
     <div class="pin-key-recovery-dm">
       メール・SMSが届かない場合、または連絡先を登録していない場合は、PINFORME公式InstagramのDMへお問い合わせください。
     </div>
@@ -5104,6 +5107,13 @@ document.addEventListener("change",function(e){
       return;
     }
 
+    try{ ownerNameInput && ownerNameInput.blur(); }catch(e){}
+    try{ contactInput && contactInput.blur(); }catch(e){}
+    try{
+      const ae=document.activeElement;
+      if(ae && typeof ae.blur==="function") ae.blur();
+    }catch(e){}
+
     if(btn){ btn.disabled=true; btn.textContent="確認・送信中…"; }
     if(status) status.textContent="登録情報を確認しています…";
 
@@ -5137,26 +5147,6 @@ document.addEventListener("change",function(e){
     if(e.key==="Escape") pinformeCloseKeyRecovery();
   });
 
-  function bindRecoveryCloseButton(){
-    const closeBtn=document.getElementById("pinformeKeyRecoveryClose");
-    if(!closeBtn || closeBtn.dataset.pinformeBound==="1") return;
-
-    closeBtn.dataset.pinformeBound="1";
-
-    closeBtn.addEventListener("click",function(e){
-      e.preventDefault();
-      e.stopPropagation();
-      pinformeCloseKeyRecovery();
-    });
-  }
-
-  if(document.readyState==="loading"){
-    document.addEventListener("DOMContentLoaded",bindRecoveryCloseButton,{once:true});
-  }else{
-    bindRecoveryCloseButton();
-  }
-
-  window.addEventListener("pageshow",bindRecoveryCloseButton);
 })();
 </script>
 
