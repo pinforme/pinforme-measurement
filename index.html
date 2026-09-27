@@ -507,7 +507,26 @@ body.pinforme-admin-route.pinforme-admin-karte-open #kartePage .karte-actions bu
   display:block !important;
 }
 </style>
-<meta name="pinforme-build" content="atomic-dog-owner-rpc-20260927-1227">
+<meta name="pinforme-build" content="admin-full-isolation-20260927-1253">
+
+<style id="pinforme-admin-complete-isolation">
+/* 管理者画面表示中は、お客様側の画面を一切混在させない */
+body.pinforme-admin-view #entryChoicePage,
+body.pinforme-admin-view #newOwnerChoicePage,
+body.pinforme-admin-view #existingOwnerLookupPage,
+body.pinforme-admin-view #remeasureLookupPage,
+body.pinforme-admin-view #startPage,
+body.pinforme-admin-view #dogInfoPage,
+body.pinforme-admin-view .step,
+body.pinforme-admin-view #finishPage,
+body.pinforme-admin-view #kartePage{
+  display:none !important;
+}
+body.pinforme-admin-view #adminPage{
+  display:block !important;
+}
+</style>
+
 </head>
 <body>
 
@@ -2594,6 +2613,23 @@ html,body{margin:0!important;padding:0!important;width:297mm!important;height:21
 
 
 
+
+<script id="pinforme-admin-route-body-lock">
+document.addEventListener("DOMContentLoaded",function(){
+  try{
+    const p=new URLSearchParams(location.search);
+    if(p.get("admin")==="login"){
+      document.body.classList.add("pinforme-admin-view");
+      const finish=document.getElementById("finishPage");
+      if(finish){
+        finish.classList.remove("active");
+        finish.style.display="none";
+      }
+    }
+  }catch(e){}
+});
+</script>
+
 </body></html>`);
     printWin.document.close();
 
@@ -2847,6 +2883,8 @@ async function verifyAdminAccess(accessToken){
   }catch(e){return false}
 }
 function openAdminPage(){
+  document.body.classList.add("pinforme-admin-view");
+  document.body.classList.remove("pinforme-admin-karte-open");
   hideAll();
   const finish=document.getElementById("finishPage");
   if(finish){
