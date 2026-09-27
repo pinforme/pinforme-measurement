@@ -685,6 +685,39 @@ body.pinforme-admin-route.pinforme-admin-karte-open #kartePage .karte-actions bu
 }
 </style>
 
+
+<style id="pinforme-karte-action-alignment-final">
+#kartePage .karte-actions{
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important;
+  gap:10px !important;
+  align-items:stretch !important;
+  max-width:1123px;
+  margin:10px auto 24px;
+  padding:0 12px;
+}
+#kartePage .karte-actions > button{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  width:100% !important;
+  min-width:0 !important;
+  height:56px !important;
+  min-height:56px !important;
+  margin:0 !important;
+  padding:0 12px !important;
+  border-radius:28px !important;
+  box-sizing:border-box !important;
+  line-height:1.2 !important;
+}
+@media(max-width:420px){
+  #kartePage .karte-actions{gap:8px !important;padding:0 10px;}
+  #kartePage .karte-actions > button{font-size:14px !important;padding:0 8px !important;}
+}
+@media print{
+  #kartePage .karte-actions{display:none !important;}
+}
+</style>
 </head>
 <body>
 
@@ -2762,51 +2795,11 @@ async function printFinalKarte(){
 @page{size:A4 landscape;margin:0!important}
 /* iPhone Safari対策：印刷ドキュメント自体には高さを持たせない。
    カルテを fixed で1枚目に描画することで、空白の2ページ目を作らせない。 */
-html,body{margin:0!important;padding:0!important;width:297mm!important;height:210mm!important;min-width:297mm!important;min-height:210mm!important;background:#fff!important;overflow:hidden!important}
-.view{position:absolute!important;left:0!important;top:0!important;width:297mm!important;height:210mm!important;margin:0!important;padding:0!important;overflow:hidden!important;background:#fff!important}
+html,body{margin:0!important;padding:0!important;width:297mm!important;height:190mm!important;min-height:0!important;background:#fff!important;overflow:hidden!important}
+.view{position:relative!important;width:297mm!important;height:190mm!important;margin:0!important;padding:0!important;overflow:hidden!important;background:#fff!important}
 .sheet{position:absolute!important;left:0!important;top:0!important;width:1123px!important;height:794px!important;min-width:1123px!important;min-height:794px!important;margin:0!important;padding:24px 30px!important;transform:scale(.94)!important;transform-origin:top left!important;box-shadow:none!important;background:#fff!important;overflow:hidden!important}
-@media print{html,body,.view{width:297mm!important;height:210mm!important;min-width:297mm!important;min-height:210mm!important;margin:0!important;padding:0!important;overflow:hidden!important}.sheet{position:absolute!important;left:0!important;top:0!important;width:1123px!important;height:794px!important;min-width:1123px!important;min-height:794px!important;margin:0!important;transform:scale(.94)!important;transform-origin:top left!important;overflow:hidden!important;page-break-after:avoid!important;page-break-inside:avoid!important;break-inside:avoid-page!important}}
-</style></head><body><div class="view">${cloned.outerHTML}</div>
-<!-- ===== PINFORME 管理ログイン：最終固定（Safari/iPhone含む） ===== -->
-<style id="pinforme-admin-login-final-alignment-fix">
-#adminPage #adminLoginBox .admin-actions{
-  display:grid !important;
-  grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important;
-  gap:10px !important;
-  align-items:stretch !important;
-  margin-top:18px !important;
-}
-#adminPage #adminLoginBox .admin-actions > .admin-btn{
-  display:flex !important;
-  align-items:center !important;
-  justify-content:center !important;
-  width:100% !important;
-  min-width:0 !important;
-  height:52px !important;
-  min-height:52px !important;
-  margin:0 !important;
-  margin-top:0 !important;
-  margin-bottom:0 !important;
-  padding:0 12px !important;
-  box-sizing:border-box !important;
-  align-self:stretch !important;
-  position:static !important;
-  transform:none !important;
-  line-height:1.2 !important;
-}
-#adminPage #adminLoginBox .admin-actions > .admin-btn.primary,
-#adminPage #adminLoginBox .admin-actions > .admin-btn.light{
-  margin:0 !important;
-  margin-top:0 !important;
-  height:52px !important;
-  min-height:52px !important;
-}
-</style>
-
-
-
-
-</body></html>`);
+@media print{html,body{width:297mm!important;height:190mm!important;min-height:0!important;margin:0!important;padding:0!important;overflow:hidden!important}.view{position:relative!important;width:297mm!important;height:190mm!important;margin:0!important;padding:0!important;overflow:hidden!important}.sheet{position:absolute!important;left:0!important;top:0!important;width:1123px!important;height:794px!important;min-width:1123px!important;min-height:794px!important;margin:0!important;transform:scale(.94)!important;transform-origin:top left!important;overflow:hidden!important;page-break-inside:avoid!important;break-inside:avoid-page!important}}
+</style></head><body><div class="view">${cloned.outerHTML}</div></body></html>`);
     printWin.document.close();
 
     // base64画像・愛犬写真をすべて読み込んでから印刷する
@@ -2815,7 +2808,7 @@ html,body{margin:0!important;padding:0!important;width:297mm!important;height:21
       return new Promise(resolve=>{img.onload=resolve;img.onerror=resolve;});
     }));
     await waitImages();
-    await new Promise(r=>setTimeout(r,900));
+    await new Promise(r=>setTimeout(r,350));
     printWin.focus();
     printWin.print();
   }catch(err){
@@ -5006,7 +4999,7 @@ document.addEventListener("change",function(e){
     if(status) status.textContent="登録情報を確認しています…";
 
     try{
-      const res=await fetch(`${PINFORME_SUPABASE_BASE}/functions/v1/request-remeasure-key`,{
+      const res=await fetch(`${PINFORME_SUPABASE_BASE}/functions/v1/rapid-api`,{
         method:"POST",
         headers:{
           "apikey":PINFORME_SUPABASE_KEY,
