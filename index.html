@@ -2759,172 +2759,56 @@ async function printFinalKarte(){
   const frame=document.getElementById("finalKarteFrame");
   if(!frame || !frame.contentDocument) return;
 
+  // 表示中の完成カルテを「トップレベルの印刷専用ページ」に複製する。
+  // iPhone Safari は iframe を直接 print() すると、絶対配置要素や画像が
+  // 欠落することがあるため、iframe 自体は印刷しない。
   try{
     const doc=frame.contentDocument;
     const sheet=doc.getElementById("sheet");
     if(!sheet) return;
 
-    // iPhone Safariでは「高さ0のbody + fixed配置」を印刷すると白紙になることがある。
-    // そのため、印刷専用ウィンドウ内にA4横1ページ分の通常フローを作り、
-    // その中へ完成カルテを縮小配置して印刷する。
     const printWin=window.open("","_blank");
     if(!printWin){
       alert("PDF保存画面を開けませんでした。Safariのポップアップを許可して、もう一度お試しください。");
       return;
     }
 
+    // iframe 内で確定済みの見た目・入力値をそのままコピー
     const styles=Array.from(doc.querySelectorAll("style")).map(el=>el.outerHTML).join("\n");
     const cloned=sheet.cloneNode(true);
+    cloned.removeAttribute("style");
 
-    // 表示中の画像を確実に複製する
+    // canvas は使っていないが、画像は src/currentSrc を明示して iOS 印刷時の欠落を防ぐ
     const srcImgs=sheet.querySelectorAll("img");
     const dstImgs=cloned.querySelectorAll("img");
     srcImgs.forEach((img,i)=>{
-      if(!dstImgs[i]) return;
-      const u=img.currentSrc || img.src;
-      if(u) dstImgs[i].setAttribute("src",u);
-      const cs=getComputedStyle(img);
-      dstImgs[i].style.display=cs.display;
-      dstImgs[i].style.visibility=cs.visibility;
-      dstImgs[i].style.opacity=cs.opacity;
+      if(dstImgs[i]){
+        const u=img.currentSrc || img.src;
+        if(u) dstImgs[i].setAttribute("src",u);
+        dstImgs[i].style.display=getComputedStyle(img).display;
+      }
     });
 
     printWin.document.open();
-    printWin.document.write(`<!doctype html>
-<html lang="ja">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>PINFORME 採寸カルテ</title>
-${styles}
+    printWin.document.write(`<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${styles}
 <style>
 @page{size:A4 landscape;margin:0!important}
-*{box-sizing:border-box}
-html,body{
-  margin:0!important;
-  padding:0!important;
-  width:297mm!important;
-  min-width:297mm!important;
-  height:auto!important;
-  min-height:0!important;
-  background:#fff!important;
-}
-body{
-  -webkit-print-color-adjust:exact!important;
-  print-color-adjust:exact!important;
-}
-/* iPhone Safari対策：A4ぎりぎりを使わず、安全領域を1枚だけ通常フローに置く */
-.print-page{
-  position:relative!important;
-  display:block!important;
-  width:287mm!important;
-  height:195mm!important;
-  margin:4mm 5mm!important;
-  padding:0!important;
-  overflow:hidden!important;
-  background:#fff!important;
-  break-inside:avoid!important;
-  page-break-inside:avoid!important;
-  break-after:avoid-page!important;
-  page-break-after:avoid!important;
-}
-/* 元カルテ 1123×794px を安全領域内へ確実に収める。
-   absolute配置にして、元サイズが改ページ計算へ影響しないようにする。 */
-.print-scale{
-  position:absolute!important;
-  left:8mm!important;
-  top:2mm!important;
-  width:1123px!important;
-  height:794px!important;
-  transform:scale(.91)!important;
-  transform-origin:top left!important;
-}
-.print-scale .sheet{
-  position:relative!important;
-  left:0!important;
-  top:0!important;
-  width:1123px!important;
-  height:794px!important;
-  min-width:1123px!important;
-  min-height:794px!important;
-  max-width:none!important;
-  max-height:none!important;
-  margin:0!important;
-  transform:none!important;
-  box-shadow:none!important;
-  background:#fff!important;
-  overflow:hidden!important;
-  break-inside:avoid!important;
-  page-break-inside:avoid!important;
-}
-@media print{
-  html,body{
-    width:297mm!important;
-    min-width:297mm!important;
-    height:auto!important;
-    min-height:0!important;
-    overflow:visible!important;
-  }
-  body{margin:0!important;padding:0!important;}
-  .print-page{
-    width:287mm!important;
-    height:195mm!important;
-    margin:4mm 5mm!important;
-    overflow:hidden!important;
-    break-inside:avoid!important;
-    page-break-inside:avoid!important;
-    break-after:avoid-page!important;
-    page-break-after:avoid!important;
-  }
-  .print-scale{
-    position:absolute!important;
-    left:8mm!important;
-    top:2mm!important;
-    width:1123px!important;
-    height:794px!important;
-    transform:scale(.91)!important;
-    transform-origin:top left!important;
-  }
-  .print-scale .sheet{
-    width:1123px!important;
-    height:794px!important;
-    min-width:1123px!important;
-    min-height:794px!important;
-    max-width:none!important;
-    max-height:none!important;
-    transform:none!important;
-    break-inside:avoid!important;
-    page-break-inside:avoid!important;
-  }
-}
-</style>
-</head>
-<body>
-  <div class="print-page">
-    <div class="print-scale">${cloned.outerHTML}</div>
-  </div>
-</body>
-</html>`);
+/* iPhone Safari対策：印刷ドキュメント自体には高さを持たせない。
+   カルテを fixed で1枚目に描画することで、空白の2ページ目を作らせない。 */
+html,body{margin:0!important;padding:0!important;width:297mm!important;height:190mm!important;min-height:0!important;background:#fff!important;overflow:hidden!important}
+.view{position:relative!important;width:297mm!important;height:190mm!important;margin:0!important;padding:0!important;overflow:hidden!important;background:#fff!important}
+.sheet{position:absolute!important;left:0!important;top:0!important;width:1123px!important;height:794px!important;min-width:1123px!important;min-height:794px!important;margin:0!important;padding:24px 30px!important;transform:scale(.94)!important;transform-origin:top left!important;box-shadow:none!important;background:#fff!important;overflow:hidden!important}
+@media print{html,body{width:297mm!important;height:190mm!important;min-height:0!important;margin:0!important;padding:0!important;overflow:hidden!important}.view{position:relative!important;width:297mm!important;height:190mm!important;margin:0!important;padding:0!important;overflow:hidden!important}.sheet{position:absolute!important;left:0!important;top:0!important;width:1123px!important;height:794px!important;min-width:1123px!important;min-height:794px!important;margin:0!important;transform:scale(.94)!important;transform-origin:top left!important;overflow:hidden!important;page-break-inside:avoid!important;break-inside:avoid-page!important}}
+</style></head><body><div class="view">${cloned.outerHTML}</div></body></html>`);
     printWin.document.close();
 
+    // base64画像・愛犬写真をすべて読み込んでから印刷する
     const waitImages=()=>Promise.all(Array.from(printWin.document.images).map(img=>{
       if(img.complete) return Promise.resolve();
       return new Promise(resolve=>{img.onload=resolve;img.onerror=resolve;});
     }));
-
     await waitImages();
-    try{
-      if(printWin.document.fonts && printWin.document.fonts.ready){
-        await printWin.document.fonts.ready;
-      }
-    }catch(e){}
-
-    // Safariにレイアウト確定の1フレームを与えてから印刷する
-    await new Promise(resolve=>{
-      const raf=printWin.requestAnimationFrame || function(cb){return setTimeout(cb,16)};
-      raf(()=>raf(()=>setTimeout(resolve,120)));
-    });
-
+    await new Promise(r=>setTimeout(r,350));
     printWin.focus();
     printWin.print();
   }catch(err){
@@ -2932,7 +2816,6 @@ body{
     alert("カルテのPDF保存画面を開けませんでした。もう一度お試しください。");
   }
 }
-
 function backToFinish(){
   hideAll();
   document.getElementById("finishPage").classList.add("active");
