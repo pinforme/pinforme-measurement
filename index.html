@@ -507,7 +507,7 @@ body.pinforme-admin-route.pinforme-admin-karte-open #kartePage .karte-actions bu
   display:block !important;
 }
 </style>
-<meta name="pinforme-build" content="link-dog-3arg-20260927-1140">
+<meta name="pinforme-build" content="secure-measurement-rpc-20260927-1151">
 </head>
 <body>
 
@@ -3624,22 +3624,35 @@ async function sendToPinforme(){
     delete payload.recovery_email;
     delete payload.recovery_phone;
 
-    if(status) status.textContent="カルテを保存しています…";
-    const res=await fetch(PINFORME_SAVE_ENDPOINT,{
+    if(!ownerRemeasureKey){
+      try{
+        ownerRemeasureKey=pinformeNormalizeRemeasureKey(
+          localStorage.getItem(PINFORME_OWNER_REMEASURE_KEY)||""
+        );
+      }catch(e){}
+    }
+    if(!ownerRemeasureKey){
+      throw new Error("採寸データ保存に必要な再採寸キーを確認できませんでした。");
+    }
+
+    if(status) status.textContent="カルテを安全に保存しています…";
+    const res=await fetch(`${PINFORME_SUPABASE_BASE}/rest/v1/rpc/save_measurement_secure`,{
       method:"POST",
       headers:{
         "apikey":PINFORME_SUPABASE_KEY,
-        "Content-Type":"application/json",
-        "Prefer":"return=minimal"
+        "Authorization":"Bearer "+PINFORME_SUPABASE_KEY,
+        "Content-Type":"application/json"
       },
-      body:JSON.stringify(payload)
+      body:JSON.stringify({
+        p_payload:payload,
+        p_owner_id:ownerId,
+        p_dog_id:dogId,
+        p_remeasure_key:ownerRemeasureKey
+      })
     });
     if(!res.ok){
       const detail=await res.text();
-      if(detail.includes("photo_promo_consent")){
-        throw new Error("Supabase側に写真同意の保存項目がまだありません。写真同意用SQLを1回実行してください。");
-      }
-      throw new Error("HTTP "+res.status+" "+detail);
+      throw new Error("採寸データ保存失敗: HTTP "+res.status+" "+detail);
     }
     PINFORME_SUBMITTED=true;
     try{
