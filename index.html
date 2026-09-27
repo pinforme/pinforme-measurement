@@ -6,7 +6,7 @@
 <meta http-equiv="Expires" content="0">
 <script id="pinforme-latest-version-guard">
 (function(){
-  const PINFORME_BUILD_ID="20260927-2337";
+  const PINFORME_BUILD_ID="20260927-2358-consent";
 
   function forceFresh(reason){
     try{
@@ -3729,6 +3729,8 @@ async function sendToPinforme(){
     sex:(document.querySelector('input[name="sex"]:checked')?.value) || null,
     weight:numericOrNull(textValue("weight")),
     photo_promo_consent:PINFORME_PHOTO_PROMO_CONSENT === true,
+    data_usage_consent:document.getElementById("dataConsent")?.checked === true,
+    data_usage_consented_at:document.getElementById("dataConsent")?.checked === true ? new Date().toISOString() : null,
     neck:avg(0),
     chest:avg(1),
     waist:avg(2),
