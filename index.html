@@ -6,7 +6,7 @@
 <meta http-equiv="Expires" content="0">
 <script id="pinforme-latest-version-guard">
 (function(){
-  const PINFORME_BUILD_ID="20260927-2322";
+  const PINFORME_BUILD_ID="20260927-2337";
 
   function forceFresh(reason){
     try{
@@ -4034,7 +4034,25 @@ function restorePINFORMEState(){
   if(dd) dd.textContent=dog+suffix;
   if(dt && dog) dt.textContent=dog+suffix+"の情報";
 
-  const wanted=state.view || localStorage.getItem(PINFORME_VIEW_KEY);
+  // 通常の新規アクセスでは、保存された途中画面へ直行せず
+  // 必ず「新規採寸 / 再採寸」のトップ画面から開始する。
+  // ページ更新(reload)時だけは従来どおり入力内容と現在画面を復元する。
+  let navType="navigate";
+  try{
+    const nav=performance.getEntriesByType("navigation");
+    if(nav && nav[0] && nav[0].type) navType=nav[0].type;
+  }catch(e){}
+
+  let wanted=state.view || localStorage.getItem(PINFORME_VIEW_KEY);
+  if(navType==="navigate" && !new URLSearchParams(location.search).has("admin")){
+    wanted="entryChoicePage";
+    try{
+      localStorage.setItem(PINFORME_VIEW_KEY,"entryChoicePage");
+      state.view="entryChoicePage";
+      localStorage.setItem(PINFORME_FORM_STATE_KEY,JSON.stringify(state));
+    }catch(e){}
+  }
+
   if(wanted){
     if(String(wanted).startsWith("measure:")){
       const idx=parseInt(String(wanted).split(":")[1],10);
