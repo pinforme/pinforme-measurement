@@ -507,7 +507,7 @@ body.pinforme-admin-route.pinforme-admin-karte-open #kartePage .karte-actions bu
   display:block !important;
 }
 </style>
-<meta name="pinforme-build" content="secure-measurement-rpc-20260927-1151">
+<meta name="pinforme-build" content="remeasure-repeat-save-20260927-1200">
 </head>
 <body>
 
@@ -4145,6 +4145,23 @@ document.addEventListener("click",function(){
   };
 
   window.pinformeChooseRemeasurement=function(){
+    // 前回の保存済み状態を完全に解除して、新しい再採寸として開始する。
+    try{
+      PINFORME_SUBMITTED=false;
+      PINFORME_SUBMITTING=false;
+      localStorage.removeItem("PINFORME_SUBMITTED");
+      localStorage.removeItem("PINFORME_SUBMITTING");
+      const submitBtn=document.getElementById("pinformeSubmitButton");
+      if(submitBtn){
+        submitBtn.disabled=false;
+        submitBtn.textContent="PINFORMEへ送信・保存";
+        submitBtn.style.opacity="1";
+      }
+      const sendStatus=document.getElementById("sendStatus");
+      if(sendStatus) sendStatus.textContent="";
+      const postSaveChoice=document.getElementById("pinformePostSaveChoice");
+      if(postSaveChoice) postSaveChoice.style.display="none";
+    }catch(e){}
     const input=document.getElementById('pinformeRemeasureKeyInput');
     // 再採寸画面を開くたびに入力欄は空欄から開始する。
     // 端末内に前回キーが残っていても自動表示しない。
@@ -4199,6 +4216,23 @@ document.addEventListener("click",function(){
     }catch(e){console.error(e);if(status)status.textContent='登録情報の確認中にエラーが発生しました。';}
   };
   window.pinformeSelectRemeasureDog=function(d,key){
+    // わんちゃん選択時にも保存済み状態を再度解除。
+    try{
+      PINFORME_SUBMITTED=false;
+      PINFORME_SUBMITTING=false;
+      localStorage.removeItem("PINFORME_SUBMITTED");
+      localStorage.removeItem("PINFORME_SUBMITTING");
+      const submitBtn=document.getElementById("pinformeSubmitButton");
+      if(submitBtn){
+        submitBtn.disabled=false;
+        submitBtn.textContent="PINFORMEへ送信・保存";
+        submitBtn.style.opacity="1";
+      }
+      const sendStatus=document.getElementById("sendStatus");
+      if(sendStatus) sendStatus.textContent="";
+      const postSaveChoice=document.getElementById("pinformePostSaveChoice");
+      if(postSaveChoice) postSaveChoice.style.display="none";
+    }catch(e){}
     const dogId=Number(d?.dog_id),ownerId=Number(d?.owner_id);if(!(dogId>0&&ownerId>0))return;
     try{
       localStorage.setItem(PINFORME_REMEASURE_DOG_ID_KEY,String(dogId));
