@@ -6,7 +6,7 @@
 <meta http-equiv="Expires" content="0">
 <script id="pinforme-latest-version-guard">
 (function(){
-  const PINFORME_BUILD_ID="20260928-0348-closefix";
+  const PINFORME_BUILD_ID="20260928-0350-close-stable";
 
   function forceFresh(reason){
     try{
@@ -5054,7 +5054,11 @@ document.addEventListener("change",function(e){
     if(btn){ btn.disabled=false; btn.textContent="新しいキーを送信する"; }
     if(ownerNameInput) ownerNameInput.value="";
     if(contactInput) contactInput.value="";
-    if(modal) modal.classList.add("open");
+    if(modal){
+      modal.style.removeProperty("display");
+      modal.removeAttribute("aria-hidden");
+      modal.classList.add("open");
+    }
     setTimeout(()=>{ try{ ownerNameInput && ownerNameInput.focus(); }catch(e){} },80);
   };
 
@@ -5070,7 +5074,7 @@ document.addEventListener("change",function(e){
 
     if(modal){
       modal.classList.remove("open");
-      modal.style.display="none";
+      modal.style.setProperty("display","none","important");
       modal.setAttribute("aria-hidden","true");
     }
 
@@ -5079,13 +5083,6 @@ document.addEventListener("change",function(e){
       btn.disabled=false;
       btn.textContent="新しいキーを送信する";
     }
-
-    setTimeout(()=>{
-      if(modal){
-        modal.style.display="";
-        modal.removeAttribute("aria-hidden");
-      }
-    },30);
   };
 
   window.pinformeSubmitKeyRecovery=async function(){
@@ -5150,13 +5147,7 @@ document.addEventListener("change",function(e){
       e.preventDefault();
       e.stopPropagation();
       pinformeCloseKeyRecovery();
-    },true);
-
-    closeBtn.addEventListener("touchend",function(e){
-      e.preventDefault();
-      e.stopPropagation();
-      pinformeCloseKeyRecovery();
-    },{capture:true,passive:false});
+    });
   }
 
   if(document.readyState==="loading"){
