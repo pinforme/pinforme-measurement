@@ -6,7 +6,7 @@
 <meta http-equiv="Expires" content="0">
 <script id="pinforme-latest-version-guard">
 (function(){
-  const PINFORME_BUILD_ID="20260927-2358-consent";
+  const PINFORME_BUILD_ID="20260928-0348-closefix";
 
   function forceFresh(reason){
     try{
@@ -711,6 +711,11 @@ body.pinforme-admin-route.pinforme-admin-karte-open #kartePage .karte-actions bu
   border:1px solid #d0d0d0;
   background:#f5f5f5;
   color:#222;
+  position:relative;
+  z-index:3;
+  pointer-events:auto !important;
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:rgba(0,0,0,0);
 }
 .pin-key-recovery-submit:disabled{opacity:.5;}
 #pinformeKeyRecoveryStatus{
@@ -5024,9 +5029,10 @@ document.addEventListener("change",function(e){
             class="pin-key-recovery-submit"
             onclick="pinformeSubmitKeyRecovery()">新しいキーを送信する</button>
     <div id="pinformeKeyRecoveryStatus" aria-live="polite"></div>
-    <button type="button"
+    <button id="pinformeKeyRecoveryClose"
+            type="button"
             class="pin-key-recovery-close"
-            onclick="pinformeCloseKeyRecovery()">閉じる</button>
+            onclick="pinformeCloseKeyRecovery(); return false;">閉じる</button>
     <div class="pin-key-recovery-dm">
       メール・SMSが届かない場合、または連絡先を登録していない場合は、PINFORME公式InstagramのDMへお問い合わせください。
     </div>
@@ -5054,7 +5060,32 @@ document.addEventListener("change",function(e){
 
   window.pinformeCloseKeyRecovery=function(){
     const modal=document.getElementById("pinformeKeyRecoveryModal");
-    if(modal) modal.classList.remove("open");
+    const ownerNameInput=document.getElementById("pinformeKeyRecoveryOwnerName");
+    const contactInput=document.getElementById("pinformeKeyRecoveryContact");
+    const status=document.getElementById("pinformeKeyRecoveryStatus");
+    const btn=document.getElementById("pinformeKeyRecoverySubmit");
+
+    try{ ownerNameInput && ownerNameInput.blur(); }catch(e){}
+    try{ contactInput && contactInput.blur(); }catch(e){}
+
+    if(modal){
+      modal.classList.remove("open");
+      modal.style.display="none";
+      modal.setAttribute("aria-hidden","true");
+    }
+
+    if(status) status.textContent="";
+    if(btn){
+      btn.disabled=false;
+      btn.textContent="新しいキーを送信する";
+    }
+
+    setTimeout(()=>{
+      if(modal){
+        modal.style.display="";
+        modal.removeAttribute("aria-hidden");
+      }
+    },30);
   };
 
   window.pinformeSubmitKeyRecovery=async function(){
@@ -5108,6 +5139,33 @@ document.addEventListener("change",function(e){
   document.addEventListener("keydown",function(e){
     if(e.key==="Escape") pinformeCloseKeyRecovery();
   });
+
+  function bindRecoveryCloseButton(){
+    const closeBtn=document.getElementById("pinformeKeyRecoveryClose");
+    if(!closeBtn || closeBtn.dataset.pinformeBound==="1") return;
+
+    closeBtn.dataset.pinformeBound="1";
+
+    closeBtn.addEventListener("click",function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      pinformeCloseKeyRecovery();
+    },true);
+
+    closeBtn.addEventListener("touchend",function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      pinformeCloseKeyRecovery();
+    },{capture:true,passive:false});
+  }
+
+  if(document.readyState==="loading"){
+    document.addEventListener("DOMContentLoaded",bindRecoveryCloseButton,{once:true});
+  }else{
+    bindRecoveryCloseButton();
+  }
+
+  window.addEventListener("pageshow",bindRecoveryCloseButton);
 })();
 </script>
 
