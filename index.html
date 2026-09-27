@@ -4999,7 +4999,7 @@ document.addEventListener("change",function(e){
     if(status) status.textContent="登録情報を確認しています…";
 
     try{
-      const res=await fetch(`${PINFORME_SUPABASE_BASE}/functions/v1/request-remeasure-key`,{
+      const res=await fetch(`${PINFORME_SUPABASE_BASE}/functions/v1/rapid-api`,{
         method:"POST",
         headers:{
           "apikey":PINFORME_SUPABASE_KEY,
