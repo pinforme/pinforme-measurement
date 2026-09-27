@@ -2804,32 +2804,39 @@ html,body{
   margin:0!important;
   padding:0!important;
   width:297mm!important;
-  height:209mm!important;
-  min-height:209mm!important;
+  min-width:297mm!important;
+  height:auto!important;
+  min-height:0!important;
   background:#fff!important;
-  overflow:hidden!important;
 }
 body{
   -webkit-print-color-adjust:exact!important;
   print-color-adjust:exact!important;
 }
+/* iPhone Safari対策：A4ぎりぎりを使わず、安全領域を1枚だけ通常フローに置く */
 .print-page{
   position:relative!important;
   display:block!important;
-  width:297mm!important;
-  height:209mm!important;
-  margin:0!important;
+  width:287mm!important;
+  height:195mm!important;
+  margin:4mm 5mm!important;
   padding:0!important;
   overflow:hidden!important;
   background:#fff!important;
+  break-inside:avoid!important;
+  page-break-inside:avoid!important;
+  break-after:avoid-page!important;
+  page-break-after:avoid!important;
 }
+/* 元カルテ 1123×794px を安全領域内へ確実に収める。
+   absolute配置にして、元サイズが改ページ計算へ影響しないようにする。 */
 .print-scale{
   position:absolute!important;
-  left:2mm!important;
-  top:1.5mm!important;
+  left:8mm!important;
+  top:2mm!important;
   width:1123px!important;
   height:794px!important;
-  transform:scale(.98)!important;
+  transform:scale(.91)!important;
   transform-origin:top left!important;
 }
 .print-scale .sheet{
@@ -2840,31 +2847,51 @@ body{
   height:794px!important;
   min-width:1123px!important;
   min-height:794px!important;
+  max-width:none!important;
+  max-height:none!important;
   margin:0!important;
   transform:none!important;
   box-shadow:none!important;
   background:#fff!important;
   overflow:hidden!important;
+  break-inside:avoid!important;
+  page-break-inside:avoid!important;
 }
 @media print{
   html,body{
     width:297mm!important;
-    height:209mm!important;
-    min-height:209mm!important;
-    overflow:hidden!important;
+    min-width:297mm!important;
+    height:auto!important;
+    min-height:0!important;
+    overflow:visible!important;
   }
+  body{margin:0!important;padding:0!important;}
   .print-page{
-    width:297mm!important;
-    height:209mm!important;
+    width:287mm!important;
+    height:195mm!important;
+    margin:4mm 5mm!important;
     overflow:hidden!important;
+    break-inside:avoid!important;
+    page-break-inside:avoid!important;
     break-after:avoid-page!important;
     page-break-after:avoid!important;
+  }
+  .print-scale{
+    position:absolute!important;
+    left:8mm!important;
+    top:2mm!important;
+    width:1123px!important;
+    height:794px!important;
+    transform:scale(.91)!important;
+    transform-origin:top left!important;
   }
   .print-scale .sheet{
     width:1123px!important;
     height:794px!important;
     min-width:1123px!important;
     min-height:794px!important;
+    max-width:none!important;
+    max-height:none!important;
     transform:none!important;
     break-inside:avoid!important;
     page-break-inside:avoid!important;
