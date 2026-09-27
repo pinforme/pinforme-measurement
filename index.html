@@ -4550,4 +4550,56 @@ document.addEventListener("change",function(e){
 })();
 </script>
 
+
+<script id="pinforme-remeasure-submit-reset-fix">
+(function(){
+  function clearSubmittedStateForRemeasure(){
+    try{
+      localStorage.removeItem("PINFORME_SUBMITTED");
+      localStorage.removeItem("PINFORME_SUBMITTING");
+    }catch(e){}
+    try{
+      window.PINFORME_SUBMITTED=false;
+      window.PINFORME_SUBMITTING=false;
+    }catch(e){}
+    try{
+      if(typeof PINFORME_SUBMITTED!=="undefined") PINFORME_SUBMITTED=false;
+      if(typeof PINFORME_SUBMITTING!=="undefined") PINFORME_SUBMITTING=false;
+    }catch(e){}
+  }
+
+  // 再採寸入口を押した時点で前回の「保存済み」状態を解除
+  document.addEventListener("click",function(e){
+    const t=e.target && e.target.closest ? e.target.closest("button,[role='button']") : null;
+    if(!t) return;
+    const label=(t.textContent||"").replace(/\s+/g,"").trim();
+    if(label.includes("再採寸")){
+      clearSubmittedStateForRemeasure();
+    }
+  },true);
+
+  // 犬を選択した時にも念のため解除
+  const orig=window.pinformeSelectRemeasureDog;
+  if(typeof orig==="function"){
+    window.pinformeSelectRemeasureDog=function(){
+      clearSubmittedStateForRemeasure();
+      return orig.apply(this,arguments);
+    };
+  }
+
+  // DOMContentLoaded後に関数定義される場合へ対応
+  window.addEventListener("load",function(){
+    const fn=window.pinformeSelectRemeasureDog;
+    if(typeof fn==="function" && !fn.__pinformeResetWrapped){
+      const wrapped=function(){
+        clearSubmittedStateForRemeasure();
+        return fn.apply(this,arguments);
+      };
+      wrapped.__pinformeResetWrapped=true;
+      window.pinformeSelectRemeasureDog=wrapped;
+    }
+  });
+})();
+</script>
+
 </body></html>
