@@ -2680,8 +2680,12 @@ function validStep(section){
     alert('3回のうち、赤く表示された測定値だけをもう一度測って入力し直してください。ほかの2回はそのままで大丈夫です。');
     if(firstBad){
       try{firstBad.focus({preventScroll:true});}catch(e){firstBad.focus();}
-      setTimeout(()=>firstBad.scrollIntoView({behavior:'smooth',block:'center'}),0);
     }
+    // 警告を閉じたあと、赤い測定値と警告文が見える位置まで自動スクロール。
+    // iPhone Safariの下部バーに警告文が隠れないよう、警告文を画面中央寄りに表示する。
+    setTimeout(()=>{
+      try{w.scrollIntoView({behavior:'smooth',block:'center'});}catch(e){}
+    },120);
     return false;
   }
 
