@@ -6,7 +6,7 @@
 <meta http-equiv="Expires" content="0">
 <script id="pinforme-latest-version-guard">
 (function(){
-  const PINFORME_BUILD_ID="20260928-0418-close-final";
+  const PINFORME_BUILD_ID="20260928-0915-measure-range-check";
 
   function forceFresh(reason){
     try{
@@ -77,6 +77,11 @@ body.edit-from-finish .step.active .finish-return-btn{display:block}
 button{height:72px;border-radius:36px;font-size:22px;font-weight:900}
 .back{background:#fff;border:2px solid #888;color:#168bd1}
 .next{background:#111;border:0;color:#fff}
+.next:disabled{opacity:.42;cursor:not-allowed;pointer-events:none}
+.measure-range-error{background:#ffe8e8!important;border-color:#d93025!important;box-shadow:0 0 0 2px rgba(217,48,37,.12)}
+.inputbox.measure-range-box-error{background:#fff0f0;border-radius:14px;padding:8px 6px}
+.measure-range-warning{display:none;margin:16px 0 0;padding:12px 14px;border:1px solid #d93025;border-radius:12px;background:#fff0f0;color:#a31212;font-size:14px;font-weight:800;line-height:1.55;text-align:left}
+.measure-range-warning.show{display:block}
 @media(max-width:390px){
 .page{padding:12px}
 .location{font-size:16px;column-gap:9px}
@@ -2556,17 +2561,113 @@ function showStep(n){
   if(n>=steps.length){showFinish();return;}
   hideAll(); current=n; steps[current].classList.add("active"); window.scrollTo({top:0,behavior:"smooth"});
 }
-function validStep(section){
+const PINFORME_RANGE_RATE=0.05;      // 平均値の5％
+const PINFORME_RANGE_MIN_CM=0.5;    // 最低許容差 0.5cm
+
+function measurementGroups(section){
   const inputs=[...section.querySelectorAll('input[type="number"]')];
+  const groups=[];
   for(let i=0;i<inputs.length;i+=3){
     const g=inputs.slice(i,i+3);
-    if(g.length<3) continue;
-    const filled=g.filter(x=>String(x.value).trim()!=="").length;
-    if(filled!==0 && filled!==3){
+    if(g.length===3) groups.push(g);
+  }
+  return groups;
+}
+function groupState(group){
+  const raw=group.map(x=>String(x.value).trim());
+  const filled=raw.filter(Boolean).length;
+  if(filled===0) return {empty:true,partial:false,rangeError:false};
+  if(filled!==3) return {empty:false,partial:true,rangeError:false};
+  const vals=raw.map(Number);
+  if(!vals.every(Number.isFinite)) return {empty:false,partial:true,rangeError:false};
+  const avg=vals.reduce((a,b)=>a+b,0)/3;
+  const spread=Math.max(...vals)-Math.min(...vals);
+  const tolerance=Math.max(PINFORME_RANGE_MIN_CM,avg*PINFORME_RANGE_RATE);
+  return {empty:false,partial:false,rangeError:spread>tolerance+1e-9,avg,spread,tolerance};
+}
+function setGroupRangeError(group,on){
+  group.forEach(input=>{
+    input.classList.toggle('measure-range-error',on);
+    const box=input.closest('.inputbox');
+    if(box) box.classList.toggle('measure-range-box-error',on);
+  });
+}
+function rangeWarning(section){
+  let w=section.querySelector('.measure-range-warning');
+  if(!w){
+    w=document.createElement('div');
+    w.className='measure-range-warning';
+    w.setAttribute('role','alert');
+    const buttons=section.querySelector('.buttons');
+    if(buttons) buttons.parentNode.insertBefore(w,buttons);
+  }
+  return w;
+}
+function refreshRangeValidation(section){
+  if(section.dataset.rangeCheckActive!=="1") return;
+  const groups=measurementGroups(section);
+  let hasRangeError=false;
+  let hasPartial=false;
+  groups.forEach(g=>{
+    const st=groupState(g);
+    setGroupRangeError(g,st.rangeError);
+    if(st.rangeError) hasRangeError=true;
+    if(st.partial) hasPartial=true;
+  });
+  const w=rangeWarning(section);
+  const next=section.querySelector('.next');
+  if(hasRangeError){
+    w.textContent='3回の測定値に大きな差があります。赤く表示された箇所をもう一度測定してください。';
+    w.classList.add('show');
+  }else if(hasPartial){
+    w.textContent='測定値は「3回すべて入力」または「3回すべて空欄」のどちらかにしてください。';
+    w.classList.add('show');
+  }else{
+    w.classList.remove('show');
+    section.dataset.rangeCheckActive="0";
+  }
+  if(next) next.disabled=hasRangeError||hasPartial;
+}
+function validStep(section){
+  const groups=measurementGroups(section);
+  for(const g of groups){
+    const st=groupState(g);
+    if(st.partial){
       alert("測定値は「3回すべて入力」または「3回すべて空欄」のどちらかにしてください。");
       return false;
     }
   }
+
+  let firstBad=null;
+  let hasRangeError=false;
+  groups.forEach(g=>{
+    const st=groupState(g);
+    setGroupRangeError(g,st.rangeError);
+    if(st.rangeError){
+      hasRangeError=true;
+      if(!firstBad) firstBad=g[0];
+    }
+  });
+
+  const w=rangeWarning(section);
+  const next=section.querySelector('.next');
+  if(hasRangeError){
+    section.dataset.rangeCheckActive="1";
+    w.textContent='3回の測定値に大きな差があります。赤く表示された箇所をもう一度測定してください。';
+    w.classList.add('show');
+    if(next) next.disabled=true;
+    alert('3回の測定値に大きな差があります。赤く表示された箇所をもう一度測定してください。');
+    if(firstBad){
+      try{firstBad.focus({preventScroll:true});}catch(e){firstBad.focus();}
+      setTimeout(()=>firstBad.scrollIntoView({behavior:'smooth',block:'center'}),0);
+    }
+    return false;
+  }
+
+  groups.forEach(g=>setGroupRangeError(g,false));
+  w.classList.remove('show');
+  section.dataset.rangeCheckActive="0";
+  if(next) next.disabled=false;
   return true;
 }
 document.addEventListener("click",e=>{
@@ -2593,6 +2694,7 @@ function bindAverage(section){
       const vals=group.map(x=>parseFloat(x.value));
       avg.textContent=vals.length===3&&vals.every(Number.isFinite)
         ?(vals.reduce((a,b)=>a+b,0)/3).toFixed(1):"0.0";
+      refreshRangeValidation(section);
     };
     group.forEach(x=>x.addEventListener("input",calc));
   });
