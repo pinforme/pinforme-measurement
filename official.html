@@ -1398,7 +1398,7 @@ footer{padding:34px 0 46px;border-top:1px solid #ececec;font-size:12px;color:#77
 
       try{
         const breeds = await fetchPublic(
-          '/rest/v1/site_breed_options?select=canonical_breed,dog_count&order=canonical_breed'
+          '/rest/v1/site_breed_counts_public?select=canonical_breed,dog_count&order=canonical_breed'
         );
         countMap = new Map((breeds || []).map(x => [
           x.canonical_breed,
