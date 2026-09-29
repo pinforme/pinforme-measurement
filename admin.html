@@ -74,7 +74,110 @@ function loadStatuses(preferred){const p=$('project').value,list=statuses.filter
 function autoTitle(){const t=$('title');if(t.value.trim()&&t.dataset.auto!=='1')return;const b=$('breed').value,p=$('project').value;let v=b;if(p==='P01')v+='採寸協力募集';else if(p==='P02')v+=' サンプルモニター';else if(p==='P03')v+=' 着用モデル';else if(p==='P04')v+=' 商品開発';else if(p==='P05')v+=' フルオーダー';t.value=v;t.dataset.auto='1'}
 function preview(){const b=$('breed').value||'犬種',p=$('project').value||'',s=$('statusKey').value||'',st=$('startDate').value,en=$('endDate').value,vis=$('isVisible').checked;$('pvProject').textContent=projectLabel(p);$('pvStatus').textContent=statusLabel(p,s);$('pvRound').textContent='第'+($('roundNo').value||1)+'弾';$('pvTitle').textContent=$('title').value||b;$('pvDesc').textContent=$('description').value||'';$('pvBreed').textContent=b;$('pvCount').textContent='登録'+countFor(b)+'頭';$('pvPeriod').textContent=st?(en?st+'〜'+en:st+'〜'):'期間未設定';$('visibleLabel').textContent=vis?'表示中':'非表示';$('previewBox').style.opacity=vis?'1':'.35'}
 function payload(state){return{canonical_breed:$('breed').value,project_code:$('project').value,status_key:$('statusKey').value,round_no:Number($('roundNo').value||1),display_order:Number($('displayOrder').value||1),title:$('title').value.trim(),short_description:$('description').value.trim()||null,start_date:$('startDate').value||null,end_date:$('endDate').value||null,detail_page_enabled:$('detailEnabled').checked,detail_page_path:$('detailPath').value.trim()||null,cta_label:$('ctaLabel').value.trim()||null,cta_url:$('ctaUrl').value.trim()||null,admin_note:$('adminNote').value.trim()||null,publish_state:state,is_visible:$('isVisible').checked,published_at:state==='published'?new Date().toISOString():null}}
-async function saveProject(state){const st=$('saveStatus'),p=payload(state);if(!p.canonical_breed||!p.project_code||!p.status_key||!p.title){st.className='status err';st.textContent='犬種・PROJECT・状態・タイトルを確認してください。';return}if(p.start_date&&p.end_date&&p.end_date<p.start_date){st.className='status err';st.textContent='終了日は開始日以降にしてください。';return}st.className='status';st.textContent=state==='published'?'公開反映中…':'下書き保存中…';try{const id=$('editingId').value;let before=null,savedId=id;if(id){const a=await request('/rest/v1/site_projects?id=eq.'+encodeURIComponent(id)+'&select=*',{headers:headers(false)});before=a?.[0]||null;await request('/rest/v1/site_projects?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:{...headers(true),Prefer:'return=minimal'},body:JSON.stringify(p)})}else{const a=await request('/rest/v1/site_projects',{method:'POST',headers:{...headers(true),Prefer:'return=representation'},body:JSON.stringify(p)});savedId=a?.[0]?.id;if(savedId)$('editingId').value=savedId}if(savedId){try{await request('/rest/v1/site_project_history',{method:'POST',headers:{...headers(true),Prefer:'return=minimal'},body:JSON.stringify({site_project_id:Number(savedId),action_type:state==='published'?'publish':'draft_save',before_data:before,after_data:p,note:state==='published'?'管理画面から公開反映':'管理画面から下書き保存'})})}catch(e){}}st.className='status ok';st.textContent=state==='published'?'公開反映しました。':'下書きを保存しました。';await loadAll();if(savedId)await editProject(Number(savedId),false)}catch(e){st.className='status err';st.textContent='保存エラー：'+e.message}}
+async function saveProject(state){
+  const st=$('saveStatus'),p=payload(state);
+  if(!p.canonical_breed||!p.project_code||!p.status_key||!p.title){
+    st.className='status err';
+    st.textContent='犬種・PROJECT・状態・タイトルを確認してください。';
+    return;
+  }
+  if(p.start_date&&p.end_date&&p.end_date<p.start_date){
+    st.className='status err';
+    st.textContent='終了日は開始日以降にしてください。';
+    return;
+  }
+
+  st.className='status';
+  st.textContent=state==='published'?'公開反映中…':'下書き保存中…';
+
+  try{
+    let id=$('editingId').value;
+    let before=null;
+    let savedId=id;
+
+    // 新規登録画面でも、同じ「犬種 × PROJECT × 第○弾」が既にあれば
+    // 新規INSERTせず、その既存PROJECTを編集対象として更新する。
+    if(!id){
+      const existing=await request(
+        '/rest/v1/site_projects'
+        +'?canonical_breed=eq.'+encodeURIComponent(p.canonical_breed)
+        +'&project_code=eq.'+encodeURIComponent(p.project_code)
+        +'&round_no=eq.'+encodeURIComponent(p.round_no)
+        +'&select=*&limit=1',
+        {headers:headers(false)}
+      );
+
+      if(Array.isArray(existing)&&existing.length){
+        before=existing[0];
+        id=String(existing[0].id);
+        savedId=id;
+        $('editingId').value=id;
+        $('editorTitle').textContent='PROJECTを編集';
+      }
+    }
+
+    if(id){
+      if(!before){
+        const a=await request(
+          '/rest/v1/site_projects?id=eq.'+encodeURIComponent(id)+'&select=*',
+          {headers:headers(false)}
+        );
+        before=a?.[0]||null;
+      }
+
+      const updated=await request(
+        '/rest/v1/site_projects?id=eq.'+encodeURIComponent(id),
+        {
+          method:'PATCH',
+          headers:{...headers(true),Prefer:'return=representation'},
+          body:JSON.stringify(p)
+        }
+      );
+
+      if(Array.isArray(updated)&&updated[0]?.id){
+        savedId=String(updated[0].id);
+        $('editingId').value=savedId;
+      }
+    }else{
+      const a=await request(
+        '/rest/v1/site_projects',
+        {
+          method:'POST',
+          headers:{...headers(true),Prefer:'return=representation'},
+          body:JSON.stringify(p)
+        }
+      );
+      savedId=a?.[0]?.id;
+      if(savedId)$('editingId').value=savedId;
+    }
+
+    if(savedId){
+      try{
+        await request('/rest/v1/site_project_history',{
+          method:'POST',
+          headers:{...headers(true),Prefer:'return=minimal'},
+          body:JSON.stringify({
+            site_project_id:Number(savedId),
+            action_type:state==='published'?'publish':'draft_save',
+            before_data:before,
+            after_data:p,
+            note:state==='published'?'管理画面から公開反映':'管理画面から下書き保存'
+          })
+        });
+      }catch(e){
+        console.warn('履歴保存に失敗しました',e);
+      }
+    }
+
+    st.className='status ok';
+    st.textContent=state==='published'?'公開反映しました。':'下書きを保存しました。';
+    await loadAll();
+    if(savedId)await editProject(Number(savedId),false);
+  }catch(e){
+    st.className='status err';
+    st.textContent='保存エラー：'+e.message;
+  }
+}
 function renderProjects(){$('listStatus').textContent=projects.length?projects.length+'件登録されています。':'まだPROJECTがありません。';$('projectList').innerHTML=projects.map(p=>`<div class="row"><div class="rowtop"><div><strong>${esc(p.canonical_breed)}</strong><small>${esc(projectLabel(p.project_code))}｜第${Number(p.round_no)}弾<br>${p.publish_state==='published'?'公開':'下書き'}・${p.is_visible?'表示':'非表示'}</small></div><span class="badge ${p.status_key==='open'?'open':''}">${esc(statusLabel(p.project_code,p.status_key))}</span></div><div class="rowactions"><button class="btn outline" onclick="editProject(${Number(p.id)})">編集</button><button class="btn light" onclick="toggleVisible(${Number(p.id)},${p.is_visible?'false':'true'})">${p.is_visible?'非表示にする':'表示する'}</button></div></div>`).join('')}
 async function editProject(id,scroll=true){let p=projects.find(x=>Number(x.id)===Number(id));if(!p){const a=await request('/rest/v1/site_projects?id=eq.'+encodeURIComponent(id)+'&select=*',{headers:headers(false)});p=a?.[0]}if(!p)return;$('editingId').value=p.id;$('editorTitle').textContent='PROJECTを編集';$('breed').value=p.canonical_breed;$('project').value=p.project_code;loadStatuses(p.status_key);$('roundNo').value=p.round_no;$('displayOrder').value=p.display_order;$('startDate').value=p.start_date||'';$('endDate').value=p.end_date||'';$('title').value=p.title||'';$('title').dataset.auto='0';$('description').value=p.short_description||'';$('ctaLabel').value=p.cta_label||'';$('ctaUrl').value=p.cta_url||'';$('detailEnabled').checked=!!p.detail_page_enabled;$('detailPath').value=p.detail_page_path||'';$('isVisible').checked=!!p.is_visible;$('adminNote').value=p.admin_note||'';preview();await loadHistory();if(scroll)window.scrollTo({top:0,behavior:'smooth'})}
 async function toggleVisible(id,v){try{await request('/rest/v1/site_projects?id=eq.'+id,{method:'PATCH',headers:{...headers(true),Prefer:'return=minimal'},body:JSON.stringify({is_visible:v})});await loadAll()}catch(e){alert('更新エラー：'+e.message)}}
