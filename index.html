@@ -3107,6 +3107,13 @@ function resetMeasurementInputsOnly(){
       }
     });
     section.querySelectorAll('.avg-value span').forEach(x=>x.textContent="0.0");
+    section.dataset.rangeCheckActive="0";
+    section.querySelectorAll('.measure-range-error,.measure-range-box-error').forEach(el=>{
+      el.classList.remove('measure-range-error','measure-range-box-error');
+    });
+    const warning=section.querySelector('.measure-range-warning');
+    if(warning){warning.textContent="";warning.classList.remove('show');}
+    const next=section.querySelector('.next'); if(next) next.disabled=false;
   });
 
   // DOMの空欄状態をそのまま保存し直すことで、
@@ -3141,8 +3148,39 @@ function remeasureSameDog(){
   savePINFORMEState();
   window.scrollTo(0,0);
 }
+function resetNewDogSession(){
+  // 新規犬の端末内入力だけを初期化。飼い主ID・キーとオンライン保存済みデータは保持。
+  localStorage.removeItem(PINFORME_REMEASURE_DOG_ID_KEY);
+  localStorage.removeItem(PINFORME_REMEASURE_PHOTO_PATH_KEY);
+  clearActiveDogCode();
+  localStorage.removeItem("PINFORME_SUBMITTED");
+  localStorage.removeItem("PINFORME_SUBMITTING");
+  localStorage.setItem("PINFORME_FRESH_MEASUREMENT_REQUIRED_V1","0");
+  PINFORME_SUBMITTED=false;
+  PINFORME_SUBMITTING=false;
+  PINFORME_EDIT_FROM_FINISH=false;
+  document.body.classList.remove("edit-from-finish");
+  current=0;
+  ["birthDate","birthDateDirect","birthYear","birthMonth","birthDay"].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value="";
+  });
+  const photo=document.getElementById("dogPhoto"); if(photo) photo.value="";
+  const preview=document.getElementById("photoPreview");
+  if(preview){preview.removeAttribute("src");preview.style.display="none";}
+  PINFORME_DOG_PHOTO_DATA="";
+  PINFORME_PHOTO_PROMO_CONSENT=false;
+  const consent=document.getElementById("photoPromoConsent"); if(consent) consent.checked=false;
+  localStorage.setItem("PINFORME_PHOTO_PROMO_CONSENT_V1","0");
+  const choice=document.getElementById("pinformePostSaveChoice"); if(choice) choice.style.display="none";
+  const status=document.getElementById("sendStatus"); if(status) status.textContent="";
+  const button=document.getElementById("pinformeSubmitButton");
+  if(button){button.disabled=false;button.textContent="PINFORMEへ送信・保存";button.style.opacity="1";}
+  resetMeasurementInputsOnly();
+}
+
 function registerAnotherDog(){
   const owner=(document.getElementById("ownerName")?.value||"").trim();
+  resetNewDogSession();
   // 同じ飼い主様の別のわんちゃん：owner_codeは保持し、dog_codeだけ新規発行する。
   clearActiveDogCode();
   try{
@@ -3176,10 +3214,7 @@ function registerAnotherDog(){
   if(preview){ preview.removeAttribute("src"); preview.style.display="none"; }
 
   // 15項目の採寸値をすべて新規状態へ
-  steps.forEach(section=>{
-    section.querySelectorAll('input[type="number"]').forEach(x=>x.value="");
-    section.querySelectorAll('.avg-value span').forEach(x=>x.textContent="0.0");
-  });
+  resetMeasurementInputsOnly();
 
   // ご主人様名と6つのポイント確認は引き継ぐ。データ利用同意は新しい登録ごとに再確認する。
   if(document.getElementById("ownerName")) document.getElementById("ownerName").value=owner;
@@ -4457,6 +4492,7 @@ document.addEventListener("click",function(){
   };
 
   window.pinformeStartFirstOwnerMeasurement=function(){
+    resetNewDogSession();
     clearRemeasureKeys();
     try{clearActiveDogCode();clearActiveOwnerCode();localStorage.removeItem(PINFORME_OWNER_REMEASURE_KEY);}catch(e){}
     try{
@@ -4543,6 +4579,7 @@ document.addEventListener("click",function(){
       const ownerName=dogs[0].owner_name||'';
       if(!(ownerId>0)) throw new Error('owner_idを確認できませんでした。');
 
+      resetNewDogSession();
       // 既存owner_idだけを保持し、新しいdog_idを発行する。
       try{
         localStorage.removeItem(PINFORME_REMEASURE_DOG_ID_KEY);
