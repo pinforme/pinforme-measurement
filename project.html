@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PINFORME PROJECT</title>
+<meta name="description" content="PINFORMEのPROJECT詳細ページです。">
+<style>
+*{box-sizing:border-box}
+html,body{max-width:100%;overflow-x:hidden}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue","Noto Sans JP",Arial,sans-serif;color:#111;background:#fff;line-height:1.8}
+a{color:inherit;text-decoration:none}
+.wrap{width:min(calc(100% - 36px),900px);margin:0 auto}
+header{border-bottom:1px solid #eee;background:#fff}
+.header-inner{height:68px;display:flex;align-items:center;justify-content:space-between}
+.brand{font-size:18px;font-weight:900;letter-spacing:.16em}
+.back{font-size:13px;font-weight:800;color:#555}
+.hero{padding:64px 0 48px;background:linear-gradient(180deg,#f3f3f3,#fff)}
+.eyebrow{font-size:11px;font-weight:900;letter-spacing:.18em;color:#777}
+h1{margin:12px 0 16px;font-size:clamp(34px,6vw,58px);line-height:1.2;overflow-wrap:anywhere}
+.lead{margin:0;color:#666;font-size:16px}
+.live-project-meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+.live-chip{display:inline-flex;align-items:center;min-height:34px;padding:0 13px;border-radius:999px;background:#f2f2f2;color:#444;font-size:12px;font-weight:800}
+.live-chip.status{background:#111;color:#fff}
+section{padding:64px 0}
+h2{margin:0 0 14px;font-size:clamp(26px,4vw,38px);line-height:1.4}
+p{color:#666}
+.flow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:24px}
+.flow div{padding:20px 16px;border:1px solid #e5e5e5;border-radius:18px;background:#fff;min-width:0}
+.flow small{display:block;margin-bottom:10px;color:#999;font-size:11px;font-weight:900}
+.flow b{display:block;margin-bottom:6px;font-size:17px}
+.flow span{font-size:12px;color:#777}
+.soft{background:#f6f6f4}
+.steps{display:grid;gap:10px;margin-top:24px}
+.step{display:flex;gap:14px;align-items:flex-start;padding:16px 0;border-top:1px solid #e5e5e5}
+.step:first-child{border-top:0}
+.step b{flex:0 0 68px;height:30px;border-radius:999px;background:#111;color:#fff;display:grid;place-items:center;font-size:10px}
+.step span{font-size:14px}
+.note{padding:18px;border-radius:16px;background:#fafafa;border:1px solid #e7e7e7;font-size:13px;color:#666}
+.cta{display:inline-flex;align-items:center;justify-content:center;min-height:56px;padding:0 24px;border-radius:999px;background:#111;color:#fff;font-size:14px;font-weight:900;margin-top:20px}
+.cta.secondary{background:#f0f0f0;color:#333}
+.error{padding:24px;border:1px solid #e5e5e5;border-radius:18px;background:#fafafa}
+footer{padding:32px 0;border-top:1px solid #eee;color:#777;font-size:12px}
+@media(max-width:700px){
+  .flow{grid-template-columns:1fr 1fr}
+  .wrap{width:min(calc(100% - 28px),900px)}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap header-inner">
+    <a class="brand" href="official.html">PINFORME</a>
+    <a class="back" href="official.html">← TOPへ戻る</a>
+  </div>
+</header>
+
+<main id="app">
+  <section class="hero">
+    <div class="wrap">
+      <div class="eyebrow" id="eyebrow">PROJECT</div>
+      <h1 id="title">PROJECTを読み込んでいます。</h1>
+      <p class="lead" id="lead">最新情報を取得しています。</p>
+      <div class="live-project-meta">
+        <span class="live-chip status" id="status">読込中</span>
+        <span class="live-chip" id="count">登録頭数を取得中</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="eyebrow" id="purposeEyebrow">ABOUT PROJECT</div>
+      <h2 id="purposeTitle">PROJECTについて</h2>
+      <p id="purposeText"></p>
+
+      <div class="flow" id="flow"></div>
+    </div>
+  </section>
+
+  <section class="soft">
+    <div class="wrap">
+      <div class="eyebrow" id="joinEyebrow">HOW IT WORKS</div>
+      <h2 id="joinTitle">進め方</h2>
+      <p id="joinText"></p>
+      <div class="steps" id="steps"></div>
+      <div class="note" id="note"></div>
+      <div id="actions"></div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">© 2026 PINFORME. All Rights Reserved.</div>
+</footer>
+
+<script>
+(() => {
+  const SB = 'https://dsbvaoqgvtoeukigdjdj.supabase.co';
+  const KEY = 'sb_publishable_403lLhKUQ9X9N1RaxaDduA_9ZQEZ6na';
+
+  const templates = {
+    P01: {
+      purposeEyebrow:'WHY MEASURE?',
+      purposeTitle:'一頭一頭の違いが、これからのサイズ基準になります。',
+      purposeText:'同じ犬種でも、胸の厚み、首まわり、脚の長さ、胴のバランスは一頭一頭違います。PINFORMEでは、実際の採寸データを集め、犬種に合ったサイズ設計や型紙づくりへつなげていきます。',
+      flow:[
+        ['01','採寸','一頭ごとの体型を知る'],
+        ['02','集計','共通点と個体差を見る'],
+        ['03','設計','サイズ基準へつなげる'],
+        ['04','服づくり','型紙・サンプルへ反映']
+      ],
+      joinEyebrow:'HOW TO JOIN',
+      joinTitle:'採寸協力の流れ',
+      joinText:'スマートフォンから使える「PINFORME 採寸ナビ」をご用意しています。画面の案内に沿って、基本情報と採寸項目を入力していただきます。',
+      steps:[
+        ['STEP 1','募集内容を確認'],
+        ['STEP 2','PINFORME 採寸ナビを開く'],
+        ['STEP 3','画面に沿って基本情報・採寸項目を入力'],
+        ['STEP 4','送信データを今後の商品・サイズ開発へ活用']
+      ],
+      note:'採寸データは、犬種別サイズの開発やフルオーダー設計につなげていきます。',
+      actions:'<a class="cta" href="index.html">採寸ナビを開く</a>'
+    },
+    P02: {
+      purposeEyebrow:'SAMPLE MONITOR',
+      purposeTitle:'データを、実際の着心地へ。',
+      purposeText:'採寸データをもとに制作したサンプルを実際に着用していただき、フィット感や動きやすさ、着用時のバランスを確認しながら型紙を調整していくPROJECTです。',
+      flow:[
+        ['01','選定','対象条件に合うわんちゃんを選ぶ'],
+        ['02','試着','サンプルを実際に着用'],
+        ['03','確認','フィット感や動きを確認'],
+        ['04','調整','型紙・仕様へ反映']
+      ],
+      joinEyebrow:'MONITOR FLOW',
+      joinTitle:'サンプルモニターの流れ',
+      joinText:'募集条件や対象サイズはPROJECTごとにご案内します。',
+      steps:[
+        ['STEP 1','募集内容・条件を確認'],
+        ['STEP 2','モニター応募'],
+        ['STEP 3','対象者へサンプルをご案内'],
+        ['STEP 4','着用確認・フィードバック']
+      ],
+      note:'実施内容や条件は、サンプルの開発状況によって変更する場合があります。',
+      actions:''
+    },
+    P03: {
+      purposeEyebrow:'WEARING MODEL',
+      purposeTitle:'完成した服を、実際の姿で伝える。',
+      purposeText:'商品化へ向けた着用イメージを伝えるため、完成度を高めたウェアを実際に着用していただくPROJECTです。',
+      flow:[
+        ['01','募集','対象モデルを募集'],
+        ['02','選定','体型や条件を確認'],
+        ['03','撮影','実際の着用イメージを撮影'],
+        ['04','発信','商品ページやSNSへ活用']
+      ],
+      joinEyebrow:'MODEL FLOW',
+      joinTitle:'着用モデルの流れ',
+      joinText:'撮影条件や掲載範囲などは募集時にご案内します。',
+      steps:[
+        ['STEP 1','募集条件を確認'],
+        ['STEP 2','応募'],
+        ['STEP 3','選定・撮影日程調整'],
+        ['STEP 4','撮影・掲載']
+      ],
+      note:'写真の使用範囲や条件は、事前に確認・同意のうえ進めます。',
+      actions:''
+    },
+    P04: {
+      purposeEyebrow:'PRODUCT',
+      purposeTitle:'集めたデータを、商品へ。',
+      purposeText:'採寸・サンプル検証・着用確認を経て、犬種ごとの体型に合わせた商品として展開していくPROJECTです。',
+      flow:[
+        ['01','設計','サイズ・仕様を決定'],
+        ['02','生産','商品化へ向けて製作'],
+        ['03','準備','販売ページ・在庫を整える'],
+        ['04','販売','商品として届ける']
+      ],
+      joinEyebrow:'PRODUCT STATUS',
+      joinTitle:'商品化の進行状況',
+      joinText:'発売時期や販売方法は、準備が整い次第公式サイト・SNSでご案内します。',
+      steps:[
+        ['STEP 1','仕様決定'],
+        ['STEP 2','生産'],
+        ['STEP 3','発売準備'],
+        ['STEP 4','販売開始']
+      ],
+      note:'商品内容・発売時期は開発状況により変更する場合があります。',
+      actions:''
+    },
+    P05: {
+      purposeEyebrow:'FULL ORDER',
+      purposeTitle:'一頭の体型に合わせて、つくる。',
+      purposeText:'個体ごとの採寸データをもとに、一頭一頭の体型へ合わせて設計するフルオーダーメイドのPROJECTです。',
+      flow:[
+        ['01','採寸','個体の体型を確認'],
+        ['02','設計','専用の寸法へ調整'],
+        ['03','製作','一頭分のウェアを製作'],
+        ['04','完成','専用ウェアとしてお届け']
+      ],
+      joinEyebrow:'FULL ORDER FLOW',
+      joinTitle:'フルオーダーの流れ',
+      joinText:'受付方法・料金・納期などは、正式受付開始時にご案内します。',
+      steps:[
+        ['STEP 1','受付内容を確認'],
+        ['STEP 2','採寸・情報確認'],
+        ['STEP 3','設計・製作'],
+        ['STEP 4','完成・お届け']
+      ],
+      note:'受付状況や製作可能数により、受付を一時停止する場合があります。',
+      actions:''
+    }
+  };
+
+  const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
+
+  async function get(path){
+    const r = await fetch(SB + path, {headers:{apikey:KEY}});
+    const raw = await r.text();
+    let data;
+    try{data=raw?JSON.parse(raw):null}catch(e){data=raw}
+    if(!r.ok) throw new Error(data?.message || raw || `HTTP ${r.status}`);
+    return data;
+  }
+
+  function param(name){return new URLSearchParams(location.search).get(name)}
+
+  async function load(){
+    try{
+      const id = param('id');
+      const code = (param('project') || '').toUpperCase();
+      const round = param('round') || '1';
+      const breed = param('breed') || '';
+
+      let q = '/rest/v1/site_projects_public?select=*';
+      if(id){
+        q += '&id=eq.' + encodeURIComponent(id);
+      }else{
+        if(code) q += '&project_code=eq.' + encodeURIComponent(code);
+        if(round) q += '&round_no=eq.' + encodeURIComponent(round);
+        if(breed) q += '&canonical_breed=eq.' + encodeURIComponent(breed);
+      }
+      q += '&order=display_order,round_no&limit=1';
+
+      const rows = await get(q);
+      const row = rows?.[0];
+      if(!row) throw new Error('PROJECTが見つかりません');
+
+      const tpl = templates[row.project_code] || {
+        purposeEyebrow:'ABOUT PROJECT',
+        purposeTitle:'PROJECTについて',
+        purposeText:row.short_description || '',
+        flow:[],
+        joinEyebrow:'INFORMATION',
+        joinTitle:'ご案内',
+        joinText:row.short_description || '',
+        steps:[],
+        note:'最新情報は公式サイトでご案内します。',
+        actions:''
+      };
+
+      document.title = `${row.title || row.project_name || 'PROJECT'} | PINFORME`;
+      document.getElementById('eyebrow').textContent =
+        `${row.project_code}｜第${row.round_no || 1}弾`;
+      document.getElementById('title').innerHTML =
+        `${esc(row.title || row.project_name || 'PROJECT')}`;
+      document.getElementById('lead').textContent =
+        row.short_description || tpl.purposeText;
+      document.getElementById('status').textContent =
+        row.status_label || 'PROJECT';
+      document.getElementById('purposeEyebrow').textContent = tpl.purposeEyebrow;
+      document.getElementById('purposeTitle').textContent = tpl.purposeTitle;
+      document.getElementById('purposeText').textContent = tpl.purposeText;
+      document.getElementById('joinEyebrow').textContent = tpl.joinEyebrow;
+      document.getElementById('joinTitle').textContent = tpl.joinTitle;
+      document.getElementById('joinText').textContent = tpl.joinText;
+      document.getElementById('note').textContent = tpl.note;
+      document.getElementById('actions').innerHTML = tpl.actions || '';
+
+      document.getElementById('flow').innerHTML = (tpl.flow || []).map(x =>
+        `<div><small>${esc(x[0])}</small><b>${esc(x[1])}</b><span>${esc(x[2])}</span></div>`
+      ).join('');
+
+      document.getElementById('steps').innerHTML = (tpl.steps || []).map(x =>
+        `<div class="step"><b>${esc(x[0])}</b><span>${esc(x[1])}</span></div>`
+      ).join('');
+
+      try{
+        const counts = await get(
+          '/rest/v1/site_breed_counts_public?canonical_breed=eq.' +
+          encodeURIComponent(row.canonical_breed || '') +
+          '&select=dog_count&limit=1'
+        );
+        const n = Number(counts?.[0]?.dog_count || 0);
+        document.getElementById('count').textContent =
+          n > 0 ? `登録${n}頭` : '登録受付中';
+      }catch(e){
+        document.getElementById('count').textContent = '登録受付中';
+      }
+
+    }catch(err){
+      console.error(err);
+      document.querySelector('main').innerHTML = `
+        <section>
+          <div class="wrap">
+            <div class="error">
+              <strong>PROJECT情報を表示できませんでした。</strong>
+              <p>公式サイトからもう一度開いてください。</p>
+              <a class="cta secondary" href="official.html">TOPへ戻る</a>
+            </div>
+          </div>
+        </section>`;
+    }
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', load);
+  }else{
+    load();
+  }
+})();
+</script>
+</body>
+</html>
