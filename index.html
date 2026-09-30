@@ -3575,9 +3575,62 @@ function showAdminDog(d){
  const photoHtml=photoPath?`<div class="admin-photo-wrap"><img id="adminDogPhoto" alt="わんちゃんの写真" style="display:none;max-width:100%;max-height:280px;object-fit:contain;border-radius:12px"><div id="adminPhotoStatus" class="admin-note">写真を読み込んでいます…</div></div>`:'<div class="admin-note">写真なし</div>';
  const mergedNote="";
  const ownerId=Number(d.owner_id||latest.owner_id||0);
- box.innerHTML=`<div class="admin-detail-head"><div><div class="admin-sub">PINFORME DOG CARTE</div><h2>${adminEsc(d.dog_name||"名前未入力")}${adminEsc(latest.dog_suffix||"")}</h2></div><button type="button" class="admin-btn light" style="width:auto;min-height:42px" onclick="document.getElementById('adminDetail').classList.add('admin-hidden')">閉じる</button></div>${photoHtml}<div class="admin-detail-meta">飼い主様：${adminEsc(d.owner_name||"—")}<br>犬種：${adminEsc(adminBreedForDog(d)||"—")} ／ 性別：${adminEsc(d.sex||latest.sex||"—")}<br>生年月日：${adminEsc(d.birth_date||latest.birth_date||"—")} ／ 最新体重：${adminLatestWeightForDog(d)==null?"—":adminEsc(adminLatestWeightForDog(d))+" kg"}<br>写真販促利用：<strong>${adminPhotoConsentLabel(adminPhotoConsentForDog(d))}</strong>${mergedNote}</div>${latest?.id?`<div style="margin:14px 0 18px"><button type="button" class="admin-btn primary" onclick="openAdminA4KarteById('${adminEsc(latest.id)}')">最新のA4採寸カルテを見る</button><div style="font-size:11px;color:#777;line-height:1.5;margin-top:7px">過去の採寸カルテは、下の採寸履歴を開いて確認できます。</div></div>`:""}<div class="admin-recovery-card"><h3>再採寸のご案内</h3><div id="adminRecoveryContact" class="admin-recovery-contact">登録情報を確認しています…</div><div class="admin-actions" style="margin:12px 0 0"><button type="button" class="admin-btn primary" ${ownerId>0?'':'disabled'} onclick="adminReissueRemeasureKey(${ownerId})">再採寸キーを発行</button></div><div id="adminNewRemeasureKey" class="admin-new-key"><div style="font-size:12px;color:#666">飼い主様へ送る再採寸キー</div><div id="adminNewRemeasureKeyValue" class="admin-new-key-value"></div><div class="admin-actions" style="margin:10px 0 0"><button type="button" class="admin-btn primary" onclick="adminCopyNewRemeasureKey()">キーをコピー</button><button type="button" class="admin-btn light" onclick="adminShareNewRemeasureKey()">共有する</button></div><div style="font-size:11px;color:#777;line-height:1.5;margin-top:8px">新しいキーを発行すると、それまでのキーは無効になります。同じ飼い主様に紐づくすべてのわんちゃんで、この新しいキーを使用します。</div></div></div><h3 style="margin:22px 0 8px">採寸履歴（${hist.length}件）</h3>${historyHtml}<div style="margin-top:26px;padding-top:18px;border-top:1px solid #e5e5e5"><div style="font-size:12px;color:#777;line-height:1.6;margin-bottom:10px">このわんちゃんの登録情報と採寸履歴を削除します。削除後は元に戻せません。</div><button type="button" class="admin-btn danger" onclick="adminDeleteDogData(${Number(d.id)||0})">このわんちゃんのデータを削除</button></div>`;
+ box.innerHTML=`<div class="admin-detail-head"><div><div class="admin-sub">PINFORME DOG CARTE</div><h2>${adminEsc(d.dog_name||"名前未入力")}${adminEsc(latest.dog_suffix||"")}</h2></div><button type="button" class="admin-btn light" style="width:auto;min-height:42px" onclick="document.getElementById('adminDetail').classList.add('admin-hidden')">閉じる</button></div>${photoHtml}<div class="admin-detail-meta">飼い主様：${adminEsc(d.owner_name||"—")}<br>犬種：${adminEsc(adminBreedForDog(d)||"—")} ／ 性別：${adminEsc(d.sex||latest.sex||"—")}<br>生年月日：${adminEsc(d.birth_date||latest.birth_date||"—")} ／ 最新体重：${adminLatestWeightForDog(d)==null?"—":adminEsc(adminLatestWeightForDog(d))+" kg"}<br>写真販促利用：<strong>${adminPhotoConsentLabel(adminPhotoConsentForDog(d))}</strong>${mergedNote}</div>${latest?.id?`<div style="margin:14px 0 18px"><button type="button" class="admin-btn primary" onclick="openAdminA4KarteById('${adminEsc(latest.id)}')">最新のA4採寸カルテを見る</button><div style="font-size:11px;color:#777;line-height:1.5;margin-top:7px">過去の採寸カルテは、下の採寸履歴を開いて確認できます。</div></div>`:""}<div class="admin-recovery-card"><h3>犬種名の修正</h3><label for="adminBreedEditInput">正式な犬種名</label><input id="adminBreedEditInput" type="text" maxlength="100" value="${adminEsc(adminBreedForDog(d))}" placeholder="例：ミニチュア・ピンシャー" style="width:100%;min-height:44px;margin:8px 0;padding:10px;border:1px solid #ccc;border-radius:8px"><div class="admin-note">このわんちゃんの犬種名を修正し、すべての採寸履歴と犬種別集計に反映します。</div><button type="button" id="adminBreedSaveButton" class="admin-btn primary" style="margin-top:10px" onclick="adminSaveDogBreed()">犬種名を保存</button><div id="adminBreedEditStatus" class="admin-note" role="status" aria-live="polite"></div></div><div class="admin-recovery-card"><h3>再採寸のご案内</h3><div id="adminRecoveryContact" class="admin-recovery-contact">登録情報を確認しています…</div><div class="admin-actions" style="margin:12px 0 0"><button type="button" class="admin-btn primary" ${ownerId>0?'':'disabled'} onclick="adminReissueRemeasureKey(${ownerId})">再採寸キーを発行</button></div><div id="adminNewRemeasureKey" class="admin-new-key"><div style="font-size:12px;color:#666">飼い主様へ送る再採寸キー</div><div id="adminNewRemeasureKeyValue" class="admin-new-key-value"></div><div class="admin-actions" style="margin:10px 0 0"><button type="button" class="admin-btn primary" onclick="adminCopyNewRemeasureKey()">キーをコピー</button><button type="button" class="admin-btn light" onclick="adminShareNewRemeasureKey()">共有する</button></div><div style="font-size:11px;color:#777;line-height:1.5;margin-top:8px">新しいキーを発行すると、それまでのキーは無効になります。同じ飼い主様に紐づくすべてのわんちゃんで、この新しいキーを使用します。</div></div></div><h3 style="margin:22px 0 8px">採寸履歴（${hist.length}件）</h3>${historyHtml}<div style="margin-top:26px;padding-top:18px;border-top:1px solid #e5e5e5"><div style="font-size:12px;color:#777;line-height:1.6;margin-bottom:10px">このわんちゃんの登録情報と採寸履歴を削除します。削除後は元に戻せません。</div><button type="button" class="admin-btn danger" onclick="adminDeleteDogData(${Number(d.id)||0})">このわんちゃんのデータを削除</button></div>`;
  box.classList.remove("admin-hidden");box.scrollIntoView({behavior:"smooth",block:"start"});if(photoPath)loadAdminPhoto(photoPath,document.getElementById("adminDogPhoto"),document.getElementById("adminPhotoStatus"));
  if(ownerId>0) adminLoadRecoveryContact(ownerId); else { const rc=document.getElementById('adminRecoveryContact'); if(rc) rc.textContent='この旧データにはowner_idがありません。'; }
+}
+
+let PINFORME_ADMIN_BREED_SAVING=false;
+async function adminSaveDogBreed(){
+  if(PINFORME_ADMIN_BREED_SAVING) return;
+  const d=PINFORME_ADMIN_ACTIVE_DOG_GROUP;
+  const dogId=Number(d?.id);
+  const input=document.getElementById("adminBreedEditInput");
+  const status=document.getElementById("adminBreedEditStatus");
+  const button=document.getElementById("adminBreedSaveButton");
+  const breed=String(input?.value||"").trim();
+  const setStatus=msg=>{if(status)status.textContent=msg;};
+  if(!Number.isSafeInteger(dogId)||dogId<=0){setStatus("対象のわんちゃんを選択してください。");return;}
+  if(!breed||breed.length>100){setStatus("犬種名を1〜100文字で入力してください。");return;}
+  const sess=getAdminSession();
+  if(!sess?.access_token||!isAdminVerified()){setStatus("管理者としてログインしてください。");return;}
+  if(breed===String(d.breed??"")){setStatus("犬種名は変更されていません。");return;}
+  const label=d.dog_name||"このわんちゃん";
+  if(!confirm(`${label}の犬種名を「${adminBreedForDog(d)||"未登録"}」から「${breed}」へ修正しますか？\nこのわんちゃんのすべての採寸履歴にも反映します。`))return;
+  PINFORME_ADMIN_BREED_SAVING=true;
+  if(button)button.disabled=true;
+  setStatus("犬種名を保存しています…");
+  try{
+    const res=await fetch(`${PINFORME_SUPABASE_BASE}/rest/v1/rpc/admin_update_dog_breed`,{
+      method:"POST",
+      headers:{apikey:PINFORME_SUPABASE_KEY,Authorization:"Bearer "+sess.access_token,"Content-Type":"application/json"},
+      body:JSON.stringify({p_dog_id:dogId,p_breed:breed,p_expected_breed:d.breed??null})
+    });
+    if(!res.ok){
+      let error={};try{error=await res.json();}catch(e){}
+      if(error.code==="PGRST202")throw new Error("犬種名修正の保存設定が未完了です。設定用SQLを実行してください。");
+      if(error.message==="breed_changed")throw new Error("別の操作で犬種名が変更されています。一覧を更新してから修正してください。");
+      throw new Error("犬種名を保存できませんでした。管理者ログインと保存設定をご確認ください。");
+    }
+    const saved=await res.json();
+    if(Number(saved?.dog_id)!==dogId||saved?.breed!==breed)throw new Error("保存結果を確認できませんでした。一覧を更新して確認してください。");
+    // サーバーで成功した後だけ、同じdog_idの表示を更新する。
+    PINFORME_ADMIN_DOGS.forEach(row=>{if(String(row.id)===String(dogId))row.breed=breed;});
+    PINFORME_ADMIN_ROWS.forEach(row=>{if(String(row.dog_id)===String(dogId))row.breed=breed;});
+    d.breed=breed;
+    (d._source_dogs||[]).forEach(row=>{if(String(row.id)===String(dogId))row.breed=breed;});
+    const filter=document.getElementById("adminBreedFilter");
+    const previousFilter=filter?.value||"";
+    updateAdminBreedFilter();
+    if(filter&&previousFilter)filter.value=breed;
+    renderAdminList();
+    if(String(PINFORME_ADMIN_ACTIVE_DOG_GROUP?.id)===String(dogId)){
+      showAdminDog(d);
+      const message=document.getElementById("adminBreedEditStatus");
+      if(message)message.textContent="犬種名を保存しました。採寸履歴と集計にも反映済みです。";
+    }
+  }catch(e){setStatus(e.message||"保存に失敗しました。一覧を更新して確認してください。");}
+  finally{PINFORME_ADMIN_BREED_SAVING=false;if(button)button.disabled=false;}
 }
 
 async function adminDeleteStoragePhotos(photoPaths,sess){
