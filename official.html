@@ -1033,6 +1033,13 @@ footer{padding:34px 0 46px;border-top:1px solid #ececec;font-size:12px;color:#77
   .dynamic-project .project-side{min-height:180px}
 }
 
+
+/* Keep the breed and project name together at mobile widths. */
+.project-title-part{display:inline-block;max-width:100%;vertical-align:top}
+@media(max-width:760px){
+  .project-title-part{display:block}
+  .dynamic-project .project-copy h3{font-size:clamp(22px,6.5vw,28px)}
+}
 </style>
 </head>
 <body>
@@ -1275,10 +1282,6 @@ footer{padding:34px 0 46px;border-top:1px solid #ececec;font-size:12px;color:#77
       </div>
 
       <div class="insta-box">
-        <p style="margin:0 0 18px;color:#555;font-size:14px;line-height:1.9">
-          採寸協力の募集、商品開発の様子、PROJECTの進捗や新しいお知らせを
-          公式Instagramで発信しています。
-        </p>
         <a class="btn secondary" href="https://www.instagram.com/pinforme.jp?stkn=MXc3ZXBtMXpkNzV6Zg==" target="_blank" rel="noopener noreferrer">公式Instagramを見る</a>
       </div>
     </div>
@@ -1325,6 +1328,14 @@ function quotaLabel(slots){
   const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({
     '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
   }[c]));
+
+  const formatProjectTitle = (title, breed) => {
+    const text = String(title ?? '');
+    const prefix = String(breed ?? '').trim();
+    const rest = prefix && text.startsWith(prefix) ? text.slice(prefix.length) : '';
+    if (!prefix || !/^\s+\S/.test(rest)) return esc(text);
+    return `<span class="project-title-part">${esc(prefix)}</span> <span class="project-title-part">${esc(rest.trim())}</span>`;
+  };
 
   const projectNumber = (code) => {
     const m = String(code || '').match(/(\d+)/);
@@ -1392,7 +1403,7 @@ function quotaLabel(slots){
           <div class="project-body">
             <div class="project-copy">
               <div class="project-jp">第${round}弾${breed ? `｜${esc(breed)}` : ''}</div>
-              <h3>${esc(title)}</h3>
+              <h3>${formatProjectTitle(title, breed)}</h3>
               ${desc ? `<p>${esc(desc)}</p>` : ''}
               ${isMonitor ? `<p>${esc(quota.slots.length ? quotaLabel(quota.slots) : MONITOR_PENDING)}</p>` : ''}
               <div class="project-meta-line">
