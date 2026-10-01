@@ -3479,7 +3479,13 @@ function adminSummaryRows(){
  f.legacy.forEach(r=>rows.push(r));
  return {filter:f,rows};
 }
-function adminNum(v){const n=Number(v);return Number.isFinite(n)?n:null}
+function adminNum(v){
+ // 未入力を0に変換しない。採寸値・体重の0以下も集計対象外。
+ if(v==null || (typeof v!=="number" && typeof v!=="string"))return null;
+ if(typeof v==="string" && v.trim()==="")return null;
+ const n=Number(v);
+ return Number.isFinite(n)&&n>0?n:null;
+}
 function adminStats(rows,key){
  const vals=rows.map(r=>adminNum(r[key])).filter(v=>v!==null);
  if(!vals.length)return null;
