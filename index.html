@@ -6,7 +6,7 @@
 <meta http-equiv="Expires" content="0">
 <script id="pinforme-latest-version-guard">
 (function(){
-  const PINFORME_BUILD_ID="20260928-0915-measure-range-check";
+  const PINFORME_BUILD_ID="20261001-partial-update-v1";
 
   function forceFresh(reason){
     try{
@@ -2506,7 +2506,7 @@ let current=0;
 let PINFORME_PHOTO_PROMO_CONSENT=false;
 
 function hideAll(){
-  introPages.forEach(x=>x.classList.remove("active"));
+  document.querySelectorAll(".intro-step,.finish-step").forEach(x=>x.classList.remove("active"));
   steps.forEach(x=>x.classList.remove("active"));
   const kp=document.getElementById("kartePage");
   if(kp) kp.classList.remove("active");
@@ -2534,6 +2534,7 @@ function startMeasurements(){
   try{
     localStorage.setItem("PINFORME_PHOTO_PROMO_CONSENT_V1", PINFORME_PHOTO_PROMO_CONSENT ? "1" : "0");
   }catch(e){}
+  if(pinPartialActive()){pinSavePartial();pinOpenItemPicker();return;}
   let mustReset=false;
   try{
     mustReset=localStorage.getItem("PINFORME_FRESH_MEASUREMENT_REQUIRED_V1")==="1";
@@ -2557,6 +2558,10 @@ function startMeasurements(){
   window.scrollTo(0,0);
 }
 function showStep(n){
+  if(pinPartialActive() && !PINFORME_EDIT_FROM_FINISH){
+    const direction=n>current?1:-1;
+    while(n>=0 && n<steps.length && !PIN_PARTIAL.selected.includes(n)) n+=direction;
+  }
   if(n<0){hideAll();document.getElementById("dogInfoPage").classList.add("active");window.scrollTo(0,0);return}
   if(n>=steps.length){showFinish();return;}
   hideAll(); current=n; steps[current].classList.add("active"); window.scrollTo({top:0,behavior:"smooth"});
@@ -2705,6 +2710,7 @@ document.addEventListener("click",e=>{
     showStep(current-1);
   }
   if(e.target.closest(".finish-return-btn")){
+    if(pinPartialActive() && !validStep(steps[current]))return;
     PINFORME_EDIT_FROM_FINISH=false;
     document.body.classList.remove("edit-from-finish");
     showFinish();
@@ -2801,7 +2807,9 @@ function collectKarte(){
       const vals=g.map(x=>x.value.trim());
       const nums=vals.map(Number);
       const avg=vals.every(v=>v!=="") ? (nums.reduce((a,b)=>a+b,0)/3).toFixed(1) : "";
-      groups.push({values:vals,average:avg});
+      const inherited=pinPartialActive() && !PIN_PARTIAL.selected.includes(idx);
+      const prior=inherited ? PIN_PARTIAL.baseline[PIN_FIELD_GROUPS[idx][groups.length]] : null;
+      groups.push({values:vals,average:inherited ? (prior==null?"":String(prior)) : avg,source:inherited?"previous":"measured"});
     }
     measurements.push({number:idx+1,groups});
   });
@@ -2813,7 +2821,7 @@ function collectKarte(){
     breed:textValue("dogBreed"),
     sex:sexChecked ? sexChecked.value : "",
     birthday:textValue("birthDate"),
-    weight:textValue("weight"),
+    weight:pinPartialActive() && !PIN_PARTIAL.updateWeight ? (PIN_PARTIAL.baseline.weight==null?"":String(PIN_PARTIAL.baseline.weight)) : textValue("weight"),
     photoPromoConsent:PINFORME_PHOTO_PROMO_CONSENT === true,
     measurements
   };
@@ -2838,11 +2846,18 @@ function showFinish(){
   }catch(e){}
   const finish=document.getElementById("finishPage");
   if(finish) finish.classList.add("active");
+  let partialNote=document.getElementById("pinPartialFinishNote");
+  if(!partialNote && finish){partialNote=document.createElement("p");partialNote.id="pinPartialFinishNote";partialNote.className="pin-partial-note";finish.prepend(partialNote);}
+  if(partialNote){partialNote.style.display=pinPartialActive()?"block":"none";if(pinPartialActive())partialNote.textContent="部分更新："+PIN_PARTIAL.selected.map(i=>PIN_ITEM_NAMES[i]).concat(PIN_PARTIAL.updateWeight?["体重"]:[]).join("、")+"。ほかの採寸値は前回から引き継いでいます。";}
   window.scrollTo(0,0);
 }
 
 let PINFORME_EDIT_FROM_FINISH=false;
 function openMeasurementForEdit(index){
+  if(pinPartialActive() && !PIN_PARTIAL.selected.includes(Number(index))){
+    if(!confirm("この項目も今回の更新対象に追加しますか？"))return;
+    PIN_PARTIAL.selected.push(Number(index));PIN_PARTIAL.selected.sort((a,b)=>a-b);pinSavePartial();
+  }
   PINFORME_EDIT_FROM_FINISH=true;
   document.body.classList.add("edit-from-finish");
   steps.forEach(step=>{
@@ -3149,6 +3164,7 @@ function remeasureSameDog(){
   window.scrollTo(0,0);
 }
 function resetNewDogSession(){
+  pinClearPartial();
   // 新規犬の端末内入力だけを初期化。飼い主ID・キーとオンライン保存済みデータは保持。
   localStorage.removeItem(PINFORME_REMEASURE_DOG_ID_KEY);
   localStorage.removeItem(PINFORME_REMEASURE_PHOTO_PATH_KEY);
@@ -3799,7 +3815,7 @@ function showAdminMeasurementById(mid){
 function showAdminMeasurement(r,d){
  const box=document.getElementById("adminDetail");
  const dogName=`${adminEsc(r.dog_name||d?.dog_name||"名前未入力")}${adminEsc(r.dog_suffix||"")}`;
- const measureCards=ADMIN_FIELDS.map(([n,k])=>`<div class="admin-measure-item"><div class="label">${n}</div><div class="value">${r[k]==null?"—":adminEsc(r[k])+" cm"}</div></div>`).join("");
+ const measureCards=ADMIN_FIELDS.map(([n,k])=>`<div class="admin-measure-item"><div class="label">${n}</div><div class="value">${r[k]==null?"—":adminEsc(r[k])+" cm"}</div>${r.update_mode==="partial"?`<small>${(r.updated_fields||[]).includes(k)?"今回測定":"前回から引継ぎ"}</small>`:""}</div>`).join("");
  const photoPath=r.photo_path||d?.photo_path;
  const photoHtml=photoPath?`<div class="admin-photo-wrap"><img id="adminDogPhoto" alt="わんちゃんの写真" style="display:none;max-width:100%;max-height:280px;object-fit:contain;border-radius:12px"><div id="adminPhotoStatus" class="admin-note">写真を読み込んでいます…</div></div>`:'<div class="admin-note">写真なし</div>';
  const backAction=d?`showAdminDog(PINFORME_ADMIN_ACTIVE_DOG_GROUP)`:`document.getElementById('adminDetail').classList.add('admin-hidden')`;
@@ -3807,7 +3823,7 @@ function showAdminMeasurement(r,d){
 <div style="margin:14px 0 18px">
   <button type="button" class="admin-btn primary" onclick="openAdminA4KarteById('${adminEsc(r.id)}')">A4採寸カルテを見る</button>
 </div>
-<div class="admin-measure-section-title">採寸結果</div><div class="admin-measure-grid">${measureCards}</div>`;
+<div class="admin-measure-section-title">採寸結果${r.update_mode==="partial"?"（部分更新）":""}</div><div class="admin-measure-grid">${measureCards}</div>`;
  box.classList.remove("admin-hidden");
  box.scrollIntoView({behavior:"auto",block:"start"});
  if(photoPath)loadAdminPhoto(photoPath,document.getElementById("adminDogPhoto"),document.getElementById("adminPhotoStatus"));
@@ -3924,6 +3940,10 @@ async function sendToPinforme(){
   if(!document.getElementById("dataConsent")?.checked){
     alert("データの取扱いへの同意が確認できません。最初の画面で同意内容をご確認ください。");
     return;
+  }
+  if(pinPartialActive()){
+    if(!PIN_PARTIAL.selected.length && !PIN_PARTIAL.updateWeight){alert("更新する項目を選んでください。");return;}
+    for(const i of PIN_PARTIAL.selected){if(!validStep(steps[i])){openMeasurementForEdit(i);return;}}
   }
   const submitBtn=document.getElementById("pinformeSubmitButton");
   if(PINFORME_SUBMITTING) return;
@@ -4122,7 +4142,7 @@ async function sendToPinforme(){
     }
 
     if(status) status.textContent="カルテを安全に保存しています…";
-    const res=await fetch(`${PINFORME_SUPABASE_BASE}/rest/v1/rpc/save_measurement_secure`,{
+    const res=await fetch(`${PINFORME_SUPABASE_BASE}/rest/v1/rpc/${pinPartialActive()?"save_measurement_partial_v1":"save_measurement_secure"}`,{
       method:"POST",
       headers:{
         "apikey":PINFORME_SUPABASE_KEY,
@@ -4133,7 +4153,8 @@ async function sendToPinforme(){
         p_payload:payload,
         p_owner_id:ownerId,
         p_dog_id:dogId,
-        p_remeasure_key:ownerRemeasureKey
+        p_remeasure_key:ownerRemeasureKey,
+        ...(pinPartialActive()?{p_base_measurement_id:PIN_PARTIAL.baseline.id,p_updated_fields:pinUpdatedFields()}: {})
       })
     });
     if(!res.ok){
@@ -5042,7 +5063,7 @@ document.addEventListener("change",function(e){
 (function(){
   function hideEveryPINFORMEPage(){
     document.querySelectorAll(
-      '#entryChoicePage,#newOwnerChoicePage,#existingOwnerLookupPage,#remeasureLookupPage,#startPage,#dogInfoPage,#adminPage,#finishPage,#kartePage,.step'
+      '#pinPartialPage,#entryChoicePage,#newOwnerChoicePage,#existingOwnerLookupPage,#remeasureLookupPage,#startPage,#dogInfoPage,#adminPage,#finishPage,#kartePage,.step'
     ).forEach(function(el){
       el.classList.remove('active');
     });
@@ -5053,7 +5074,7 @@ document.addEventListener("change",function(e){
 
   function detectCurrentPINFORMEView(){
     var candidates = Array.from(document.querySelectorAll(
-      '#entryChoicePage.active,#newOwnerChoicePage.active,#existingOwnerLookupPage.active,#remeasureLookupPage.active,#startPage.active,#dogInfoPage.active,#finishPage.active,#kartePage.active,#adminPage.active,.step.active'
+      '#pinPartialPage.active,#entryChoicePage.active,#newOwnerChoicePage.active,#existingOwnerLookupPage.active,#remeasureLookupPage.active,#startPage.active,#dogInfoPage.active,#finishPage.active,#kartePage.active,#adminPage.active,.step.active'
     )).filter(function(el){
       var cs = window.getComputedStyle(el);
       return cs.display !== 'none' && cs.visibility !== 'hidden';
@@ -5397,6 +5418,79 @@ document.addEventListener("change",function(e){
   });
 
 })();
+</script>
+
+
+<style>
+#pinPartialPage .pin-item{display:flex;align-items:center;gap:12px;padding:14px;border:1px solid #ddd;border-radius:12px;margin:8px 0;font-size:16px;color:#222}#pinPartialPage input[type=checkbox]{width:22px;height:22px;flex-shrink:0}#pinPartialPage small{display:block;font-size:12px;color:#666;line-height:1.6}.pin-partial-note{padding:14px;border-radius:12px;background:#f5f5f5;font-size:13px;line-height:1.7;margin:14px 0}
+</style>
+<section class="intro-step" id="pinPartialPage"><div class="pin-remeasure-box">
+<h1 class="pin-remeasure-title">再採寸の方法</h1>
+<div id="pinPartialBody"></div><p id="pinPartialStatus" role="status" aria-live="polite"></p>
+<button class="pin-remeasure-action light" type="button" onclick="pinPartialBack()">戻る</button>
+</div></section>
+<script id="pinforme-partial-update-v1">
+const PIN_FIELD_GROUPS=[['neck'],['chest'],['waist'],['back_length'],['front_length'],['front_leg_girth_up','front_leg_girth_low'],['hind_leg_girth_up','hind_leg_girth_low'],['front_leg_length_1','front_leg_length_2','front_leg_length_3'],['hind_leg_length_1','hind_leg_length_2','hind_leg_length_3'],['neck_length'],['snood_length'],['head_girth'],['front_leg_spacing'],['mid_neck'],['tail_girth']];
+const PIN_ITEM_NAMES=['首まわり（首の付け根）','胴まわり','ウエスト','着丈','前身頃','前脚の太さ','後脚の太さ','前脚の長さ','後脚の長さ','首の長さ（ネック）','首の長さ（スヌード）','頭周り','前脚の幅','首の真ん中','尻尾の太さ'];
+let PIN_PARTIAL=null;
+try{PIN_PARTIAL=JSON.parse(localStorage.getItem('PINFORME_PARTIAL_V1')||'null');}catch(e){}
+function pinSavePartial(){try{localStorage.setItem('PINFORME_PARTIAL_V1',JSON.stringify(PIN_PARTIAL));}catch(e){}}
+function pinClearPartial(){PIN_PARTIAL=null;try{localStorage.removeItem('PINFORME_PARTIAL_V1');}catch(e){}document.getElementById('pinPartialPage')?.classList.remove('active');}
+function pinPartialActive(){return !!(PIN_PARTIAL?.mode==='partial' && PIN_PARTIAL.baseline?.id && String(PIN_PARTIAL.dogId)===localStorage.getItem(PINFORME_REMEASURE_DOG_ID_KEY));}
+function pinUpdatedFields(){return PIN_PARTIAL.selected.flatMap(i=>PIN_FIELD_GROUPS[i]).concat(PIN_PARTIAL.updateWeight?['weight']:[]);}
+function pinPartialShow(){document.querySelectorAll('.intro-step,.step,.finish-step').forEach(e=>e.classList.remove('active'));document.getElementById('pinPartialPage').classList.add('active');window.scrollTo(0,0);try{savePINFORMEState();}catch(e){}}
+function pinShowMode(){PIN_PARTIAL={mode:'choice',dogId:localStorage.getItem(PINFORME_REMEASURE_DOG_ID_KEY),selected:[],updateWeight:false};pinSavePartial();document.querySelector('#pinPartialPage h1').textContent='再採寸の方法';document.getElementById('pinPartialBody').innerHTML='<p class="pin-partial-note">全項目を測り直すか、変更したい項目だけ更新するかを選んでください。</p><div class="pin-remeasure-actions"><button type="button" class="pin-remeasure-action primary" onclick="pinChooseFull()">全項目を測り直す</button><button type="button" class="pin-remeasure-action light" onclick="pinChoosePartial()">変更したい項目だけ更新する</button></div>';document.getElementById('pinPartialStatus').textContent='';pinPartialShow();}
+function pinChooseFull(){pinClearPartial();hideAll();document.getElementById('startPage').classList.add('active');savePINFORMEState();}
+let pinSnapshotLoading=false;
+async function pinChoosePartial(){
+ if(pinSnapshotLoading)return;pinSnapshotLoading=true;
+ const state=PIN_PARTIAL;const status=document.getElementById('pinPartialStatus');status.textContent='前回の採寸を確認しています…';
+ try{
+  const res=await fetch(`${PINFORME_SUPABASE_BASE}/rest/v1/rpc/get_remeasure_snapshot_v1`,{method:'POST',headers:{apikey:PINFORME_SUPABASE_KEY,Authorization:'Bearer '+PINFORME_SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify({p_dog_id:Number(state.dogId),p_remeasure_key:localStorage.getItem(PINFORME_OWNER_REMEASURE_KEY)})});
+  if(!res.ok)throw new Error('前回の採寸を読み込めませんでした。Supabase用SQLの導入を確認してください。');
+  const baseline=await res.json();if(PIN_PARTIAL!==state)return;
+  if(!baseline?.id)throw new Error('前回の採寸データがありません。「全項目を測り直す」を選んでください。');
+  state.baseline=baseline;state.mode='partial';const promo=document.getElementById('photoPromoConsent');if(promo)promo.checked=baseline.photo_promo_consent===true;PINFORME_PHOTO_PROMO_CONSENT=baseline.photo_promo_consent===true;pinSavePartial();status.textContent='';hideAll();document.getElementById('startPage').classList.add('active');savePINFORMEState();
+ }catch(e){if(PIN_PARTIAL===state)status.textContent=e.message;}finally{pinSnapshotLoading=false;}
+}
+function pinOpenItemPicker(){
+ document.querySelector('#pinPartialPage h1').textContent='更新する項目を選択';
+ const b=PIN_PARTIAL.baseline;
+ document.getElementById('pinPartialBody').innerHTML='<p class="pin-partial-note">選んだ項目だけ測り直します。選ばなかった項目は前回の値を引き継ぎます。選んだ項目を空欄にすると、その値は未入力として保存されます。<br>前回の保存：'+adminEsc(adminDate(b.created_at))+'</p>'+PIN_ITEM_NAMES.map((n,i)=>'<label class="pin-item"><input type="checkbox" id="pinUpdateItem'+i+'" '+(PIN_PARTIAL.selected.includes(i)?'checked':'')+'><span>'+String(i+1)+'. '+adminEsc(n)+'<small>前回：'+PIN_FIELD_GROUPS[i].map(k=>b[k]==null?'未入力':adminEsc(b[k])+' cm').join(' ／ ')+'</small></span></label>').join('')+'<label class="pin-item"><input type="checkbox" id="pinUpdateWeight" '+(PIN_PARTIAL.updateWeight?'checked':'')+'><span>体重<small>前回：'+(b.weight==null?'未入力':adminEsc(b.weight)+' kg')+'</small></span></label><button type="button" class="pin-remeasure-action primary" onclick="pinStartSelected()">選んだ項目を更新する</button>';
+ document.getElementById('pinPartialStatus').textContent='';pinPartialShow();
+}
+function pinStartSelected(){
+ const chosen=PIN_ITEM_NAMES.map((_,i)=>i).filter(i=>document.getElementById('pinUpdateItem'+i).checked);
+ const updateWeight=document.getElementById('pinUpdateWeight').checked;
+ if(!chosen.length&&!updateWeight){document.getElementById('pinPartialStatus').textContent='更新する項目を1つ以上選んでください。';return;}
+ if(updateWeight && !(Number(textValue('weight'))>0)){document.getElementById('pinPartialStatus').textContent='体重を更新する場合は、戻って基本情報の体重を入力してください。';return;}
+ PIN_PARTIAL.selected=chosen;PIN_PARTIAL.updateWeight=updateWeight;pinSavePartial();
+ PINFORME_EDIT_FROM_FINISH=false;document.body.classList.remove('edit-from-finish');
+ if(!chosen.length){showFinish();return;}
+ hideAll();current=chosen[0];steps[current].classList.add('active');savePINFORMEState();window.scrollTo(0,0);
+}
+function pinPartialBack(){if(PIN_PARTIAL?.mode==='partial'){hideAll();document.getElementById('dogInfoPage').classList.add('active');}else{pinClearPartial();pinformeBackToEntry();}savePINFORMEState();}
+// Existing selection still populates basic information and validates the owner key.
+const pinOriginalSelect=window.pinformeSelectRemeasureDog;
+window.pinformeSelectRemeasureDog=function(d,key){pinClearPartial();pinOriginalSelect(d,key);pinShowMode();};
+for(const name of ['pinformeChooseNewMeasurement','pinformeStartFirstOwnerMeasurement','pinformeChooseExistingOwner','pinformeChooseRemeasurement']){const fn=window[name];window[name]=function(...args){pinClearPartial();return fn.apply(this,args);};}
+// Refresh the same dog's authoritative details using the existing owner key.
+window.remeasureSameDog=async function(){
+ const dogId=localStorage.getItem(PINFORME_REMEASURE_DOG_ID_KEY);
+ const key=localStorage.getItem(PINFORME_OWNER_REMEASURE_KEY);
+ pinformeChooseRemeasurement();
+ if(!dogId||!key)return;
+ const status=document.getElementById('pinformeRemeasureStatus');if(status)status.textContent='わんちゃんを確認しています…';
+ try{
+  const res=await fetch(`${PINFORME_SUPABASE_BASE}/rest/v1/rpc/get_remeasure_dogs`,{method:'POST',headers:{apikey:PINFORME_SUPABASE_KEY,Authorization:'Bearer '+PINFORME_SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify({p_key:key})});
+  if(!res.ok)throw new Error('確認できませんでした。再採寸キーを入力してください。');
+  const dogs=await res.json();const dog=dogs.find(d=>String(d.dog_id)===String(dogId));
+  if(!dog)throw new Error('わんちゃんを確認できませんでした。再採寸キーを入力してください。');
+  pinformeSelectRemeasureDog(dog,key);
+ }catch(e){if(status)status.textContent=e.message;}
+};
+document.addEventListener('change',e=>{if(e.target.id?.startsWith('pinUpdateItem') && PIN_PARTIAL){PIN_PARTIAL.selected=PIN_ITEM_NAMES.map((_,i)=>i).filter(i=>document.getElementById('pinUpdateItem'+i)?.checked);pinSavePartial();}if(e.target.id==='pinUpdateWeight'&&PIN_PARTIAL){PIN_PARTIAL.updateWeight=e.target.checked;pinSavePartial();}});
+window.addEventListener('load',()=>{let savedView='';try{savedView=JSON.parse(localStorage.getItem(PINFORME_FORM_STATE_KEY)||'{}').view;}catch(e){}if(savedView==='pinPartialPage' || document.getElementById('pinPartialPage').classList.contains('active')){if(pinPartialActive())pinOpenItemPicker();else if(PIN_PARTIAL?.mode==='choice')pinShowMode();}});
 </script>
 
 </body></html>
