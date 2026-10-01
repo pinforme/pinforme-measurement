@@ -1301,6 +1301,27 @@ footer{padding:34px 0 46px;border-top:1px solid #ececec;font-size:12px;color:#77
   const PINFORME_SUPABASE_URL = 'https://dsbvaoqgvtoeukigdjdj.supabase.co';
   const PINFORME_PUBLISHABLE_KEY = 'sb_publishable_403lLhKUQ9X9N1RaxaDduA_9ZQEZ6na';
 
+
+// 募集枠は既存の説明文に公開情報として保存し、画面では説明と分けて表示。
+const QUOTA_MARKER = '\n\n【サイズ別募集枠】\n';
+const MONITOR_PENDING = '募集頭数・対象サイズは、採寸データをもとに決定し、準備が整い次第ご案内します。';
+function splitQuota(value){
+  const text=String(value||'');
+  const pos=text.lastIndexOf(QUOTA_MARKER);
+  if(pos<0)return {description:text,slots:[]};
+  const lines=text.slice(pos+QUOTA_MARKER.length).trim().split('\n');
+  const slots=[];
+  for(const line of lines){
+    const m=line.match(/^([^：:\n]+)[：:]\s*([1-9]\d*)頭$/);
+    if(!m || !Number.isSafeInteger(Number(m[2])))return {description:text,slots:[]};
+    slots.push({size:m[1].trim(),count:Number(m[2])});
+  }
+  return {description:text.slice(0,pos),slots};
+}
+function quotaLabel(slots){
+  return slots.length ? '募集予定 '+slots.map(x=>x.size+' '+x.count+'頭').join(' ／ ')+'（計'+slots.reduce((sum,x)=>sum+x.count,0)+'頭）' : '募集枠は決定後にご案内';
+}
+
   const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({
     '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
   }[c]));
@@ -1344,7 +1365,9 @@ footer{padding:34px 0 46px;border-top:1px solid #ececec;font-size:12px;color:#77
     const breed = row.canonical_breed || '';
     const round = Number(row.round_no || 1);
     const title = row.title || row.project_name || breed || 'PROJECT';
-    const desc = row.short_description || '';
+    const quota = splitQuota(row.short_description);
+    const desc = quota.description;
+    const isMonitor = code === 'P02';
     const count = Number(dogCount || 0);
     const start = formatDate(row.start_date);
     const end = formatDate(row.end_date);
@@ -1371,9 +1394,10 @@ footer{padding:34px 0 46px;border-top:1px solid #ececec;font-size:12px;color:#77
               <div class="project-jp">第${round}弾${breed ? `｜${esc(breed)}` : ''}</div>
               <h3>${esc(title)}</h3>
               ${desc ? `<p>${esc(desc)}</p>` : ''}
+              ${isMonitor ? `<p>${esc(quota.slots.length ? quotaLabel(quota.slots) : MONITOR_PENDING)}</p>` : ''}
               <div class="project-meta-line">
                 ${breed ? `<span class="project-meta-chip">${esc(breed)}</span>` : ''}
-                ${count > 0 ? `<span class="project-meta-chip">登録${count}頭</span>` : ''}
+                ${code === 'P01' && count > 0 ? `<span class="project-meta-chip">採寸登録${count}頭</span>` : ''}
                 ${period ? `<span class="project-meta-chip">${esc(period)}</span>` : ''}
               </div>
               ${detailEnabled
