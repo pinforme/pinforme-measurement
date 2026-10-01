@@ -31,6 +31,7 @@
 <div class="grid2"><div class="field"><label>開始日</label><input id="startDate" type="date" onchange="preview()"></div><div class="field"><label>終了日</label><input id="endDate" type="date" onchange="preview()"></div></div>
 <div class="field"><label>タイトル</label><input id="title" type="text" oninput="this.dataset.auto='0';preview()"></div>
 <div class="field"><label>短い説明文</label><textarea id="description" oninput="preview()"></textarea></div>
+<div id="quotaField" class="field hidden"><label for="quotaInput">サイズ別の募集予定頭数</label><textarea id="quotaInput" placeholder="サイズ名：頭数（1行に1サイズ）" oninput="preview()"></textarea><p class="lead">サイズが決まったら入力してください。例：S：5。行を追加してサイズ数を増やせます。未入力の間は、採寸データをもとに決定する旨を表示します。</p></div>
 <div class="grid2"><div class="field"><label>CTAボタン文言</label><input id="ctaLabel" value="詳しく見る"></div><div class="field"><label>リンク先</label><input id="ctaUrl"></div></div>
 <div class="switchrow"><div><strong>詳細ページを公開</strong><small>準備中はOFFでOK</small></div><label class="switch"><input id="detailEnabled" type="checkbox"><span></span></label></div>
 <div class="field"><label>詳細ページパス</label><input id="detailPath"></div>
@@ -49,6 +50,27 @@
 </main>
 </div>
 <script>
+
+// 募集枠は既存の説明文に公開情報として保存し、画面では説明と分けて表示。
+const QUOTA_MARKER = '\n\n【サイズ別募集枠】\n';
+const MONITOR_PENDING = '募集頭数・対象サイズは、採寸データをもとに決定し、準備が整い次第ご案内します。';
+function splitQuota(value){
+  const text=String(value||'');
+  const pos=text.lastIndexOf(QUOTA_MARKER);
+  if(pos<0)return {description:text,slots:[]};
+  const lines=text.slice(pos+QUOTA_MARKER.length).trim().split('\n');
+  const slots=[];
+  for(const line of lines){
+    const m=line.match(/^([^：:\n]+)[：:]\s*([1-9]\d*)頭$/);
+    if(!m || !Number.isSafeInteger(Number(m[2])))return {description:text,slots:[]};
+    slots.push({size:m[1].trim(),count:Number(m[2])});
+  }
+  return {description:text.slice(0,pos),slots};
+}
+function quotaLabel(slots){
+  return slots.length ? '募集予定 '+slots.map(x=>x.size+' '+x.count+'頭').join(' ／ ')+'（計'+slots.reduce((sum,x)=>sum+x.count,0)+'頭）' : '募集枠は決定後にご案内';
+}
+
 const BASE='https://dsbvaoqgvtoeukigdjdj.supabase.co';
 const KEY='sb_publishable_403lLhKUQ9X9N1RaxaDduA_9ZQEZ6na';
 const SESSION_KEY='PINFORME_SITE_ADMIN_SESSION_V1';
@@ -72,10 +94,29 @@ function renderTypes(){const cur=$('project').value;$('project').innerHTML=types
 function renderBreeds(){const cur=$('breed').value;$('breed').innerHTML=breeds.map(x=>`<option value="${esc(x.canonical_breed)}">${esc(x.canonical_breed)}（${Number(x.dog_count||0)}頭）</option>`).join('');if(breeds.some(x=>x.canonical_breed===cur))$('breed').value=cur}
 function loadStatuses(preferred){const p=$('project').value,list=statuses.filter(x=>x.project_code===p);$('statusKey').innerHTML=list.map(x=>`<option value="${esc(x.status_key)}">${esc(x.status_label)}</option>`).join('');if(preferred&&list.some(x=>x.status_key===preferred))$('statusKey').value=preferred;else if(list.some(x=>x.status_key==='open'))$('statusKey').value='open';preview()}
 function autoTitle(){const t=$('title');if(t.value.trim()&&t.dataset.auto!=='1')return;const b=$('breed').value,p=$('project').value;let v=b;if(p==='P01')v+='採寸協力募集';else if(p==='P02')v+=' サンプルモニター';else if(p==='P03')v+=' 着用モデル';else if(p==='P04')v+=' 商品開発';else if(p==='P05')v+=' フルオーダー';t.value=v;t.dataset.auto='1'}
-function preview(){const b=$('breed').value||'犬種',p=$('project').value||'',s=$('statusKey').value||'',st=$('startDate').value,en=$('endDate').value,vis=$('isVisible').checked;$('pvProject').textContent=projectLabel(p);$('pvStatus').textContent=statusLabel(p,s);$('pvRound').textContent='第'+($('roundNo').value||1)+'弾';$('pvTitle').textContent=$('title').value||b;$('pvDesc').textContent=$('description').value||'';$('pvBreed').textContent=b;$('pvCount').textContent='登録'+countFor(b)+'頭';$('pvPeriod').textContent=st?(en?st+'〜'+en:st+'〜'):'期間未設定';$('visibleLabel').textContent=vis?'表示中':'非表示';$('previewBox').style.opacity=vis?'1':'.35'}
-function payload(state){return{canonical_breed:$('breed').value,project_code:$('project').value,status_key:$('statusKey').value,round_no:Number($('roundNo').value||1),display_order:Number($('displayOrder').value||1),title:$('title').value.trim(),short_description:$('description').value.trim()||null,start_date:$('startDate').value||null,end_date:$('endDate').value||null,detail_page_enabled:$('detailEnabled').checked,detail_page_path:$('detailPath').value.trim()||null,cta_label:$('ctaLabel').value.trim()||null,cta_url:$('ctaUrl').value.trim()||null,admin_note:$('adminNote').value.trim()||null,publish_state:state,is_visible:$('isVisible').checked,published_at:state==='published'?new Date().toISOString():null}}
+function readQuotaInput(){
+  const value=$('quotaInput').value.trim();
+  if(!value)return [];
+  const seen=new Set();
+  const slots=value.split(/\r?\n/).map(line=>{
+    const m=line.trim().match(/^([^：:\n]+)[：:]\s*([1-9]\d*)\s*頭?$/);
+    if(!m)throw new Error('募集枠は「サイズ名：正の整数」で1行ずつ入力してください。');
+    const size=m[1].trim(),count=Number(m[2]);
+    if(!size || size.includes('【') || !Number.isSafeInteger(count) || seen.has(size))throw new Error('サイズ名の重複や頭数を確認してください。');
+    seen.add(size);return {size,count};
+  });
+  if(!Number.isSafeInteger(slots.reduce((sum,x)=>sum+x.count,0)))throw new Error('合計頭数が大きすぎます。');
+  return slots;
+}
+function monitorDescription(){
+  const description=$('description').value.trim();
+  const slots=$('project').value==='P02'?readQuotaInput():[];
+  return (description+(slots.length?QUOTA_MARKER+slots.map(x=>x.size+'：'+x.count+'頭').join('\n'):''))||null;
+}
+function preview(){const b=$('breed').value||'犬種',p=$('project').value||'',s=$('statusKey').value||'',st=$('startDate').value,en=$('endDate').value,vis=$('isVisible').checked;$('pvProject').textContent=projectLabel(p);$('pvStatus').textContent=statusLabel(p,s);$('pvRound').textContent='第'+($('roundNo').value||1)+'弾';$('pvTitle').textContent=$('title').value||b;$('pvDesc').textContent=$('description').value||'';$('pvBreed').textContent=b;$('quotaField').classList.toggle('hidden',p!=='P02');$('pvCount').hidden=p!=='P01'&&p!=='P02';if(p==='P02'){try{$('pvCount').textContent=quotaLabel(readQuotaInput())}catch(e){$('pvCount').textContent='募集枠の入力を確認してください。'}}else{$('pvCount').textContent='採寸登録'+countFor(b)+'頭';}$('pvPeriod').textContent=st?(en?st+'〜'+en:st+'〜'):'期間未設定';$('visibleLabel').textContent=vis?'表示中':'非表示';$('previewBox').style.opacity=vis?'1':'.35'}
+function payload(state){return{canonical_breed:$('breed').value,project_code:$('project').value,status_key:$('statusKey').value,round_no:Number($('roundNo').value||1),display_order:Number($('displayOrder').value||1),title:$('title').value.trim(),short_description:monitorDescription(),start_date:$('startDate').value||null,end_date:$('endDate').value||null,detail_page_enabled:$('detailEnabled').checked,detail_page_path:$('detailPath').value.trim()||null,cta_label:$('ctaLabel').value.trim()||null,cta_url:$('ctaUrl').value.trim()||null,admin_note:$('adminNote').value.trim()||null,publish_state:state,is_visible:$('isVisible').checked,published_at:state==='published'?new Date().toISOString():null}}
 async function saveProject(state){
-  const st=$('saveStatus'),p=payload(state);
+  const st=$('saveStatus');let p;try{p=payload(state)}catch(e){st.className='status err';st.textContent=e.message;return;}
   if(!p.canonical_breed||!p.project_code||!p.status_key||!p.title){
     st.className='status err';
     st.textContent='犬種・PROJECT・状態・タイトルを確認してください。';
@@ -179,9 +220,9 @@ async function saveProject(state){
   }
 }
 function renderProjects(){$('listStatus').textContent=projects.length?projects.length+'件登録されています。':'まだPROJECTがありません。';$('projectList').innerHTML=projects.map(p=>`<div class="row"><div class="rowtop"><div><strong>${esc(p.canonical_breed)}</strong><small>${esc(projectLabel(p.project_code))}｜第${Number(p.round_no)}弾<br>${p.publish_state==='published'?'公開':'下書き'}・${p.is_visible?'表示':'非表示'}</small></div><span class="badge ${p.status_key==='open'?'open':''}">${esc(statusLabel(p.project_code,p.status_key))}</span></div><div class="rowactions"><button class="btn outline" onclick="editProject(${Number(p.id)})">編集</button><button class="btn light" onclick="toggleVisible(${Number(p.id)},${p.is_visible?'false':'true'})">${p.is_visible?'非表示にする':'表示する'}</button></div></div>`).join('')}
-async function editProject(id,scroll=true){let p=projects.find(x=>Number(x.id)===Number(id));if(!p){const a=await request('/rest/v1/site_projects?id=eq.'+encodeURIComponent(id)+'&select=*',{headers:headers(false)});p=a?.[0]}if(!p)return;$('editingId').value=p.id;$('editorTitle').textContent='PROJECTを編集';$('breed').value=p.canonical_breed;$('project').value=p.project_code;loadStatuses(p.status_key);$('roundNo').value=p.round_no;$('displayOrder').value=p.display_order;$('startDate').value=p.start_date||'';$('endDate').value=p.end_date||'';$('title').value=p.title||'';$('title').dataset.auto='0';$('description').value=p.short_description||'';$('ctaLabel').value=p.cta_label||'';$('ctaUrl').value=p.cta_url||'';$('detailEnabled').checked=!!p.detail_page_enabled;$('detailPath').value=p.detail_page_path||'';$('isVisible').checked=!!p.is_visible;$('adminNote').value=p.admin_note||'';preview();await loadHistory();if(scroll)window.scrollTo({top:0,behavior:'smooth'})}
+async function editProject(id,scroll=true){let p=projects.find(x=>Number(x.id)===Number(id));if(!p){const a=await request('/rest/v1/site_projects?id=eq.'+encodeURIComponent(id)+'&select=*',{headers:headers(false)});p=a?.[0]}if(!p)return;$('editingId').value=p.id;$('editorTitle').textContent='PROJECTを編集';$('breed').value=p.canonical_breed;$('project').value=p.project_code;loadStatuses(p.status_key);$('roundNo').value=p.round_no;$('displayOrder').value=p.display_order;$('startDate').value=p.start_date||'';$('endDate').value=p.end_date||'';$('title').value=p.title||'';$('title').dataset.auto='0';const quota=splitQuota(p.short_description);$('description').value=quota.description;$('quotaInput').value=quota.slots.map(x=>x.size+'：'+x.count).join('\n');$('ctaLabel').value=p.cta_label||'';$('ctaUrl').value=p.cta_url||'';$('detailEnabled').checked=!!p.detail_page_enabled;$('detailPath').value=p.detail_page_path||'';$('isVisible').checked=!!p.is_visible;$('adminNote').value=p.admin_note||'';preview();await loadHistory();if(scroll)window.scrollTo({top:0,behavior:'smooth'})}
 async function toggleVisible(id,v){try{await request('/rest/v1/site_projects?id=eq.'+id,{method:'PATCH',headers:{...headers(true),Prefer:'return=minimal'},body:JSON.stringify({is_visible:v})});await loadAll()}catch(e){alert('更新エラー：'+e.message)}}
-function newProject(){$('editingId').value='';$('editorTitle').textContent='PROJECTを新規登録';$('roundNo').value=1;$('displayOrder').value=1;$('startDate').value='';$('endDate').value='';$('title').value='';$('title').dataset.auto='1';$('description').value='';$('ctaLabel').value='詳しく見る';$('ctaUrl').value='';$('detailEnabled').checked=false;$('detailPath').value='';$('isVisible').checked=true;$('adminNote').value='';autoTitle();loadStatuses();preview();$('history').innerHTML='';$('historyStatus').textContent='新規PROJECTです。';window.scrollTo({top:0,behavior:'smooth'})}
+function newProject(){$('editingId').value='';$('editorTitle').textContent='PROJECTを新規登録';$('roundNo').value=1;$('displayOrder').value=1;$('startDate').value='';$('endDate').value='';$('title').value='';$('title').dataset.auto='1';$('description').value='';$('quotaInput').value='';$('ctaLabel').value='詳しく見る';$('ctaUrl').value='';$('detailEnabled').checked=false;$('detailPath').value='';$('isVisible').checked=true;$('adminNote').value='';autoTitle();loadStatuses();preview();$('history').innerHTML='';$('historyStatus').textContent='新規PROJECTです。';window.scrollTo({top:0,behavior:'smooth'})}
 async function loadHistory(){const id=$('editingId').value;if(!id){$('historyStatus').textContent='PROJECTを選択すると履歴を表示します。';$('history').innerHTML='';return}try{const a=await request('/rest/v1/site_project_history?site_project_id=eq.'+encodeURIComponent(id)+'&select=*&order=changed_at.desc&limit=30',{headers:headers(false)});$('historyStatus').textContent=a.length?a.length+'件の履歴':'履歴はまだありません。';$('history').innerHTML=a.map(r=>{const d=new Date(r.changed_at);return`<div class="historyrow"><strong>${esc(r.action_type==='publish'?'公開反映':r.action_type==='draft_save'?'下書き保存':r.action_type)}</strong><small>${esc(Number.isNaN(d.getTime())?r.changed_at:d.toLocaleString('ja-JP'))}｜${esc(r.note||'')}</small></div>`}).join('')}catch(e){$('historyStatus').textContent='履歴エラー：'+e.message}}
 restore();
 </script>
