@@ -6,7 +6,7 @@
 <meta http-equiv="Expires" content="0">
 <script id="pinforme-latest-version-guard">
 (function(){
-  const PINFORME_BUILD_ID="20261001-partial-update-v1";
+  const PINFORME_BUILD_ID="20261001-owner-contact-v3";
 
   function forceFresh(reason){
     try{
@@ -1375,7 +1375,7 @@ body.pinforme-admin-route.pinforme-admin-karte-open #kartePage .karte-actions bu
     <div class="form-field"><label>体重</label><div class="weight-row"><input type="number" inputmode="decimal" step="0.1" id="weight"><span>kg</span></div></div>
     <div class="form-field"><label>わんちゃんの写真</label>
       <div class="photo-purpose-note">※ カルテ管理・わんちゃんの識別のために使用します。</div>
-      <input type="file" id="dogPhoto" accept="image/*"><img id="photoPreview" class="photo-preview">
+      <input type="file" id="dogPhoto" accept="image/*"><img id="photoPreview" class="photo-preview"><p id="pinPhotoStatus" style="font-size:12px;line-height:1.6;color:#666" aria-live="polite"></p>
       <label class="photo-consent">
         <input type="checkbox" id="photoPromoConsent">
         <span>ご提供いただいた写真を、PINFORMEのSNS・Webサイト・販促物等で使用することに同意します。<span class="optional">任意</span></span>
@@ -2732,13 +2732,86 @@ function bindAverage(section){
 }
 steps.forEach(bindAverage);
 let PINFORME_DOG_PHOTO_DATA="";
+let PINFORME_PHOTO_GENERATION=0;
+let PINFORME_PHOTO_SOURCE="";
+let PINFORME_OWNER_REQUEST_GENERATION=0;
+function pinClearOwnerContact(){
+  for(const id of ["recoveryEmail","recoveryPhone"]){const input=document.getElementById(id);if(input)input.value="";}
+}
+function pinApplyOwnerContact(contact){
+  const email=document.getElementById("recoveryEmail"),phone=document.getElementById("recoveryPhone");
+  if(email)email.value=contact?.recovery_email||"";
+  if(phone)phone.value=contact?.recovery_phone||"";
+}
+async function pinFetchOwnerContact(ownerId,key){
+  const response=await fetch(`${PINFORME_SUPABASE_BASE}/rest/v1/rpc/get_owner_recovery_contact_secure_v1`,{
+    method:"POST",
+    headers:{apikey:PINFORME_SUPABASE_KEY,Authorization:"Bearer "+PINFORME_SUPABASE_KEY,"Content-Type":"application/json"},
+    body:JSON.stringify({p_owner_id:Number(ownerId),p_remeasure_key:pinformeNormalizeRemeasureKey(key)})
+  });
+  if(!response.ok)throw new Error("連絡先を読み込めませんでした。連絡先引継ぎ用SQLの導入と再採寸キーをご確認ください。");
+  const result=await response.json();
+  if(!result || String(result.owner_id)!==String(ownerId))throw new Error("飼い主様の連絡先を確認できませんでした。");
+  return result;
+}
+function pinPhotoContext(){
+  const dog=localStorage.getItem(PINFORME_REMEASURE_DOG_ID_KEY);
+  const owner=localStorage.getItem(PINFORME_REMEASURE_OWNER_ID_KEY)||"";
+  return dog ? "dog:"+owner+":"+dog : "new:"+(localStorage.getItem(PINFORME_ACTIVE_DOG_CODE_KEY)||"");
+}
+function pinClearDogPhoto(){
+  PINFORME_PHOTO_GENERATION++;
+  PINFORME_DOG_PHOTO_DATA="";
+  PINFORME_PHOTO_SOURCE="";
+  const file=document.getElementById("dogPhoto");if(file)file.value="";
+  const preview=document.getElementById("photoPreview");
+  if(preview){preview.removeAttribute("src");preview.style.display="none";}
+  const status=document.getElementById("pinPhotoStatus");if(status)status.textContent="";
+  try{
+    const state=JSON.parse(localStorage.getItem(PINFORME_FORM_STATE_KEY)||"null");
+    if(state){state.photo="";state.photoDogId="";state.photoSource="";localStorage.setItem(PINFORME_FORM_STATE_KEY,JSON.stringify(state));}
+  }catch(e){}
+}
+function pinHasNewDogPhoto(){
+  return !!document.getElementById("dogPhoto")?.files?.[0] ||
+    (PINFORME_PHOTO_SOURCE==="selected" && PINFORME_DOG_PHOTO_DATA.startsWith("data:image/"));
+}
+async function pinLoadRegisteredDogPhoto(photoPath){
+  if(!photoPath)return;
+  const generation=PINFORME_PHOTO_GENERATION,context=pinPhotoContext();
+  const status=document.getElementById("pinPhotoStatus");
+  if(status)status.textContent="登録済みの写真を読み込んでいます…";
+  const stillCurrent=()=>generation===PINFORME_PHOTO_GENERATION && context===pinPhotoContext();
+  try{
+    const session=getAdminSession();
+    const response=await fetch(`${PINFORME_SUPABASE_BASE}/storage/v1/object/authenticated/${PINFORME_PHOTO_BUCKET}/${encodeURI(photoPath)}`,{
+      headers:{apikey:PINFORME_SUPABASE_KEY,Authorization:"Bearer "+(session?.access_token||PINFORME_SUPABASE_KEY)}
+    });
+    if(!response.ok)throw new Error("photo unavailable");
+    const blob=await response.blob();
+    if(!stillCurrent())return;
+    if(blob.type && !blob.type.startsWith("image/"))throw new Error("invalid photo");
+    const data=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result||""));reader.onerror=reject;reader.readAsDataURL(blob);});
+    if(!stillCurrent())return;
+    PINFORME_DOG_PHOTO_DATA=data;PINFORME_PHOTO_SOURCE="registered";
+    const preview=document.getElementById("photoPreview");if(preview){preview.src=data;preview.style.display="block";}
+    if(status)status.textContent="登録済みの写真です。変更しなければ、この写真を引き継ぎます。";
+    savePINFORMEState();
+  }catch(e){
+    if(stillCurrent() && status)status.textContent="登録済みの写真を引き継ぎます。現在のアクセス権限ではプレビューを表示できません。変更する場合は写真を選択してください。";
+  }
+}
 document.getElementById("dogPhoto").addEventListener("change",e=>{
- const f=e.target.files[0]; if(!f)return;
+ const f=e.target.files[0];if(!f)return;
+ const generation=++PINFORME_PHOTO_GENERATION,context=pinPhotoContext();
+ PINFORME_DOG_PHOTO_DATA="";PINFORME_PHOTO_SOURCE="";
+ const preview=document.getElementById("photoPreview");if(preview){preview.removeAttribute("src");preview.style.display="none";}
  const r=new FileReader();
  r.onload=ev=>{
-   PINFORME_DOG_PHOTO_DATA=String(ev.target.result||"");
-   const p=document.getElementById("photoPreview");
-   p.src=PINFORME_DOG_PHOTO_DATA; p.style.display="block";
+   if(generation!==PINFORME_PHOTO_GENERATION || context!==pinPhotoContext())return;
+   PINFORME_DOG_PHOTO_DATA=String(ev.target.result||"");PINFORME_PHOTO_SOURCE="selected";
+   const p=document.getElementById("photoPreview");p.src=PINFORME_DOG_PHOTO_DATA;p.style.display="block";
+   const status=document.getElementById("pinPhotoStatus");if(status)status.textContent="今回選択した写真です。送信・保存すると反映されます。";
    try{savePINFORMEState();}catch(err){}
  };
  r.readAsDataURL(f);
@@ -2751,7 +2824,11 @@ const PINFORME_PHOTO_BUCKET = "dog-photos";
 
 async function uploadDogPhotoToSupabase(){
   const input=document.getElementById("dogPhoto");
-  const file=input?.files?.[0];
+  let file=input?.files?.[0];
+  if(!file && pinHasNewDogPhoto()){
+    const blob=await (await fetch(PINFORME_DOG_PHOTO_DATA)).blob();
+    file=new File([blob],"restored-photo."+(blob.type==="image/png"?"png":"jpg"),{type:blob.type||"image/jpeg"});
+  }
   if(!file) return null;
   const safeExt=((file.name||"").split(".").pop()||"jpg").toLowerCase().replace(/[^a-z0-9]/g,"") || "jpg";
   const path=`measurements/${Date.now()}_${Math.random().toString(36).slice(2,10)}.${safeExt}`;
@@ -3164,6 +3241,7 @@ function remeasureSameDog(){
   window.scrollTo(0,0);
 }
 function resetNewDogSession(){
+  pinClearDogPhoto();
   pinClearPartial();
   // 新規犬の端末内入力だけを初期化。飼い主ID・キーとオンライン保存済みデータは保持。
   localStorage.removeItem(PINFORME_REMEASURE_DOG_ID_KEY);
@@ -3195,6 +3273,7 @@ function resetNewDogSession(){
 }
 
 function registerAnotherDog(){
+  pinClearDogPhoto();
   const owner=(document.getElementById("ownerName")?.value||"").trim();
   resetNewDogSession();
   // 同じ飼い主様の別のわんちゃん：owner_codeは保持し、dog_codeだけ新規発行する。
@@ -3537,6 +3616,7 @@ function adminStartNewMeasurement(){
 }
 
 function adminStartRemeasure(){
+  pinClearDogPhoto();
   const d=PINFORME_ADMIN_ACTIVE_DOG_GROUP;
   if(!d || d.id==null){ alert("再採寸するわんちゃんを選択してください。"); return; }
   const hist=adminDogHistory(d), latest=hist[0]||{};
@@ -4004,7 +4084,7 @@ async function sendToPinforme(){
 
   if(status) status.textContent="PINFORMEへ送信しています…";
   try{
-    if(document.getElementById("dogPhoto")?.files?.[0]){
+    if(pinHasNewDogPhoto()){
       if(status) status.textContent="写真をアップロードしています…";
       payload.photo_path=await uploadDogPhotoToSupabase();
     }else{
@@ -4231,7 +4311,7 @@ const PINFORME_FORM_STATE_KEY="PINFORME_FORM_STATE_V1";
 const PINFORME_VIEW_KEY="PINFORME_CURRENT_VIEW";
 
 function savePINFORMEState(){
-  const state={fields:{},photo:"",view:"entryChoicePage"};
+  const state={fields:{},photo:"",photoDogId:pinPhotoContext(),photoSource:PINFORME_PHOTO_SOURCE,view:"entryChoicePage"};
   document.querySelectorAll('input,select,textarea').forEach((el,i)=>{
     const key=el.id || el.name || ("field_"+i);
     if(el.type==="file") return;
@@ -4291,7 +4371,9 @@ function restorePINFORMEState(){
     else el.value=saved.value ?? "";
   });
 
-  if(state.photo){
+  if(state.photo && state.photoDogId===pinPhotoContext()){
+    PINFORME_PHOTO_GENERATION++;
+    PINFORME_PHOTO_SOURCE=state.photoSource==="selected"?"selected":"registered";
     PINFORME_DOG_PHOTO_DATA=state.photo;
     const preview=document.getElementById("photoPreview");
     if(preview){
@@ -4621,6 +4703,7 @@ document.addEventListener("click",function(){
   };
 
   window.pinformeBackToNewOwnerChoice=function(){
+    PINFORME_OWNER_REQUEST_GENERATION++;pinClearOwnerContact();
     const input=document.getElementById('pinformeExistingOwnerKeyInput');
     if(input) input.value='';
     const status=document.getElementById('pinformeExistingOwnerStatus');
@@ -4629,6 +4712,7 @@ document.addEventListener("click",function(){
   };
 
   window.pinformeConfirmExistingOwner=async function(){
+    const requestGeneration=++PINFORME_OWNER_REQUEST_GENERATION;
     const input=document.getElementById('pinformeExistingOwnerKeyInput');
     const status=document.getElementById('pinformeExistingOwnerStatus');
     const key=pinformeNormalizeRemeasureKey(input?.value||'');
@@ -4650,6 +4734,7 @@ document.addEventListener("click",function(){
       });
       if(!res.ok) throw new Error('HTTP '+res.status+' '+await res.text());
       const dogs=await res.json();
+      if(requestGeneration!==PINFORME_OWNER_REQUEST_GENERATION)return;
       if(!Array.isArray(dogs)||!dogs.length){
         if(status) status.textContent='一致する登録情報が見つかりません。キーをご確認ください。';
         return;
@@ -4659,6 +4744,8 @@ document.addEventListener("click",function(){
       const ownerName=dogs[0].owner_name||'';
       if(!(ownerId>0)) throw new Error('owner_idを確認できませんでした。');
 
+      const contact=await pinFetchOwnerContact(ownerId,key);
+      if(requestGeneration!==PINFORME_OWNER_REQUEST_GENERATION)return;
       resetNewDogSession();
       // 既存owner_idだけを保持し、新しいdog_idを発行する。
       try{
@@ -4678,6 +4765,7 @@ document.addEventListener("click",function(){
           if(el.type==='checkbox'||el.type==='radio')el.checked=false;else el.value='';
         });
         const owner=document.getElementById('ownerName'); if(owner) owner.value=ownerName;
+        pinApplyOwnerContact(contact);
         const suffix=document.getElementById('dogSuffix'); if(suffix) suffix.value='くん';
         document.querySelectorAll('.pin-first .suffix').forEach(b=>b.classList.toggle('active',b.dataset.value==='くん'));
         const pp=document.getElementById('photoPreview'); if(pp){pp.removeAttribute('src');pp.style.display='none';}
@@ -4692,8 +4780,9 @@ document.addEventListener("click",function(){
       showOnly('startPage');
       try{savePINFORMEState();}catch(e){}
     }catch(e){
+      if(requestGeneration!==PINFORME_OWNER_REQUEST_GENERATION)return;
       console.error(e);
-      if(status) status.textContent='登録情報の確認中にエラーが発生しました。';
+      if(status) status.textContent=e.message||'登録情報の確認中にエラーが発生しました。';
     }
   };
 
@@ -4736,6 +4825,7 @@ document.addEventListener("click",function(){
     },0);
   };
   window.pinformeBackToEntry=function(){
+    PINFORME_OWNER_REQUEST_GENERATION++;pinClearOwnerContact();
     const status=document.getElementById('pinformeRemeasureStatus');if(status)status.textContent='';
     const list=document.getElementById('pinformeRemeasureDogList');if(list)list.innerHTML='';
     const eStatus=document.getElementById('pinformeExistingOwnerStatus');if(eStatus)eStatus.textContent='';
@@ -5472,8 +5562,19 @@ function pinStartSelected(){
 function pinPartialBack(){if(PIN_PARTIAL?.mode==='partial'){hideAll();document.getElementById('dogInfoPage').classList.add('active');}else{pinClearPartial();pinformeBackToEntry();}savePINFORMEState();}
 // Existing selection still populates basic information and validates the owner key.
 const pinOriginalSelect=window.pinformeSelectRemeasureDog;
-window.pinformeSelectRemeasureDog=function(d,key){pinClearPartial();pinOriginalSelect(d,key);pinShowMode();};
-for(const name of ['pinformeChooseNewMeasurement','pinformeStartFirstOwnerMeasurement','pinformeChooseExistingOwner','pinformeChooseRemeasurement']){const fn=window[name];window[name]=function(...args){pinClearPartial();return fn.apply(this,args);};}
+window.pinformeSelectRemeasureDog=async function(d,key){
+ const requestGeneration=++PINFORME_OWNER_REQUEST_GENERATION;
+ pinClearOwnerContact();pinClearPartial();pinClearDogPhoto();
+ const status=document.getElementById('pinformeRemeasureStatus');
+ if(status)status.textContent='飼い主様の連絡先を確認しています…';
+ try{
+  const contact=await pinFetchOwnerContact(d.owner_id,key);
+  if(requestGeneration!==PINFORME_OWNER_REQUEST_GENERATION)return;
+  pinOriginalSelect(d,key);pinApplyOwnerContact(contact);pinShowMode();pinLoadRegisteredDogPhoto(d.photo_path||'');
+  if(status)status.textContent='';
+ }catch(e){if(requestGeneration===PINFORME_OWNER_REQUEST_GENERATION && status)status.textContent=e.message;}
+};
+for(const name of ['pinformeChooseNewMeasurement','pinformeStartFirstOwnerMeasurement','pinformeChooseExistingOwner','pinformeChooseRemeasurement']){const fn=window[name];window[name]=function(...args){PINFORME_OWNER_REQUEST_GENERATION++;pinClearOwnerContact();pinClearPartial();pinClearDogPhoto();return fn.apply(this,args);};}
 // Refresh the same dog's authoritative details using the existing owner key.
 window.remeasureSameDog=async function(){
  const dogId=localStorage.getItem(PINFORME_REMEASURE_DOG_ID_KEY);
@@ -5490,7 +5591,7 @@ window.remeasureSameDog=async function(){
  }catch(e){if(status)status.textContent=e.message;}
 };
 document.addEventListener('change',e=>{if(e.target.id?.startsWith('pinUpdateItem') && PIN_PARTIAL){PIN_PARTIAL.selected=PIN_ITEM_NAMES.map((_,i)=>i).filter(i=>document.getElementById('pinUpdateItem'+i)?.checked);pinSavePartial();}if(e.target.id==='pinUpdateWeight'&&PIN_PARTIAL){PIN_PARTIAL.updateWeight=e.target.checked;pinSavePartial();}});
-window.addEventListener('load',()=>{let savedView='';try{savedView=JSON.parse(localStorage.getItem(PINFORME_FORM_STATE_KEY)||'{}').view;}catch(e){}if(savedView==='pinPartialPage' || document.getElementById('pinPartialPage').classList.contains('active')){if(pinPartialActive())pinOpenItemPicker();else if(PIN_PARTIAL?.mode==='choice')pinShowMode();}});
+window.addEventListener('load',()=>{if(!PINFORME_DOG_PHOTO_DATA && localStorage.getItem(PINFORME_REMEASURE_DOG_ID_KEY)){pinLoadRegisteredDogPhoto(localStorage.getItem(PINFORME_REMEASURE_PHOTO_PATH_KEY)||'');}let savedView='';try{savedView=JSON.parse(localStorage.getItem(PINFORME_FORM_STATE_KEY)||'{}').view;}catch(e){}if(savedView==='pinPartialPage' || document.getElementById('pinPartialPage').classList.contains('active')){if(pinPartialActive())pinOpenItemPicker();else if(PIN_PARTIAL?.mode==='choice')pinShowMode();}});
 </script>
 
 </body></html>
