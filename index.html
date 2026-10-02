@@ -775,6 +775,12 @@ body.pinforme-admin-route.pinforme-admin-karte-open #kartePage .karte-actions bu
   #kartePage .karte-actions{display:none !important;}
 }
 </style>
+<style>
+#dogInfoPage .pin-measured-date-box{display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box;overflow:hidden;border:1px solid #ccc;border-radius:9px;background:#fff;}
+#dogInfoPage .pin-measured-date-box #pinMeasuredOn{display:block;-webkit-appearance:none;appearance:none;width:100%!important;max-width:100%!important;min-width:0!important;inline-size:100%!important;min-inline-size:0!important;box-sizing:border-box!important;height:50px;padding:0 13px;margin:0;border:0;border-radius:0;background:transparent;font-size:16px;text-align:left;}
+#pinMeasuredOn::-webkit-date-and-time-value{min-width:0;text-align:left;}
+#pinMeasuredOn::-webkit-datetime-edit{min-width:0;padding:0;}
+</style>
 </head>
 <body>
 
@@ -1372,7 +1378,7 @@ body.pinforme-admin-route.pinforme-admin-karte-open #kartePage .karte-actions bu
   </div>
   <input id="birthDate" type="hidden" value="">
 </div></div>
-    <div class="form-field"><label for="pinMeasuredOn">今回の測定日（必須）</label><input id="pinMeasuredOn" type="date" required style="width:100%;max-width:100%;min-width:0;box-sizing:border-box"><p style="font-size:12px;line-height:1.6">実際に測った日を選んでください。部分更新では、今回測り直す項目だけにこの日付を記録します。</p></div>
+    <div class="form-field"><label for="pinMeasuredOn">今回の測定日（必須）</label><div class="pin-measured-date-box"><input id="pinMeasuredOn" type="date" required aria-label="今回の測定日"></div><p style="font-size:12px;line-height:1.6">実際に測った日を選んでください。部分更新では、今回測り直す項目だけにこの日付を記録します。</p></div>
     <div class="form-field"><label>体重</label><div class="weight-row"><input type="number" inputmode="decimal" step="0.1" id="weight"><span>kg</span></div></div>
     <div class="form-field"><label>わんちゃんの写真</label>
       <div class="photo-purpose-note">※ カルテ管理・わんちゃんの識別のために使用します。</div>
