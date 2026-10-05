@@ -6,7 +6,7 @@
 <meta http-equiv="Expires" content="0">
 <script id="pinforme-latest-version-guard">
 (function(){
-  const PINFORME_BUILD_ID="20261005-photo-draft-v6";
+  const PINFORME_BUILD_ID="20261005-photo-draft-v7";
 
   function forceFresh(reason){
     try{
@@ -3200,9 +3200,7 @@ function backToFinish(){
   window.scrollTo(0,0);
 }
 function backToStartKeepData(){
-  // いま保存したカルテ自体は二重送信防止のため保存済みのまま扱うが、
-  // 次の「新規採寸 / 再採寸」を開始できるよう送信ロックはここで解除する。
-  PINFORME_SUBMITTED=false;
+  // Saved state remains attached to this draft. New/re-measurement actions reset it.
   PINFORME_SUBMITTING=false;
 
   try{
@@ -3213,8 +3211,8 @@ function backToStartKeepData(){
   if(!pinValidateMeasuredOn())return;
   const submitBtn=document.getElementById("pinformeSubmitButton");
   if(submitBtn){
-    submitBtn.disabled=false;
-    submitBtn.textContent="PINFORMEへ送信・保存";
+    submitBtn.disabled=PINFORME_SUBMITTED;
+    submitBtn.textContent=PINFORME_SUBMITTED ? "送信・保存済み ✓" : "PINFORMEへ送信・保存";
     submitBtn.style.opacity="1";
   }
 
@@ -3227,6 +3225,7 @@ function backToStartKeepData(){
   hideAll();
   document.getElementById("entryChoicePage").classList.add("active");
   try{ localStorage.setItem("PINFORME_CURRENT_VIEW","entryChoicePage"); }catch(e){}
+  savePINFORMEState();
   window.scrollTo(0,0);
 }
 const PINFORME_ACTIVE_OWNER_CODE_KEY="PINFORME_ACTIVE_OWNER_CODE_V1";
