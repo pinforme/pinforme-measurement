@@ -6,7 +6,7 @@
 <meta http-equiv="Expires" content="0">
 <script id="pinforme-latest-version-guard">
 (function(){
-  const PINFORME_BUILD_ID="20261005-photo-draft-v4";
+  const PINFORME_BUILD_ID="20261005-photo-draft-v5";
 
   function forceFresh(reason){
     try{
@@ -2798,6 +2798,22 @@ function pinHasUnsentDraft(){
 function pinRefreshDraftButton(){
   const box=document.getElementById('pinResumeDraftBox');if(box)box.hidden=!pinHasUnsentDraft();
 }
+function pinDraftResumeView(state){
+  const allowed=['startPage','dogInfoPage','finishPage','kartePage','pinPartialPage'];
+  for(const view of [state?.resumeView,state?.view]){
+    const match=/^measure:(\d+)$/.exec(String(view||''));
+    if(match && Number(match[1])<steps.length)return view;
+    if(allowed.includes(view) && document.getElementById(view))return view;
+  }
+  // Older drafts may have already lost their saved screen when reopened.
+  // Choose a real input screen from the restored values, never the entry screen.
+  let lastFilled=-1;
+  steps.forEach((step,i)=>{
+    if([...step.querySelectorAll('input[type="number"]')].some(input=>input.value.trim()!==''))lastFilled=i;
+  });
+  if(lastFilled>=0)return 'measure:'+lastFilled;
+  return state?.fields?.dogName?.value && state?.fields?.dogBreed?.value ? 'dogInfoPage' : 'startPage';
+}
 function pinResumeDraft(){
   restorePINFORMEState(true);
   if(typeof recalcAll==='function')recalcAll();
@@ -4532,7 +4548,7 @@ function restorePINFORMEState(continueDraft=false){
     if(nav && nav[0] && nav[0].type) navType=nav[0].type;
   }catch(e){}
 
-  let wanted=(continueDraft ? state.resumeView : state.view) || localStorage.getItem(PINFORME_VIEW_KEY);
+  let wanted=(continueDraft ? pinDraftResumeView(state) : state.view) || localStorage.getItem(PINFORME_VIEW_KEY);
   if(!continueDraft && navType==="navigate" && !new URLSearchParams(location.search).has("admin")){
     wanted="entryChoicePage";
     try{
