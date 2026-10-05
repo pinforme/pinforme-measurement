@@ -6,7 +6,7 @@
 <meta http-equiv="Expires" content="0">
 <script id="pinforme-latest-version-guard">
 (function(){
-  const PINFORME_BUILD_ID="20261005-photo-draft-v5";
+  const PINFORME_BUILD_ID="20261005-photo-draft-v6";
 
   function forceFresh(reason){
     try{
@@ -2761,6 +2761,7 @@ function bindAverage(section){
 steps.forEach(bindAverage);
 let PINFORME_DOG_PHOTO_DATA="";
 let PINFORME_PHOTO_READY=Promise.resolve();
+let PINFORME_DRAFT_READY=false;
 const PINFORME_DRAFT_PHOTO_KEY='PINFORME_DRAFT_PHOTO_V2';
 let PINFORME_DRAFT_WRITE_OK=true;
 function pinDraftNotice(message){
@@ -4432,6 +4433,7 @@ const PINFORME_FORM_STATE_KEY="PINFORME_FORM_STATE_V1";
 const PINFORME_VIEW_KEY="PINFORME_CURRENT_VIEW";
 
 function savePINFORMEState(){
+  if(!PINFORME_DRAFT_READY)return;
   const previous=pinStoredDraft();
   const state={fields:{},photo:"",photoDogId:pinPhotoContext(),photoSource:PINFORME_PHOTO_SOURCE,view:"entryChoicePage",submitted:PINFORME_SUBMITTED,resumeView:previous?.resumeView||previous?.view||"startPage"};
   document.querySelectorAll('input,select,textarea').forEach((el,i)=>{
@@ -4444,6 +4446,7 @@ function savePINFORMEState(){
       type:el.type
     };
   });
+  state.measurementInputs=steps.map(step=>Array.from(step.querySelectorAll('input[type="number"]')).map(input=>input.value));
   const preview=document.getElementById("photoPreview");
   if(preview && preview.src && preview.src.startsWith("data:image/")){
     // Photo bytes are stored separately after measurement values succeed.
@@ -4528,6 +4531,12 @@ function restorePINFORMEState(continueDraft=false){
     }
   }
 
+  if(Array.isArray(state.measurementInputs)){
+    steps.forEach((step,index)=>{
+      const values=state.measurementInputs[index];if(!Array.isArray(values))return;
+      step.querySelectorAll('input[type="number"]').forEach((input,i)=>{if(typeof values[i]==="string")input.value=values[i];});
+    });
+  }
   /* 反映表示も復元 */
   const owner=document.getElementById("ownerName")?.value||"";
   const dog=document.getElementById("dogName")?.value||"";
@@ -4549,7 +4558,7 @@ function restorePINFORMEState(continueDraft=false){
   }catch(e){}
 
   let wanted=(continueDraft ? pinDraftResumeView(state) : state.view) || localStorage.getItem(PINFORME_VIEW_KEY);
-  if(!continueDraft && navType==="navigate" && !new URLSearchParams(location.search).has("admin")){
+  if(!continueDraft && navType==="navigate" && !new URLSearchParams(location.search).has("admin") && !new URLSearchParams(location.search).has("_pinforme_reason")){
     wanted="entryChoicePage";
     try{
       localStorage.setItem(PINFORME_VIEW_KEY,"entryChoicePage");
@@ -4559,6 +4568,7 @@ function restorePINFORMEState(continueDraft=false){
     }catch(e){}
   }
 
+  if(!continueDraft && (navType==="reload" || new URLSearchParams(location.search).has("_pinforme_reason")) && !state.submitted)wanted=pinDraftResumeView(state);
   if(wanted){
     if(String(wanted).startsWith("measure:")){
       const idx=parseInt(String(wanted).split(":")[1],10);
@@ -4589,8 +4599,12 @@ document.addEventListener("input",savePINFORMEState);
 document.addEventListener("change",()=>setTimeout(savePINFORMEState,0));
 document.addEventListener("click",()=>setTimeout(savePINFORMEState,0));
 window.addEventListener("beforeunload",savePINFORMEState);
+window.addEventListener("pagehide",savePINFORMEState);
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden")savePINFORMEState();});
 window.addEventListener("DOMContentLoaded",()=>setTimeout(()=>{
   restorePINFORMEState();
+  PINFORME_DRAFT_READY=true;
+  savePINFORMEState();
   pinRefreshDraftButton();
   document.documentElement.classList.remove("pinforme-restoring");
 },0));
