@@ -5929,14 +5929,15 @@ const PinProductCore=(()=>{
   const currentAge=PinSizeCore.months(birth,today),measurementAge=PinSizeCore.months(birth,row.measured_on);
   if(!now||!measured||measured>now||currentAge===null||measurementAge===null)return blocked('生年月日・測定日を確認');
   const maxDays=currentAge<12?p.puppy_days:p.adult_days;
-  if((now-measured)/86400000>maxDays)return blocked('採寸から'+maxDays+'日超：最新の体型を確認');
+  const elapsedDays=Math.floor((now-measured)/86400000),oldFields=[];let reference=elapsedDays>maxDays;
+  if(reference&&currentAge<12)return blocked('採寸から'+maxDays+'日超：成長期のため再採寸を確認');
   for(const f of p.fields){
    if(positive(row[f])===null)return blocked('判定項目の採寸不足：'+f);
    const at=date(row.field_measured_on?.[f]);
    if(!at||at>now||at>measured)return blocked('寸法の測定日を確認：'+f);
    const age=PinSizeCore.months(birth,row.field_measured_on[f]);
    if(age===null||currentAge>=12&&age<12)return blocked('成犬になった後の再採寸が必要：'+f);
-   if((now-at)/86400000>maxDays)return blocked('引き継いだ寸法の再採寸を確認：'+f);
+   if((now-at)/86400000>maxDays){if(currentAge<12)return blocked('引き継いだ寸法の再採寸を確認：'+f);reference=true;oldFields.push(f);}
   }
   const candidates=[],adjustments=[];
   for(const v of p.variants){
@@ -5944,7 +5945,10 @@ const PinProductCore=(()=>{
    if(!misses.length)candidates.push(v);
    else if(misses.every(f=>lengths.has(f)))adjustments.push({variant:v,fields:misses});
   }
-  return {state:candidates.length?'fit':adjustments.length?'length_review':'no_fit',reason:candidates.length?'対応範囲内の候補':adjustments.length?'体格に合う候補はあるが、丈の対応範囲外':'適合する既製の組み合わせなし',candidates,adjustments};
+  const state=candidates.length?'fit':adjustments.length?'length_review':'no_fit';
+  const reason=candidates.length?'対応範囲内の候補':adjustments.length?'体格に合う候補はあるが、丈の対応範囲外':'適合する既製の組み合わせなし';
+  const message=reference?'前回採寸に基づく参考：'+reason+'。採寸から'+elapsedDays+'日経過。'+(oldFields.length?'古い寸法あり（'+oldFields.join('・')+'）。':'')+'今の体型に合うサイズを選ぶため、再採寸をおすすめします。':reason;
+  return {state:reference?'reference_'+state:state,reason:message,reference,elapsed_days:elapsedDays,old_fields:oldFields,candidates,adjustments};
  }
  return {fields,lengths,positive,date,validate,evaluate};
 })();
@@ -6004,8 +6008,8 @@ const PinProductCore=(()=>{
    if(!items.length)throw Error('対象犬種の採寸データがありません。管理者一覧を更新してください。');
    const checks=items.map(x=>({x,r:C.evaluate(p,x,today())}));
    const heading=p.status==='draft'||dirty?'開発用の比較（未確定・編集内容を含む）':'確定基準との適合候補（管理者確認用）';
-   const counts=checks.reduce((a,{r})=>(a[r.state]=(a[r.state]||0)+1,a),{});
-   $('pcResults').innerHTML='<h3>'+heading+'</h3><p>対象 '+items.length+'頭 ／ 範囲内 '+(counts.fit||0)+'頭 ／ 丈の確認 '+(counts.length_review||0)+'頭 ／ 再採寸確認 '+(counts.remeasure||0)+'頭 ／ 適合なし '+(counts.no_fit||0)+'頭</p><p>年齢で商品ラインを制限せず、同じ商品内の全組み合わせを比較します。袖丈のために体格サイズを下げる判定はしません。合わない場合に自動でオーダーメイドを勧めません。</p><div class="pc-scroll"><table><thead><tr><th>名前／ID</th><th>最新採寸日</th><th>確認結果</th><th>対応範囲内の候補</th><th>体格は合うが丈を要確認</th></tr></thead><tbody>'+checks.map(({x,r})=>'<tr><td>'+escape(x.dog.dog_name||'名前未入力')+'／'+escape(x.dog.id)+'</td><td>'+escape(x.row?.measured_on||'不明')+'</td><td>'+escape(named(r.reason))+'</td><td>'+escape(r.candidates.map(variantName).join('、')||'—')+'</td><td>'+escape(r.adjustments.map(a=>variantName(a.variant)+'：'+a.fields.map(f=>labels[f]).join('・')).join('、')||'—')+'</td></tr>').join('')+'</tbody></table></div>';
+   const counts=checks.reduce((a,{r})=>(a[r.state]=(a[r.state]||0)+1,a),{});const references=checks.filter(({r})=>r.reference).length;
+   $('pcResults').innerHTML='<h3>'+heading+'</h3><p>対象 '+items.length+'頭 ／ 範囲内 '+(counts.fit||0)+'頭 ／ 丈の確認 '+(counts.length_review||0)+'頭 ／ 前回データの参考 '+references+'頭 ／ 再採寸確認 '+(counts.remeasure||0)+'頭 ／ 適合なし '+(counts.no_fit||0)+'頭</p><p>年齢で商品ラインを制限せず、同じ商品内の全組み合わせを比較します。成犬の古い記録は「前回採寸の参考」として表示し、現在の適合候補と分けます。パピー時の寸法しかない成犬は再採寸を案内します。袖丈のために体格サイズを下げる判定はしません。合わない場合に自動でオーダーメイドを勧めません。</p><div class="pc-scroll"><table><thead><tr><th>名前／ID</th><th>最新採寸日</th><th>確認結果</th><th>対応範囲内の候補</th><th>体格は合うが丈を要確認</th></tr></thead><tbody>'+checks.map(({x,r})=>'<tr><td>'+escape(x.dog.dog_name||'名前未入力')+'／'+escape(x.dog.id)+'</td><td>'+escape(x.row?.measured_on||'不明')+'</td><td>'+escape(named(r.reason))+'</td><td>'+escape((r.candidates.length&&r.reference?'前回採寸の参考候補：':'')+(r.candidates.map(variantName).join('、')||'—'))+'</td><td>'+escape((r.adjustments.length&&r.reference?'前回採寸の参考：':'')+(r.adjustments.map(a=>variantName(a.variant)+'：'+a.fields.map(f=>labels[f]).join('・')).join('、')||'—'))+'</td></tr>').join('')+'</tbody></table></div>';
    notify('寸法範囲との比較です。フィットや安全性は試着で検証してください。'+(PINFORME_ADMIN_ROWS.length>=1000||PINFORME_ADMIN_DOGS.length>=1000?' 読み込み上限に達しています。全件の結果ではありません。':''));
   }catch(e){$('pcResults').innerHTML='';notify(e.message);}
  }
