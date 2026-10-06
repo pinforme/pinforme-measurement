@@ -1895,7 +1895,7 @@ body.pinforme-admin-route.pinforme-admin-karte-open #kartePage .karte-actions bu
       <div class="admin-field"><label>パスワード</label><input id="adminPassword" type="password" autocomplete="current-password"></div>
       <div class="admin-actions"><button class="admin-btn primary" type="button" onclick="adminLogin()">ログイン</button><button class="admin-btn light" type="button" onclick="closeAdminPage()">採寸ナビへ戻る</button></div><div class="admin-status" id="adminLoginStatus"></div>
     </div>
-    <div id="adminManagerBox" class="admin-hidden"><div class="admin-toolbar"><input id="adminSearch" type="search" placeholder="飼い主様名・わんちゃん名で検索" oninput="renderAdminList()"><button type="button" onclick="loadAdminCartes()">更新</button></div><div class="admin-filter-panel"><div class="admin-filter-title">絞り込み</div><div class="admin-filter-grid"><div class="admin-filter-field"><label for="adminBreedFilter">① 犬種</label><select id="adminBreedFilter" onchange="onAdminBreedFilterChange()"><option value="">すべての犬種</option></select></div><div class="admin-filter-field"><label>② 体重範囲（採寸時）</label><div class="admin-weight-filter"><input id="adminWeightMin" type="number" inputmode="decimal" step="0.1" min="0" placeholder="最小 kg" oninput="renderAdminList()" disabled><span>〜</span><input id="adminWeightMax" type="number" inputmode="decimal" step="0.1" min="0" placeholder="最大 kg" oninput="renderAdminList()" disabled></div><div class="admin-filter-hint" id="adminWeightHint">犬種を選ぶと体重範囲で絞り込めます。</div></div><div class="admin-filter-field"><label>③ 胴まわり範囲（cm）</label><div class="admin-weight-filter"><input id="adminChestMin" type="number" inputmode="decimal" step="0.1" min="0" placeholder="最小 cm" aria-label="胴まわりの下限" oninput="renderAdminList()"><span>〜</span><input id="adminChestMax" type="number" inputmode="decimal" step="0.1" min="0" placeholder="最大 cm" aria-label="胴まわりの上限" oninput="renderAdminList()"></div><div class="admin-filter-hint">最新採寸の胴まわりで絞り込みます。上下限を含み、未入力は範囲指定時に除外します。</div></div><div class="admin-filter-field"><label for="adminAgeFilter">④ 年齢区分（採寸時）</label><select id="adminAgeFilter" onchange="renderAdminList()"><option value="">すべて</option><option value="adult">成犬（12か月以上）</option><option value="puppy">パピー（12か月未満）</option></select><div class="admin-filter-hint">最新採寸日の月齢で判定します。月齢不明は区分指定時に除外します。</div></div><div class="admin-filter-field"><label for="adminPhotoConsentFilter">⑤ 写真の販促利用</label><select id="adminPhotoConsentFilter" onchange="renderAdminList()"><option value="">すべて</option><option value="yes">同意あり</option><option value="no">同意なし</option></select><div class="admin-filter-hint">SNS・Webサイト・販促物等への写真使用同意で仕分けます。</div></div></div><button type="button" class="admin-filter-reset" onclick="resetAdminFilters()">絞り込みを解除</button><button type="button" id="adminSummaryButton" class="admin-summary-open" onclick="showAdminSummary()" disabled>絞り込み結果の集計カルテを見る</button></div><div class="admin-status" id="adminListStatus"></div><div class="admin-list" id="adminList"></div><div class="admin-actions"><button class="admin-btn light" type="button" onclick="closeAdminPage()">採寸ナビへ戻る</button><button class="admin-btn danger" type="button" onclick="adminLogout()">ログアウト</button></div></div>
+    <div id="adminManagerBox" class="admin-hidden"><div class="admin-toolbar"><input id="adminSearch" type="search" placeholder="飼い主様名・わんちゃん名で検索" oninput="renderAdminList()"><button type="button" onclick="loadAdminCartes()">更新</button></div><div class="admin-filter-panel"><div class="admin-filter-title">絞り込み</div><div class="admin-filter-grid"><div class="admin-filter-field"><label for="adminBreedFilter">① 犬種</label><select id="adminBreedFilter" onchange="onAdminBreedFilterChange()"><option value="">すべての犬種</option></select></div><div class="admin-filter-field"><label>② 体重範囲（採寸時）</label><div class="admin-weight-filter"><input id="adminWeightMin" type="number" inputmode="decimal" step="0.1" min="0" placeholder="最小 kg" oninput="renderAdminList()" disabled><span>〜</span><input id="adminWeightMax" type="number" inputmode="decimal" step="0.1" min="0" placeholder="最大 kg" oninput="renderAdminList()" disabled></div><div class="admin-filter-hint" id="adminWeightHint">犬種を選ぶと体重範囲で絞り込めます。</div></div><div class="admin-filter-field"><label>③ 胴まわり範囲（cm）</label><div class="admin-weight-filter"><input id="adminChestMin" type="number" inputmode="decimal" step="0.1" min="0" placeholder="最小 cm" aria-label="胴まわりの下限" oninput="renderAdminList()"><span>〜</span><input id="adminChestMax" type="number" inputmode="decimal" step="0.1" min="0" placeholder="最大 cm" aria-label="胴まわりの上限" oninput="renderAdminList()"></div><div class="admin-filter-hint">選択した年齢区分の最新記録で絞り込みます。上下限を含み、未入力は範囲指定時に除外します。</div></div><div class="admin-filter-field"><label for="adminAgeFilter">④ 年齢区分（採寸時）</label><select id="adminAgeFilter" onchange="renderAdminList()"><option value="">すべて</option><option value="adult">成犬（12か月以上）</option><option value="puppy">パピー（12か月未満）</option></select><div class="admin-filter-hint">過去の履歴も含め、選択した年齢区分の最新記録を1頭1件使います。12か月は集計用の区切りです。月齢不明は除外します。</div></div><div class="admin-filter-field"><label for="adminPhotoConsentFilter">⑤ 写真の販促利用</label><select id="adminPhotoConsentFilter" onchange="renderAdminList()"><option value="">すべて</option><option value="yes">同意あり</option><option value="no">同意なし</option></select><div class="admin-filter-hint">SNS・Webサイト・販促物等への写真使用同意で仕分けます。</div></div></div><button type="button" class="admin-filter-reset" onclick="resetAdminFilters()">絞り込みを解除</button><button type="button" id="adminSummaryButton" class="admin-summary-open" onclick="showAdminSummary()" disabled>絞り込み結果の集計カルテを見る</button></div><div class="admin-status" id="adminListStatus"></div><div class="admin-list" id="adminList"></div><div class="admin-actions"><button class="admin-btn light" type="button" onclick="closeAdminPage()">採寸ナビへ戻る</button><button class="admin-btn danger" type="button" onclick="adminLogout()">ログアウト</button></div></div>
   </div><div class="admin-card admin-hidden" id="adminDetail"></div></div>
 </section>
 
@@ -3636,6 +3636,14 @@ function adminAnalysisFilterOptions(){
  const invalid=[chestMin,chestMax].some(v=>v!==null&&(!Number.isFinite(v)||v<0))||(chestMin!==null&&chestMax!==null&&chestMin>chestMax);
  return {chestMinRaw,chestMaxRaw,chestMin,chestMax,ageMode,invalid};
 }
+function adminAnalysisRowForDog(dog,ageMode){
+ const history=adminDogHistory(dog);
+ if(!ageMode)return history[0]||null;
+ return history.find(row=>{
+  const age=PinSizeCore.months(dog.birth_date||row.birth_date,row.measured_on);
+  return age!==null&&(ageMode==="adult"?age>=12:age<12);
+ })||null;
+}
 function adminAnalysisMatches(row,dog,options){
  const {chestMin,chestMax,ageMode,invalid}=options;if(invalid)return false;
  if(chestMin!==null||chestMax!==null){const chest=adminNum(row?.chest);if(chest===null||(chestMin!==null&&chest<chestMin)||(chestMax!==null&&chest>chestMax))return false;}
@@ -3665,8 +3673,10 @@ function getAdminFilteredData(){
  const dogs=adminCanonicalDogGroups().filter(d=>{
   if(q&&!String(d.owner_name||"").toLowerCase().includes(q)&&!String(d.dog_name||"").toLowerCase().includes(q))return false;
   if(breed&&adminBreedForDog(d)!==breed)return false;
-  if(!weightMatches(adminLatestWeightForDog(d)))return false;
-  if(!adminAnalysisMatches(adminDogHistory(d)[0],d,analysis))return false;
+  const selected=adminAnalysisRowForDog(d,analysis.ageMode);
+  const weight=analysis.ageMode?adminNum(selected?.weight):adminLatestWeightForDog(d);
+  if(!weightMatches(weight))return false;
+  if(!adminAnalysisMatches(selected,d,analysis))return false;
   if(!consentMatches(adminPhotoConsentForDog(d)))return false;
   return true;
  });
@@ -3685,9 +3695,10 @@ function renderAdminList(){
  const box=document.getElementById("adminList"),st=document.getElementById("adminListStatus");
  const filtered=getAdminFilteredData();
  const {dogs,legacy,filtering}=filtered;
+ const recordLabel=filtered.ageMode==="puppy"?"パピー時の最新採寸":filtered.ageMode==="adult"?"成犬時の最新採寸":"最新採寸";
  const totalDogCount=adminCanonicalDogGroups().length+adminLegacyUniqueLatestRows().length;
  st.textContent=`${filtered.invalid?"胴まわりの範囲を確認してください（下限 ≦ 上限）。 ／ ":""}わんちゃん ${totalDogCount}頭 ／ 採寸履歴 ${PINFORME_ADMIN_ROWS.length}件${filtering?` ／ 絞り込み結果 ${dogs.length+legacy.length}頭`:""}`;box.innerHTML="";
- dogs.forEach(d=>{const hist=adminDogHistory(d),latest=hist[0]||{},w=adminLatestWeightForDog(d),b=document.createElement("button");b.type="button";b.className="admin-row";b.innerHTML=`<span><strong>${adminEsc(d.dog_name||"名前未入力")}${adminEsc(latest.dog_suffix||"")}</strong><small>飼い主様：${adminEsc(d.owner_name||"—")}<br>犬種：${adminEsc(adminBreedForDog(d)||"—")}${w==null?"":` ／ 最新体重 ${adminEsc(w)} kg`}<br>採寸履歴：${hist.length}件${hist[0]?` ／ 最新 ${adminEsc(adminDate(hist[0].created_at))}`:""}<br>写真販促利用：${adminPhotoConsentLabel(adminPhotoConsentForDog(d))}</small></span><span class="arrow">›</span>`;b.onclick=()=>showAdminDog(d);box.appendChild(b)});
+ dogs.forEach(d=>{const hist=adminDogHistory(d),latest=adminAnalysisRowForDog(d,filtered.ageMode)||{},w=filtered.ageMode?adminNum(latest.weight):adminLatestWeightForDog(d),b=document.createElement("button");b.type="button";b.className="admin-row";b.innerHTML=`<span><strong>${adminEsc(d.dog_name||"名前未入力")}${adminEsc(latest.dog_suffix||"")}</strong><small>飼い主様：${adminEsc(d.owner_name||"—")}<br>犬種：${adminEsc(adminBreedForDog(d)||"—")}${w==null?"":` ／ ${filtered.ageMode?"対象採寸時体重":"最新体重"} ${adminEsc(w)} kg`}<br>採寸履歴：${hist.length}件${latest.id!=null?` ／ ${recordLabel} ${adminEsc(latest.measured_on||adminDate(latest.created_at))}`:""}<br>写真販促利用：${adminPhotoConsentLabel(adminPhotoConsentForDog(d))}</small></span><span class="arrow">›</span>`;b.onclick=()=>showAdminDog(d);box.appendChild(b)});
  legacy.forEach(r=>{const b=document.createElement("button");b.type="button";b.className="admin-row";b.innerHTML=`<span><strong>${adminEsc(r.dog_name||"名前未入力")}${adminEsc(r.dog_suffix||"")} <small>（旧データ）</small></strong><small>飼い主様：${adminEsc(r.owner_name||"—")}<br>犬種：${adminEsc(r.breed||"—")}${r.weight==null?"":` ／ 体重 ${adminEsc(r.weight)} kg`}<br>${adminEsc(adminDate(r.created_at))}<br>写真販促利用：${adminPhotoConsentLabel(adminPhotoConsentForRow(r))}</small></span><span class="arrow">›</span>`;b.onclick=()=>showAdminMeasurement(r,null);box.appendChild(b)});
  if(!dogs.length&&!legacy.length)box.innerHTML='<div class="admin-note">該当するカルテはありません。</div>';
  const summaryBtn=document.getElementById("adminSummaryButton");
@@ -3695,7 +3706,7 @@ function renderAdminList(){
 }
 function adminSummaryRows(){
  const f=getAdminFilteredData(),rows=[];
- f.dogs.forEach(d=>{const h=adminDogHistory(d);if(h[0])rows.push(h[0]);});
+ f.dogs.forEach(d=>{const row=adminAnalysisRowForDog(d,f.ageMode);if(row)rows.push(row);});
  f.legacy.forEach(r=>rows.push(r));
  return {filter:f,rows};
 }
@@ -3726,7 +3737,7 @@ function showAdminSummary(){
    const st=adminStats(rows,key);
    return `<tr><td>${adminEsc(label)}</td><td><strong>${st?adminFmtStat(st.avg):"—"}</strong></td><td>${st?adminFmtStat(st.min):"—"}</td><td>${st?adminFmtStat(st.max):"—"}</td><td>${st?st.count:"0"}</td></tr>`;
  }).join("");
- box.innerHTML=`<div class="admin-measure-sticky"><div class="admin-measure-sticky-top"><button type="button" class="admin-back-link" onclick="document.getElementById('adminDetail').classList.add('admin-hidden')">← 一覧へ戻る</button><div class="admin-measure-sticky-name">集計カルテ</div></div></div><div class="admin-summary-card"><div class="admin-summary-head"><div class="admin-sub">PINFORME SIZE ANALYSIS</div><h2>${adminEsc(breedLabel)}</h2><p>体重範囲：${rangeLabel}<br>胴まわり範囲：${chestRangeLabel}<br>年齢区分：${ageLabel}<br>対象は絞り込み結果の各わんちゃんの「最新採寸」1件ずつです。</p></div><div class="admin-summary-kpis"><div class="admin-summary-kpi"><small>対象</small><strong>${rows.length}頭</strong></div><div class="admin-summary-kpi"><small>平均体重</small><strong>${weightAvg==null?"—":adminFmtStat(weightAvg)+" kg"}</strong></div><div class="admin-summary-kpi"><small>体重実績範囲</small><strong>${weights.length?adminFmtStat(Math.min(...weights))+"〜"+adminFmtStat(Math.max(...weights))+" kg":"—"}</strong></div></div><table class="admin-summary-table"><thead><tr><th>採寸項目</th><th>平均</th><th>最小</th><th>最大</th><th>件数</th></tr></thead><tbody>${statRows}</tbody></table><div class="admin-summary-note">単位：cm。未入力の項目はその項目の集計件数から除外しています。部分更新で引き継いだ寸法は、以前の月齢で測った値を含む場合があります。平均値だけでサイズを確定せず、最小・最大の幅もあわせて確認してください。</div></div>`;
+ box.innerHTML=`<div class="admin-measure-sticky"><div class="admin-measure-sticky-top"><button type="button" class="admin-back-link" onclick="document.getElementById('adminDetail').classList.add('admin-hidden')">← 一覧へ戻る</button><div class="admin-measure-sticky-name">集計カルテ</div></div></div><div class="admin-summary-card"><div class="admin-summary-head"><div class="admin-sub">PINFORME SIZE ANALYSIS</div><h2>${adminEsc(breedLabel)}</h2><p>体重範囲：${rangeLabel}<br>胴まわり範囲：${chestRangeLabel}<br>年齢区分：${ageLabel}<br>対象は各わんちゃんの${filter.ageMode?"「選択した年齢区分での最新採寸」":"「最新採寸」"}1件ずつです。パピー時と成犬時の記録は、それぞれの区分で集計できます。</p></div><div class="admin-summary-kpis"><div class="admin-summary-kpi"><small>対象</small><strong>${rows.length}頭</strong></div><div class="admin-summary-kpi"><small>平均体重</small><strong>${weightAvg==null?"—":adminFmtStat(weightAvg)+" kg"}</strong></div><div class="admin-summary-kpi"><small>体重実績範囲</small><strong>${weights.length?adminFmtStat(Math.min(...weights))+"〜"+adminFmtStat(Math.max(...weights))+" kg":"—"}</strong></div></div><table class="admin-summary-table"><thead><tr><th>採寸項目</th><th>平均</th><th>最小</th><th>最大</th><th>件数</th></tr></thead><tbody>${statRows}</tbody></table><div class="admin-summary-note">単位：cm。未入力の項目はその項目の集計件数から除外しています。部分更新で引き継いだ寸法は、以前の月齢で測った値を含む場合があります。平均値だけでサイズを確定せず、最小・最大の幅もあわせて確認してください。</div></div>`;
  box.classList.remove("admin-hidden");box.scrollIntoView({behavior:"auto",block:"start"});
 }
 const ADMIN_FIELDS=[["① 首まわり","neck"],["② 胴まわり","chest"],["③ ウエスト","waist"],["④ 着丈","back_length"],["⑤ 前身頃","front_length"],["⑥ 前脚の太さ（上側）","front_leg_girth_up"],["⑥ 前脚の太さ（下側）","front_leg_girth_low"],["⑦ 後脚の太さ（上側）","hind_leg_girth_up"],["⑦ 後脚の太さ（下側）","hind_leg_girth_low"],["⑧ 前脚の長さ 1","front_leg_length_1"],["⑧ 前脚の長さ 2","front_leg_length_2"],["⑧ 前脚の長さ 3","front_leg_length_3"],["⑨ 後脚の長さ 1","hind_leg_length_1"],["⑨ 後脚の長さ 2","hind_leg_length_2"],["⑨ 後脚の長さ 3","hind_leg_length_3"],["⑩ 首の長さ（ネック）","neck_length"],["⑪ 首の長さ（スヌード）","snood_length"],["⑫ 頭まわり","head_girth"],["⑬ 前脚の間","front_leg_spacing"],["⑭ 首の真ん中","mid_neck"],["⑮ 尻尾の太さ","tail_girth"]];
@@ -5830,10 +5841,10 @@ function allowed(){return !!getAdminSession()?.access_token&&isAdminVerified();}
 function signature(){return JSON.stringify([el('psBreed').value,el('psAge').value,el('psMonths').value,PINFORME_ADMIN_ROWS.map(r=>[r.id,r.created_at,r.measured_on,r.field_measured_on]),PINFORME_ADMIN_DOGS.map(d=>[d.id,d.breed,d.birth_date])]);}
 function reset(){state.plan=[];state.results=[];state.report=null;el('psEditor').innerHTML='';el('psResults').innerHTML='';el('psError').textContent='';}
 function refresh(){if(!allowed())return;reset();const old=el('psBreed').value;state.items=C.latest(PINFORME_ADMIN_DOGS,PINFORME_ADMIN_ROWS);const breeds=[...new Set(state.items.map(x=>x.breed).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ja'));el('psBreed').innerHTML='<option value="">犬種を選択</option>'+breeds.map(b=>'<option>'+esc(b)+'</option>').join('');if(breeds.includes(old))el('psBreed').value=old;else if(breeds.includes('ミニチュアピンシャー'))el('psBreed').value='ミニチュアピンシャー';el('psStatus').textContent=`読み込み済み：${state.items.length}頭／採寸履歴${PINFORME_ADMIN_ROWS.length}件。旧データ（dog_idなし）${PINFORME_ADMIN_ROWS.filter(r=>r.dog_id==null).length}件は、個体を確実に識別できないため対象外。`+(PINFORME_ADMIN_ROWS.length>=1000||PINFORME_ADMIN_DOGS.length>=1000?' 読み込み上限に達しています。全件分析には取得処理の拡張が必要です。':'');}
-function population(){const breed=el('psBreed').value,threshold=Number(el('psMonths').value);if(!breed)throw Error('犬種を選んでください。');if(!Number.isInteger(threshold)||threshold<1||threshold>36)throw Error('成犬の境界は1〜36か月の整数で指定してください。');return C.population(state.items,breed,el('psAge').value,threshold);}
+function population(){const breed=el('psBreed').value,threshold=Number(el('psMonths').value);if(!breed)throw Error('犬種を選んでください。');if(!Number.isInteger(threshold)||threshold<1||threshold>36)throw Error('成犬の境界は1〜36か月の整数で指定してください。');const ageMode=el('psAge').value;const items=state.items.map(x=>{const row=adminDogHistory(x.dog).find(r=>{const age=C.months(x.dog.birth_date||r.birth_date,r.measured_on);return age!==null&&(ageMode==='adult'?age>=threshold:age<threshold);});return {...x,row:row||x.row};});return C.population(items,breed,ageMode,threshold);}
 function error(e){el('psError').textContent=e.message||String(e);}
 function propose(){if(!allowed())return;try{if(!state.items.length)refresh();const p=population();state.plan=C.propose(p,Number(el('psCount').value));state.signature=signature();renderEditor();calculate();}catch(e){reset();error(e);}}
-function renderEditor(){el('psEditor').innerHTML='<h3>仮の体寸法範囲（cm）</h3><p>胴まわりの分布を人数の偏りが小さくなるよう区切り、他3項目は各区分の実測最小〜最大を使います。人数を保証する分割ではありません。生地の伸び・ゆとりを加えた服の仕上がり寸法ではありません。</p><p>胴まわりは下限以上・上限未満、最後の区分のみ上限を含みます。他の項目は両端を含みます。範囲外は「要確認」です。</p><div class="ps-scroll"><table><thead><tr><th>サイズ</th>'+C.fields.map(f=>'<th>'+L[f]+' 下限／上限</th>').join('')+'</tr></thead><tbody>'+state.plan.map((p,i)=>'<tr><td><input class="ps-size-name" data-size="'+i+'" value="'+esc(p.name)+'" aria-label="サイズ名 '+(i+1)+'"></td>'+C.fields.map(f=>'<td><div class="ps-range">'+p.ranges[f].map((v,j)=>'<input type="number" inputmode="decimal" step="any" min="0.001" data-row="'+i+'" data-field="'+f+'" data-end="'+j+'" value="'+v+'" aria-label="'+esc(p.name)+' '+L[f]+(j?' 上限':' 下限')+'">').join('<span>〜</span>')+'</div></td>').join('')+'</tr>').join('')+'</tbody></table></div><button id="psRecalc" type="button" class="ps-primary">範囲を反映して再計算</button><button id="psCSV" type="button">振り分けCSVを保存</button><button id="psJSON" type="button">サイズ案JSONを保存</button><p>変更後は再計算してください。設計案はこの画面を閉じると消えます。必要な案はJSONで保存できます。</p>';el('psRecalc').onclick=calculate;el('psCSV').onclick=()=>download('csv');el('psJSON').onclick=()=>download('json');el('psEditor').oninput=()=>{state.report=null;el('psResults').innerHTML='<p class="ps-note">範囲を変更しました。再計算してください。</p>';};}
+function renderEditor(){el('psEditor').innerHTML='<h3>仮の体寸法範囲（cm）</h3><p>胴まわりの分布を人数の偏りが小さくなるよう区切り、他3項目は各区分の実測最小〜最大を使います。人数を保証する分割ではありません。生地の伸び・ゆとりを加えた服の仕上がり寸法ではありません。</p><p>胴まわりは下限以上・上限未満、最後の区分のみ上限を含みます。他の項目は両端を含みます。範囲外は「要確認」です。</p><div class="ps-scroll"><table><thead><tr><th>サイズ</th>'+C.fields.map(f=>'<th>'+L[f]+' 下限／上限</th>').join('')+'</tr></thead><tbody>'+state.plan.map((p,i)=>'<tr><td><input class="ps-size-name" data-size="'+i+'" value="'+esc(p.name)+'" aria-label="サイズ名 '+(i+1)+'"></td>'+C.fields.map(f=>'<td><div class="ps-range">'+p.ranges[f].map((v,j)=>'<input type="number" inputmode="decimal" step="any" min="0.001" data-row="'+i+'" data-field="'+f+'" data-end="'+j+'" value="'+v+'" aria-label="'+esc(p.name)+' '+L[f]+(j?' 上限':' 下限')+'">').join('<span>〜</span>')+'</div></td>').join('')+'</tr>').join('')+'</tbody></table></div><button id="psRecalc" type="button" class="ps-primary">範囲を反映して再計算</button><button id="psCSV" type="button">振り分けCSVを保存</button><button id="psJSON" type="button">サイズ案JSONを保存</button><button id="psProduct" type="button">商品別基準へ取り込む</button><p>変更後は再計算してください。設計案はこの画面を閉じると消えます。必要な案はJSONで保存できます。</p>';el('psRecalc').onclick=calculate;el('psCSV').onclick=()=>download('csv');el('psJSON').onclick=()=>download('json');el('psProduct').onclick=()=>{if(!allowed())return;try{const plan=readPlan(),bad=C.validate(plan);if(bad)throw Error(bad);window.dispatchEvent(new CustomEvent('pinforme-size-plan',{detail:{breed:el('psBreed').value,age_mode:el('psAge').value,plan}}));}catch(e){error(e);}};el('psEditor').oninput=()=>{state.report=null;el('psResults').innerHTML='<p class="ps-note">範囲を変更しました。再計算してください。</p>';};}
 function readPlan(){return state.plan.map((p,i)=>({name:el('psEditor').querySelector('[data-size="'+i+'"]').value.trim(),ranges:Object.fromEntries(C.fields.map(f=>[f,[0,1].map(j=>{const v=el('psEditor').querySelector('[data-row="'+i+'"][data-field="'+f+'"][data-end="'+j+'"]').value;return v.trim()===''?null:Number(v);})]))}));}
 function calculate(){if(!allowed())return;state.report=null;el('psResults').innerHTML='';try{if(signature()!==state.signature)throw Error('データまたは対象条件が変わりました。「仮サイズ案を計算」を押してください。');const plan=readPlan(),bad=C.validate(plan);if(bad)throw Error(bad);state.plan=plan;const items=population();state.results=items.map(x=>({...x,...C.classify(x,plan)}));const usable=items.filter(x=>!x.reason);const statsHtml='<div class="ps-scroll"><table><thead><tr><th>項目</th><th>頭数</th><th>最小</th><th>25%</th><th>中央値</th><th>75%</th><th>最大</th></tr></thead><tbody>'+C.fields.map(f=>{const s=C.stats(usable,f);return '<tr><td>'+L[f]+'</td>'+[s?.n||0,s?.min,s?.q1,s?.median,s?.q3,s?.max].map(v=>'<td>'+fmt(v)+'</td>').join('')+'</tr>';}).join('')+'</tbody></table></div>';
 let cards=plan.map(p=>{const m=state.results.filter(x=>x.size===p.name),count=m.length;return '<div class="ps-size-card"><strong>'+esc(p.name)+'：'+count+'頭</strong><p>'+ (count<5?'少数データの仮案。追加募集・着用検証が必要です。':'頭数だけで確定せず、区分の端の子も着用検証してください。')+'</p><div class="ps-scroll"><table><tr><th>項目</th><th>平均</th><th>中央値</th><th>実測範囲</th></tr>'+C.fields.map(f=>{const s=C.stats(m,f);return '<tr><td>'+L[f]+'</td><td>'+fmt(s?.avg)+'</td><td>'+fmt(s?.median)+'</td><td>'+fmt(s?.min)+'〜'+fmt(s?.max)+'</td></tr>';}).join('')+'</table></div></div>';}).join('');
@@ -5858,7 +5869,7 @@ function renderHistory(plan){
 }
 function download(type){if(!allowed())return;if(!state.report){error(Error('先に有効なサイズ案を再計算してください。'));return;}if(signature()!==state.signature){error(Error('対象データが変わりました。再計算してください。'));return;}
 let text,mime,ext;if(type==='json'){text=JSON.stringify(state.report,null,2);mime='application/json';ext='json';}else{const safe=v=>{let s=String(v??'');if(/^[=+@\-\t\r]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"';};const rows=[['犬ID','名前','犬種','採寸日','採寸時月齢','仮サイズ','理由',...C.fields.map(f=>L[f]+' cm'),'体重 kg','前身頃 cm'],...state.results.map(x=>[x.dog.id,x.dog.dog_name||x.row?.dog_name,x.breed,x.row?.measured_on,x.age,x.size,x.reason,...C.fields.map(f=>x.values[f]),C.num(x.row?.weight),C.num(x.row?.front_length)])];text='\uFEFF'+rows.map(r=>r.map(safe).join(',')).join('\r\n');mime='text/csv';ext='csv';}const blob=new Blob([text],{type:mime+';charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='PINFORME_size_draft_'+new Date().toISOString().slice(0,10)+'.'+ext;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}
-function mount(){const manager=el('adminManagerBox');if(!manager)return;const panel=document.createElement('section');panel.id='pinSizePanel';panel.innerHTML='<h2>サイズ設計・振り分け</h2><p>最新の保存を1頭1件として、測定日と各寸法の測定時月齢を確認し、犬種ごとに仮のサイズ案を計算します。上の検索・体重・写真同意フィルターとは独立しています。</p><button type="button" id="psRefresh">読み込み済みデータを取り込む</button><p id="psStatus">管理者一覧の読み込み完了後に取り込んでください。</p><label for="psBreed">犬種</label><select id="psBreed"><option value="">犬種を選択</option></select><div class="ps-grid"><div><label for="psAge">年齢区分（採寸時）</label><select id="psAge"><option value="adult">成犬</option><option value="puppy">パピー</option></select></div><div><label for="psMonths">成犬とする月齢</label><input id="psMonths" type="number" value="12" min="1" max="36" step="1"></div></div><p>12か月は分析用の仮設定です。必要に応じて変更してください。既存データは送信日を測定日として補完します。先行データも計算に利用します。成犬とパピーを混ぜずに計算します。</p><label for="psCount">仮のサイズ区分数</label><select id="psCount"><option value="1">1区分</option><option value="2">2区分</option><option value="3" selected>3区分</option><option value="4">4区分</option><option value="5">5区分</option></select><button type="button" class="ps-primary" id="psPropose">仮サイズ案を計算</button><p class="ps-note">計算だけで販売サイズを確定せず、OEMと生地・ゆとりを相談し、実際の着用で検証してください。この機能は採寸データを保存・変更しません。</p><p id="psError" class="ps-error" role="alert"></p><div id="psEditor"></div><div id="psResults"></div>';manager.appendChild(panel);el('psRefresh').onclick=refresh;el('psPropose').onclick=propose;['psBreed','psAge','psMonths','psCount'].forEach(id=>el(id).onchange=reset);const original=window.renderAdminList;window.renderAdminList=function(...args){const result=original.apply(this,args);if(allowed())refresh();return result;};const logout=window.adminLogout;window.adminLogout=function(...args){reset();state.items=[];el('psBreed').innerHTML='<option value="">犬種を選択</option>';el('psStatus').textContent='管理者一覧の読み込み完了後に取り込んでください。';return logout.apply(this,args);};if(allowed())refresh();}
+function mount(){const manager=el('adminManagerBox');if(!manager)return;const panel=document.createElement('section');panel.id='pinSizePanel';panel.innerHTML='<h2>サイズ設計・振り分け</h2><p>選択した年齢区分の最新履歴を1頭1件として、測定日と各寸法の測定時月齢を確認し、犬種ごとに仮のサイズ案を計算します。上の検索・体重・写真同意フィルターとは独立しています。</p><button type="button" id="psRefresh">読み込み済みデータを取り込む</button><p id="psStatus">管理者一覧の読み込み完了後に取り込んでください。</p><label for="psBreed">犬種</label><select id="psBreed"><option value="">犬種を選択</option></select><div class="ps-grid"><div><label for="psAge">年齢区分（採寸時）</label><select id="psAge"><option value="adult">成犬</option><option value="puppy">パピー</option></select></div><div><label for="psMonths">成犬とする月齢</label><input id="psMonths" type="number" value="12" min="1" max="36" step="1"></div></div><p>12か月は分析用の仮設定です。必要に応じて変更してください。既存データは送信日を測定日として補完します。先行データも計算に利用します。成犬とパピーを混ぜずに計算します。</p><label for="psCount">仮のサイズ区分数</label><select id="psCount"><option value="1">1区分</option><option value="2">2区分</option><option value="3" selected>3区分</option><option value="4">4区分</option><option value="5">5区分</option></select><button type="button" class="ps-primary" id="psPropose">仮サイズ案を計算</button><p class="ps-note">計算だけで販売サイズを確定せず、OEMと生地・ゆとりを相談し、実際の着用で検証してください。この機能は採寸データを保存・変更しません。</p><p id="psError" class="ps-error" role="alert"></p><div id="psEditor"></div><div id="psResults"></div>';manager.appendChild(panel);el('psRefresh').onclick=refresh;el('psPropose').onclick=propose;['psBreed','psAge','psMonths','psCount'].forEach(id=>el(id).onchange=reset);const original=window.renderAdminList;window.renderAdminList=function(...args){const result=original.apply(this,args);if(allowed())refresh();return result;};const logout=window.adminLogout;window.adminLogout=function(...args){reset();state.items=[];el('psBreed').innerHTML='<option value="">犬種を選択</option>';el('psStatus').textContent='管理者一覧の読み込み完了後に取り込んでください。';return logout.apply(this,args);};if(allowed())refresh();}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount);else mount();
 })();
 </script>
@@ -5880,5 +5891,157 @@ function pinCurrentReference(x,plan,threshold){
  const result=PinSizeCore.classify(x,plan);return result.size==='要確認'?'提示不可：範囲を要確認':result.size+'（仮案・着用検証前）';
 }
 window.addEventListener('load',()=>{const input=document.getElementById('pinMeasuredOn');if(input)input.max=pinTodayDate();});
+</script>
+<style>
+#pinProductPanel{margin:18px 0;padding:18px;border:1px solid #ddd;border-radius:14px;background:#fff;color:#222}#pinProductPanel h2{font-size:22px}#pinProductPanel p{font-size:13px;line-height:1.8}#pinProductPanel label{display:block;margin:12px 0 6px;font-size:13px;font-weight:700}#pinProductPanel input:not([type=checkbox]),#pinProductPanel select{display:block;width:100%;min-height:44px;padding:8px;border:1px solid #bbb;border-radius:8px;font-size:16px;background:#fff;color:#222}#pinProductPanel button{min-height:44px;margin:8px 4px 8px 0;padding:10px 14px;border:1px solid #aaa;border-radius:8px;background:#fff;color:#111;font-weight:700}#pinProductPanel .pc-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}#pinProductPanel .pc-check{display:inline-flex;align-items:center;gap:8px;margin-right:14px;font-weight:400}#pinProductPanel input[type=checkbox]{width:20px;height:20px;flex:none}#pinProductPanel .pc-scroll{max-width:100%;overflow:auto}#pinProductPanel table{border-collapse:collapse;width:100%;font-size:13px}#pinProductPanel th,#pinProductPanel td{padding:10px 6px;border-bottom:1px solid #ddd;white-space:nowrap;text-align:left}#pinProductPanel td>input:not([type=checkbox]){min-width:100px}#pinProductPanel td>select{min-width:170px}#pinProductPanel .pc-range{display:flex;gap:5px;align-items:center}#pinProductPanel .pc-range input{min-width:80px;width:85px}#pinProductPanel .pc-note{background:#f2f2f2;padding:12px;border-radius:8px}#pcMessage{white-space:pre-line;color:#5b3d1e}#pinProductPanel fieldset{border:1px solid #ddd;border-radius:8px;margin-top:15px}#pcSave{background:#111!important;color:#fff!important}@media(max-width:500px){#pinProductPanel .pc-grid{grid-template-columns:1fr}}
+</style>
+<script>
+/* PINFORME product criteria: local administration only, no measurement writes. */
+const PinProductCore=(()=>{
+ const fields=['neck','chest','waist','back_length','front_length','front_leg_girth_up','front_leg_girth_low','hind_leg_girth_up','hind_leg_girth_low','front_leg_length_1','front_leg_length_2','front_leg_length_3','hind_leg_length_1','hind_leg_length_2','hind_leg_length_3','neck_length','snood_length','head_girth','front_leg_spacing','mid_neck','tail_girth'];
+ const lengths=new Set(['back_length','front_length','front_leg_length_1','front_leg_length_2','front_leg_length_3','hind_leg_length_1','hind_leg_length_2','hind_leg_length_3']);
+ const positive=v=>v!==null&&v!==undefined&&String(v).trim()!==''&&Number.isFinite(Number(v))&&Number(v)>0?Number(v):null;
+ const text=v=>typeof v==='string'?v.trim():'';
+ const date=v=>{if(!/^\d{4}-\d{2}-\d{2}$/.test(v||''))return null;const d=new Date(v+'T00:00:00Z');return Number.isFinite(+d)&&d.toISOString().slice(0,10)===v?d:null;};
+ function validate(p){
+  if(!p||typeof p!=='object')return '基準の形式が不正です。';
+  for(const key of ['product_key','title','breed','model','material'])if(!text(p[key])||p[key].length>300)return '商品識別名・商品名・犬種・型・素材を入力してください（各300文字以内）。';
+  if(!['tank','short','long','other'].includes(p.kind)||!['draft','confirmed'].includes(p.status))return '商品または確定区分を確認してください。';
+  if(!Array.isArray(p.fields)||new Set(p.fields).size!==p.fields.length||p.fields.some(f=>!fields.includes(f))||!['neck','chest','waist','back_length'].every(f=>p.fields.includes(f)))return '首・胴・ウエスト・着丈を含む採寸項目を選んでください。';
+  if(['short','long'].includes(p.kind)&&!p.fields.some(f=>f.startsWith('front_leg_length_')))return '袖あり商品は前脚の長さも判定項目に含めてください。';
+  for(const key of ['adult_days','puppy_days'])if(!Number.isInteger(p[key])||p[key]<1||p[key]>365)return '再採寸確認の目安は1〜365日の整数にしてください。';
+  if(!Array.isArray(p.variants)||!p.variants.length||p.variants.length>60)return 'サイズ・丈の組み合わせは1〜60件にしてください。';
+  const names=new Set();
+  for(const v of p.variants){
+   if(!text(v.size)||!text(v.length)||v.size.length>60||v.length.length>100||!['adult','small'].includes(v.line))return '各組み合わせのライン・サイズ名・丈名を確認してください。';
+   const name=JSON.stringify([v.line,v.size,v.length]);if(names.has(name))return '同じライン・サイズ・丈の組み合わせが重複しています。';names.add(name);
+   for(const f of p.fields){const r=v.ranges?.[f];if(!Array.isArray(r)||r.length!==2||r.some(x=>positive(x)===null)||Number(r[0])>Number(r[1])||(f==='chest'&&v.chest_upper_exclusive&&Number(r[0])===Number(r[1])))return '各対応範囲に0より大きい下限・上限を入力してください。';}
+  }
+  if(p.status==='confirmed'&&(!text(p.validated_on)||!date(p.validated_on)))return '確定基準には着用検証・寸法確認の完了日を入力してください。';
+  return '';
+ }
+ function evaluate(p,item,today){
+  const invalid=validate(p);if(invalid)return {state:'invalid',reason:invalid,candidates:[],adjustments:[]};
+  const row=item.row,dog=item.dog||{},birth=dog.birth_date||row?.birth_date,now=date(today),measured=date(row?.measured_on);
+  const blocked=reason=>({state:'remeasure',reason,candidates:[],adjustments:[]});
+  if(!row)return blocked('採寸履歴なし');
+  if(String(dog.breed||row.breed||'').trim()!==p.breed)return {state:'excluded',reason:'対象犬種が異なる',candidates:[],adjustments:[]};
+  const currentAge=PinSizeCore.months(birth,today),measurementAge=PinSizeCore.months(birth,row.measured_on);
+  if(!now||!measured||measured>now||currentAge===null||measurementAge===null)return blocked('生年月日・測定日を確認');
+  const maxDays=currentAge<12?p.puppy_days:p.adult_days;
+  if((now-measured)/86400000>maxDays)return blocked('採寸から'+maxDays+'日超：最新の体型を確認');
+  for(const f of p.fields){
+   if(positive(row[f])===null)return blocked('判定項目の採寸不足：'+f);
+   const at=date(row.field_measured_on?.[f]);
+   if(!at||at>now||at>measured)return blocked('寸法の測定日を確認：'+f);
+   const age=PinSizeCore.months(birth,row.field_measured_on[f]);
+   if(age===null||currentAge>=12&&age<12)return blocked('成犬になった後の再採寸が必要：'+f);
+   if((now-at)/86400000>maxDays)return blocked('引き継いだ寸法の再採寸を確認：'+f);
+  }
+  const candidates=[],adjustments=[];
+  for(const v of p.variants){
+   const misses=p.fields.filter(f=>{const n=positive(row[f]),[lo,hi]=v.ranges[f].map(Number);return n<lo||n>hi||(f==='chest'&&v.chest_upper_exclusive&&n===hi);});
+   if(!misses.length)candidates.push(v);
+   else if(misses.every(f=>lengths.has(f)))adjustments.push({variant:v,fields:misses});
+  }
+  return {state:candidates.length?'fit':adjustments.length?'length_review':'no_fit',reason:candidates.length?'対応範囲内の候補':adjustments.length?'体格に合う候補はあるが、丈の対応範囲外':'適合する既製の組み合わせなし',candidates,adjustments};
+ }
+ return {fields,lengths,positive,date,validate,evaluate};
+})();
+
+(()=>{
+ const KEY='pinforme_product_criteria_v1',C=PinProductCore,$=id=>document.getElementById(id),escape=v=>adminEsc(v),clone=v=>JSON.parse(JSON.stringify(v));
+ const labels=Object.fromEntries(ADMIN_FIELDS.map(([label,key])=>[key,label]));
+ const required=['neck','chest','waist','back_length'];
+ let saved=[],working=null,dirty=false,loadError='';
+ const allowed=()=>!!getAdminSession()?.access_token&&isAdminVerified();
+ const uuid=()=>crypto.randomUUID();
+ const today=()=>pinTodayDate();
+ function blank(){return {schema:1,product_key:'',title:'',breed:'ミニチュアピンシャー',kind:'tank',model:'',material:'',conditions:'',garment_notes:'',status:'draft',validated_on:'',adult_days:90,puppy_days:30,fields:required.slice(),variants:['S','M','L'].map(size=>({line:'adult',size,length:'標準',ranges:Object.fromEntries(required.map(f=>[f,[null,null]])),chest_upper_exclusive:false}))};}
+ function notify(message){$('pcMessage').textContent=message;}
+ function invalidate(){dirty=true;$('pcResults').innerHTML='';}
+ function read(){
+  const p=clone(working);
+  ['product_key','title','breed','kind','model','material','conditions','garment_notes','status','validated_on'].forEach(k=>p[k]=$('pc_'+k).value.trim());
+  ['adult_days','puppy_days'].forEach(k=>p[k]=Number($('pc_'+k).value));
+  p.fields=[...$('pcFields').querySelectorAll('input:checked')].map(x=>x.value);
+  p.variants=p.variants.map((v,i)=>({...v,line:$('pcLine'+i).value,size:$('pcSize'+i).value.trim(),length:$('pcLength'+i).value.trim(),chest_upper_exclusive:$('pcExclusive'+i).checked,ranges:Object.fromEntries(p.fields.map(f=>[f,[0,1].map(j=>{const raw=$('pcRange_'+i+'_'+f+'_'+j)?.value;return raw==null||raw.trim()===''?null:Number(raw);})]))}));
+  return p;
+ }
+ function list(){
+  $('pcSaved').innerHTML='<option value="">保存した基準を選択</option>'+saved.map(p=>'<option value="'+escape(p.id)+'">'+escape(p.title+'／'+p.model+'／'+p.material+' v'+p.revision+' '+(p.status==='confirmed'?'確定':'開発中'))+'</option>').join('');
+ }
+ function editor(){
+  const p=working;
+  const input=(key,label,type='text')=>'<label>'+label+'<input id="pc_'+key+'" type="'+type+'" value="'+escape(p[key]??'')+'"'+(type==='text'?' maxlength="300"':'')+'></label>';
+  $('pcEditor').innerHTML='<div class="pc-grid">'+input('product_key','商品識別名（同じ商品では同じ名前）')+input('title','商品名')+input('breed','対象犬種')+'<label>商品タイプ<select id="pc_kind">'+[['tank','タンクトップ'],['short','半袖'],['long','長袖'],['other','その他']].map(([v,l])=>'<option value="'+v+'"'+(p.kind===v?' selected':'')+'>'+l+'</option>').join('')+'</select></label>'+input('model','型・デザイン名')+input('material','素材・生地名')+'</div>'+input('conditions','伸縮性・ゆとり・着用検証の条件')+input('garment_notes','服の仕上がり寸法・OEM確認メモ（体の対応範囲と区別）')+'<div class="pc-grid"><label>基準の区分<select id="pc_status"><option value="draft"'+(p.status==='draft'?' selected':'')+'>開発中</option><option value="confirmed"'+(p.status==='confirmed'?' selected':'')+'>確定（寸法・着用検証済み）</option></select></label>'+input('validated_on','検証完了日','date')+input('adult_days','成犬：再採寸確認の目安（日）','number')+input('puppy_days','パピー：再採寸確認の目安（日）','number')+'</div><p>再採寸の目安は管理用の仮設定（成犬90日・パピー30日）です。商品や成長状況に応じて変更してください。</p><fieldset id="pcFields"><legend>判定に使う体の採寸項目</legend>'+C.fields.map(f=>'<label class="pc-check"><input type="checkbox" value="'+f+'"'+(p.fields.includes(f)?' checked':'')+(required.includes(f)?' disabled':'')+'>'+escape(labels[f])+'</label>').join('')+'</fieldset><p>下表は犬の体の対応範囲（cm）です。空欄のままでは保存・判定できません。服の仕上がり寸法は上の別メモに残してください。</p><div class="pc-scroll"><table><thead><tr><th>ライン</th><th>体格サイズ</th><th>着丈・袖丈の組み合わせ名</th>'+p.fields.map(f=>'<th>'+escape(labels[f])+' 下限〜上限</th>').join('')+'<th>胴上限は未満</th><th>操作</th></tr></thead><tbody>'+p.variants.map((v,i)=>'<tr><td><select id="pcLine'+i+'"><option value="adult"'+(v.line==='adult'?' selected':'')+'>成犬向け</option><option value="small"'+(v.line==='small'?' selected':'')+'>小柄な子・パピー向け</option></select></td><td><input id="pcSize'+i+'" maxlength="60" value="'+escape(v.size)+'"></td><td><input id="pcLength'+i+'" maxlength="100" value="'+escape(v.length)+'"></td>'+p.fields.map(f=>'<td><div class="pc-range">'+[0,1].map(j=>'<input id="pcRange_'+i+'_'+f+'_'+j+'" type="number" min="0.001" step="any" aria-label="'+escape(v.size+' '+labels[f]+(j?'上限':'下限'))+'" value="'+escape(v.ranges[f]?.[j]??'')+'">').join('<span>〜</span>')+'</div></td>').join('')+'<td><input type="checkbox" id="pcExclusive'+i+'"'+(v.chest_upper_exclusive?' checked':'')+' aria-label="胴まわり上限を含まない"></td><td><button type="button" data-copy="'+i+'">丈違いを複製</button><button type="button" data-remove="'+i+'">削除</button></td></tr>').join('')+'</tbody></table></div><button id="pcAdd" type="button">組み合わせを追加</button><div><label class="pc-check"><input id="pcConfirmedCheck" type="checkbox">確定として保存する場合、OEMとの寸法確認と着用検証が完了していることを確認しました</label><button id="pcSave" type="button">新しい版として保存</button><button id="pcEvaluate" type="button">最新採寸との適合を確認</button></div>';
+  $('pcEditor').oninput=invalidate;
+  $('pcFields').onchange=()=>{working=read();for(const v of working.variants)for(const f of working.fields)if(!v.ranges[f])v.ranges[f]=[null,null];invalidate();editor();};
+  $('pc_kind').onchange=()=>{working=read();if(['short','long'].includes(working.kind))for(const f of ['front_leg_length_1','front_leg_length_2','front_leg_length_3']){if(!working.fields.includes(f))working.fields.push(f);for(const v of working.variants)if(!v.ranges[f])v.ranges[f]=[null,null];}invalidate();editor();};
+  $('pcEditor').querySelectorAll('[data-copy]').forEach(b=>b.onclick=()=>{working=read();const v=clone(working.variants[Number(b.dataset.copy)]);v.length+='（変更用）';working.variants.push(v);invalidate();editor();});
+  $('pcEditor').querySelectorAll('[data-remove]').forEach(b=>b.onclick=()=>{working=read();working.variants.splice(Number(b.dataset.remove),1);invalidate();editor();});
+  $('pcAdd').onclick=()=>{working=read();working.variants.push({line:'adult',size:'',length:'標準',ranges:Object.fromEntries(working.fields.map(f=>[f,[null,null]])),chest_upper_exclusive:false});invalidate();editor();};
+  $('pcSave').onclick=save;$('pcEvaluate').onclick=evaluate;
+ }
+ function save(){
+  if(!allowed())return;
+  try{
+   const p=read(),bad=C.validate(p);if(bad)throw Error(bad);
+   if(loadError)throw Error('保存済み基準を読み込めていないため、上書きを防いでいます。JSONのバックアップを確認してください。');
+   if(p.status==='confirmed'&&!$('pcConfirmedCheck').checked)throw Error('確定保存の確認欄にチェックしてください。');
+   if(p.status==='confirmed'&&p.validated_on>today())throw Error('検証完了日は今日以前の日付にしてください。');
+   p.schema=1;p.id=uuid();p.revision=1+Math.max(0,...saved.filter(v=>v.product_key===p.product_key&&v.breed===p.breed).map(v=>v.revision));p.saved_at=new Date().toISOString();
+   const next=[...saved,p];localStorage.setItem(KEY,JSON.stringify(next));saved=next;working=clone(p);dirty=false;list();$('pcSaved').value=p.id;editor();$('pcResults').innerHTML='';notify('v'+p.revision+'を保存しました。旧版は保持しています。JSONバックアップも保存してください。');
+  }catch(e){notify('保存できませんでした：'+e.message);}
+ }
+ const named=v=>String(v).replace(/\b[a-z_]+\b/g,key=>labels[key]||key);
+ function variantName(v){return (v.line==='small'?'小柄な子・パピー向け':'成犬向け')+' '+v.size+'／'+v.length;}
+ function evaluate(){
+  if(!allowed())return;
+  try{
+   const p=read(),bad=C.validate(p);if(bad)throw Error(bad);working=p;
+   const items=PinSizeCore.latest(PINFORME_ADMIN_DOGS,PINFORME_ADMIN_ROWS).filter(x=>x.breed===p.breed);
+   if(!items.length)throw Error('対象犬種の採寸データがありません。管理者一覧を更新してください。');
+   const checks=items.map(x=>({x,r:C.evaluate(p,x,today())}));
+   const heading=p.status==='draft'||dirty?'開発用の比較（未確定・編集内容を含む）':'確定基準との適合候補（管理者確認用）';
+   const counts=checks.reduce((a,{r})=>(a[r.state]=(a[r.state]||0)+1,a),{});
+   $('pcResults').innerHTML='<h3>'+heading+'</h3><p>対象 '+items.length+'頭 ／ 範囲内 '+(counts.fit||0)+'頭 ／ 丈の確認 '+(counts.length_review||0)+'頭 ／ 再採寸確認 '+(counts.remeasure||0)+'頭 ／ 適合なし '+(counts.no_fit||0)+'頭</p><p>年齢で商品ラインを制限せず、同じ商品内の全組み合わせを比較します。袖丈のために体格サイズを下げる判定はしません。合わない場合に自動でオーダーメイドを勧めません。</p><div class="pc-scroll"><table><thead><tr><th>名前／ID</th><th>最新採寸日</th><th>確認結果</th><th>対応範囲内の候補</th><th>体格は合うが丈を要確認</th></tr></thead><tbody>'+checks.map(({x,r})=>'<tr><td>'+escape(x.dog.dog_name||'名前未入力')+'／'+escape(x.dog.id)+'</td><td>'+escape(x.row?.measured_on||'不明')+'</td><td>'+escape(named(r.reason))+'</td><td>'+escape(r.candidates.map(variantName).join('、')||'—')+'</td><td>'+escape(r.adjustments.map(a=>variantName(a.variant)+'：'+a.fields.map(f=>labels[f]).join('・')).join('、')||'—')+'</td></tr>').join('')+'</tbody></table></div>';
+   notify('寸法範囲との比較です。フィットや安全性は試着で検証してください。'+(PINFORME_ADMIN_ROWS.length>=1000||PINFORME_ADMIN_DOGS.length>=1000?' 読み込み上限に達しています。全件の結果ではありません。':''));
+  }catch(e){$('pcResults').innerHTML='';notify(e.message);}
+ }
+ function backup(){
+  if(!allowed())return;if(!saved.length){notify('先に基準を保存してください。');return;}
+  const blob=new Blob([JSON.stringify({format:'PINFORME_PRODUCT_CRITERIA',schema:1,exported_at:new Date().toISOString(),criteria:saved},null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='PINFORME_product_criteria_'+today()+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+ }
+ async function restore(file){
+  if(!allowed()||!file)return;
+  try{
+   if(file.size>2000000)throw Error('JSONは2MB以内にしてください。');
+   const data=JSON.parse(await file.text());if(!allowed())return;
+   if(data.format!=='PINFORME_PRODUCT_CRITERIA'||data.schema!==1||!Array.isArray(data.criteria)||data.criteria.length>500)throw Error('商品基準バックアップの形式を確認してください。');
+   if(loadError)throw Error('既存基準を読み込めないため、取り込みを停止しています。');
+   const next=clone(saved);
+   for(const p of data.criteria){const bad=C.validate(p);if(bad)throw Error(bad);if(typeof p.id!=='string'||!p.id||p.id.length>100||!Number.isInteger(p.revision)||p.revision<1)throw Error('版情報が不正です。');const old=next.find(v=>v.id===p.id);if(old){if(JSON.stringify(old)!==JSON.stringify(p))throw Error('同じIDに異なる内容があります。既存基準は変更していません。');continue;}next.push(p);}
+   localStorage.setItem(KEY,JSON.stringify(next));saved=next;list();notify('基準を取り込みました。既存の版は保持しています。');
+  }catch(e){notify('取り込めませんでした：'+e.message);}finally{$('pcImport').value='';}
+ }
+ function newDraft(){if(dirty&&!confirm('未保存の編集を破棄して、新しい基準を開きますか？'))return;working=blank();dirty=false;editor();$('pcSaved').value='';$('pcResults').innerHTML='';notify('寸法はまだ入っていません。OEMとの相談・試着をもとに入力してください。');}
+ function mount(){
+  const manager=$('adminManagerBox');if(!manager)return;
+  const panel=document.createElement('section');panel.id='pinProductPanel';panel.innerHTML='<h2>商品別のサイズ基準</h2><p>タンクトップ・半袖・長袖それぞれの対応範囲を、型・素材と一緒に版ごとに保存します。旧版を上書きせず、丈違いも別の組み合わせとして登録できます。</p><p class="pc-note">基準はこのブラウザに保存されます。別端末への移動や消失への備えにはJSONバックアップを使ってください。採寸データの保存先には書き込みません。お客様への自動表示・販売サイズの公開は行いません。</p><label>保存した基準<select id="pcSaved"></select></label><button type="button" id="pcNew">新しい基準</button><button type="button" id="pcBackup">全基準をJSON保存</button><label>基準JSONを取り込む<input id="pcImport" type="file" accept="application/json,.json"></label><p id="pcMessage" role="status"></p><div id="pcEditor"></div><div id="pcResults"></div>';manager.appendChild(panel);
+  try{saved=JSON.parse(localStorage.getItem(KEY)||'[]');if(!Array.isArray(saved)||saved.some(p=>C.validate(p)||typeof p.id!=='string'||!Number.isInteger(p.revision)))throw Error('保存内容の形式を確認してください。');}catch(e){saved=[];loadError=e.message;}
+  list();working=blank();editor();if(loadError)notify('保存済み基準を読み込めません：'+loadError);
+  $('pcNew').onclick=newDraft;$('pcBackup').onclick=backup;$('pcImport').onchange=e=>restore(e.target.files[0]);
+  $('pcSaved').onchange=()=>{const p=saved.find(v=>v.id===$('pcSaved').value);if(!p)return;if(dirty&&!confirm('未保存の編集を破棄して、保存基準を開きますか？')){$('pcSaved').value=working.id||'';return;}working=clone(p);dirty=false;editor();$('pcResults').innerHTML='';notify('v'+p.revision+'を開きました。変更を保存すると新しい版になります。');};
+  window.addEventListener('pinforme-size-plan',e=>{
+   if(!allowed())return;if(dirty&&!confirm('未保存の編集を破棄して、仮サイズ案を取り込みますか？'))return;
+   const source=e.detail;working=blank();working.breed=source.breed;working.variants=source.plan.map((v,i)=>({line:source.age_mode==='puppy'?'small':'adult',size:v.name,length:'標準',ranges:clone(v.ranges),chest_upper_exclusive:i<source.plan.length-1}));dirty=true;editor();$('pcSaved').value='';$('pcResults').innerHTML='';notify('仮サイズ案を開発中の基準として取り込みました。商品・型・素材を入力して保存してください。');panel.scrollIntoView({block:'start'});
+  });
+  const render=window.renderAdminList;window.renderAdminList=function(...args){const result=render.apply(this,args);$('pcResults').innerHTML='';return result;};
+  const logout=window.adminLogout;window.adminLogout=function(...args){$('pcResults').innerHTML='';working=blank();dirty=false;editor();return logout.apply(this,args);};
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount);else mount();
+})();
+
 </script>
 </body></html>
