@@ -1,0 +1,55 @@
+<!doctype html><html lang="ja"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>PINFORME｜お洋服の着心地</title><style>*{box-sizing:border-box}body{margin:0;background:#f7f5f0;color:#272b2d;font-family:system-ui,sans-serif;line-height:1.7}main{max-width:650px;margin:auto;padding:24px 18px 60px}header{letter-spacing:3px;font-weight:700;font-size:22px}h1{font-size:26px;letter-spacing:0;margin:18px 0 8px}h2{font-size:21px}section,.box{min-width:0;overflow:hidden;background:#fff;padding:20px;border:1px solid #ddd8cd;border-radius:16px;margin:18px 0}.note{background:#eee8dc;padding:12px;border-radius:9px;font-size:14px}.muted{color:#656565;font-size:14px}fieldset{border:0;padding:0;margin:20px 0}legend{font-weight:700;margin-bottom:8px}label.choice{display:flex;align-items:center;gap:10px;border:1px solid #ddd8cd;border-radius:10px;padding:12px;margin:8px 0;cursor:pointer}label.choice:has(input:checked){background:#eee8dc;border-color:#746b59}input[type=radio],input[type=checkbox]{width:19px;height:19px;flex:none;accent-color:#574f40}input[type=date],textarea,select{font:inherit;padding:12px;width:100%;min-width:0;max-width:100%;display:block;border:1px solid #bbb;border-radius:9px;background:white;color:inherit}input[type=date]{-webkit-appearance:none;appearance:none;min-height:48px}textarea{min-height:100px}button{font:inherit;min-height:48px;border:1px solid #514b41;border-radius:10px;padding:12px 18px;cursor:pointer;background:#fff;color:#292929;width:100%;margin-top:10px}button.primary{background:#292d2f;color:white}.progress{font-size:14px;color:#645b4a;margin-top:20px}dl{margin:0}dt{font-weight:700;margin-top:12px}dd{margin:3px 0;white-space:pre-wrap;overflow-wrap:anywhere}[hidden]{display:none!important}#error{color:#942f2f;white-space:pre-line}#previews img,#previews video{max-width:100%;max-height:240px;border-radius:10px}#previews figure{margin:15px 0}a{color:inherit}#sendError{color:#942f2f}#finish:disabled{opacity:.6}</style><main><header>PINFORME</header><h1>お洋服の着心地を教えてください</h1><p>専門的な判断は不要です。着せてみて感じたことを教えてください🐾</p><p id="loadState" class="note">試着情報を読み込んでいます…</p><div id="entry" hidden><div class="progress">1．回答　→　2．内容確認</div><section><h2>試着したお洋服</h2><p id="inviteInfo"></p><select id="kind" hidden aria-label="商品タイプ"><option value="tank">タンクトップ</option><option value="short">半袖</option><option value="long">長袖</option></select><label for="date">着用日</label><input id="date" type="date" required></section><form id="form"><section><h2>身体へのフィット</h2><p class="muted">首・胸・ウエストについて、それぞれ選んでください。</p><div id="fits"></div></section><section><h2>着ている時に困ったこと</h2><div id="issueAnswer"></div><div id="issueDetails" hidden><p>当てはまるものを選んでください（複数可）。</p><div id="issues"></div><div id="otherDetails" hidden><label for="otherText">「その他」の内容（必須）</label><textarea id="otherText" maxlength="500" placeholder="気になったことを具体的に教えてください"></textarea></div></div></section><section><h2>丈の好み</h2><p class="muted">動きやすさなどの支障とは別に、好みを教えてください。</p><div id="prefs"></div></section><section><h2>写真・動画・ひとこと <small>任意</small></h2><label for="media">写真・動画を選ぶ</label><input id="media" type="file" accept="image/*,video/*" multiple><p class="muted">写真・動画は非公開で保存します。5点まで、1点20MB以内。</p><div id="previews"></div><label for="note">気になる場所や、着せてみた感想</label><textarea id="note" maxlength="3000" placeholder="分からないことも、そのまま書いていただいて大丈夫です。"></textarea></section><p id="error" role="alert"></p><button class="primary" type="submit">回答内容を確認する</button></form></div><div id="review" hidden tabindex="-1"><div class="progress">1．回答　→　2．内容確認</div><section><h2>回答内容の確認</h2><dl id="summary"></dl></section><button id="back">回答を修正する</button><p id="sendError" role="alert"></p><button id="finish" class="primary">回答を送信する</button></div><div id="done" hidden tabindex="-1"><section><h2>回答を受け付けました🐾</h2><p>ご協力ありがとうございます。PINFORMEの服づくりに活かします。</p></section></div></main><script>
+const $=id=>document.getElementById(id);const fitOpts=['気になる点なし','締め付けが気になる','余りが気になる','分からない'],prefOpts=['短くしたい','今が好み','長くしたい','分からない'];let urls=[],files=[];
+function group(name,title,values){return '<fieldset><legend>'+title+'</legend>'+values.map((v,i)=>'<label class="choice"><input type="radio" name="'+name+'" value="'+v+'" required>'+v+'</label>').join('')+'</fieldset>';}
+$('fits').innerHTML=['首','胸','ウエスト'].map((t,i)=>group('fit'+i,t,fitOpts)).join('');$('issueAnswer').innerHTML=group('issue','着用上の支障',['なし','あり','分からない']);$('issues').innerHTML=['着せにくい','動きにくい','ずれる','擦れる','排泄時に汚れる','脚が引っかかる','その他'].map(v=>'<label class="choice"><input type="checkbox" name="detail" value="'+v+'">'+v+'</label>').join('');
+function preferences(){const sleeve=$('kind').value!=='tank';const old={};document.querySelectorAll('#prefs input:checked').forEach(x=>old[x.name]=x.value);$('prefs').innerHTML=group('back','着丈',prefOpts)+group('front','前身頃',prefOpts)+(sleeve?group('sleeve','袖丈',prefOpts):'');document.querySelectorAll('#prefs input').forEach(x=>x.checked=old[x.name]===x.value);}
+preferences();document.querySelectorAll('[name=issue]').forEach(x=>x.onchange=()=>{$('issueDetails').hidden=x.value!=='あり';if(x.value!=='あり'){document.querySelectorAll('[name=detail]').forEach(x=>x.checked=false);$('otherDetails').hidden=true;$('otherText').value='';}});document.querySelectorAll('[name=detail]').forEach(x=>x.onchange=()=>{const checked=document.querySelector('[name=detail][value=その他]').checked;$('otherDetails').hidden=!checked;if(!checked)$('otherText').value='';});const today=new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Tokyo'}).format(new Date());$('date').max=today;
+function clearMedia(){urls.forEach(URL.revokeObjectURL);urls=[];$('previews').replaceChildren();}
+$('media').onchange=()=>{clearMedia();files=[...$('media').files];if(files.length>5||files.some(f=>f.size>20*1024*1024||! ['image/jpeg','image/png','image/webp','image/heic','video/mp4','video/quicktime'].includes(f.type))){$('error').textContent='画像・動画を5点まで、1点20MB以内で選んでください。';$('media').value='';files=[];return;}$('error').textContent='';files.forEach(f=>{const u=URL.createObjectURL(f);urls.push(u);const fig=document.createElement('figure'),el=document.createElement(f.type.startsWith('image/')?'img':'video');el.src=u;if(el.tagName==='VIDEO')el.controls=true;else el.alt='選択した写真';const cap=document.createElement('figcaption');cap.textContent=f.name;fig.append(el,cap);$('previews').append(fig);});};
+function selected(name){return document.querySelector('[name='+name+']:checked')?.value||'';}
+function show(id){['entry','review','done'].forEach(k=>$(k).hidden=k!==id);$(id).focus?.();window.scrollTo({top:0,behavior:'smooth'});}
+
+const BASE='https://dsbvaoqgvtoeukigdjdj.supabase.co',KEY='sb_publishable_403lLhKUQ9X9N1RaxaDduA_9ZQEZ6na',BUCKET='pinforme-wear-media';
+const token=new URLSearchParams(location.search).get('t')||'';
+let invitation=null,answer=null;const uploaded=new Map();
+async function rpc(name,body,auth=KEY){
+ const r=await fetch(BASE+'/rest/v1/rpc/'+name,{method:'POST',headers:{apikey:KEY,Authorization:'Bearer '+auth,'Content-Type':'application/json'},body:JSON.stringify(body)});
+ const data=await r.json().catch(()=>null);if(!r.ok)throw Error(data?.message||'通信に失敗しました。');return data;
+}
+async function init(){try{
+ if(!/^[0-9a-f]{64}$/.test(token))throw Error('リンクを確認してください。');
+ invitation=await rpc('pinforme_wear_get_invitation',{p_token:token});
+ if(!invitation)throw Error('このリンクは使用済みか、期限が切れています。');
+ $('inviteInfo').textContent=invitation.dog_name+'／'+invitation.product+'／'+invitation.size+'サイズ・'+invitation.length+'／'+invitation.model;
+ $('kind').value=invitation.product_type;
+ preferences();$('loadState').hidden=true;show('entry');
+ }catch(e){$('loadState').textContent=e.message+' PINFORMEまでご連絡ください。';}
+}
+$('form').onsubmit=e=>{e.preventDefault();$('error').textContent='';
+ if(!$('date').value||$('date').value>today){$('error').textContent='着用日を今日以前の日付で入力してください。';$('date').focus();return;}
+ const detail=[...document.querySelectorAll('[name=detail]:checked')].map(x=>x.value);
+ if(selected('issue')==='あり'&&!detail.length){$('error').textContent='困ったことの内容を1つ以上選んでください。';$('issueDetails').scrollIntoView({behavior:'smooth'});return;}
+ const otherText=$('otherText').value.trim();
+ if(selected('issue')==='あり'&&detail.includes('その他')&&!otherText){$('error').textContent='「その他」の内容を入力してください。';$('otherText').focus();return;}
+ answer={p_token:token,p_worn_on:$('date').value,p_fit:{neck:selected('fit0'),chest:selected('fit1'),waist:selected('fit2')},p_issue_answer:selected('issue'),p_issues:detail,p_other_text:otherText,p_preference:{back:selected('back'),front:selected('front'),sleeve:$('kind').value==='tank'?'':selected('sleeve')},p_media_paths:[],p_owner_note:$('note').value.trim()};
+ const rows=[['わんちゃん・お洋服',$('inviteInfo').textContent],['着用日',answer.p_worn_on],...['首','胸','ウエスト'].map((v,i)=>[v+'のフィット',selected('fit'+i)]),['着用上の支障',selected('issue')+(detail.length?'：'+detail.join('・'):'')+(detail.includes('その他')?'（'+otherText+'）':'')],['着丈の好み',selected('back')],['前身頃の好み',selected('front')],...($('kind').value!=='tank'?[['袖丈の好み',selected('sleeve')]]:[]),['写真・動画',files.length?files.map(f=>f.name).join('\n'):'なし'],['ひとこと',answer.p_owner_note||'なし']];
+ $('summary').replaceChildren();for(const [k,v] of rows){const dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=k;dd.textContent=v;$('summary').append(dt,dd);}show('review');
+};
+$('back').onclick=()=>show('entry');
+async function uploadMedia(f){
+ if(uploaded.has(f))return uploaded.get(f);
+ const ext=({'image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/heic':'heic','video/mp4':'mp4','video/quicktime':'mov'})[f.type];
+ if(!ext)throw Error('対応していない写真・動画です。');
+ const path=token+'/'+crypto.randomUUID().replaceAll('-','')+'.'+ext;
+ const r=await fetch(BASE+'/storage/v1/object/'+BUCKET+'/'+path,{method:'POST',headers:{apikey:KEY,Authorization:'Bearer '+KEY,'Content-Type':f.type,'x-upsert':'false'},body:f});
+ if(!r.ok)throw Error('写真・動画を保存できませんでした。時間をおいて再試行してください。');
+ uploaded.set(f,path);return path;
+}
+$('finish').onclick=async()=>{
+ if(!answer||!invitation)return;const b=$('finish');b.disabled=true;b.textContent='送信中…';$('sendError').textContent='';
+ try{answer.p_media_paths=[];for(const f of files)answer.p_media_paths.push(await uploadMedia(f));await rpc('pinforme_wear_submit',answer);show('done');clearMedia();history.replaceState(null,'',location.pathname);}
+ catch(e){$('sendError').textContent=e.message+' 回答が保存されたか不明な場合はPINFORMEへご連絡ください。';}
+ finally{b.disabled=false;b.textContent='回答を送信する';}
+};
+init();
+</script></html>
