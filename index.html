@@ -5831,6 +5831,10 @@ if(typeof module!=='undefined')module.exports=PinSizeCore;
 </script>
 <style>
 #pinSizePanel{margin:18px 0;padding:18px;border:1px solid #ddd;border-radius:14px;background:#fafafa;color:#222}#pinSizePanel h2{font-size:22px;margin:0 0 14px}#pinSizePanel p{font-size:13px;line-height:1.8}#pinSizePanel label{display:block;font-size:13px;font-weight:700;margin:12px 0 6px}#pinSizePanel input,#pinSizePanel select{width:100%;min-height:44px;border:1px solid #bbb;border-radius:8px;padding:8px;font-size:16px;background:#fff}#pinSizePanel button{min-height:44px;border:1px solid #bbb;border-radius:8px;padding:10px 14px;margin:8px 4px 8px 0;font-weight:700;background:#fff;color:#111}#pinSizePanel .ps-primary{background:#111;color:#fff}#pinSizePanel .ps-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}#pinSizePanel .ps-scroll{overflow-x:auto}#pinSizePanel table{border-collapse:collapse;width:100%;font-size:13px}#pinSizePanel th,#pinSizePanel td{padding:10px 6px;border-bottom:1px solid #ddd;text-align:left;white-space:nowrap}#pinSizePanel .ps-range{display:flex;gap:4px;align-items:center}#pinSizePanel .ps-range input{width:80px}#pinSizePanel .ps-size-name{width:90px}#pinSizePanel .ps-note{background:#eee;padding:12px;border-radius:8px}#pinSizePanel .ps-error{color:#a02020;white-space:pre-line}#pinSizePanel .ps-size-card{padding:14px;margin:12px 0;border:1px solid #ddd;border-radius:10px;background:#fff}#pinSizePanel summary{cursor:pointer;padding:8px 0;font-weight:700}
+
+#pinSizePanel .ps-ratio-dog{display:flex;flex-direction:column;gap:6px;padding:12px 0;border-top:1px solid #e3e0da;font-size:13px;line-height:1.6;min-width:0;overflow-wrap:anywhere}
+#pinSizePanel .ps-ratio-values{display:flex;flex-wrap:wrap;gap:6px 16px}
+#pinSizePanel .ps-ratio-values span{white-space:nowrap}
 </style>
 <script>
 (()=>{
@@ -5883,8 +5887,13 @@ function compareBodies(){
   const k=Number(el('psCount').value),plan=C.propose(items,k),multi=bodyCluster(items,k);
   const chest=plan.map((v,j)=>items.map((x,i)=>({x,i})).filter(({x})=>x.values.chest>=v.ranges.chest[0]&&(j<plan.length-1?x.values.chest<v.ranges.chest[1]:x.values.chest<=v.ranges.chest[1])).map(x=>x.i));
   const fs=['neck','chest','waist'];
-  const cards=(title,groups)=>'<h3>'+title+'</h3>'+(title==='3部位の体型グループ'?stability:'')+'<p>3部位のばらつき指標：'+fmt(multi.scoreGroups(groups))+'（小さいほど、このデータ内でまとまる）</p>'+groups.map((g,j)=>'<section class="ps-size-card"><strong>体型グループ '+(j+1)+'／'+g.length+'頭</strong><p>'+g.map(i=>esc(items[i].dog.dog_name||'名前未入力')+'／'+esc(items[i].dog.id)).join('、')+'</p>'+fs.map(f=>{const v=g.map(i=>Number(items[i].values[f])),avg=v.reduce((s,n)=>s+n,0)/v.length,lo=Math.min(...v),hi=Math.max(...v);return '<p>'+L[f]+'：中心 '+fmt(avg)+' cm<br>実測 '+fmt(lo)+'〜'+fmt(hi)+' cm／幅 '+fmt(hi-lo)+' cm</p>';}).join('')+'<small>実測範囲は商品の対応範囲ではありません。</small></section>').join('');
-  let stability='<div class="ps-size-card"><strong>分類の安定性</strong><p>この条件では一致率を計算していません。対象4〜10頭・区分数1〜3で、頭数が区分数を上回る場合に表示します。</p></div>';
+  const ratio=(item,field)=>100*Number(item.values[field])/Number(item.values.chest);
+  const ratioFmt=value=>Number(value).toFixed(1)+'%';
+  const cards=(title,groups)=>'<h3>'+title+'</h3><p>3部位のばらつき指標：'+fmt(multi.scoreGroups(groups))+'（小さいほど、このデータ内でまとまる）</p>'+groups.map((g,j)=>{
+   const spread=field=>{const v=g.map(i=>ratio(items[i],field));return ratioFmt(Math.min(...v))+'〜'+ratioFmt(Math.max(...v));};
+   return '<section class="ps-size-card"><strong>体型グループ '+(j+1)+'／'+g.length+'頭</strong><p>首／胴：'+spread('neck')+'<br>ウエスト／胴：'+spread('waist')+'</p><div class="ps-ratio-list">'+g.map(i=>{const x=items[i];return '<div class="ps-ratio-dog"><strong>'+esc(x.dog.dog_name||'名前未入力')+'／'+esc(x.dog.id)+'</strong><span>胴まわり '+fmt(x.values.chest)+' cm</span><div class="ps-ratio-values"><span>首／胴 <b>'+ratioFmt(ratio(x,'neck'))+'</b></span><span>ウエスト／胴 <b>'+ratioFmt(ratio(x,'waist'))+'</b></span></div></div>';}).join('')+'</div><details><summary>各部位の実測分布を見る</summary>'+fs.map(f=>{const v=g.map(i=>Number(items[i].values[f])),avg=v.reduce((s,n)=>s+n,0)/v.length,lo=Math.min(...v),hi=Math.max(...v);return '<p>'+L[f]+'：中心 '+fmt(avg)+' cm<br>実測 '+fmt(lo)+'〜'+fmt(hi)+' cm／幅 '+fmt(hi-lo)+' cm</p>';}).join('')+'<small>実測範囲は商品の対応範囲ではありません。</small></details></section>';
+  }).join('');
+  let stability='';
   if(items.length<=10&&k<=3&&items.length>k){
    let agree=0,total=0;
    const groupOf=(gs,i)=>gs.findIndex(g=>g.includes(i));
@@ -5892,9 +5901,9 @@ function compareBodies(){
     const indices=items.map((_,i)=>i).filter(i=>i!==removed),sub=bodyCluster(indices.map(i=>items[i]),k).groups.map(g=>g.map(i=>indices[i]));
     for(let a=0;a<indices.length;a++)for(let b=a+1;b<indices.length;b++){const i=indices[a],j=indices[b];if((groupOf(multi.groups,i)===groupOf(multi.groups,j))===(groupOf(sub,i)===groupOf(sub,j)))agree++;total++;}
    }
-   stability='<div class="ps-size-card"><strong>分類の安定性：'+fmt(100*agree/total)+'%</strong><p>1頭ずつ除いて再計算し、残った子同士が同じグループか別グループかを比較した一致率です。</p><p>この集計内の参考値で、サイズの適合率や将来データへの精度ではありません。</p></div>';
+   stability='<p>1頭ずつ除いて再計算：ペアの同じ／別グループ判定の一致 '+fmt(100*agree/total)+'%。この集計内の安定性の参考で、将来データへの精度ではありません。</p>';
   }
-  el('psComparison').innerHTML='<h3>体型の分け方を比較</h3><p>分析対象 '+items.length+'頭／条件により除外 '+(all.length-items.length)+'頭。首・胴・ウエストを、それぞれの標準偏差で尺度をそろえて同じ重みで比較。丈・体重はこの分類には使いません。'+esc(multi.method)+'。</p><p class="ps-note">商品サイズ・着用可否・推奨サイズは未確定です。グループ全員を収めるために対応範囲を広げる計算はしていません。</p><details open><summary>胴まわり中心</summary>'+cards('胴まわり中心の体型グループ',chest)+'</details><details><summary>首・胴・ウエストを合わせる</summary>'+cards('3部位の体型グループ',multi.groups)+'</details>';
+  el('psComparison').innerHTML='<h3>体型の分け方を比較</h3><p>分析対象 '+items.length+'頭／条件により除外 '+(all.length-items.length)+'頭。首・胴・ウエストを、それぞれの標準偏差で尺度をそろえて同じ重みで比較。丈・体重はこの分類には使いません。'+esc(multi.method)+'。</p><p class="ps-note">商品サイズ・着用可否・推奨サイズは未確定です。グループ全員を収めるために対応範囲を広げる計算はしていません。</p>'+stability+'<p class="ps-note">身体の大きさは胴まわり、形の違いは首・ウエストの比率で確認します。比率＝各部位 ÷ 胴まわり × 100。ウエストの比率が小さいほど、胴に対してウエストが細いことを表します。比率による分類や適合判定は行いません。</p><details open><summary>胴まわり中心</summary>'+cards('胴まわり中心の体型グループ',chest)+'</details><details><summary>首・胴・ウエストを合わせる</summary>'+cards('3部位の体型グループ',multi.groups)+'</details>';
   el('psError').textContent='';el('psComparison').scrollIntoView({block:'start'});
  }catch(e){el('psComparison').innerHTML='';error(e);}
 }
