@@ -6165,6 +6165,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 #pinAdminMenu p{margin:0 0 14px;color:#625d55;font-size:.9rem}
 .pin-admin-menu-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .pin-admin-menu-grid button{display:flex;align-items:center;justify-content:space-between;gap:6px;width:100%;min-height:76px;text-align:left;padding:12px;border:1px solid #d8d1c5;border-radius:12px;background:#f8f6f1;color:#292a28;font:inherit;font-weight:700;cursor:pointer}
+.pin-admin-menu-grid button:nth-child(4) span:first-child{white-space:nowrap;font-size:clamp(13px,3.7vw,16px)}
 .pin-admin-menu-grid button span:last-child{font-size:1.25em;color:#77716a}
 #pinAdminMenu .pin-admin-logout{margin-top:16px;width:100%;min-height:44px}
 #pinAdminViewHead{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:10px;padding:9px 0;background:#fff}
@@ -6179,7 +6180,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   ['採寸データ・集計','pinAdminCarte'],
   ['サイズ設計','pinSizePanel'],
   ['商品別サイズ基準','pinProductPanel'],
-  ['オンライン試着回答','pinWearOnline'],
+  ['オンライン回答','pinWearOnline'],
   ['端末内の試着記録','pinWearPanel']
  ];
  function mount(){
