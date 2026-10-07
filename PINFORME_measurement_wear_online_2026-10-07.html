@@ -6106,6 +6106,11 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 #pinWearPanel .pw-online-section dl{display:grid;grid-template-columns:minmax(100px,1fr) 2fr;gap:8px}
 #pinWearPanel .pw-online-section dt{font-weight:bold}
 #pinWearPanel .pw-online-section dd{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
+#pinWearPanel .pw-online-media{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:12px;margin:16px 0}
+#pinWearPanel .pw-online-media figure{margin:0;padding:10px;background:#faf8f4;border:1px solid #ddd;border-radius:10px}
+#pinWearPanel .pw-online-media img,#pinWearPanel .pw-online-media video{display:block;width:100%;max-height:420px;object-fit:contain;border-radius:6px;background:#eee}
+#pinWearPanel .pw-online-media figcaption{margin:0 0 8px;font-weight:700}
+#pinWearPanel .pw-online-media button{width:100%}
 @media(max-width:600px){#pinWearPanel .pw-online-section dl{grid-template-columns:1fr}#pinWearPanel .pw-online-section dt{margin-top:12px}}
 </style>
 <script>
@@ -6114,7 +6119,9 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
  const auth=()=>{const s=getAdminSession();return s?.access_token&&isAdminVerified()?s.access_token:null;};
  const msg=v=>$('pwoMsg').textContent=v;
  const opts=a=>a.map(x=>'<option>'+E(x)+'</option>').join('');
- let rows=[];
+ let rows=[],mediaEpoch=0;
+ const mediaUrls=new Set();
+ function clearMedia(){mediaEpoch++;for(const url of mediaUrls)URL.revokeObjectURL(url);mediaUrls.clear();}
  async function rpc(name,body){const jwt=auth();if(!jwt)throw Error('管理者としてログインしてください。');
   const r=await fetch(PINFORME_SUPABASE_BASE+'/rest/v1/rpc/'+name,{method:'POST',headers:{apikey:PINFORME_SUPABASE_KEY,Authorization:'Bearer '+jwt,'Content-Type':'application/json'},body:JSON.stringify(body)});
   const d=await r.json().catch(()=>null);if(!r.ok)throw Error(d?.message||'保存先との通信に失敗しました。');return d;
@@ -6134,9 +6141,21 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
    const u=new URL('PINFORME_owner_wear.html',location.href);u.search='?t='+token;$('pwoLink').value=u.href;msg('専用リンクを発行しました。有効期限：'+new Date(result.expires_at).toLocaleDateString('ja-JP')+'。このリンクを対象の飼い主さんに送ってください。');}
   finally{b.disabled=false;}
  }catch(e){msg('リンクを発行できませんでした：'+e.message);}}
- async function media(path){try{const jwt=auth();if(!jwt)return;const r=await fetch(PINFORME_SUPABASE_BASE+'/storage/v1/object/authenticated/pinforme-wear-media/'+encodeURI(path),{headers:{apikey:PINFORME_SUPABASE_KEY,Authorization:'Bearer '+jwt}});if(!r.ok)throw Error('開けませんでした');const u=URL.createObjectURL(await r.blob()),a=document.createElement('a');a.href=u;a.download=path.split('/').pop();a.click();setTimeout(()=>URL.revokeObjectURL(u),60000);}catch(e){const m=$('pwoRecordMsg');if(m)m.textContent='写真・動画：'+e.message;else msg('写真・動画：'+e.message);}}
+ async function fetchMedia(path){const jwt=auth();if(!jwt)throw Error('管理者として再ログインしてください。');const r=await fetch(PINFORME_SUPABASE_BASE+'/storage/v1/object/authenticated/pinforme-wear-media/'+encodeURI(path),{headers:{apikey:PINFORME_SUPABASE_KEY,Authorization:'Bearer '+jwt}});if(!r.ok)throw Error('読み込めませんでした。');return r.blob();}
+ async function media(path){try{const u=URL.createObjectURL(await fetchMedia(path)),a=document.createElement('a');a.href=u;a.download=path.split('/').pop();a.click();setTimeout(()=>URL.revokeObjectURL(u),60000);}catch(e){const m=$('pwoRecordMsg');if(m)m.textContent='写真・動画：'+e.message;else msg('写真・動画：'+e.message);}}
+ function addMedia(card,paths){const gallery=document.createElement('div');gallery.className='pw-online-media';const epoch=mediaEpoch;
+  paths.forEach((path,i)=>{const figure=document.createElement('figure'),caption=document.createElement('figcaption'),info=document.createElement('p'),isVideo=/\.(mp4|mov)$/i.test(path);
+   caption.textContent=(isVideo?'動画 ':'写真 ')+(i+1);figure.append(caption);gallery.append(figure);
+   if(isVideo){const play=document.createElement('button');play.type='button';play.textContent='▶ 動画を再生';
+    play.onclick=async()=>{play.disabled=true;play.textContent='動画を読み込み中…';try{const blob=await fetchMedia(path);if(epoch!==mediaEpoch||!figure.isConnected)return;const url=URL.createObjectURL(blob);mediaUrls.add(url);const video=document.createElement('video');video.controls=true;video.playsInline=true;video.preload='metadata';video.src=url;figure.replaceChild(video,play);video.play().catch(()=>{});}catch(e){play.disabled=false;play.textContent='▶ 動画を再生';info.textContent=e.message;figure.append(info);}};
+    figure.append(play);
+   }else{info.textContent='写真を読み込み中…';figure.append(info);
+    fetchMedia(path).then(blob=>{if(epoch!==mediaEpoch||!figure.isConnected)return;const url=URL.createObjectURL(blob);mediaUrls.add(url);const img=document.createElement('img');img.alt='試着写真 '+(i+1);img.onload=()=>{info.remove();};img.onerror=()=>{img.remove();info.textContent='この端末では表示できません。';const b=document.createElement('button');b.type='button';b.textContent='写真を保存';b.onclick=()=>media(path);figure.append(b);};figure.insertBefore(img,info);img.src=url;}).catch(e=>{if(epoch===mediaEpoch)info.textContent='写真を読み込めません：'+e.message;});
+   }
+  });card.append(gallery);
+ }
  function pair(dl,k,v){const dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=k;dd.textContent=String(v??'');dl.append(dt,dd);}
- function render(){const box=$('pwoAnswers');box.replaceChildren();$('pwoCount').textContent='オンライン回答 '+rows.length+'件';if(!rows.length){box.textContent='オンライン回答はまだありません。';return;}
+ function render(){const box=$('pwoAnswers');clearMedia();box.replaceChildren();$('pwoCount').textContent='オンライン回答 '+rows.length+'件';if(!rows.length){box.textContent='オンライン回答はまだありません。';return;}
   for(const r of rows){const card=document.createElement('article'),title=document.createElement('h3'),dl=document.createElement('dl');card.dataset.answerId=r.id;title.textContent=r.dog_name+'／'+r.product+' '+r.size+'・'+r.length;card.append(title,dl);
    pair(dl,'着用日',r.date);pair(dl,'商品',r.source+'／'+r.model+'／'+r.material);
    pair(dl,'フィット',['neck','chest','waist'].map((k,i)=>['首','胸','ウエスト'][i]+'：'+(r.fit?.[k]||'—')).join('／'));
@@ -6146,7 +6165,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
    pair(dl,'管理側の確認状況',r.status||'未確認');pair(dl,'管理側の対応メモ',r.note||'なし');
    const reviews=Array.isArray(r.review_history)?r.review_history:[];
    if(reviews.length){const last=reviews[reviews.length-1];pair(dl,'最終保存',new Date(last.at).toLocaleString('ja-JP')+'／'+last.status);}
-   const paths=Array.isArray(r.media_paths)?r.media_paths:[];if(paths.length){const div=document.createElement('div');div.textContent='写真・動画：';paths.forEach((p,i)=>{const b=document.createElement('button');b.type='button';b.textContent='保存 '+(i+1);b.onclick=()=>media(p);div.append(b);});card.append(div);}
+   const paths=Array.isArray(r.media_paths)?r.media_paths:[];if(paths.length)addMedia(card,paths);
    const status=document.createElement('select');['未確認','確認中','確認済み'].forEach(v=>{const o=new Option(v,v);status.add(o);});status.value=r.status;
    const note=document.createElement('textarea');note.placeholder='管理側の対応メモ';note.maxLength=5000;note.value=r.note||'';
    const result=document.createElement('p');result.setAttribute('role','status');
@@ -6158,7 +6177,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
  function mount(){const m=$('adminManagerBox');if(!m)return;const s=document.createElement('section');s.id='pinWearOnline';s.innerHTML='<h2>試着リンクの発行</h2><p>対象のわんちゃんと商品を指定して専用リンクを発行します。リンクは30日間、1回だけ回答できます。</p><div class="pwo-grid"><label>わんちゃん<select id="pwoDog"></select></label><label>紐づける採寸履歴<select id="pwoHistory"></select></label><label>商品・サンプルID<input id="pwoProduct" maxlength="300" placeholder="ミニピン用タンクトップ 第1版"></label><label>商品タイプ<select id="pwoType"><option value="tank">タンクトップ</option><option value="short">半袖</option><option value="long">長袖</option></select></label><label>型の版<input id="pwoModel" maxlength="300" placeholder="サンプル第1版"></label><label>素材<input id="pwoMaterial" maxlength="300" placeholder="オーガニックコットン"></label><label>サイズ<input id="pwoSize" maxlength="100" placeholder="S"></label><label>丈<input id="pwoLength" maxlength="100" placeholder="標準丈"></label><label>記録種別<select id="pwoSource"><option>サンプル試着</option><option>購入後</option></select></label></div><button id="pwoCreate" type="button">専用リンクを発行</button><label>発行したリンク（コピーして対象の方へ送る）<textarea id="pwoLink" readonly></textarea></label><p id="pwoMsg" role="status"></p><h3 id="pwoCount">オンライン回答 0件</h3><button id="pwoRefresh" type="button">回答を更新</button><div id="pwoAnswers"></div>';m.append(s);
   $('pwoDog').onchange=history;$('pwoCreate').onclick=create;$('pwoRefresh').onclick=load;
   const old=window.renderAdminList;window.renderAdminList=function(...a){const x=old.apply(this,a);refreshDogs();load();return x;};
-  const logout=window.adminLogout;window.adminLogout=function(...a){rows=[];$('pwoLink').value='';$('pwoAnswers').replaceChildren();$('pwoDog').replaceChildren();$('pwoHistory').replaceChildren();return logout.apply(this,a);};
+  const logout=window.adminLogout;window.adminLogout=function(...a){rows=[];clearMedia();$('pwoLink').value='';$('pwoAnswers').replaceChildren();$('pwoDog').replaceChildren();$('pwoHistory').replaceChildren();return logout.apply(this,a);};
   refreshDogs();load();
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount);else mount();
