@@ -6130,17 +6130,21 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
  async function media(path){try{const jwt=auth();if(!jwt)return;const r=await fetch(PINFORME_SUPABASE_BASE+'/storage/v1/object/authenticated/pinforme-wear-media/'+encodeURI(path),{headers:{apikey:PINFORME_SUPABASE_KEY,Authorization:'Bearer '+jwt}});if(!r.ok)throw Error('開けませんでした');const u=URL.createObjectURL(await r.blob()),a=document.createElement('a');a.href=u;a.download=path.split('/').pop();a.click();setTimeout(()=>URL.revokeObjectURL(u),60000);}catch(e){msg('写真・動画：'+e.message);}}
  function pair(dl,k,v){const dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=k;dd.textContent=String(v??'');dl.append(dt,dd);}
  function render(){const box=$('pwoAnswers');box.replaceChildren();$('pwoCount').textContent='オンライン回答 '+rows.length+'件';if(!rows.length){box.textContent='オンライン回答はまだありません。';return;}
-  for(const r of rows){const card=document.createElement('article'),title=document.createElement('h3'),dl=document.createElement('dl');title.textContent=r.dog_name+'／'+r.product+' '+r.size+'・'+r.length;card.append(title,dl);
+  for(const r of rows){const card=document.createElement('article'),title=document.createElement('h3'),dl=document.createElement('dl');card.dataset.answerId=r.id;title.textContent=r.dog_name+'／'+r.product+' '+r.size+'・'+r.length;card.append(title,dl);
    pair(dl,'着用日',r.date);pair(dl,'商品',r.source+'／'+r.model+'／'+r.material);
    pair(dl,'フィット',['neck','chest','waist'].map((k,i)=>['首','胸','ウエスト'][i]+'：'+(r.fit?.[k]||'—')).join('／'));
    pair(dl,'着用上の支障',r.issue_answer+' '+(r.issues||[]).join('・')+(r.other_text?'（'+r.other_text+'）':''));
    pair(dl,'丈の好み',['back','front','sleeve'].filter(k=>r.preference?.[k]).map(k=>({back:'着丈',front:'前身頃',sleeve:'袖丈'}[k]+'：'+r.preference[k])).join('／'));
    pair(dl,'採寸履歴',r.measurement?.measured_on||'紐づけなし');pair(dl,'ひとこと',r.owner_note||'なし');
+   pair(dl,'管理側の確認状況',r.status||'未確認');pair(dl,'管理側の対応メモ',r.note||'なし');
+   const reviews=Array.isArray(r.review_history)?r.review_history:[];
+   if(reviews.length){const last=reviews[reviews.length-1];pair(dl,'最終保存',new Date(last.at).toLocaleString('ja-JP')+'／'+last.status);}
    const paths=Array.isArray(r.media_paths)?r.media_paths:[];if(paths.length){const div=document.createElement('div');div.textContent='写真・動画：';paths.forEach((p,i)=>{const b=document.createElement('button');b.type='button';b.textContent='保存 '+(i+1);b.onclick=()=>media(p);div.append(b);});card.append(div);}
    const status=document.createElement('select');['未確認','確認中','確認済み'].forEach(v=>{const o=new Option(v,v);status.add(o);});status.value=r.status;
    const note=document.createElement('textarea');note.placeholder='管理側の対応メモ';note.maxLength=5000;note.value=r.note||'';
-   const save=document.createElement('button');save.type='button';save.textContent='確認状況・メモを保存';save.onclick=async()=>{save.disabled=true;try{await rpc('pinforme_wear_admin_review',{p_id:r.id,p_status:status.value,p_note:note.value.trim()});await load();msg('確認履歴を保存しました。');}catch(e){msg(e.message);}finally{save.disabled=false;}};
-   card.append(status,note,save);box.append(card);
+   const result=document.createElement('p');result.setAttribute('role','status');
+   const save=document.createElement('button');save.type='button';save.textContent='確認状況・メモを保存';save.onclick=async()=>{save.disabled=true;try{const ok=await rpc('pinforme_wear_admin_review',{p_id:r.id,p_status:status.value,p_note:note.value.trim()});if(ok!==true)throw Error('対象の回答が見つかりませんでした。');await load();const updated=[...$('pwoAnswers').querySelectorAll('article')].find(c=>c.dataset.answerId===r.id);if(updated){const feedback=updated.querySelector('[data-review-result]');feedback.textContent='保存しました。上の「管理側の確認状況」と「最終保存」を確認できます。';}msg('確認履歴を保存しました。');}catch(e){result.textContent='保存できませんでした：'+e.message;}finally{save.disabled=false;}};
+   result.dataset.reviewResult='';const statusLabel=document.createElement('label');statusLabel.textContent='確認状況を変更';statusLabel.append(status);const noteLabel=document.createElement('label');noteLabel.textContent='対応メモを変更';noteLabel.append(note);card.append(statusLabel,noteLabel,save,result);box.append(card);
   }
  }
  async function load(){if(!auth())return;try{rows=await rpc('pinforme_wear_admin_list',{});if(!Array.isArray(rows))throw Error('回答形式を確認してください。');render();}catch(e){msg('オンライン回答を取得できません：'+e.message);}}
@@ -6149,6 +6153,75 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   const old=window.renderAdminList;window.renderAdminList=function(...a){const x=old.apply(this,a);refreshDogs();load();return x;};
   const logout=window.adminLogout;window.adminLogout=function(...a){rows=[];$('pwoLink').value='';$('pwoAnswers').replaceChildren();$('pwoDog').replaceChildren();$('pwoHistory').replaceChildren();return logout.apply(this,a);};
   refreshDogs();load();
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount);else mount();
+})();
+</script>
+<style>
+/* 管理者画面の入口。選択先の既存画面・データ処理はそのまま使う。 */
+#adminManagerBox [hidden]{display:none!important}
+#pinAdminMenu{padding:4px 0 12px}
+#pinAdminMenu h2{font-size:1.25rem;margin:10px 0 5px}
+#pinAdminMenu p{margin:0 0 14px;color:#625d55;font-size:.9rem}
+.pin-admin-menu-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.pin-admin-menu-grid button{display:flex;align-items:center;justify-content:space-between;gap:6px;width:100%;min-height:76px;text-align:left;padding:12px;border:1px solid #d8d1c5;border-radius:12px;background:#f8f6f1;color:#292a28;font:inherit;font-weight:700;cursor:pointer}
+.pin-admin-menu-grid button span:last-child{font-size:1.25em;color:#77716a}
+#pinAdminMenu .pin-admin-logout{margin-top:16px;width:100%;min-height:44px}
+#pinAdminViewHead{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:10px;padding:9px 0;background:#fff}
+#pinAdminViewHead button{min-height:44px;padding:8px 12px;border:1px solid #bdb6a9;border-radius:9px;background:#f5f2eb;color:#292a28;font:inherit;font-weight:700;cursor:pointer}
+#pinAdminViewTitle{font-weight:700;line-height:1.3}
+@media(max-width:350px){.pin-admin-menu-grid{grid-template-columns:1fr}.pin-admin-menu-grid button{min-height:58px}}
+</style>
+<script>
+(()=>{
+ const sections=[
+  ['採寸データ・集計','pinAdminCarte'],
+  ['サイズ設計','pinSizePanel'],
+  ['商品別サイズ基準','pinProductPanel'],
+  ['オンライン試着回答','pinWearOnline'],
+  ['端末内の試着記録','pinWearPanel']
+ ];
+ function mount(){
+  const manager=document.getElementById('adminManagerBox');
+  if(!manager||document.getElementById('pinAdminMenu'))return;
+  const carte=document.createElement('section');carte.id='pinAdminCarte';
+  while(manager.firstChild&&manager.firstChild.id!=='pinSizePanel')carte.append(manager.firstChild);
+  manager.prepend(carte);
+  const menu=document.createElement('div');menu.id='pinAdminMenu';
+  const heading=document.createElement('h2');heading.textContent='管理メニュー';
+  const help=document.createElement('p');help.textContent='確認したい項目を選んでください。';
+  const grid=document.createElement('div');grid.className='pin-admin-menu-grid';
+  const head=document.createElement('div');head.id='pinAdminViewHead';head.hidden=true;
+  const back=document.createElement('button');back.type='button';back.textContent='← メニューへ';
+  const title=document.createElement('span');title.id='pinAdminViewTitle';
+  head.append(back,title);
+  const open=id=>{
+   const entry=sections.find(([,key])=>key===id),target=document.getElementById(id);
+   if(!entry||!target)return;
+   menu.hidden=true;head.hidden=false;title.textContent=entry[0];
+   sections.forEach(([,key])=>{document.getElementById(key).hidden=key!==id;});
+   document.getElementById('adminDetail')?.classList.add('admin-hidden');
+   window.scrollTo(0,0);
+   if(id==='pinWearOnline')document.getElementById('pwoRefresh')?.click();
+  };
+  const home=()=>{
+   head.hidden=true;menu.hidden=false;
+   sections.forEach(([,key])=>{document.getElementById(key).hidden=true;});
+   document.getElementById('adminDetail')?.classList.add('admin-hidden');
+   window.scrollTo(0,0);
+  };
+  back.onclick=home;
+  for(const [label,id] of sections){
+   const button=document.createElement('button');button.type='button';button.setAttribute('aria-label',label+'を開く');
+   const name=document.createElement('span');name.textContent=label;
+   const arrow=document.createElement('span');arrow.textContent='›';
+   button.append(name,arrow);button.onclick=()=>open(id);grid.append(button);
+  }
+  const logout=document.createElement('button');logout.type='button';logout.className='admin-btn light pin-admin-logout';logout.textContent='ログアウト';logout.onclick=()=>window.adminLogout();
+  menu.append(heading,help,grid,logout);manager.prepend(head);manager.prepend(menu);
+  const previousLogout=window.adminLogout;
+  window.adminLogout=function(...args){home();return previousLogout.apply(this,args);};
+  home();
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount);else mount();
 })();
