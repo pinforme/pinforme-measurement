@@ -3492,6 +3492,70 @@ function closeAdminPage(){
     window.scrollTo(0,0);
   }
 }
+function pinMountMeasurementRestore(carte){
+ const box=document.createElement('details'),title=document.createElement('summary');title.textContent='バックアップから復元';box.append(title);
+ const note=document.createElement('p');note.textContent='ファイルを選んで現在のデータとの差を確認します。消えている記録だけ復元し、既存記録は上書きしません。内容が違う記録がある場合は停止します。写真の実ファイルや飼い主の別テーブルは復元対象外です。';
+ const input=document.createElement('input');input.type='file';input.accept='.json,application/json';input.setAttribute('aria-label','採寸バックアップファイル');
+ const check=document.createElement('button');check.type='button';check.textContent='復元内容を確認';check.disabled=true;
+ const status=document.createElement('p');status.setAttribute('role','status');
+ const summary=document.createElement('div');
+ const consent=document.createElement('label'),tick=document.createElement('input');tick.type='checkbox';consent.append(tick,document.createTextNode('確認した不足分だけを復元する'));consent.hidden=true;
+ const apply=document.createElement('button');apply.type='button';apply.textContent='不足している記録を復元';apply.disabled=true;apply.hidden=true;
+ let backup=null,preview=null,busy=false,version=0;
+ const allowed=()=>!!getAdminSession()?.access_token&&isAdminVerified();
+ const reset=()=>{preview=null;summary.replaceChildren();tick.checked=false;consent.hidden=true;apply.hidden=true;apply.disabled=true;};
+ const rpc=async(payload,token)=>{
+  const response=await fetch(PINFORME_SUPABASE_BASE+'/rest/v1/rpc/pinforme_measurement_restore',{method:'POST',headers:{apikey:PINFORME_SUPABASE_KEY,Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  const data=await response.json();
+  if(!response.ok)throw Error(data?.code==='PGRST202'?'先にSupabaseへ復元機能のSQLを追加してください。':data?.message||'復元処理に失敗しました。');
+  if(!allowed()||getAdminSession()?.access_token!==token)throw Error('ログイン状態が変わりました。差分を再確認してください。');
+  if(!data?.report||typeof data.fingerprint!=='string')throw Error('復元結果を確認できませんでした。');
+  return data;
+ };
+ input.onchange=async()=>{
+  const mine=++version;backup=null;reset();check.disabled=true;status.textContent='';
+  const file=input.files?.[0];if(!file)return;
+  try{
+   if(file.size>20000000)throw Error('20MB以内のJSONを選んでください。');
+   const data=JSON.parse(await file.text());if(mine!==version)return;
+   if(data?.format!=='PINFORME_MEASUREMENT_BACKUP'||data.schema!==1||!Array.isArray(data.dogs)||!Array.isArray(data.measurements))throw Error('採寸バックアップの形式を確認してください。');
+   backup=data;check.disabled=false;status.textContent='ファイル内：'+data.dogs.length+'頭・採寸履歴'+data.measurements.length+'件。「復元内容を確認」を押してください。';
+  }catch(e){if(mine===version)status.textContent='読み込めませんでした：'+e.message;}
+ };
+ tick.onchange=()=>apply.disabled=busy||!tick.checked||!preview?.can_apply;
+ check.onclick=async()=>{
+  if(busy||!backup)return;if(!allowed()){status.textContent='管理者としてログインしてください。';return;}
+  busy=true;input.disabled=true;check.disabled=true;reset();status.textContent='現在のデータとの差を確認しています…';
+  try{
+   preview=await rpc({p_backup:backup,p_apply:false,p_expected:null},getAdminSession().access_token);
+   const table=document.createElement('table');table.style.width='100%';
+   const header=document.createElement('tr');for(const text of ['対象','不足','同じ','差あり']){const cell=document.createElement('th');cell.textContent=text;header.append(cell);}table.append(header);
+   for(const [key,name] of [['dogs','登録情報'],['measurements','採寸履歴']]){
+    const result=preview.report[key];const row=document.createElement('tr');for(const text of [name,result.missing,result.same,result.conflicts]){const cell=document.createElement('td');cell.textContent=text;row.append(cell);}table.append(row);
+    const changes=result.entries||[];
+    if(changes.length){const detail=document.createElement('details'),heading=document.createElement('summary');heading.textContent=name+'の差分 '+changes.length+'件';detail.append(heading);
+     for(const entry of changes){const p=document.createElement('p');p.textContent=(entry.name||'記録')+'／ID '+entry.id+'：'+(entry.state==='missing'?'不足（復元対象）':'内容が違う：'+(entry.fields||[]).join('・'));detail.append(p);}summary.append(detail);}
+   }
+   summary.prepend(table);
+   status.textContent=preview.can_apply?'不足している記録を復元できます。内容を確認してチェックを入れてください。':Object.values(preview.report).some(x=>x.conflicts>0)?'内容が違う記録があります。上書きを防ぐため復元できません。差分を確認してください。':'不足している記録はありません。復元は不要です。';
+   consent.hidden=!preview.can_apply;apply.hidden=!preview.can_apply;
+  }catch(e){reset();status.textContent='確認できませんでした：'+e.message;}
+  finally{busy=false;input.disabled=false;check.disabled=!backup;}
+ };
+ apply.onclick=async()=>{
+  if(busy||!tick.checked||!preview?.can_apply||!allowed())return;
+  const expected=preview.fingerprint;busy=true;input.disabled=true;check.disabled=true;tick.disabled=true;apply.disabled=true;status.textContent='不足している記録を復元しています…';
+  try{
+   const result=await rpc({p_backup:backup,p_apply:true,p_expected:expected},getAdminSession().access_token);
+   if(result.applied!==true)throw Error('復元の完了を確認できませんでした。');
+   reset();status.textContent=result.inserted+'件を復元しました。登録一覧を更新します。';
+   try{await loadAdminCartes();}catch(e){status.textContent+='一覧の「更新」を押してください。';}
+  }catch(e){reset();status.textContent='完了を確認できませんでした：'+e.message+' 通信が途切れた場合も、差分を再確認してから操作してください。';}
+  finally{busy=false;input.disabled=false;check.disabled=!backup;tick.disabled=false;}
+ };
+ box.append(note,input,check,status,summary,consent,apply);carte.insertBefore(box,carte.children[1]||null);
+}
+
 async function pinExportMeasurementBackup(){
  const button=document.getElementById('pinMeasurementBackup'),status=document.getElementById('pinMeasurementBackupStatus');
  const allowed=()=>!!getAdminSession()?.access_token&&isAdminVerified();
@@ -3514,7 +3578,7 @@ async function pinExportMeasurementBackup(){
   const [dogs,measurements]=await Promise.all([pages(PINFORME_SUPABASE_BASE+'/rest/v1/dogs'),pages(PINFORME_SAVE_ENDPOINT)]);
   if(!allowed()||getAdminSession()?.access_token!==token)throw Error('ログイン状態が変わりました。もう一度保存してください。');
   const now=new Date();
-  const backup={format:'PINFORME_MEASUREMENT_BACKUP',schema:1,exported_at:now.toISOString(),counts:{dogs:dogs.length,measurements:measurements.length},dogs,measurements,notes:['全犬種・全採寸履歴。画面の絞り込みは適用していません。','写真・動画の実ファイル、飼い主の別テーブル、試着回答、ブラウザ内の設定は含みません。','データ保管用です。この画面からの復元機能はありません。']};
+  const backup={format:'PINFORME_MEASUREMENT_BACKUP',schema:1,exported_at:now.toISOString(),counts:{dogs:dogs.length,measurements:measurements.length},dogs,measurements,notes:['全犬種・全採寸履歴。画面の絞り込みは適用していません。','写真・動画の実ファイル、飼い主の別テーブル、試着回答、ブラウザ内の設定は含みません。','復元には管理者画面の「バックアップから復元」を使用します。']};
   const stamp=now.toLocaleString('sv-SE',{timeZone:'Asia/Tokyo'}).replace(/[-: ]/g,'');
   const url=URL.createObjectURL(new Blob([JSON.stringify(backup,null,2)],{type:'application/json'}));
   const a=document.createElement('a');a.href=url;a.download='PINFORME_measurements_backup_'+stamp+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
@@ -6481,9 +6545,9 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   manager.prepend(carte);
   const backupBox=document.createElement('div');backupBox.className='admin-measurement-backup';
   const backupButton=document.createElement('button');backupButton.id='pinMeasurementBackup';backupButton.type='button';backupButton.textContent='全採寸データをバックアップ保存';backupButton.onclick=pinExportMeasurementBackup;
-  const backupNote=document.createElement('p');backupNote.textContent='全犬種・全採寸項目・過去の履歴をJSONで保存します。画面の絞り込みは適用しません。写真・動画の実ファイルは含みません。復元は別途対応が必要です。';
+  const backupNote=document.createElement('p');backupNote.textContent='全犬種・全採寸項目・過去の履歴をJSONで保存します。画面の絞り込みは適用しません。写真・動画の実ファイルは含みません。復元は「バックアップから復元」から内容を確認して実行できます。';
   const backupStatus=document.createElement('p');backupStatus.id='pinMeasurementBackupStatus';backupStatus.setAttribute('role','status');
-  backupBox.append(backupButton,backupNote,backupStatus);carte.prepend(backupBox);
+  backupBox.append(backupButton,backupNote,backupStatus);carte.prepend(backupBox);pinMountMeasurementRestore(carte);
 
   const wear=document.getElementById('pinWearPanel');
   const online=document.createElement('section');online.className='pw-online-section';
