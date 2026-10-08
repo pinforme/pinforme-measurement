@@ -1196,8 +1196,9 @@ body.pinforme-admin-route.pinforme-admin-karte-open #kartePage .karte-actions bu
     <div class="pin-entry-actions">
       <button type="button" class="pin-entry-btn primary" onclick="pinformeStartFirstOwnerMeasurement()">
         <span class="pin-entry-main">はじめての飼い主様</span>
-        <span class="pin-entry-sub">新しい飼い主様として登録して採寸する</span>
+        <span class="pin-entry-sub">名前・メールアドレスを登録して採寸する</span>
       </button>
+      <button type="button" class="pin-entry-btn secondary" onclick="pinStartAnonymousMeasurement()"><span class="pin-entry-main">個人情報の入力なしで協力する</span><span class="pin-entry-sub">名前・メール・電話番号は不要です</span></button>
       <button type="button" class="pin-entry-btn secondary" onclick="pinformeChooseExistingOwner()">
         <span class="pin-entry-main">登録済みの飼い主様</span>
         <span class="pin-entry-sub">登録済みの飼い主様に新しいわんちゃんを追加する</span>
@@ -1222,7 +1223,7 @@ body.pinforme-admin-route.pinforme-admin-karte-open #kartePage .karte-actions bu
       <strong>お客様キーを忘れた方</strong>
       登録時のご主人様のお名前と、メールアドレスまたは電話番号を入力すると、新しいお客様キーを自動で受け取れます。
       <button type="button" class="pin-key-recovery-open" onclick="pinformeOpenKeyRecovery()">お客様キーを再発行する</button>
-      <div class="pin-key-recovery-note">連絡先を登録していない場合や届かない場合は、info@pinforme.jp までお問い合わせください。</div>
+      <div class="pin-key-recovery-note">連絡先未登録の場合は、キーを必ず保管してください。紛失時は本人確認ができず、再発行できない場合があります。お問い合わせはDMまたはinfo@pinforme.jpへ。</div>
     </div>
   </div>
 </section>
@@ -1243,7 +1244,7 @@ body.pinforme-admin-route.pinforme-admin-karte-open #kartePage .karte-actions bu
       <strong>お客様キーを忘れた方</strong>
       登録時のご主人様のお名前と、メールアドレスまたは電話番号を入力すると、新しいお客様キーを自動で受け取れます。再発行すると古いキーは使えなくなります。
       <button type="button" class="pin-key-recovery-open" onclick="pinformeOpenKeyRecovery()">お客様キーを再発行する</button>
-      <div class="pin-key-recovery-note">連絡先を登録していない場合や届かない場合は、info@pinforme.jp までお問い合わせください。</div>
+      <div class="pin-key-recovery-note">連絡先未登録の場合は、キーを必ず保管してください。紛失時は本人確認ができず、再発行できない場合があります。お問い合わせはDMまたはinfo@pinforme.jpへ。</div>
     </div>
   </div>
 </section>
@@ -1261,6 +1262,11 @@ body.pinforme-admin-route.pinforme-admin-karte-open #kartePage .karte-actions bu
     採寸は愛犬がリラックスした状態で行ってください。
   </div>
 
+  <div class="privacy-box" id="pinAnonymousChoice">
+    <label class="confirm"><input type="checkbox" id="pinAnonymousMode" onchange="pinSyncAnonymousMode();savePINFORMEState()"><span><strong>個人情報を入力せずに採寸へ協力する</strong></span></label>
+    <p style="font-size:13px;line-height:1.7">飼い主様の名前・メールアドレス・電話番号は不要です。わんちゃんの名前と写真も省略できます。お客様キーで次回の再採寸や別のわんちゃんの追加につなげられます。</p>
+    <p id="pinAnonymousNote" hidden style="font-size:13px;line-height:1.7">メールは送信しません。保存完了画面のお客様キーを必ず保管してください。カルテはその場でPDF保存できます。DMでのお届けも希望できます（DMではInstagramアカウントが分かります）。</p>
+  </div>
   <div class="field">
     <label>ご主人様の名前 <span class="req">必須</span></label>
     <input id="ownerName" type="text">
@@ -1932,9 +1938,10 @@ body.pinforme-admin-route.pinforme-admin-karte-open #kartePage .karte-actions bu
     <div class="send-status" id="sendStatus">PINFORMEへのオンライン保存は、保存先データベース接続後に有効になります。</div>
     <div id="pinformeRemeasureKeyBox" class="pin-remeasure-key-box">
       <div class="pin-remeasure-key-title">お客様キー</div>
-      <div class="pin-remeasure-key-note">飼い主様専用のキーです。再採寸・部分更新・わんちゃんの追加登録に使用します。</div>
+      <div class="pin-remeasure-key-note">飼い主様専用のキーです。再採寸・部分更新・わんちゃんの追加登録に使用します。コピーまたはスクリーンショットで保管してください。キーを知っている方は登録情報を開けますので、公開投稿には載せないでください。</div>
       <div id="pinformeRemeasureKeyValue" class="pin-remeasure-key-value"></div>
       <button type="button" class="pin-copy-key-btn" onclick="pinformeCopyRemeasureKey()">お客様キーをコピー</button>
+      <div id="pinDMChoice" hidden style="font-size:13px;line-height:1.7;margin-top:16px"><strong>カルテをDMで受け取りたい方へ</strong><p>お客様キーと、対象のわんちゃんの名前（名前未入力の場合は下の管理用の呼び名）をPINFORMEへDMしてください。確認後、手動でカルテをお送りします。Instagramが開いても、自動送信はされません。</p><div id="pinDMDogLabel"></div><button type="button" class="pin-copy-key-btn" onclick="pinCopyDMRequest()">DM用の文章をコピー</button><a href="https://ig.me/m/pinforme.jp" target="_blank" rel="noopener noreferrer" style="display:block;margin-top:12px">PINFORMEのDMを開く</a><button type="button" class="pin-copy-key-btn" onclick="openKartePage()">カルテを見る・PDF保存</button><p>連絡先を登録しない場合、キー紛失時は本人確認による再発行ができない場合があります。</p></div>
     </div>
   </div>
 </section>
@@ -2529,19 +2536,20 @@ function goDogInfo(){
   const breed=document.getElementById("dogBreed").value.trim();
   const ok=document.getElementById("tipsConfirmed").checked;
   const dataConsent=document.getElementById("dataConsent")?.checked;
-  if(!owner){alert("ご主人様の名前を入力してください。");return}
-  if(!dog){alert("わんちゃんの名前を入力してください。");return}
+  if(!pinAnonymousActive() && !owner){alert("ご主人様の名前を入力してください。");return}
+  if(!pinAnonymousActive() && !dog){alert("わんちゃんの名前を入力してください。");return}
   if(!breed){alert("犬種を入力してください。");return}
   if(!ok){alert("6つのポイントを確認してチェックを入れてください。");return}
   if(!dataConsent){alert("個人情報・写真・採寸データの取扱いを確認し、同意にチェックを入れてください。");return}
   const suffix=document.getElementById("dogSuffix").value;
-  document.getElementById("ownerDisplay").textContent=owner;
-  document.getElementById("dogDisplay").textContent=dog+suffix;
-  document.getElementById("dogInfoTitle").textContent=dog+suffix+"の情報";
+  document.getElementById("ownerDisplay").textContent=owner||"匿名希望";
+  document.getElementById("dogDisplay").textContent=dog ? dog+suffix : "名前未入力";
+  document.getElementById("dogInfoTitle").textContent=dog ? dog+suffix+"の情報" : "わんちゃんの情報";
   hideAll(); document.getElementById("dogInfoPage").classList.add("active"); window.scrollTo(0,0);
 }
 function backStart(){hideAll();document.getElementById("startPage").classList.add("active");window.scrollTo(0,0)}
 function pinValidateCustomerEmail(){
+  if(pinAnonymousActive())return true;
   const input=document.getElementById("recoveryEmail");
   if(input)input.value=input.value.trim();
   if(!input || !input.value || !input.checkValidity()){
@@ -2794,7 +2802,7 @@ async function pinPreparePhoto(file){
 function pinStoredDraft(){try{return JSON.parse(localStorage.getItem(PINFORME_FORM_STATE_KEY)||'null');}catch(e){return null;}}
 function pinHasUnsentDraft(){
   const state=pinStoredDraft();
-  return !!(state && !state.submitted && (state.fields?.ownerName?.value || state.fields?.dogName?.value));
+  return !!(state && !state.submitted && (state.fields?.ownerName?.value || state.fields?.dogName?.value || state.fields?.pinAnonymousMode?.checked));
 }
 function pinRefreshDraftButton(){
   const box=document.getElementById('pinResumeDraftBox');if(box)box.hidden=!pinHasUnsentDraft();
@@ -2837,6 +2845,7 @@ function pinApplyOwnerContact(contact){
   const email=document.getElementById("recoveryEmail"),phone=document.getElementById("recoveryPhone");
   if(email)email.value=contact?.recovery_email||"";
   if(phone)phone.value=contact?.recovery_phone||"";
+  pinSetAnonymousMode(!contact?.recovery_email);
 }
 async function pinFetchOwnerContact(ownerId,key){
   const response=await fetch(`${PINFORME_SUPABASE_BASE}/rest/v1/rpc/get_owner_recovery_contact_secure_v1`,{
@@ -2846,7 +2855,15 @@ async function pinFetchOwnerContact(ownerId,key){
   });
   if(!response.ok)throw new Error("連絡先を読み込めませんでした。連絡先引継ぎ用SQLの導入とお客様キーをご確認ください。");
   const result=await response.json();
-  if(!result || String(result.owner_id)!==String(ownerId))throw new Error("飼い主様の連絡先を確認できませんでした。");
+  if(!result || (Array.isArray(result) && result.length===0)){
+    // 連絡先未登録でも、キーが同じowner_idの犬を開けることを確認してから進める。
+    const check=await fetch(`${PINFORME_SUPABASE_BASE}/rest/v1/rpc/get_remeasure_dogs`,{method:'POST',headers:{apikey:PINFORME_SUPABASE_KEY,Authorization:'Bearer '+PINFORME_SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify({p_key:pinformeNormalizeRemeasureKey(key)})});
+    if(!check.ok)throw new Error('お客様キーを確認できませんでした。');
+    const dogs=await check.json();
+    if(!Array.isArray(dogs) || !dogs.some(d=>String(d.owner_id)===String(ownerId)))throw new Error('お客様キーを確認できませんでした。');
+    return {owner_id:Number(ownerId),recovery_email:null,recovery_phone:null};
+  }
+  if(String(result.owner_id)!==String(ownerId))throw new Error("飼い主様の連絡先を確認できませんでした。");
   return result;
 }
 function pinPhotoContext(){
@@ -3000,8 +3017,8 @@ function collectKarte(){
   return {
     createdAt:new Date().toISOString(),
     measuredOn:textValue("pinMeasuredOn"),
-    owner:textValue("ownerName"),
-    dog:textValue("dogName")+getDogSuffix(),
+    owner:pinAnonymousActive() ? "匿名希望" : textValue("ownerName"),
+    dog:(textValue("dogName") || (pinAnonymousActive() ? pinAnonymousDogLabel() : ""))+getDogSuffix(),
     breed:textValue("dogBreed"),
     sex:sexChecked ? sexChecked.value : "",
     birthday:textValue("birthDate"),
@@ -4249,7 +4266,7 @@ function backFromKartePage(){
 let pinCustomerMailContext=null;
 let pinCustomerMailBusy=false;
 async function pinSendCustomerSavedEmail(){
-  if(!pinCustomerMailContext||pinCustomerMailBusy)return;
+  if(pinAnonymousActive() || !pinCustomerMailContext||pinCustomerMailBusy)return;
   pinCustomerMailBusy=true;
   const status=document.getElementById("pinCustomerMailStatus"),retry=document.getElementById("pinCustomerMailRetry");
   if(status)status.textContent="採寸データは保存済みです。お客様キーのメールを送信しています…";
@@ -4308,10 +4325,10 @@ async function sendToPinforme(options={}){
     return Number.isFinite(n) ? n : null;
   };
   const payload={
-    owner_name:textValue("ownerName") || null,
-    recovery_email:textValue("recoveryEmail") || null,
-    recovery_phone:textValue("recoveryPhone") || null,
-    dog_name:textValue("dogName") || null,
+    owner_name:pinAnonymousActive() ? "匿名希望" : (textValue("ownerName") || null),
+    recovery_email:pinAnonymousActive() ? null : (textValue("recoveryEmail") || null),
+    recovery_phone:pinAnonymousActive() ? null : (textValue("recoveryPhone") || null),
+    dog_name:textValue("dogName") || (pinAnonymousActive() ? pinAnonymousDogLabel() : null),
     dog_suffix:getDogSuffix() || null,
     measured_on:textValue("pinMeasuredOn"),
     birth_date:textValue("birthDate") || null,
@@ -4517,13 +4534,26 @@ async function sendToPinforme(options={}){
     if(!ownerRemeasureKey){try{ownerRemeasureKey=localStorage.getItem(PINFORME_OWNER_REMEASURE_KEY)||"";}catch(e){}}
     if(ownerRemeasureKey) pinformeShowRemeasureKey(ownerRemeasureKey);
     if(status) status.textContent="PINFORMEへの送信・保存が完了しました。";
-    pinCustomerMailContext={owner_id:ownerId,dog_id:dogId,remeasure_key:ownerRemeasureKey};
-    await pinSendCustomerSavedEmail();
+    pinCustomerMailContext=pinAnonymousActive() ? null : {owner_id:ownerId,dog_id:dogId,remeasure_key:ownerRemeasureKey};
+    if(pinAnonymousActive()){
+      document.getElementById("pinCustomerMailStatus").textContent="メールは送信しません。お客様キーをコピーするか、スクリーンショットで保管してください。";
+      document.getElementById("pinCustomerMailRetry").style.display="none";
+    }else await pinSendCustomerSavedEmail();
+    pinRefreshDMChoice();
     if(submitBtn){ submitBtn.textContent="送信・保存済み ✓"; submitBtn.disabled=true; submitBtn.style.opacity=".65"; }
     const postSaveChoice=document.getElementById("pinformePostSaveChoice");
     if(postSaveChoice) postSaveChoice.style.display="block";
     try{savePINFORMEState();}catch(e){}
     alert("PINFORMEへの送信・保存が完了しました。");
+    // 完了メッセージを閉じた後、キーと保管の説明を画面上部に表示する。
+    requestAnimationFrame(()=>{
+      const keyBox=document.getElementById("pinformeRemeasureKeyBox");
+      if(!keyBox || !keyBox.classList.contains("show"))return;
+      keyBox.style.scrollMarginTop="16px";
+      keyBox.setAttribute("tabindex","-1");
+      try{keyBox.focus({preventScroll:true});}catch(e){}
+      keyBox.scrollIntoView({behavior:"smooth",block:"start"});
+    });
   }catch(err){
     console.error("PINFORME Supabase save error:",err);
     const detail=(err && err.message) ? err.message : String(err);
@@ -4640,6 +4670,7 @@ function restorePINFORMEState(continueDraft=false){
     const photo=JSON.parse(localStorage.getItem(PINFORME_DRAFT_PHOTO_KEY)||"null");
     if(photo?.context===pinPhotoContext()){state.photo=photo.data;state.photoDogId=photo.context;state.photoSource="selected";}
   }catch(e){}
+  pinSyncAnonymousMode();
   PINFORME_SUBMITTED=state.submitted===true;
   const submitButton=document.getElementById("pinformeSubmitButton");
   if(submitButton){submitButton.disabled=PINFORME_SUBMITTED;submitButton.textContent=PINFORME_SUBMITTED?"送信・保存済み ✓":"PINFORMEへ送信・保存";}
@@ -6629,6 +6660,66 @@ function render(){if(!$('pwOverview'))return;const rows=filtered();if(selected&&
  if(rows.length>limit){const pager=document.createElement('div');pager.className='pw-pager';const prev=document.createElement('button'),next=document.createElement('button'),label=document.createElement('span');prev.textContent='前へ';next.textContent='次へ';prev.disabled=page===0;next.disabled=(page+1)*limit>=rows.length;label.textContent=(page+1)+' / '+Math.ceil(rows.length/limit);prev.onclick=()=>{page--;render();$('pwOverview').scrollIntoView({block:'start'});};next.onclick=()=>{page++;render();$('pwOverview').scrollIntoView({block:'start'});};pager.append(prev,label,next);box.append(pager);}details();}
 function mount(){const wear=$('pinWearPanel');if(!wear)return;local=window.pinWearLocalRecords||[];online=window.pinWearOnlineRecords||[];const overview=document.createElement('section');overview.id='pwOverview';const filters=$('pwFilterProduct').closest('.pw-grid');filters.after(overview);const detailBack=document.createElement('div');detailBack.id='pwDetailBack';const back=document.createElement('button');back.type='button';back.textContent='← 一覧へ戻る';back.onclick=close;detailBack.append(back);overview.after(detailBack);const onlineSection=wear.querySelector('.pw-online-section');onlineSection.querySelector('p').hidden=true;const count=$('pwoCount');count.hidden=true;filters.before($('pwoRefresh'),$('pwoRecordMsg'));for(const h of wear.querySelectorAll('h3'))if(h.textContent==='管理者が手入力した記録')h.hidden=true;const bottom=document.createElement('button');bottom.textContent='← 一覧へ戻る';bottom.type='button';bottom.onclick=close;bottom.id='pwDetailBottom';wear.append(bottom);const originalDetails=details;window.addEventListener('pinforme-wear-online',e=>{online=e.detail||[];render();$('pwDetailBottom').hidden=!selected;});window.addEventListener('pinforme-wear-local',e=>{local=e.detail||[];render();$('pwDetailBottom').hidden=!selected;});['pwFilterProduct','pwFilterSize','pwFilterStatus'].forEach(id=>$(id).addEventListener('change',()=>{page=0;selected=null;render();$('pwDetailBottom').hidden=true;}));overview.addEventListener('click',()=>{$('pwDetailBottom').hidden=!selected;});back.addEventListener('click',()=>{$('pwDetailBottom').hidden=true;});bottom.addEventListener('click',()=>{bottom.hidden=true;});render();bottom.hidden=true;}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount);else mount();
+})();
+</script>
+
+<script>
+// 個人情報入力なしの採寸：既存のowner_id / dog_idとお客様キーを使用する。
+function pinAnonymousActive(){return document.getElementById('pinAnonymousMode')?.checked===true;}
+function pinSetAnonymousMode(on){document.getElementById('pinAnonymousMode').checked=!!on;pinSyncAnonymousMode();}
+function pinSyncAnonymousMode(){
+ const anon=pinAnonymousActive();document.getElementById('pinAnonymousNote').hidden=!anon;
+ for(const id of ['ownerName','recoveryEmail','recoveryPhone']){
+  const el=document.getElementById(id);el.closest('.field').hidden=anon;el.disabled=anon;
+  if(anon)el.value='';
+ }
+ document.getElementById('recoveryEmail').required=!anon;
+ const label=document.getElementById('dogName').closest('.field').querySelector('label');
+ label.innerHTML=anon?'わんちゃんの名前・呼び名 <span style="font-size:12px;color:#777">任意（次回の見分け用）</span>':'わんちゃんの名前 <span class="req">必須</span>';
+ pinRefreshDMChoice();
+}
+function pinAnonymousDogLabel(){
+ const name=textValue('dogName');if(name)return name;
+ // 再採寸時は保存済みの呼び名を引き継ぐ。新規犬だけランダムなdog_codeから発行。
+ return 'わんちゃん-'+getOrCreateActiveDogCode().replace(/[^a-z0-9]/gi,'').slice(0,10).toUpperCase();
+}
+function pinRefreshDMChoice(){
+ const box=document.getElementById('pinDMChoice');if(!box)return;
+ box.hidden=!pinAnonymousActive() || !PINFORME_SUBMITTED;
+ if(!box.hidden)document.getElementById('pinDMDogLabel').textContent='対象：'+pinAnonymousDogLabel();
+}
+async function pinCopyDMRequest(){
+ if(!PINFORME_SUBMITTED)return;
+ const key=document.getElementById('pinformeRemeasureKeyValue').textContent.trim();if(!key)return;
+ const text='採寸カルテのDM送付を希望します。\nお客様キー：'+key+'\n対象：'+pinAnonymousDogLabel();
+ try{await navigator.clipboard.writeText(text);alert('DM用の文章をコピーしました。DMを開いて貼り付け、送信してください。');}catch(e){prompt('こちらをコピーしてDMで送信してください。',text);}
+}
+function pinStartAnonymousMeasurement(){pinformeStartFirstOwnerMeasurement();pinSetAnonymousMode(true);savePINFORMEState();}
+const pinFirstOwnerWithContact=window.pinformeStartFirstOwnerMeasurement;
+window.pinformeStartFirstOwnerMeasurement=function(...args){const r=pinFirstOwnerWithContact.apply(this,args);pinSetAnonymousMode(false);savePINFORMEState();return r;};
+window.addEventListener('load',()=>{pinSyncAnonymousMode();if(PINFORME_SUBMITTED){const key=localStorage.getItem(PINFORME_OWNER_REMEASURE_KEY);if(key)pinformeShowRemeasureKey(key);pinRefreshDMChoice();}});
+// 管理者がDMで受け取ったキーから対象犬を確認する（キーの再発行はしない）。
+(function(){
+ const host=document.getElementById('adminManagerBox');const panel=document.createElement('div');panel.className='admin-recovery-card';
+ panel.innerHTML='<h3>DMのお客様キーからカルテを探す</h3><label for="pinAdminDMKey">お客様キー</label><input id="pinAdminDMKey" type="text" autocomplete="off" maxlength="19" placeholder="XXXX-XXXX-XXXX-XXXX" style="width:100%;min-height:44px"><button id="pinAdminDMFind" type="button" class="admin-btn primary">わんちゃんを確認</button><div id="pinAdminDMStatus" role="status"></div><div id="pinAdminDMResults"></div>';
+ host.prepend(panel);
+ document.getElementById('pinAdminDMKey').addEventListener('input',e=>{e.target.value=pinformeNormalizeRemeasureKey(e.target.value).slice(0,19);});
+ document.getElementById('pinAdminDMFind').onclick=async()=>{
+  const status=document.getElementById('pinAdminDMStatus'),results=document.getElementById('pinAdminDMResults'),button=document.getElementById('pinAdminDMFind');results.replaceChildren();
+  const allowed=()=>!!getAdminSession()?.access_token&&isAdminVerified();if(!allowed()){status.textContent='管理者としてログインしてください。';return;}
+  const key=pinformeNormalizeRemeasureKey(document.getElementById('pinAdminDMKey').value);
+  if(key.replace(/-/g,'').length!==16){status.textContent='16文字のお客様キーを入力してください。';return;}
+  button.disabled=true;status.textContent='確認しています…';
+  try{
+   const res=await fetch(PINFORME_SUPABASE_BASE+'/rest/v1/rpc/get_remeasure_dogs',{method:'POST',headers:{apikey:PINFORME_SUPABASE_KEY,Authorization:'Bearer '+getAdminSession().access_token,'Content-Type':'application/json'},body:JSON.stringify({p_key:key})});
+   if(!res.ok)throw Error('登録情報を確認できませんでした。');const dogs=await res.json();
+   if(!allowed())return;if(!Array.isArray(dogs)||!dogs.length){status.textContent='該当する登録情報がありません。キーをご確認ください。';return;}
+   await loadAdminCartes();if(!allowed())return;
+   status.textContent=dogs.length+'頭見つかりました。DMに記載された対象を選んでください。';
+   for(const row of dogs){const d=adminCanonicalDogGroups().find(d=>String(d.id)===String(row.dog_id));const b=document.createElement('button');b.type='button';b.className='admin-btn light';b.textContent=row.dog_name||'名前未入力';b.disabled=!d;b.onclick=()=>{if(allowed())showAdminDog(d);};results.append(b);}
+   document.getElementById('pinAdminDMKey').value='';
+  }catch(e){status.textContent=e.message;}finally{button.disabled=false;}
+ };
 })();
 </script>
 </body></html>
