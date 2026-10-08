@@ -4545,6 +4545,15 @@ async function sendToPinforme(options={}){
     if(postSaveChoice) postSaveChoice.style.display="block";
     try{savePINFORMEState();}catch(e){}
     alert("PINFORMEへの送信・保存が完了しました。");
+    // 完了メッセージを閉じた後、キーと保管の説明を画面上部に表示する。
+    requestAnimationFrame(()=>{
+      const keyBox=document.getElementById("pinformeRemeasureKeyBox");
+      if(!keyBox || !keyBox.classList.contains("show"))return;
+      keyBox.style.scrollMarginTop="16px";
+      keyBox.setAttribute("tabindex","-1");
+      try{keyBox.focus({preventScroll:true});}catch(e){}
+      keyBox.scrollIntoView({behavior:"smooth",block:"start"});
+    });
   }catch(err){
     console.error("PINFORME Supabase save error:",err);
     const detail=(err && err.message) ? err.message : String(err);
