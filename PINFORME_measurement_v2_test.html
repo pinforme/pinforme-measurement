@@ -6738,7 +6738,7 @@ function pinSyncAnonymousMode(){
  const anon=pinAnonymousActive();document.getElementById('pinAnonymousNote').hidden=!anon;
  for(const id of ['ownerName','recoveryEmail','recoveryPhone']){
   const el=document.getElementById(id);el.closest('.field').hidden=anon;el.disabled=anon;
-  if(anon)el.value='';
+  // 解除時に戻せるよう、入力値は保持。匿名保存のpayloadは別途除外。
  }
  document.getElementById('recoveryEmail').required=!anon;
  const label=document.getElementById('dogName').closest('.field').querySelector('label');
