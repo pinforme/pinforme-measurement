@@ -6810,11 +6810,12 @@ function pinV2Persist(){localStorage.setItem(PIN_V2_KEY,JSON.stringify(PIN_V2));
 function pinV2Records(){try{return JSON.parse(localStorage.getItem('PINFORME_V2_RECORDS')||'[]');}catch{return [];}}
 function pinV2Page(id){hideAll();document.getElementById(id).classList.add('active');window.scrollTo(0,0);savePINFORMEState();}
 function pinV2Home(){pinV2RenderHome();pinV2Page('pinV2Home');}
+function pinV2RestoreBrand(container){const original=document.querySelector('#entryChoicePage .pinforme-brand-lockup');const title=container.querySelector('.v2-word');if(original&&title){const logo=original.cloneNode(true);logo.classList.add('compact');title.replaceWith(logo);}}
 function pinV2RenderHome(){
  const box=document.getElementById('pinV2Home');box.replaceChildren();
  const wrap=document.createElement('div');wrap.className='v2-wrap';
  wrap.innerHTML='<div class="v2-word">PINFORME</div><h1>採寸の目的を選んでください</h1><p>必要なところから測って、愛犬の採寸カルテを育てていきましょう。</p><label for="v2Product">採寸目的・お洋服の選択</label><select id="v2Product"></select><div class="v2-required-note"><p>お洋服を選ぶと、必要な採寸項目はすべて必須になります。</p><p>各部位を3回ずつ測って入力してください。</p></div><div class="v2-note"><p>タンクトップは、基本5項目と同じです。</p><p>全15項目を選んだ場合も、基本5項目は必須です。残り10項目は空欄でも進められます。</p><p>半袖・長袖・タートルネック・ロンパースの項目数は仮設定です。</p></div><button id="v2New" class="v2-primary">初めての採寸を始める</button><h2>登録済みの採寸を使う</h2><div id="v2Dogs"></div><details><summary>テスト用のデータを用意する</summary><p>実在の飼い主・わんちゃんのデータではありません。</p><button id="v2Demo5">基本5項目の登録例を追加</button><button id="v2Demo15">15項目の登録例を追加</button></details><p id="v2HomeStatus" role="status"></p>';
- box.append(wrap);const select=document.getElementById('v2Product');
+ box.append(wrap);pinV2RestoreBrand(wrap);const select=document.getElementById('v2Product');
  const placeholder=new Option('選んでください','');placeholder.disabled=true;select.add(placeholder);
  for(const [key,p] of Object.entries(PIN_V2_PRODUCTS))select.add(new Option(p.label,key));
  select.value='';
@@ -6848,7 +6849,7 @@ function pinV2Begin(product,id=null){
  resetNewDogSession();pinClearPartial();resetMeasurementInputsOnly();
  PINFORME_SUBMITTED=false;PINFORME_SUBMITTING=false;PINFORME_EDIT_FROM_FINISH=false;
  document.body.classList.remove('edit-from-finish');
- for(const id of ['ownerName','dogName','recoveryEmail','recoveryPhone','weight','birthDate']){const e=document.getElementById(id);if(e)e.value='';}
+ for(const id of ['ownerName','dogName','dogBreed','recoveryEmail','recoveryPhone','weight','birthDate']){const e=document.getElementById(id);if(e)e.value='';}
  for(const id of ['tipsConfirmed','dataConsent','photoPromoConsent','pinAnonymousMode']){const e=document.getElementById(id);if(e)e.checked=false;}
  document.getElementById('sendStatus').textContent='';document.getElementById('pinCustomerMailStatus').textContent='';
  const btn=document.getElementById('pinformeSubmitButton');btn.disabled=false;btn.textContent='テスト用カルテを保存';btn.style.opacity='1';
@@ -6864,6 +6865,7 @@ function pinV2Needed(){return PIN_V2_PRODUCTS[PIN_V2.product].items;}
 function pinV2Missing(){const b=PIN_V2.baseline;return pinV2Needed().filter(i=>PIN_FIELD_GROUPS[i].some(f=>!pinV2Has(b?.values[f])));}
 function pinV2ChangePage(){
  const box=document.getElementById('pinV2Change');box.innerHTML='<div class="v2-wrap"><h1>前回から体型に変化はありますか？</h1><p>成長や体重の変化、お洋服の着心地の変化など、気付いた範囲で教えてください。分からない場合は、今回必要な部位を一緒に確認できます。</p><p id="v2LastRecord"></p><fieldset><legend>体型の変化</legend><label><input type="radio" name="v2Change" value="none"> 特に変わりはありません</label><label><input type="radio" name="v2Change" value="changed"> 変わったところがあります</label><label><input type="radio" name="v2Change" value="unknown"> 分からない・確認したい</label></fieldset><div id="v2ChangedItems" hidden></div><details id="v2ManualDetails"><summary>目的の服を変えずに、項目を追加・再採寸する</summary><p>測っていない部位の追加や、念のための測り直しにも使えます。今回の服に必要な不足項目は自動で追加されます。</p><div id="v2ManualItems"></div></details><p id="v2Growth" class="v2-note" hidden>成長中のわんちゃんは、今回のお洋服に必要な部位を測り直す設定にしています（テストでは12か月未満を目安）。</p><p id="v2Plan" role="status"></p><p id="v2ChangeError" role="alert"></p><button id="v2ChangeNext" class="v2-primary">この内容で進む</button><button onclick="pinV2Home()">戻る</button></div>';
+ pinV2RestoreBrand(box);
  document.getElementById('v2LastRecord').textContent='前回の記録：'+PIN_V2.baseline.history[0].date+' ／ '+PIN_V2.baseline.dog;
  const items=document.getElementById('v2ChangedItems');items.innerHTML='<p>変わったと思う部位を選んでください（必要なところだけで大丈夫です）。</p>';
  PIN_ITEM_NAMES.forEach((name,i)=>{const label=document.createElement('label');const input=document.createElement('input');input.type='checkbox';input.value=i;input.name='v2Changed';label.append(input,document.createTextNode(name+'（前回 '+PIN_FIELD_GROUPS[i].map(f=>PIN_V2.baseline.values[f]??'未測定').join(' / ')+'）'));items.append(label);});
