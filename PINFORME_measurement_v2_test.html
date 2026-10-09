@@ -6827,6 +6827,11 @@ function pinV2RenderHome(){
  document.getElementById('v2Demo5').onclick=()=>pinV2Demo(5);
  document.getElementById('v2Demo15').onclick=()=>pinV2Demo(15);
 }
+// 旧版の新規・戻る入口も、改良版の目的選択へ統一する。
+// この時点では入力途中の下書きを消さず、新しい目的を選んで開始した時に初期化する。
+for(const name of ['pinformeChooseNewMeasurement','pinformeStartFirstOwnerMeasurement','pinStartAnonymousMeasurement','pinformeChooseExistingOwner','pinformeChooseRemeasurement','pinformeBackToEntry','pinformeBackToNewOwnerChoice','backToStartKeepData']){
+ window[name]=function(){pinV2Home();};
+}
 function pinV2Demo(count){
  const records=pinV2Records(),id='demo-'+count;
  if(records.some(r=>r.id===id)){document.getElementById('v2HomeStatus').textContent='この登録例はすでにあります。';return;}
@@ -6893,7 +6898,7 @@ validStep=function(section){
 };
 const pinV2OriginalStart=startMeasurements;
 startMeasurements=function(){
- if(!PIN_V2)return pinV2OriginalStart();
+ if(!PIN_V2||!PIN_V2_PRODUCTS[PIN_V2.product]){pinV2Home();document.getElementById('v2HomeStatus').textContent='採寸目的・お洋服を選んでください。';return;}
  if(!pinValidateCustomerEmail()||!pinValidateMeasuredOn())return;
  PINFORME_PHOTO_PROMO_CONSENT=document.getElementById('photoPromoConsent').checked;
  if(!PIN_V2.baseline)PIN_V2.selected=[...pinV2Needed()];
