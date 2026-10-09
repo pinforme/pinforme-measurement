@@ -2529,8 +2529,8 @@ setPINFORMEKarte=function(d){
  v2KarteBase(d);const box=document.getElementById(&#x27;v2Meta&#x27;),purpose=document.getElementById(&#x27;v2Purpose&#x27;);box.replaceChildren();purpose.replaceChildren();
  if(!d.v2)return;
  document.querySelector(&#x27;.field span&#x27;).textContent=&#x27;今回の記録日&#x27;;
- const p=document.createElement(&#x27;p&#x27;);p.textContent=&#x27;採寸目的：&#x27;+d.v2.product;purpose.append(p);
- const scope=document.createElement(&#x27;p&#x27;);scope.textContent=&#x27;今回の採寸：&#x27;+d.v2.selected.length+&#x27;項目 ／ 対象外・未測定の部位は後から追加できます。&#x27;;purpose.append(scope);
+ const p=document.createElement(&#x27;p&#x27;);p.textContent=&#x27;初版の採寸目的（△0）：&#x27;+d.v2.initialPurpose;purpose.append(p);
+ const scope=document.createElement(&#x27;p&#x27;);scope.textContent=&#x27;現在の登録：&#x27;+d.v2.registeredCount+&#x27;／15項目（今回測定：&#x27;+d.v2.measuredCount+&#x27;項目）&#x27;;purpose.append(scope);
  let legend=document.getElementById(&#x27;v2Legend&#x27;);if(!legend){legend=document.createElement(&#x27;span&#x27;);legend.id=&#x27;v2Legend&#x27;;legend.className=&#x27;v2-legend&#x27;;document.querySelector(&#x27;.results-title&#x27;).append(legend);}legend.textContent=&#x27;△ 改定番号 ／ ＋ 追加 ／ ↻ 再採寸（直近3回）&#x27;;
  (d.measurements||[]).forEach((item,i)=&gt;item.groups.forEach((g,j)=&gt;{
   const el=document.getElementById(&#x27;m&#x27;+(i+1)+&#x27;_&#x27;+(j+1));if(!el)return;el.replaceChildren();
@@ -2550,9 +2550,9 @@ setPINFORMEKarte=function(d){
   const time=document.createElement(&#x27;time&#x27;);const rev=document.createElement(&#x27;span&#x27;);rev.style.display=&#x27;block&#x27;;rev.textContent=&#x27;△&#x27;+entry.revision;time.append(rev,document.createTextNode(entry.date));time.dateTime=entry.date;const body=document.createElement(&#x27;div&#x27;);body.className=&#x27;v2-history-body&#x27;;const added=(entry.updates||[]).some(u=&gt;u.mark===&#x27;＋&#x27;),remeasured=(entry.updates||[]).some(u=&gt;u.mark===&#x27;↻&#x27;);
   const first=entry.kind===&#x27;初回登録&#x27;||entry.kind===&#x27;初回採寸&#x27;;
   const manualAdd=(entry.updates||[]).some(u=&gt;u.mark===&#x27;＋&#x27;&amp;&amp;(entry.manualItems||[]).includes(fields.findIndex(fs=&gt;fs.includes(u.field))));
-  const label=first?&#x27;初回採寸&#x27;:entry.kind===&#x27;部分更新&#x27;?&#x27;部分更新&#x27;:entry.kind===&#x27;未採寸項目の追加&#x27;?&#x27;未採寸項目の追加&#x27;:added&amp;&amp;remeasured?&#x27;項目追加・再採寸&#x27;:added?(manualAdd?&#x27;項目追加（任意選択）&#x27;:&#x27;項目追加（服に必要）&#x27;):remeasured?&#x27;再採寸&#x27;:&#x27;体型確認&#x27;;
+  const label=first?&#x27;初版（初回採寸）&#x27;:entry.kind===&#x27;部分更新&#x27;?&#x27;部分更新&#x27;:entry.kind===&#x27;未採寸項目の追加&#x27;?&#x27;未採寸項目の追加&#x27;:added&amp;&amp;remeasured?&#x27;項目追加・再採寸&#x27;:added?(manualAdd?&#x27;項目追加（任意選択）&#x27;:&#x27;項目追加（服に必要）&#x27;):remeasured?&#x27;再採寸&#x27;:&#x27;体型確認&#x27;;
   const purposes={research:&#x27;商品開発への採寸協力&#x27;,tank:&#x27;タンクトップ&#x27;,undecided:&#x27;まだ決めていない&#x27;,short:&#x27;半袖&#x27;,long:&#x27;長袖&#x27;,turtle:&#x27;タートルネック&#x27;,romper:&#x27;ロンパース&#x27;};
-  body.textContent=first?&#x27;初回採寸：&#x27;+(entry.purposeLabel||purposes[entry.product]||&#x27;目的未記録&#x27;)+&#x27;／&#x27;+indices.length+&#x27;項目測定&#x27;+(entry.hasUnmeasured||entry.selectedCount&gt;indices.length?&#x27;（未測定あり）&#x27;:&#x27;&#x27;):indices.length?label+&#x27;：&#x27;+summary:&#x27;体型確認：変化なし&#x27;;li.append(time,body);
+  body.textContent=first?&#x27;初版（初回採寸）：&#x27;+(entry.purposeLabel||purposes[entry.product]||&#x27;目的未記録&#x27;)+&#x27;／&#x27;+indices.length+&#x27;項目測定&#x27;+(entry.hasUnmeasured||entry.selectedCount&gt;indices.length?&#x27;（未測定あり）&#x27;:&#x27;&#x27;):indices.length?label+&#x27;：&#x27;+summary:&#x27;体型確認：変化なし&#x27;;li.append(time,body);
   if(changes.length){const note=document.createElement(&#x27;div&#x27;);note.textContent=changes.slice(0,2).map(u=&gt;names[fields.findIndex(fs=&gt;fs.includes(u.field))]+&#x27;: &#x27;+u.before+&#x27;→&#x27;+u.after+&#x27;cm&#x27;).join(&#x27;、&#x27;)+(changes.length&gt;2?&#x27; ほか&#x27;+(changes.length-2)+&#x27;箇所&#x27;:&#x27;&#x27;);body.append(note);}
   list.append(li);
  });
@@ -6988,16 +6988,17 @@ function pinV2Snapshot(){
  }));
  // 確認日は実測日を変更しない。
  if(PIN_V2.change==='none')pinV2Needed().forEach(i=>PIN_FIELD_GROUPS[i].forEach(f=>{if(pinV2Has(values[f])&&!marks[f])confirmed[f]=date;}));
- const previousHistory=(baseline?.history||[]).slice().reverse().map((h,i)=>({...h,revision:Number.isInteger(h.revision)?h.revision:i+1})).reverse();
- const revision=previousHistory.find(h=>h.id===PIN_V2.sessionId)?.revision??(Math.max(0,...previousHistory.map(h=>h.revision))+1);
+ const previousHistory=(baseline?.history||[]).slice().reverse().map((h,i)=>({...h,revision:i})).reverse();
+ const revision=previousHistory.find(h=>h.id===PIN_V2.sessionId)?.revision??(Math.max(-1,...previousHistory.map(h=>h.revision))+1);
  const event={id:PIN_V2.sessionId,revision,date,kind:!baseline?'初回登録':updates.length?(PIN_V2.mode==='add'?'未採寸項目の追加':PIN_V2.mode==='update'?'部分更新':'追加・再採寸'):'体型変化なしを確認',product:PIN_V2.product,purposeLabel:PIN_V2_PRODUCTS[PIN_V2.product].label,selectedCount:PIN_V2.selected.length,hasUnmeasured:PIN_V2.selected.some(i=>PIN_FIELD_GROUPS[i].some(f=>!updates.some(u=>u.field===f))),manualItems:PIN_V2.manualItems||[],change:PIN_V2.change,updates};
  const history=[event,...previousHistory.filter(h=>h.id!==event.id)];
  return {photo:PINFORME_DOG_PHOTO_DATA||'',id:PIN_V2.dogId,dog:data.dog,dogName:textValue('dogName'),suffix:getDogSuffix(),owner:data.owner,customerKey:PIN_V2.customerKey,ownerGroup:PIN_V2.ownerGroup||baseline?.ownerGroup||PIN_V2.dogId,anonymous:pinAnonymousActive(),recoveryEmail:pinAnonymousActive()?'':textValue('recoveryEmail'),recoveryPhone:pinAnonymousActive()?'':textValue('recoveryPhone'),breed:data.breed,birthday:data.birthday,sex:data.sex,weight:pinV2Has(data.weight)?Number(data.weight):null,values,dates,confirmed,marks,history,product:PIN_V2.product};
 }
 collectKarte=function(){
  const data=pinV2OriginalCollect();if(!PIN_V2)return data;data.dog=textValue('dogName')?textValue('dogName')+getDogSuffix():'名前未登録';
- const record=pinV2Snapshot();data.measurements=PIN_FIELD_GROUPS.map((fields,i)=>({number:i+1,groups:fields.map(f=>({average:record.values[f]??'',measuredOn:record.dates[f]||'',confirmedOn:record.confirmed[f]||'',mark:record.marks[f]||'',revisions:record.history.slice(0,3).filter(h=>(h.updates||[]).some(u=>u.field===f)).map(h=>({revision:h.revision,mark:h.updates.find(u=>u.field===f).mark})).reverse(),source:record.marks[f]?'measured':'previous'}))}));
- data.v2={product:PIN_V2_PRODUCTS[PIN_V2.product].label,selected:PIN_V2.selected,history:record.history.slice(0,3),dates:record.dates,confirmed:record.confirmed,marks:record.marks,change:PIN_V2.change,recordDate:data.measuredOn};return data;
+ const record=pinV2Snapshot();data.measurements=PIN_FIELD_GROUPS.map((fields,i)=>({number:i+1,groups:fields.map(f=>({average:record.values[f]??'',measuredOn:record.dates[f]||'',confirmedOn:record.confirmed[f]||'',mark:record.marks[f]||'',revisions:record.history.slice(0,3).filter(h=>h.revision>0&&(h.updates||[]).some(u=>u.field===f)).map(h=>({revision:h.revision,mark:h.updates.find(u=>u.field===f).mark})).reverse(),source:record.marks[f]?'measured':'previous'}))}));
+ const initial=record.history.find(h=>h.revision===0);
+ data.v2={initialPurpose:initial?.purposeLabel||PIN_V2_PRODUCTS[initial?.product]?.label||'目的未記録',registeredCount:PIN_FIELD_GROUPS.filter(fs=>fs.some(f=>pinV2Has(record.values[f]))).length,measuredCount:PIN_FIELD_GROUPS.filter(fs=>fs.some(f=>record.history[0].updates.some(u=>u.field===f))).length,product:PIN_V2_PRODUCTS[PIN_V2.product].label,selected:PIN_V2.selected,history:record.history.slice(0,3),dates:record.dates,confirmed:record.confirmed,marks:record.marks,change:PIN_V2.change,recordDate:data.measuredOn};return data;
 };
 const pinV2OriginalFinish=showFinish;
 showFinish=function(){
