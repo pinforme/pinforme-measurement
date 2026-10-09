@@ -6824,7 +6824,7 @@ function pinV2RenderHome(){
  document.getElementById('v2New').onclick=()=>pinV2Begin(select.value);
  const dogs=document.getElementById('v2Dogs'),records=pinV2Records();
  if(!records.length)dogs.textContent='このテスト版には、まだ保存したカルテがありません。';
- for(const r of records){const b=document.createElement('button');b.textContent=(r.dogName?r.dog:'名前未登録')+' ／ 最新記録 '+r.history[0].date;b.onclick=()=>pinV2Begin(select.value,r.id);dogs.append(b);}
+ for(const r of records){const card=document.createElement('div');card.className='v2-dog-card';const title=document.createElement('p');title.textContent=(r.dogName?r.dog:'名前未登録')+' ／ 最新記録 '+r.history[0].date;const b=document.createElement('button');b.className='v2-update';b.textContent='この子の採寸を変更・追加する';b.onclick=()=>pinV2Begin(select.value,r.id);const second=document.createElement('button');second.className='v2-another-dog';second.textContent='同じ飼い主で別の子を登録';second.onclick=()=>pinV2Begin(select.value,null,r);card.append(title,b,second);dogs.append(card);}
  document.getElementById('v2Demo5').onclick=()=>pinV2Demo(5);
  document.getElementById('v2Demo15').onclick=()=>pinV2Demo(15);
 }
@@ -6841,12 +6841,13 @@ function pinV2Demo(count){
  records.push({id,dog:'登録例'+count+'ちゃん',dogName:'登録例'+count,suffix:'ちゃん',owner:'テスト飼い主',breed:'ミニチュアピンシャー',birthday:'2023-01-01',weight:4,sex:'女の子',values,dates,confirmed:{},history:[{id:'initial',date,kind:'初回登録',product:count===5?'tank':'research',purposeLabel:PIN_V2_PRODUCTS[count===5?'tank':'research'].label,updates:Object.keys(values).map(f=>({field:f,mark:'＋',before:null,after:values[f]}))}]});
  localStorage.setItem('PINFORME_V2_RECORDS',JSON.stringify(records));pinV2RenderHome();
 }
-function pinV2Begin(product,id=null){
+function pinV2Begin(product,id=null,ownerSource=null){
  if(!Object.prototype.hasOwnProperty.call(PIN_V2_PRODUCTS,product)){const select=document.getElementById('v2Product');document.getElementById('v2HomeStatus').textContent='採寸目的・お洋服を選んでください。';select.setAttribute('aria-invalid','true');select.focus();return;}
  const previous=pinV2Records().find(r=>r.id===id);
- PIN_V2={product,dogId:id||('test-'+crypto.randomUUID()),baseline:previous?pinV2Clone(previous):null,selected:[],change:'',sessionId:crypto.randomUUID(),saved:false};
+ PIN_V2={product,dogId:id||('test-'+crypto.randomUUID()),baseline:previous?pinV2Clone(previous):null,ownerGroup:previous?.ownerGroup||ownerSource?.ownerGroup||ownerSource?.id||id||('owner-'+crypto.randomUUID()),selected:[],change:'',sessionId:crypto.randomUUID(),saved:false};
  // 独立したテスト名前空間のみをリセット。既存の本番保存とは分離。
- resetNewDogSession();pinClearPartial();resetMeasurementInputsOnly();
+ resetNewDogSession();pinClearPartial();resetMeasurementInputsOnly();pinClearDogPhoto();
+ document.querySelectorAll('input[name=sex]').forEach(e=>e.checked=false);
  PINFORME_SUBMITTED=false;PINFORME_SUBMITTING=false;PINFORME_EDIT_FROM_FINISH=false;
  document.body.classList.remove('edit-from-finish');
  for(const id of ['ownerName','dogName','dogBreed','recoveryEmail','recoveryPhone','weight','birthDate']){const e=document.getElementById(id);if(e)e.value='';}
@@ -6855,16 +6856,20 @@ function pinV2Begin(product,id=null){
  const btn=document.getElementById('pinformeSubmitButton');btn.disabled=false;btn.textContent='テスト用カルテを保存';btn.style.opacity='1';
  document.getElementById('pinMeasuredOn').value='';
  if(previous){
-  for(const [id,value] of Object.entries({ownerName:previous.owner,dogName:previous.dogName,dogSuffix:previous.suffix,dogBreed:previous.breed,birthDate:previous.birthday,weight:previous.weight,recoveryEmail:'test@example.com'})){const e=document.getElementById(id);if(e)e.value=value||'';}
+  for(const [id,value] of Object.entries({ownerName:previous.owner,dogName:previous.dogName,dogSuffix:previous.suffix,dogBreed:previous.breed,birthDate:previous.birthday,weight:previous.weight,recoveryEmail:previous.recoveryEmail||'',recoveryPhone:previous.recoveryPhone||''})){const e=document.getElementById(id);if(e)e.value=value||'';}
+  pinSetAnonymousMode(previous.anonymous===true);
   const sex=[...document.querySelectorAll('input[name="sex"]')].find(e=>e.value===previous.sex);if(sex)sex.checked=true;
   pinV2Persist();pinV2ChangePage();
- }else{pinV2Persist();pinV2Page('startPage');}
+ }else{
+  if(ownerSource){for(const [id,value] of Object.entries({ownerName:ownerSource.anonymous?'':ownerSource.owner,recoveryEmail:ownerSource.recoveryEmail||'',recoveryPhone:ownerSource.recoveryPhone||''})){document.getElementById(id).value=value||'';}pinSetAnonymousMode(ownerSource.anonymous===true);}
+  pinV2Persist();pinV2Page('startPage');
+ }
  savePINFORMEState();
 }
 function pinV2Needed(){return PIN_V2_PRODUCTS[PIN_V2.product].items;}
 function pinV2Missing(){const b=PIN_V2.baseline;return pinV2Needed().filter(i=>PIN_FIELD_GROUPS[i].some(f=>!pinV2Has(b?.values[f])));}
 function pinV2ChangePage(){
- const box=document.getElementById('pinV2Change');box.innerHTML='<div class="v2-wrap"><h1>前回から体型に変化はありますか？</h1><p>成長や体重の変化、お洋服の着心地の変化など、気付いた範囲で教えてください。分からない場合は、今回必要な部位を一緒に確認できます。</p><p id="v2LastRecord"></p><fieldset><legend>体型の変化</legend><label><input type="radio" name="v2Change" value="none"> 特に変わりはありません</label><label><input type="radio" name="v2Change" value="changed"> 変わったところがあります</label><label><input type="radio" name="v2Change" value="unknown"> 分からない・確認したい</label></fieldset><div id="v2ChangedItems" hidden></div><details id="v2ManualDetails"><summary>目的の服を変えずに、項目を追加・再採寸する</summary><p>測っていない部位の追加や、念のための測り直しにも使えます。今回の服に必要な不足項目は自動で追加されます。</p><div id="v2ManualItems"></div></details><p id="v2Growth" class="v2-note" hidden>成長中のわんちゃんは、今回のお洋服に必要な部位を測り直す設定にしています（テストでは12か月未満を目安）。</p><p id="v2Plan" role="status"></p><p id="v2ChangeError" role="alert"></p><button id="v2ChangeNext" class="v2-primary">この内容で進む</button><button onclick="pinV2Home()">戻る</button></div>';
+ const box=document.getElementById('pinV2Change');box.innerHTML='<div class="v2-wrap"><div class="v2-word">PINFORME</div><h1>前回から体型に変化はありますか？</h1><p>成長や体重の変化、お洋服の着心地の変化など、気付いた範囲で教えてください。分からない場合は、今回必要な部位を一緒に確認できます。</p><p id="v2LastRecord"></p><fieldset><legend>体型の変化</legend><label><input type="radio" name="v2Change" value="none"> 特に変わりはありません</label><label><input type="radio" name="v2Change" value="changed"> 変わったところがあります</label><label><input type="radio" name="v2Change" value="unknown"> 分からない・確認したい</label></fieldset><div id="v2ChangedItems" hidden></div><details id="v2ManualDetails"><summary>目的の服を変えずに、項目を追加・再採寸する</summary><p>測っていない部位の追加や、念のための測り直しにも使えます。今回の服に必要な不足項目は自動で追加されます。</p><div id="v2ManualItems"></div></details><p id="v2Growth" class="v2-note" hidden>成長中のわんちゃんは、今回のお洋服に必要な部位を測り直す設定にしています（テストでは12か月未満を目安）。</p><p id="v2Plan" role="status"></p><p id="v2ChangeError" role="alert"></p><button id="v2ChangeNext" class="v2-primary">この内容で進む</button><button onclick="pinV2Home()">戻る</button></div>';
  pinV2RestoreBrand(box);
  document.getElementById('v2LastRecord').textContent='前回の記録：'+PIN_V2.baseline.history[0].date+' ／ '+PIN_V2.baseline.dog;
  const items=document.getElementById('v2ChangedItems');items.innerHTML='<p>変わったと思う部位を選んでください（必要なところだけで大丈夫です）。</p>';
@@ -6936,7 +6941,7 @@ function pinV2Snapshot(){
  if(PIN_V2.change==='none')pinV2Needed().forEach(i=>PIN_FIELD_GROUPS[i].forEach(f=>{if(pinV2Has(values[f])&&!marks[f])confirmed[f]=date;}));
  const event={id:PIN_V2.sessionId,date,kind:!baseline?'初回登録':updates.length?'追加・再採寸':'体型変化なしを確認',product:PIN_V2.product,purposeLabel:PIN_V2_PRODUCTS[PIN_V2.product].label,selectedCount:PIN_V2.selected.length,hasUnmeasured:PIN_V2.selected.some(i=>PIN_FIELD_GROUPS[i].some(f=>!updates.some(u=>u.field===f))),manualItems:PIN_V2.manualItems||[],change:PIN_V2.change,updates};
  const history=[event,...(baseline?.history||[]).filter(h=>h.id!==event.id)];
- return {id:PIN_V2.dogId,dog:data.dog,dogName:textValue('dogName'),suffix:getDogSuffix(),owner:data.owner,breed:data.breed,birthday:data.birthday,sex:data.sex,weight:pinV2Has(data.weight)?Number(data.weight):null,values,dates,confirmed,marks,history,product:PIN_V2.product};
+ return {id:PIN_V2.dogId,dog:data.dog,dogName:textValue('dogName'),suffix:getDogSuffix(),owner:data.owner,ownerGroup:PIN_V2.ownerGroup||baseline?.ownerGroup||PIN_V2.dogId,anonymous:pinAnonymousActive(),recoveryEmail:pinAnonymousActive()?'':textValue('recoveryEmail'),recoveryPhone:pinAnonymousActive()?'':textValue('recoveryPhone'),breed:data.breed,birthday:data.birthday,sex:data.sex,weight:pinV2Has(data.weight)?Number(data.weight):null,values,dates,confirmed,marks,history,product:PIN_V2.product};
 }
 collectKarte=function(){
  const data=pinV2OriginalCollect();if(!PIN_V2)return data;data.dog=textValue('dogName')?textValue('dogName')+getDogSuffix():'名前未登録';
