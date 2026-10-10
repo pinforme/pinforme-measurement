@@ -3976,11 +3976,11 @@ function adminStartRemeasure(){
 function showAdminDog(d){
  PINFORME_ADMIN_ACTIVE_DOG_GROUP=d;
  const hist=adminDogHistory(d),latest=hist[0]||{},box=document.getElementById("adminDetail"),photoPath=d.photo_path||latest.photo_path;
- const historyHtml=hist.length?hist.map((r,i)=>`<button type="button" class="admin-row" style="margin-top:8px" onclick="showAdminMeasurementById('${adminEsc(r.id)}')"><span><strong>${i===0?"最新の採寸":"過去の採寸"}</strong><small>${adminEsc(adminDate(r.created_at))} ／ ${r.weight==null?"体重 —":adminEsc(r.weight)+" kg"}</small></span><span class="arrow">›</span></button>`).join(""):'<div class="admin-note">採寸履歴はまだありません。</div>';
+ const historyHtml=pinAdminV2HistoryHTML(hist);
  const photoHtml=photoPath?`<div class="admin-photo-wrap"><img id="adminDogPhoto" alt="わんちゃんの写真" style="display:none;max-width:100%;max-height:280px;object-fit:contain;border-radius:12px"><div id="adminPhotoStatus" class="admin-note">写真を読み込んでいます…</div></div>`:'<div class="admin-note">写真なし</div>';
  const mergedNote="";
  const ownerId=Number(d.owner_id||latest.owner_id||0);
- box.innerHTML=`<div class="admin-detail-head"><div><div class="admin-sub">PINFORME DOG CARTE</div><h2>${adminEsc(d.dog_name||"名前未入力")}${adminEsc(latest.dog_suffix||"")}</h2></div><button type="button" class="admin-btn light" style="width:auto;min-height:42px" onclick="document.getElementById('adminDetail').classList.add('admin-hidden')">閉じる</button></div>${photoHtml}<div class="admin-detail-meta">飼い主様：${adminEsc(d.owner_name||"—")}<br>犬種：${adminEsc(adminBreedForDog(d)||"—")} ／ 性別：${adminEsc(d.sex||latest.sex||"—")}<br>生年月日：${adminEsc(d.birth_date||latest.birth_date||"—")} ／ 最新体重：${adminLatestWeightForDog(d)==null?"—":adminEsc(adminLatestWeightForDog(d))+" kg"}<br>写真販促利用：<strong>${adminPhotoConsentLabel(adminPhotoConsentForDog(d))}</strong>${mergedNote}</div>${latest?.id?`<div style="margin:14px 0 18px"><button type="button" class="admin-btn primary" onclick="openAdminA4KarteById('${adminEsc(latest.id)}')">最新のA4採寸カルテを見る</button><div style="font-size:11px;color:#777;line-height:1.5;margin-top:7px">過去の採寸カルテは、下の採寸履歴を開いて確認できます。</div></div>`:""}<div class="admin-recovery-card"><h3>犬種名の修正</h3><label for="adminBreedEditInput">正式な犬種名</label><input id="adminBreedEditInput" type="text" maxlength="100" value="${adminEsc(adminBreedForDog(d))}" placeholder="例：ミニチュア・ピンシャー" style="width:100%;min-height:44px;margin:8px 0;padding:10px;border:1px solid #ccc;border-radius:8px"><div class="admin-note">このわんちゃんの犬種名を修正し、すべての採寸履歴と犬種別集計に反映します。</div><button type="button" id="adminBreedSaveButton" class="admin-btn primary" style="margin-top:10px" onclick="adminSaveDogBreed()">犬種名を保存</button><div id="adminBreedEditStatus" class="admin-note" role="status" aria-live="polite"></div></div><div class="admin-recovery-card"><h3>再採寸のご案内</h3><div id="adminRecoveryContact" class="admin-recovery-contact">登録情報を確認しています…</div><div class="admin-actions" style="margin:12px 0 0"><button type="button" class="admin-btn primary" ${ownerId>0?'':'disabled'} onclick="adminReissueRemeasureKey(${ownerId})">キーを再発行してメール送信</button></div><div id="adminNewRemeasureKey" class="admin-new-key"><div style="font-size:12px;color:#666">飼い主様へ送るお客様キー</div><div id="adminNewRemeasureKeyValue" class="admin-new-key-value"></div><div class="admin-actions" style="margin:10px 0 0"><button type="button" class="admin-btn primary" onclick="adminCopyNewRemeasureKey()">キーをコピー</button><button type="button" class="admin-btn light" onclick="adminShareNewRemeasureKey()">共有する</button></div><div style="font-size:11px;color:#777;line-height:1.5;margin-top:8px">新しいキーを発行すると、それまでのキーは無効になります。同じ飼い主様に紐づくすべてのわんちゃんで、この新しいキーを使用します。</div></div></div><h3 style="margin:22px 0 8px">採寸履歴（${hist.length}件）</h3>${historyHtml}<div style="margin-top:26px;padding-top:18px;border-top:1px solid #e5e5e5"><div style="font-size:12px;color:#777;line-height:1.6;margin-bottom:10px">このわんちゃんの登録情報と採寸履歴を削除します。削除後は元に戻せません。</div><button type="button" class="admin-btn danger" onclick="adminDeleteDogData(${Number(d.id)||0})">このわんちゃんのデータを削除</button></div>`;
+ box.innerHTML=`<div class="admin-detail-head"><div><div class="admin-sub">PINFORME DOG CARTE</div><h2>${adminEsc(d.dog_name||"名前未入力")}${adminEsc(latest.dog_suffix||"")}</h2></div><button type="button" class="admin-btn light" style="width:auto;min-height:42px" onclick="document.getElementById('adminDetail').classList.add('admin-hidden')">閉じる</button></div>${photoHtml}<div class="admin-detail-meta">飼い主様：${adminEsc(d.owner_name||"—")}<br>犬種：${adminEsc(adminBreedForDog(d)||"—")} ／ 性別：${adminEsc(d.sex||latest.sex||"—")}<br>生年月日：${adminEsc(d.birth_date||latest.birth_date||"—")} ／ 最新体重：${adminLatestWeightForDog(d)==null?"—":adminEsc(adminLatestWeightForDog(d))+" kg"}<br>写真販促利用：<strong>${adminPhotoConsentLabel(adminPhotoConsentForDog(d))}</strong>${mergedNote}</div>${latest?.id?pinAdminV2Summary(latest):''}${latest?.id?`<div style="margin:14px 0 18px"><button type="button" class="admin-btn primary" onclick="openAdminA4KarteById('${adminEsc(latest.id)}')">最新のA4採寸カルテを見る</button><div style="font-size:11px;color:#777;line-height:1.5;margin-top:7px">過去の採寸カルテは、下の採寸履歴を開いて確認できます。</div></div>`:""}<div class="admin-recovery-card"><h3>犬種名の修正</h3><label for="adminBreedEditInput">正式な犬種名</label><input id="adminBreedEditInput" type="text" maxlength="100" value="${adminEsc(adminBreedForDog(d))}" placeholder="例：ミニチュア・ピンシャー" style="width:100%;min-height:44px;margin:8px 0;padding:10px;border:1px solid #ccc;border-radius:8px"><div class="admin-note">このわんちゃんの犬種名を修正し、すべての採寸履歴と犬種別集計に反映します。</div><button type="button" id="adminBreedSaveButton" class="admin-btn primary" style="margin-top:10px" onclick="adminSaveDogBreed()">犬種名を保存</button><div id="adminBreedEditStatus" class="admin-note" role="status" aria-live="polite"></div></div><div class="admin-recovery-card"><h3>再採寸のご案内</h3><div id="adminRecoveryContact" class="admin-recovery-contact">登録情報を確認しています…</div><div class="admin-actions" style="margin:12px 0 0"><button type="button" class="admin-btn primary" ${ownerId>0?'':'disabled'} onclick="adminReissueRemeasureKey(${ownerId})">キーを再発行してメール送信</button></div><div id="adminNewRemeasureKey" class="admin-new-key"><div style="font-size:12px;color:#666">飼い主様へ送るお客様キー</div><div id="adminNewRemeasureKeyValue" class="admin-new-key-value"></div><div class="admin-actions" style="margin:10px 0 0"><button type="button" class="admin-btn primary" onclick="adminCopyNewRemeasureKey()">キーをコピー</button><button type="button" class="admin-btn light" onclick="adminShareNewRemeasureKey()">共有する</button></div><div style="font-size:11px;color:#777;line-height:1.5;margin-top:8px">新しいキーを発行すると、それまでのキーは無効になります。同じ飼い主様に紐づくすべてのわんちゃんで、この新しいキーを使用します。</div></div></div><h3 style="margin:22px 0 8px">採寸履歴（${hist.length}件）</h3>${historyHtml}<div style="margin-top:26px;padding-top:18px;border-top:1px solid #e5e5e5"><div style="font-size:12px;color:#777;line-height:1.6;margin-bottom:10px">このわんちゃんの登録情報と採寸履歴を削除します。削除後は元に戻せません。</div><button type="button" class="admin-btn danger" onclick="adminDeleteDogData(${Number(d.id)||0})">このわんちゃんのデータを削除</button></div>`;
  box.classList.remove("admin-hidden");box.scrollIntoView({behavior:"smooth",block:"start"});if(photoPath)loadAdminPhoto(photoPath,document.getElementById("adminDogPhoto"),document.getElementById("adminPhotoStatus"));
  if(ownerId>0) adminLoadRecoveryContact(ownerId); else { const rc=document.getElementById('adminRecoveryContact'); if(rc) rc.textContent='この旧データにはowner_idがありません。'; }
 }
@@ -4229,7 +4229,7 @@ function showAdminMeasurementById(mid){
 function showAdminMeasurement(r,d){
  const box=document.getElementById("adminDetail");
  const dogName=`${adminEsc(r.dog_name||d?.dog_name||"名前未入力")}${adminEsc(r.dog_suffix||"")}`;
- const measureCards=ADMIN_FIELDS.map(([n,k])=>`<div class="admin-measure-item"><div class="label">${n}</div><div class="value">${r[k]==null?"—":adminEsc(r[k])+" cm"}</div>${r.update_mode==="partial"?`<small>${(r.updated_fields||[]).includes(k)?"今回測定":"前回から引継ぎ"}</small>`:""}<small>測定日：${adminEsc(r.field_measured_on?.[k]||"不明")}</small></div>`).join("");
+ const measureCards='';
  const photoPath=r.photo_path||d?.photo_path;
  const photoHtml=photoPath?`<div class="admin-photo-wrap"><img id="adminDogPhoto" alt="わんちゃんの写真" style="display:none;max-width:100%;max-height:280px;object-fit:contain;border-radius:12px"><div id="adminPhotoStatus" class="admin-note">写真を読み込んでいます…</div></div>`:'<div class="admin-note">写真なし</div>';
  const backAction=d?`showAdminDog(PINFORME_ADMIN_ACTIVE_DOG_GROUP)`:`document.getElementById('adminDetail').classList.add('admin-hidden')`;
@@ -4237,7 +4237,7 @@ function showAdminMeasurement(r,d){
 <div style="margin:14px 0 18px">
   <button type="button" class="admin-btn primary" onclick="openAdminA4KarteById('${adminEsc(r.id)}')">A4採寸カルテを見る</button>
 </div>
-<div class="admin-measure-section-title">採寸結果${r.update_mode==="partial"?"（部分更新）":""}</div><div class="admin-measure-grid">${measureCards}</div>`;
+${pinAdminV2Summary(r)}<div hidden class="admin-measure-section-title">採寸結果${r.update_mode==="partial"?"（部分更新）":""}</div><div class="admin-measure-grid">${measureCards}</div>`;
  box.classList.remove("admin-hidden");
  box.scrollIntoView({behavior:"auto",block:"start"});
  if(photoPath)loadAdminPhoto(photoPath,document.getElementById("adminDogPhoto"),document.getElementById("adminPhotoStatus"));
@@ -4303,6 +4303,7 @@ async function openAdminA4KarteById(mid){
     }
   };
 
+  pinAdminV2CarteData(data,r);
   const photoPath=r.photo_path || d?.photo_path || "";
   if(photoPath) data.photo=await pinformeAdminPhotoUrl(photoPath);
 
@@ -7081,9 +7082,9 @@ window.addEventListener('DOMContentLoaded',()=>{
  document.getElementById('v2HomeButton').onclick=pinV2Home;document.getElementById('v2ResumeButton').onclick=pinV2Resume;
  document.getElementById('pinSaveNoPhotoButton').hidden=true;
 
- setTimeout(()=>{pinV2Home();pinV2Progress();document.documentElement.classList.remove('pinforme-restoring');},100);
+ setTimeout(()=>{if(new URLSearchParams(location.search).get('admin')!=='login'){pinV2Home();pinV2Progress();}else{bar.hidden=true;document.getElementById('adminPage').classList.add('active');}document.documentElement.classList.remove('pinforme-restoring');},100);
 });
-document.addEventListener('click',e=>{if(e.target.closest('.brand,.pinforme-unified-header,.pin-brand')){e.preventDefault();e.stopImmediatePropagation();pinV2Home();}},true);
+document.addEventListener('click',e=>{if(new URLSearchParams(location.search).get('admin')!=='login'&&e.target.closest('.brand,.pinforme-unified-header,.pin-brand')){e.preventDefault();e.stopImmediatePropagation();pinV2Home();}},true);
 
 // 採寸画面のボタンは、表示中の画面を基準に1回だけ処理する。
 (function(){
@@ -7212,4 +7213,40 @@ sendToPinforme=async function(options={}){
 };
 
 const pinV2ReadyHome=pinV2Home;pinV2Home=function(){if(!PINFORME_SUBMITTING)pinV2ReadyHome();};
+</script><style>.pav2-event{border:1px solid #ddd;border-radius:10px;padding:14px;margin:12px 0}.pav2-event h4{margin:0 0 8px}.pav2-event p,.pav2-event li{font-size:14px;line-height:1.7;overflow-wrap:anywhere}.pav2-event ul{padding-left:22px}.pav2-summary{margin:20px 0}.pav2-marker{display:block;font-weight:700;color:#333}.pav2-history details{margin:16px 0}</style><script>/* Read-only revision display, based on stored measurements. */
+function pinAdminV2History(dogId,throughId){
+ const rows=PINFORME_ADMIN_ROWS.filter(r=>String(r.dog_id)===String(dogId)).slice().sort((a,b)=>new Date(a.created_at)-new Date(b.created_at)||Number(a.id)-Number(b.id));
+ const result=[];let previous=null,revision=-1;
+ for(const row of rows){
+  const meta=row.pinforme_v2_meta||{};
+  revision=Math.max(revision+1,Number.isSafeInteger(meta.revision)?meta.revision:0);
+  const updates=Array.isArray(meta.changes)?meta.changes:ADMIN_FIELDS.filter(([,f])=>row[f]!=null&&(!previous||!Array.isArray(row.updated_fields)||row.updated_fields.includes(f))).map(([,field])=>({field,before:previous?.[field]??null,after:row[field],mark:previous?.[field]==null?'＋':'↻'}));
+  const kind=!previous?'初回登録':({add:'未採寸項目の追加',update:'部分更新',remeasure:'再採寸',confirm:'体型変化なしを確認'}[meta.mode]||(row.update_mode==='partial'?'部分更新':'追加・再採寸'));
+  result.push({id:String(row.id),revision,date:row.measured_on||String(row.created_at||'').slice(0,10)||'日付不明',kind,purposeLabel:meta.purpose_label||'目的未記録（旧版登録）',product:meta.purpose,selectedCount:meta.selected_count,hasUnmeasured:meta.has_unmeasured,updates,row});
+  previous=row;if(throughId!=null&&String(row.id)===String(throughId))break;
+ }
+ return result.reverse();
+}
+function pinAdminV2FieldLabel(field){return ADMIN_FIELDS.find(([,f])=>f===field)?.[0]||'採寸項目';}
+function pinAdminV2HistoryHTML(hist){
+ if(!hist.length)return '<p>採寸履歴はまだありません。</p>';
+ const events=pinAdminV2History(hist[0].dog_id);
+ const render=e=>'<article class="pav2-event"><h4>△'+e.revision+' '+adminEsc(e.kind)+'</h4><p>採寸日：'+adminEsc(e.date)+'</p><p>'+adminEsc(e.purposeLabel)+'</p>'+(e.updates.length?'<ul>'+e.updates.map(u=>'<li>'+adminEsc(pinAdminV2FieldLabel(u.field))+'：'+(u.before==null?'未登録':adminEsc(u.before)+' cm')+' → '+adminEsc(u.after)+' cm <span>'+adminEsc(u.mark)+'</span></li>').join('')+'</ul>':'<p>採寸値の追加・変更はありません。</p>')+'<button type="button" class="admin-btn light" onclick="showAdminMeasurementById(\''+adminEsc(e.id)+'\')">この記録の採寸結果を見る</button></article>';
+ return '<div class="pav2-history"><p class="admin-note">直近3回を表示しています。＋：追加 ／ ↻：再採寸</p>'+events.slice(0,3).map(render).join('')+(events.length>3?'<details><summary>以前の履歴を見る（'+(events.length-3)+'件）</summary>'+events.slice(3).map(render).join('')+'</details>':'')+'</div>';
+}
+function pinAdminV2Summary(row){
+ const events=pinAdminV2History(row.dog_id,row.id),initial=events[events.length-1],current=events[0];
+ const changes=current?.updates||[];
+ const cards=ADMIN_FIELDS.map(([label,f])=>{
+  const markers=events.slice(0,3).filter(e=>e.revision>0&&e.updates.some(u=>u.field===f)).reverse().map(e=>'△'+e.revision+' '+e.updates.find(u=>u.field===f).mark).join(' ／ ');
+  return '<div class="admin-measure-item"><div class="label">'+adminEsc(label)+'</div><div class="value">'+(row[f]==null?'未登録':adminEsc(row[f])+' cm')+'</div>'+(markers?'<small class="pav2-marker">'+adminEsc(markers)+'</small>':'')+(row[f]!=null?'<small>採寸日：'+adminEsc(row.field_measured_on?.[f]||'不明')+'</small>':'')+(row[f]!=null?'<small>'+(changes.some(u=>u.field===f)?'今回測定':'以前の記録を引き継ぎ')+'</small>':'')+'</div>';
+ }).join('');
+ return '<section class="pav2-summary"><h3>△'+(current?.revision??0)+' の採寸記録</h3><p>初版の採寸目的（△0）：'+adminEsc(initial?.purposeLabel||'目的未記録')+'</p><p>現在の登録：'+PIN_FIELD_GROUPS.filter(fs=>fs.some(f=>row[f]!=null)).length+'／15項目</p><div class="admin-measure-grid">'+cards+'</div></section>';
+}
+function pinAdminV2CarteData(data,row){
+ const events=pinAdminV2History(row.dog_id,row.id),recent=events.slice(0,3),initial=events[events.length-1];
+ data.measurements=PIN_FIELD_GROUPS.map(fs=>({groups:fs.map(f=>({average:row[f]??'',measuredOn:row.field_measured_on?.[f]||'',confirmedOn:row.pinforme_v2_meta?.field_confirmed_on?.[f]||'',revisions:recent.filter(e=>e.revision>0&&e.updates.some(u=>u.field===f)).reverse().map(e=>({revision:e.revision,mark:e.updates.find(u=>u.field===f).mark}))}))}));
+ data.v2={initialPurpose:initial?.purposeLabel||'目的未記録',registeredCount:PIN_FIELD_GROUPS.filter(fs=>fs.some(f=>row[f]!=null)).length,measuredCount:PIN_FIELD_GROUPS.filter(fs=>fs.some(f=>events[0]?.updates.some(u=>u.field===f))).length,history:recent,dates:row.field_measured_on||{},confirmed:row.pinforme_v2_meta?.field_confirmed_on||{}};
+ return data;
+}
 </script></body></html>
