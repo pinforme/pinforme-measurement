@@ -3980,7 +3980,7 @@ function showAdminDog(d){
  const photoHtml=photoPath?`<div class="admin-photo-wrap"><img id="adminDogPhoto" alt="わんちゃんの写真" style="display:none;max-width:100%;max-height:280px;object-fit:contain;border-radius:12px"><div id="adminPhotoStatus" class="admin-note">写真を読み込んでいます…</div></div>`:'<div class="admin-note">写真なし</div>';
  const mergedNote="";
  const ownerId=Number(d.owner_id||latest.owner_id||0);
- box.innerHTML=`<div class="admin-detail-head"><div><div class="admin-sub">PINFORME DOG CARTE</div><h2>${adminEsc(d.dog_name||"名前未入力")}${adminEsc(latest.dog_suffix||"")}</h2></div><button type="button" class="admin-btn light" style="width:auto;min-height:42px" onclick="document.getElementById('adminDetail').classList.add('admin-hidden')">閉じる</button></div>${photoHtml}<div class="admin-detail-meta">飼い主様：${adminEsc(d.owner_name||"—")}<br>犬種：${adminEsc(adminBreedForDog(d)||"—")} ／ 性別：${adminEsc(d.sex||latest.sex||"—")}<br>生年月日：${adminEsc(d.birth_date||latest.birth_date||"—")} ／ 最新体重：${adminLatestWeightForDog(d)==null?"—":adminEsc(adminLatestWeightForDog(d))+" kg"}<br>写真販促利用：<strong>${adminPhotoConsentLabel(adminPhotoConsentForDog(d))}</strong>${mergedNote}</div>${latest?.id?`<div style="margin:14px 0 18px"><button type="button" class="admin-btn primary" onclick="openAdminA4KarteById('${adminEsc(latest.id)}')">最新のA4採寸カルテを見る</button><div style="font-size:11px;color:#777;line-height:1.5;margin-top:7px">過去の採寸カルテは、下の採寸履歴を開いて確認できます。</div></div>`:""}<div class="admin-recovery-card"><h3>犬種名の修正</h3><label for="adminBreedEditInput">正式な犬種名</label><input id="adminBreedEditInput" type="text" maxlength="100" value="${adminEsc(adminBreedForDog(d))}" placeholder="例：ミニチュア・ピンシャー" style="width:100%;min-height:44px;margin:8px 0;padding:10px;border:1px solid #ccc;border-radius:8px"><div class="admin-note">このわんちゃんの犬種名を修正し、すべての採寸履歴と犬種別集計に反映します。</div><button type="button" id="adminBreedSaveButton" class="admin-btn primary" style="margin-top:10px" onclick="adminSaveDogBreed()">犬種名を保存</button><div id="adminBreedEditStatus" class="admin-note" role="status" aria-live="polite"></div></div><div class="admin-recovery-card"><h3>再採寸のご案内</h3><div id="adminRecoveryContact" class="admin-recovery-contact">登録情報を確認しています…</div><div class="admin-actions" style="margin:12px 0 0"><button type="button" class="admin-btn primary" ${ownerId>0?'':'disabled'} onclick="adminReissueRemeasureKey(${ownerId})">お客様キーを発行</button></div><div id="adminNewRemeasureKey" class="admin-new-key"><div style="font-size:12px;color:#666">飼い主様へ送るお客様キー</div><div id="adminNewRemeasureKeyValue" class="admin-new-key-value"></div><div class="admin-actions" style="margin:10px 0 0"><button type="button" class="admin-btn primary" onclick="adminCopyNewRemeasureKey()">キーをコピー</button><button type="button" class="admin-btn light" onclick="adminShareNewRemeasureKey()">共有する</button></div><div style="font-size:11px;color:#777;line-height:1.5;margin-top:8px">新しいキーを発行すると、それまでのキーは無効になります。同じ飼い主様に紐づくすべてのわんちゃんで、この新しいキーを使用します。</div></div></div><h3 style="margin:22px 0 8px">採寸履歴（${hist.length}件）</h3>${historyHtml}<div style="margin-top:26px;padding-top:18px;border-top:1px solid #e5e5e5"><div style="font-size:12px;color:#777;line-height:1.6;margin-bottom:10px">このわんちゃんの登録情報と採寸履歴を削除します。削除後は元に戻せません。</div><button type="button" class="admin-btn danger" onclick="adminDeleteDogData(${Number(d.id)||0})">このわんちゃんのデータを削除</button></div>`;
+ box.innerHTML=`<div class="admin-detail-head"><div><div class="admin-sub">PINFORME DOG CARTE</div><h2>${adminEsc(d.dog_name||"名前未入力")}${adminEsc(latest.dog_suffix||"")}</h2></div><button type="button" class="admin-btn light" style="width:auto;min-height:42px" onclick="document.getElementById('adminDetail').classList.add('admin-hidden')">閉じる</button></div>${photoHtml}<div class="admin-detail-meta">飼い主様：${adminEsc(d.owner_name||"—")}<br>犬種：${adminEsc(adminBreedForDog(d)||"—")} ／ 性別：${adminEsc(d.sex||latest.sex||"—")}<br>生年月日：${adminEsc(d.birth_date||latest.birth_date||"—")} ／ 最新体重：${adminLatestWeightForDog(d)==null?"—":adminEsc(adminLatestWeightForDog(d))+" kg"}<br>写真販促利用：<strong>${adminPhotoConsentLabel(adminPhotoConsentForDog(d))}</strong>${mergedNote}</div>${latest?.id?`<div style="margin:14px 0 18px"><button type="button" class="admin-btn primary" onclick="openAdminA4KarteById('${adminEsc(latest.id)}')">最新のA4採寸カルテを見る</button><div style="font-size:11px;color:#777;line-height:1.5;margin-top:7px">過去の採寸カルテは、下の採寸履歴を開いて確認できます。</div></div>`:""}<div class="admin-recovery-card"><h3>犬種名の修正</h3><label for="adminBreedEditInput">正式な犬種名</label><input id="adminBreedEditInput" type="text" maxlength="100" value="${adminEsc(adminBreedForDog(d))}" placeholder="例：ミニチュア・ピンシャー" style="width:100%;min-height:44px;margin:8px 0;padding:10px;border:1px solid #ccc;border-radius:8px"><div class="admin-note">このわんちゃんの犬種名を修正し、すべての採寸履歴と犬種別集計に反映します。</div><button type="button" id="adminBreedSaveButton" class="admin-btn primary" style="margin-top:10px" onclick="adminSaveDogBreed()">犬種名を保存</button><div id="adminBreedEditStatus" class="admin-note" role="status" aria-live="polite"></div></div><div class="admin-recovery-card"><h3>再採寸のご案内</h3><div id="adminRecoveryContact" class="admin-recovery-contact">登録情報を確認しています…</div><div class="admin-actions" style="margin:12px 0 0"><button type="button" class="admin-btn primary" ${ownerId>0?'':'disabled'} onclick="adminReissueRemeasureKey(${ownerId})">キーを再発行してメール送信</button></div><div id="adminNewRemeasureKey" class="admin-new-key"><div style="font-size:12px;color:#666">飼い主様へ送るお客様キー</div><div id="adminNewRemeasureKeyValue" class="admin-new-key-value"></div><div class="admin-actions" style="margin:10px 0 0"><button type="button" class="admin-btn primary" onclick="adminCopyNewRemeasureKey()">キーをコピー</button><button type="button" class="admin-btn light" onclick="adminShareNewRemeasureKey()">共有する</button></div><div style="font-size:11px;color:#777;line-height:1.5;margin-top:8px">新しいキーを発行すると、それまでのキーは無効になります。同じ飼い主様に紐づくすべてのわんちゃんで、この新しいキーを使用します。</div></div></div><h3 style="margin:22px 0 8px">採寸履歴（${hist.length}件）</h3>${historyHtml}<div style="margin-top:26px;padding-top:18px;border-top:1px solid #e5e5e5"><div style="font-size:12px;color:#777;line-height:1.6;margin-bottom:10px">このわんちゃんの登録情報と採寸履歴を削除します。削除後は元に戻せません。</div><button type="button" class="admin-btn danger" onclick="adminDeleteDogData(${Number(d.id)||0})">このわんちゃんのデータを削除</button></div>`;
  box.classList.remove("admin-hidden");box.scrollIntoView({behavior:"smooth",block:"start"});if(photoPath)loadAdminPhoto(photoPath,document.getElementById("adminDogPhoto"),document.getElementById("adminPhotoStatus"));
  if(ownerId>0) adminLoadRecoveryContact(ownerId); else { const rc=document.getElementById('adminRecoveryContact'); if(rc) rc.textContent='この旧データにはowner_idがありません。'; }
 }
@@ -4140,6 +4140,7 @@ async function adminDeleteDogData(dogId){
 }
 
 async function adminLoadRecoveryContact(ownerId){
+ if(pinAdminKeyMailContext&&pinAdminKeyMailContext.ownerId!==Number(ownerId)){pinAdminKeyMailContext=null;document.getElementById('adminKeyMailRetry')?.setAttribute('hidden','');}
  const el=document.getElementById('adminRecoveryContact');if(!el)return;
  const sess=getAdminSession();if(!sess?.access_token||!isAdminVerified()){el.textContent='管理者認証が必要です。';return;}
  try{
@@ -4150,18 +4151,48 @@ async function adminLoadRecoveryContact(ownerId){
   el.innerHTML=`メールアドレス：<strong>${adminEsc(email||'未登録')}</strong><br>電話番号：<strong>${adminEsc(phone||'未登録')}</strong><br><span style="font-size:11px;color:#777">必要に応じて本人確認に利用できます。再採寸をお願いする場合は下のボタンから新しいキーを発行してください。</span>`;
  }catch(e){console.error(e);el.textContent='本人確認情報の読み込みに失敗しました。';}
 }
+/* Admin key reissue uses the same recovery email template as customer recovery. */
+let pinAdminKeyMailContext=null,pinAdminKeyMailBusy=false,pinAdminReissueBusy=false;
+function pinAdminKeyMailUI(){
+ const box=document.getElementById('adminNewRemeasureKey');if(!box)return null;
+ let status=document.getElementById('adminKeyMailStatus');if(!status){status=document.createElement('p');status.id='adminKeyMailStatus';status.setAttribute('role','status');status.style.cssText='font-size:14px;line-height:1.7;overflow-wrap:anywhere';box.append(status);}
+ let button=document.getElementById('adminKeyMailRetry');if(!button){button=document.createElement('button');button.id='adminKeyMailRetry';button.type='button';button.textContent='同じキーを登録メールへ再送する';button.onclick=()=>adminSendReissuedKeyEmail();button.hidden=true;box.append(button);}
+ return {status,button};
+}
+async function adminSendReissuedKeyEmail(){
+ if(!pinAdminKeyMailContext||pinAdminKeyMailBusy)return;
+ const sess=getAdminSession();if(!sess?.access_token||!isAdminVerified()){alert('管理者として再ログインしてください。');return;}
+ const context={...pinAdminKeyMailContext},ui=pinAdminKeyMailUI();if(!ui)return;
+ pinAdminKeyMailBusy=true;ui.button.disabled=true;ui.status.textContent='登録メールへ新しいお客様キーを送信しています…';
+ try{
+  const response=await fetch(PINFORME_SUPABASE_BASE+'/functions/v1/rapid-api',{method:'POST',headers:{apikey:PINFORME_SUPABASE_KEY,Authorization:'Bearer '+sess.access_token,'Content-Type':'application/json'},body:JSON.stringify({action:'admin_key_email',owner_id:context.ownerId,remeasure_key:context.key}),signal:AbortSignal.timeout(30000)});
+  const result=await response.json().catch(()=>null);
+  if(!response.ok||!result?.ok||typeof result.email_sent!=='boolean')throw new Error(result?.message||'メール送信を確認できませんでした。');
+  if(pinAdminKeyMailContext!==null&&pinAdminKeyMailContext.key===context.key){
+   if(result.email_sent){ui.status.textContent=result.email+' 宛てのメール送信を受け付けました。受信箱・迷惑メールをご確認ください。';ui.button.hidden=true;}
+   else{ui.status.textContent=result.message||'メール送信を確認できませんでした。新しいキーは発行済みです。';ui.button.hidden=result.retryable!==true;}
+  }
+ }catch(e){if(pinAdminKeyMailContext?.key===context.key){ui.status.textContent='新しいキーは発行済みですが、メール送信を確認できませんでした。同じキーで再送できます。';ui.button.hidden=false;}}
+ finally{pinAdminKeyMailBusy=false;ui.button.disabled=false;}
+}
+
 async function adminReissueRemeasureKey(ownerId){
+ if(pinAdminKeyMailBusy||pinAdminReissueBusy)return;
  if(!(Number(ownerId)>0))return;
  const sess=getAdminSession();if(!sess?.access_token||!isAdminVerified()){alert('管理者ログインが必要です。');return;}
- if(!confirm('飼い主様へ送る新しいお客様キーを発行しますか？\n\n発行すると、現在のお客様キーはすぐに無効になります。\n同じ飼い主様に紐づくすべてのわんちゃんで新しいキーを使用します。'))return;
+ if(!confirm('新しいお客様キーを発行し、登録メールへ送信しますか？\n\n発行すると、現在のお客様キーはすぐに無効になります。\n同じ飼い主様に紐づくすべてのわんちゃんで新しいキーを使用します。'))return;
+ pinAdminReissueBusy=true;
  try{
   const res=await fetch(`${PINFORME_SUPABASE_BASE}/rest/v1/rpc/admin_reissue_remeasure_key`,{method:'POST',headers:{apikey:PINFORME_SUPABASE_KEY,Authorization:'Bearer '+sess.access_token,'Content-Type':'application/json'},body:JSON.stringify({p_owner_id:Number(ownerId)})});
   if(!res.ok) throw new Error(await res.text());
   let key=await res.json();if(Array.isArray(key))key=key[0];if(key&&typeof key==='object')key=key.admin_reissue_remeasure_key||key.key||Object.values(key)[0];
   key=String(key||'').replace(/^"|"$/g,'');
   const val=document.getElementById('adminNewRemeasureKeyValue'),box=document.getElementById('adminNewRemeasureKey');if(val)val.textContent=key;if(box)box.classList.add('show');
-  alert('飼い主様へ送るお客様キーを発行しました。以前のキーは無効になっています。');
+  pinAdminKeyMailContext={ownerId:Number(ownerId),key};
+  const mailUI=pinAdminKeyMailUI();if(mailUI){mailUI.button.hidden=true;mailUI.status.textContent='新しいキーを発行しました。以前のキーは使用できません。';}
+  await adminSendReissuedKeyEmail();
  }catch(e){console.error(e);alert('再発行に失敗しました。\n'+(e?.message||e));}
+ finally{pinAdminReissueBusy=false;}
 }
 async function adminCopyNewRemeasureKey(){
  const key=(document.getElementById('adminNewRemeasureKeyValue')?.textContent||'').trim();if(!key)return;
