@@ -7191,6 +7191,7 @@ sendToPinforme=async function(options={}){
  PINFORME_SUBMITTING=true;button.disabled=true;button.textContent='送信・保存中…';
  try{
   if(!PIN_V2.pending){
+   await PINFORME_PHOTO_READY;
    const record=pinV2Snapshot(),event=record.history[0];let photoPath=localStorage.getItem(PINFORME_REMEASURE_PHOTO_PATH_KEY)||null;
    if(pinHasNewDogPhoto()&&!options.skipPhoto){await PINFORME_PHOTO_READY;photoPath=await uploadDogPhotoToSupabase();localStorage.setItem(PINFORME_REMEASURE_PHOTO_PATH_KEY,photoPath);}
    const payload={owner_name:record.anonymous?'匿名希望':record.owner||null,dog_name:record.dogName||null,dog_suffix:record.suffix||null,birth_date:record.birthday||null,breed:record.breed||null,sex:record.sex||null,weight:record.weight,measured_on:event.date,photo_path:photoPath,photo_promo_consent:document.getElementById('photoPromoConsent').checked,data_usage_consent:true,data_usage_consented_at:new Date().toISOString(),...record.values};
@@ -7249,4 +7250,29 @@ function pinAdminV2CarteData(data,row){
  data.v2={initialPurpose:initial?.purposeLabel||'目的未記録',registeredCount:PIN_FIELD_GROUPS.filter(fs=>fs.some(f=>row[f]!=null)).length,measuredCount:PIN_FIELD_GROUPS.filter(fs=>fs.some(f=>events[0]?.updates.some(u=>u.field===f))).length,history:recent,dates:row.field_measured_on||{},confirmed:row.pinforme_v2_meta?.field_confirmed_on||{}};
  return data;
 }
+</script><script>// Resolve private storage access with the current customer key. Do not cache signed URLs.
+const pinV2OldPhotoLoader=pinLoadRegisteredDogPhoto;
+pinLoadRegisteredDogPhoto=function(path){
+ if(!PIN_V2?.serverDogId||!PIN_V2?.customerKey)return pinV2OldPhotoLoader(path);
+ const generation=PINFORME_PHOTO_GENERATION,context=pinPhotoContext(),dogId=PIN_V2.serverDogId,key=PIN_V2.customerKey;
+ const current=()=>generation===PINFORME_PHOTO_GENERATION&&context===pinPhotoContext()&&PIN_V2?.serverDogId===dogId;
+ const status=document.getElementById('pinPhotoStatus');
+ if(status)status.textContent='登録済みの写真を読み込んでいます…';
+ const task=(async()=>{
+  try{
+   const response=await fetch(PINFORME_SUPABASE_BASE+'/functions/v1/rapid-api',{method:'POST',headers:{apikey:PINFORME_SUPABASE_KEY,Authorization:'Bearer '+PINFORME_SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify({action:'customer_photo',dog_id:dogId,remeasure_key:key}),signal:AbortSignal.timeout(30000)});
+   const result=await response.json();if(!response.ok||!result.ok||!result.photo_url)throw new Error('photo unavailable');
+   const image=await fetch(result.photo_url,{signal:AbortSignal.timeout(30000)});if(!image.ok)throw new Error('photo unavailable');
+   const blob=await image.blob();if(blob.type&&!blob.type.startsWith('image/'))throw new Error('invalid photo');
+   const data=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result||''));reader.onerror=reject;reader.readAsDataURL(blob);});
+   if(!current())return;
+   PINFORME_DOG_PHOTO_DATA=data;PINFORME_PHOTO_SOURCE='registered';
+   const preview=document.getElementById('photoPreview');if(preview){preview.src=data;preview.style.display='block';}
+   if(PIN_V2.baseline)PIN_V2.baseline.photo=data;
+   if(status)status.textContent='登録済みの写真です。変更しなければ、この写真を引き継ぎます。';
+   pinV2Persist();savePINFORMEState();
+  }catch(e){if(current()&&status)status.textContent='登録済み写真は保存されていますが、表示できませんでした。通信を確認し、入口からもう一度進んでください。';}
+ })();
+ PINFORME_PHOTO_READY=task;return task;
+};
 </script></body></html>
