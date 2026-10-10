@@ -6842,7 +6842,15 @@ const PIN_V2_KEY='PINFORME_V2_WORKING';
 let PIN_V2=null;try{PIN_V2=JSON.parse(localStorage.getItem(PIN_V2_KEY)||'null');}catch{}
 const pinV2Clone=x=>JSON.parse(JSON.stringify(x));
 const pinV2Has=v=>v!==null && v!==undefined && String(v).trim()!=='';
-function pinV2Persist(){localStorage.setItem(PIN_V2_KEY,JSON.stringify(PIN_V2));}
+function pinV2StoreJSON(key,value){
+ try{localStorage.setItem(key,JSON.stringify(value));}
+ catch(error){
+  if(error.name!=='QuotaExceededError')throw error;
+  const compact=JSON.stringify(value,(name,item)=>name==='photo'&&typeof item==='string'&&item.startsWith('data:image/')?'':item);
+  try{localStorage.setItem(key,compact);}catch(retry){if(retry.name!=='QuotaExceededError')throw retry;}
+ }
+}
+function pinV2Persist(){pinV2StoreJSON(PIN_V2_KEY,PIN_V2);}
 function pinV2Records(){try{return JSON.parse(localStorage.getItem('PINFORME_V2_RECORDS')||'[]');}catch{return [];}}
 function pinV2Page(id){hideAll();document.getElementById(id).classList.add('active');window.scrollTo(0,0);savePINFORMEState();}
 function pinV2Home(){document.getElementById('pinV2OwnerMenu')?.replaceChildren();pinV2RenderHome();pinV2Page('pinV2Home');}
@@ -6897,7 +6905,7 @@ function pinV2Demo(count){
  const date='2026-09-01',values={},dates={};
  PIN_FIELD_GROUPS.slice(0,count).forEach((fields,i)=>fields.forEach((f,j)=>{values[f]=[24,40,28,30,20][i]??(10+i+j);dates[f]=date;}));
  records.push({id,dog:'登録例'+count+'ちゃん',dogName:'登録例'+count,suffix:'ちゃん',owner:'テスト飼い主',breed:'ミニチュアピンシャー',birthday:'2023-01-01',weight:4,sex:'女の子',values,dates,confirmed:{},history:[{id:'initial',date,kind:'初回登録',product:count===5?'tank':'research',purposeLabel:PIN_V2_PRODUCTS[count===5?'tank':'research'].label,updates:Object.keys(values).map(f=>({field:f,mark:'＋',before:null,after:values[f]}))}]});
- localStorage.setItem('PINFORME_V2_RECORDS',JSON.stringify(records));pinV2RenderHome();document.getElementById('v2HomeStatus').textContent='登録例'+count+'のテスト用お客様キー：'+pinV2KeyRecords().find(r=>r.id===id).customerKey;
+ pinV2StoreJSON('PINFORME_V2_RECORDS',records);pinV2RenderHome();document.getElementById('v2HomeStatus').textContent='登録例'+count+'のテスト用お客様キー：'+pinV2KeyRecords().find(r=>r.id===id).customerKey;
 }
 function pinV2Begin(product,id=null,ownerSource=null,mode=''){
  if(!Object.prototype.hasOwnProperty.call(PIN_V2_PRODUCTS,product)){const select=document.getElementById('v2Product');document.getElementById('v2PurposeStatus').textContent='採寸目的・お洋服を選んでください。';select.setAttribute('aria-invalid','true');select.focus();return;}
@@ -7061,7 +7069,7 @@ sendToPinforme=async function(){
  for(const i of PIN_V2.selected){if(!validStep(steps[i])){openMeasurementForEdit(i);return;}}
  const record=pinV2Snapshot(),records=pinV2Records();const index=records.findIndex(r=>r.id===record.id);
  if(index<0)records.push(record);else records[index]=record;
- try{localStorage.setItem('PINFORME_V2_RECORDS',JSON.stringify(records));}catch{alert('テスト用の保存領域がいっぱいです。保存できませんでした。');return;}
+ try{pinV2StoreJSON('PINFORME_V2_RECORDS',records);}catch{alert('テスト用の保存領域がいっぱいです。保存できませんでした。');return;}
  PIN_V2.saved=true;pinV2Persist();pinV2RenderReview();pinformeShowRemeasureKey(record.customerKey);const data=collectKarte();localStorage.setItem('PINFORME_LAST_KARTE',JSON.stringify(data));
  const btn=document.getElementById('pinformeSubmitButton');btn.disabled=true;btn.textContent='送信・保存済み';
  document.getElementById('sendStatus').textContent='この端末のテスト用領域に保存しました。本番への送信・メール送信は行っていません。';
@@ -7126,7 +7134,7 @@ function pinV2FromServer(dog,snapshot,contact,key){
  const name=s.dog_name??dog.dog_name??'',suffix=s.dog_suffix??dog.dog_suffix??'';
  return {id:String(dog.dog_id),ownerId:dog.owner_id,measurementId:s.id??null,ownerGroup:String(dog.owner_id),customerKey:key,dogName:name,suffix,dog:name?name+suffix:'名前未登録',owner:s.owner_name??dog.owner_name??'',anonymous:(s.owner_name??dog.owner_name)==='匿名希望',recoveryEmail:contact?.recovery_email||'',recoveryPhone:contact?.recovery_phone||'',breed:s.breed??dog.breed??'',birthday:s.birth_date??dog.birth_date??'',weight:s.weight??dog.latest_weight??null,sex:s.sex??dog.sex??'',photoPath:snapshot?s.photo_path:dog.photo_path??null,photo:'',values,dates,confirmed:meta.field_confirmed_on||{},marks,history:s.pinforme_v2_history||[],product:meta.purpose||'research'};
 }
-function pinV2Cache(record){const records=pinV2Records(),index=records.findIndex(r=>r.id===record.id);if(index<0)records.push(record);else records[index]=record;localStorage.setItem('PINFORME_V2_RECORDS',JSON.stringify(records));}
+function pinV2Cache(record){const records=pinV2Records(),index=records.findIndex(r=>r.id===record.id);if(index<0)records.push(record);else records[index]=record;pinV2StoreJSON('PINFORME_V2_RECORDS',records);}
 pinV2KeyRecords=()=>pinV2Records();
 let pinV2UnlockGeneration=0;
 pinV2Unlock=async function(){
@@ -7138,7 +7146,7 @@ pinV2Unlock=async function(){
   const contact=await pinV2RPC('get_owner_recovery_contact_secure_v1',{p_owner_id:dogs[0].owner_id,p_remeasure_key:key});
   const records=await Promise.all(dogs.map(async dog=>pinV2FromServer(dog,await pinV2RPC('get_remeasure_snapshot_v2',{p_dog_id:dog.dog_id,p_remeasure_key:key}),contact,key)));
   if(generation!==pinV2UnlockGeneration||String(input.value).toUpperCase().replace(/[^A-Z0-9]/g,'')!==key)return;
-  localStorage.setItem('PINFORME_V2_RECORDS',JSON.stringify(records));pinV2OwnerMenu(records);
+  pinV2StoreJSON('PINFORME_V2_RECORDS',records);pinV2OwnerMenu(records);
  }catch(e){if(generation===pinV2UnlockGeneration)status.textContent=e.http?'お客様キーを確認してください。確認できない場合は、再発行の案内をご覧ください。':e.message;}
  finally{button.disabled=false;}
 };
@@ -7171,7 +7179,7 @@ async function pinV2FinishSaved(pending,receipt){
  PIN_V2.dogId=local.id;PIN_V2.savedRecord=local;pinV2Cache(local);pinV2Persist();
  try{const s=await pinV2RPC('get_remeasure_snapshot_v2',{p_dog_id:pending.args.p_dog_id,p_remeasure_key:PIN_V2.customerKey});const r=pinV2FromServer({dog_id:pending.args.p_dog_id,owner_id:pending.args.p_owner_id},s,{recovery_email:local.recoveryEmail,recovery_phone:local.recoveryPhone},PIN_V2.customerKey);r.photo=local.photo;PIN_V2.savedRecord=r;pinV2Cache(r);}catch(e){/* Save receipt remains authoritative; cached acknowledged data is shown. */}
  const saved=PIN_V2.savedRecord;for(const [id,value] of Object.entries({ownerName:saved.owner,dogName:saved.dogName,dogSuffix:saved.suffix,dogBreed:saved.breed,birthDate:saved.birthday,weight:saved.weight,recoveryEmail:saved.recoveryEmail,recoveryPhone:saved.recoveryPhone,pinMeasuredOn:pending.args.p_payload.measured_on})){const el=document.getElementById(id);if(el)el.value=value??'';}pinSetAnonymousMode(saved.anonymous);document.querySelectorAll('input[name=sex]').forEach(el=>el.checked=el.value===saved.sex);
- pinV2Persist();pinV2RenderReview();pinformeShowRemeasureKey(PIN_V2.customerKey);localStorage.setItem('PINFORME_LAST_KARTE',JSON.stringify(collectKarte()));
+ pinV2Persist();pinV2RenderReview();pinformeShowRemeasureKey(PIN_V2.customerKey);pinV2StoreJSON('PINFORME_LAST_KARTE',collectKarte());
  document.getElementById('sendStatus').textContent='PINFORMEへの送信・保存が完了しました。';
  const button=document.getElementById('pinformeSubmitButton');button.disabled=true;button.textContent='送信・保存済み ✓';button.style.opacity='.65';
  const context={owner_id:pending.args.p_owner_id,dog_id:pending.args.p_dog_id,remeasure_key:PIN_V2.customerKey};pinCustomerMailContext=local.anonymous?null:context;
@@ -7180,7 +7188,7 @@ async function pinV2FinishSaved(pending,receipt){
  pinRefreshDMChoice();document.getElementById('pinformePostSaveChoice').style.display='block';savePINFORMEState();
 }
 sendToPinforme=async function(options={}){
- if(!PIN_V2||PINFORME_SUBMITTING||PIN_V2.saved)return;
+ if(!PIN_V2||PINFORME_SUBMITTING||(PIN_V2.saved&&!PIN_V2.pending))return;
  const button=document.getElementById('pinformeSubmitButton'),status=document.getElementById('sendStatus');
  if(!PIN_V2.pending){
   if(!pinValidateCustomerEmail()||!pinValidateMeasuredOn())return;
@@ -7204,11 +7212,11 @@ sendToPinforme=async function(options={}){
    PIN_V2.pending={record,args:{p_payload:payload,p_owner_id:PIN_V2.ownerId,p_dog_id:PIN_V2.serverDogId,p_remeasure_key:PIN_V2.customerKey,p_request_id:PIN_V2.sessionId,p_mode:mode,p_purpose:PIN_V2.product,p_base_measurement_id:PIN_V2.baseline?.measurementId??null,p_updated_fields:fields,p_confirm_unchanged:PIN_V2.change==='none'}};pinV2Persist();
   }
   status.textContent='カルテを安全に保存しています…';
-  const receipt=await pinV2RPC('save_measurement_v2',PIN_V2.pending.args);
+  const receipt=PIN_V2.receipt||await pinV2RPC('save_measurement_v2',PIN_V2.pending.args);
   await pinV2FinishSaved(PIN_V2.pending,receipt);
  }catch(e){
   if(e.http&&e.http<500){delete PIN_V2.pending;pinV2Persist();}
-  status.textContent=e.code==='40001'?'前回の記録が更新されています。お客様キーで最新の記録を確認してから、もう一度進めてください。':e.http?'保存できませんでした。'+e.message:'保存結果を確認できませんでした。同じ内容で保存を再試行すると、重複せずに結果を確認できます。';
+  status.textContent=PIN_V2.receipt?'データの保存は完了していますが、画面の更新を完了できませんでした。再試行して表示を確認してください。確認用：'+(e.message||'表示処理エラー'):e.code==='40001'?'前回の記録が更新されています。お客様キーで最新の記録を確認してから、もう一度進めてください。':e.http?'保存できませんでした。'+e.message:'保存結果を確認できませんでした。同じ内容で保存を再試行すると、重複せずに結果を確認できます。';
   button.disabled=false;button.textContent=PIN_V2.pending?'同じ内容で保存を再試行':'PINFORMEへ送信・保存';
  }finally{PINFORME_SUBMITTING=false;}
 };
