@@ -3243,10 +3243,10 @@ async function printFinalKarte(){
 @page{size:A4 landscape;margin:0!important}
 /* iPhone Safari対策：印刷ドキュメント自体には高さを持たせない。
    カルテを fixed で1枚目に描画することで、空白の2ページ目を作らせない。 */
-html,body{margin:0!important;padding:0!important;width:297mm!important;height:190mm!important;min-height:0!important;background:#fff!important;overflow:hidden!important}
-.view{position:relative!important;width:297mm!important;height:190mm!important;margin:0!important;padding:0!important;overflow:hidden!important;background:#fff!important}
+html,body{margin:0!important;padding:0!important;width:297mm!important;height:200mm!important;min-height:0!important;background:#fff!important;overflow:hidden!important}
+.view{position:relative!important;width:297mm!important;height:200mm!important;margin:0!important;padding:0!important;overflow:hidden!important;background:#fff!important}
 .sheet{position:absolute!important;left:0!important;top:0!important;width:1123px!important;height:794px!important;min-width:1123px!important;min-height:794px!important;margin:0!important;padding:24px 30px!important;transform:scale(.94)!important;transform-origin:top left!important;box-shadow:none!important;background:#fff!important;overflow:hidden!important}
-@media print{html,body{width:297mm!important;height:190mm!important;min-height:0!important;margin:0!important;padding:0!important;overflow:hidden!important}.view{position:relative!important;width:297mm!important;height:190mm!important;margin:0!important;padding:0!important;overflow:hidden!important}.sheet{position:absolute!important;left:0!important;top:0!important;width:1123px!important;height:794px!important;min-width:1123px!important;min-height:794px!important;margin:0!important;transform:scale(.94)!important;transform-origin:top left!important;overflow:hidden!important;page-break-inside:avoid!important;break-inside:avoid-page!important}}
+@media print{html,body{width:297mm!important;height:200mm!important;min-height:0!important;margin:0!important;padding:0!important;overflow:hidden!important}.view{position:relative!important;width:297mm!important;height:200mm!important;margin:0!important;padding:0!important;overflow:hidden!important}.sheet{position:absolute!important;left:0!important;top:0!important;width:1123px!important;height:794px!important;min-width:1123px!important;min-height:794px!important;margin:0!important;transform:scale(.94)!important;transform-origin:top left!important;overflow:hidden!important;page-break-inside:avoid!important;break-inside:avoid-page!important}}
 </style></head><body><div class="view">${cloned.outerHTML}</div></body></html>`);
     printWin.document.close();
 
@@ -6870,7 +6870,23 @@ function pinV2RenderHome(){
  wrap.innerHTML='<div class="v2-word">PINFORME</div><h1>採寸を始める</h1><p><span class="v2-copy-line">ご利用状況に合わせて、</span><span class="v2-copy-line">下の入口をお選びください。</span></p><section class="v2-entry-card"><h2>初めてご利用の飼い主様</h2><p><span class="v2-copy-line">愛犬の採寸データを登録し、</span><span class="v2-copy-line">採寸カルテを作成します。</span></p><button id="v2New" class="v2-primary">初めての採寸を始める</button></section><section id="v2Registered" class="v2-entry-card"><h2>お客様キーをお持ちの飼い主様</h2><p><span class="v2-copy-line">登録済みの採寸を更新・追加できます。</span><span class="v2-copy-line">2匹目以降のわんちゃんも登録できます。</span></p><button id="v2RegisteredOpen" class="v2-primary" aria-expanded="false" aria-controls="v2KeyPanel">お客様キーで進む</button><div id="v2KeyPanel" hidden><label for="v2CustomerKey">お客様キー</label><input id="v2CustomerKey" type="text" placeholder="16文字のお客様キー" maxlength="24" autocomplete="off" autocapitalize="characters" spellcheck="false"><button id="v2KeyNext" class="v2-primary">お客様キーを確認して進む</button><p id="v2KeyStatus" role="status"></p><div id="v2Dogs" hidden></div><details class="v2-key-help"><summary>お客様キーを忘れた方はこちら</summary><p>登録時の飼い主様のお名前と、メールアドレスまたは電話番号から再発行の手続きへ進めます。</p><button id="v2RecoverKey">お客様キーの再発行へ</button><p>連絡先を登録していない方や、メールが見つからない方は、InstagramのDMまたはinfo@pinforme.jpへお問い合わせください。</p></details></div></section><p id="v2HomeStatus" role="status"></p>';
  box.append(wrap);pinV2RestoreBrand(wrap);
  document.getElementById('v2New').onclick=()=>pinV2Purpose();
- document.getElementById('v2RegisteredOpen').onclick=()=>{const panel=document.getElementById('v2KeyPanel'),button=document.getElementById('v2RegisteredOpen');panel.hidden=!panel.hidden;button.setAttribute('aria-expanded',String(!panel.hidden));if(!panel.hidden){const input=document.getElementById('v2CustomerKey');input.focus({preventScroll:true});requestAnimationFrame(()=>requestAnimationFrame(()=>{if(panel.hidden)return;const bar=document.querySelector('.v2-testbar'),offset=(bar?.getBoundingClientRect().bottom||0)+16;window.scrollTo({top:Math.max(0,window.scrollY+panel.getBoundingClientRect().top-offset),behavior:'smooth'});}));}};
+ document.getElementById('v2RegisteredOpen').onclick=()=>{
+ const panel=document.getElementById('v2KeyPanel'),button=document.getElementById('v2RegisteredOpen');
+ panel.hidden=!panel.hidden;button.setAttribute('aria-expanded',String(!panel.hidden));
+ const home=document.getElementById('pinV2Home');
+ home.style.paddingBottom=panel.hidden?'':window.innerHeight+'px';
+ if(panel.hidden)return;
+ const input=document.getElementById('v2CustomerKey');
+ const align=()=>{
+  if(panel.hidden||!panel.isConnected||!document.getElementById('pinV2Home')?.classList.contains('active'))return;
+  const bar=document.querySelector('.v2-testbar');
+  const offset=(bar?.getBoundingClientRect().bottom||0)+16;
+  window.scrollTo({top:Math.max(0,window.scrollY+panel.getBoundingClientRect().top-offset),behavior:'auto'});
+ };
+ requestAnimationFrame(align);
+ // Re-align after the mobile keyboard changes the viewport.
+ setTimeout(align,180);setTimeout(align,450);
+};
  document.getElementById('v2KeyNext').onclick=pinV2Unlock;
  document.getElementById('v2RecoverKey').onclick=pinformeOpenKeyRecovery;
  document.getElementById('v2CustomerKey').oninput=()=>{document.getElementById('v2Dogs').hidden=true;document.getElementById('v2Dogs').replaceChildren();document.getElementById('v2KeyStatus').textContent='';};
