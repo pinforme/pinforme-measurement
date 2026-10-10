@@ -7213,7 +7213,7 @@ sendToPinforme=async function(options={}){
 };
 
 const pinV2ReadyHome=pinV2Home;pinV2Home=function(){if(!PINFORME_SUBMITTING)pinV2ReadyHome();};
-</script><style>.pav2-event{border:1px solid #ddd;border-radius:10px;padding:14px;margin:12px 0}.pav2-event h4{margin:0 0 8px}.pav2-event p,.pav2-event li{font-size:14px;line-height:1.7;overflow-wrap:anywhere}.pav2-event ul{padding-left:22px}.pav2-summary{margin:20px 0}.pav2-marker{display:block;font-weight:700;color:#333}.pav2-history details{margin:16px 0}</style><script>/* Read-only revision display, based on stored measurements. */
+</script><style>.pav2-event{border:1px solid #ddd;border-radius:10px;padding:14px;margin:12px 0}.pav2-event h4{margin:0 0 8px}.pav2-event p,.pav2-event li{font-size:14px;line-height:1.7;overflow-wrap:anywhere}.pav2-event ul{padding-left:22px}.pav2-summary{margin:20px 0}.pav2-purpose-label{display:block;color:#666;font-size:13px;margin-bottom:4px}.pav2-purpose-value{display:block;word-break:normal;overflow-wrap:normal;text-wrap:balance}.pav2-purpose{line-height:1.7}.pav2-marker{display:block;font-weight:700;color:#333}.pav2-history details{margin:16px 0}</style><script>/* Read-only revision display, based on stored measurements. */
 function pinAdminV2History(dogId,throughId){
  const rows=PINFORME_ADMIN_ROWS.filter(r=>String(r.dog_id)===String(dogId)).slice().sort((a,b)=>new Date(a.created_at)-new Date(b.created_at)||Number(a.id)-Number(b.id));
  const result=[];let previous=null,revision=-1;
@@ -7241,7 +7241,7 @@ function pinAdminV2Summary(row){
   const markers=events.slice(0,3).filter(e=>e.revision>0&&e.updates.some(u=>u.field===f)).reverse().map(e=>'△'+e.revision+' '+e.updates.find(u=>u.field===f).mark).join(' ／ ');
   return '<div class="admin-measure-item"><div class="label">'+adminEsc(label)+'</div><div class="value">'+(row[f]==null?'未登録':adminEsc(row[f])+' cm')+'</div>'+(markers?'<small class="pav2-marker">'+adminEsc(markers)+'</small>':'')+(row[f]!=null?'<small>採寸日：'+adminEsc(row.field_measured_on?.[f]||'不明')+'</small>':'')+(row[f]!=null?'<small>'+(changes.some(u=>u.field===f)?'今回測定':'以前の記録を引き継ぎ')+'</small>':'')+'</div>';
  }).join('');
- return '<section class="pav2-summary"><h3>△'+(current?.revision??0)+' の採寸記録</h3><p>初版の採寸目的（△0）：'+adminEsc(initial?.purposeLabel||'目的未記録')+'</p><p>現在の登録：'+PIN_FIELD_GROUPS.filter(fs=>fs.some(f=>row[f]!=null)).length+'／15項目</p><div class="admin-measure-grid">'+cards+'</div></section>';
+ return '<section class="pav2-summary"><h3>△'+(current?.revision??0)+' の採寸記録</h3><p class="pav2-purpose"><span class="pav2-purpose-label">初版の採寸目的（△0）</span><span class="pav2-purpose-value">'+adminEsc(initial?.purposeLabel||'目的未記録')+'</span></p><p>現在の登録：'+PIN_FIELD_GROUPS.filter(fs=>fs.some(f=>row[f]!=null)).length+'／15項目</p><div class="admin-measure-grid">'+cards+'</div></section>';
 }
 function pinAdminV2CarteData(data,row){
  const events=pinAdminV2History(row.dog_id,row.id),recent=events.slice(0,3),initial=events[events.length-1];
