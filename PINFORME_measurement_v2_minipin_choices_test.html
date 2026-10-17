@@ -7408,4 +7408,34 @@ function pinV2IsOptional(index){
   });
  };
 })();
+</script><style id="pin-confirmation-layout">body{padding-top:calc(var(--pin-header-height,140px) + 16px)!important}#finishPage .finish-card[data-save-state="unsent"]>.finish-mark{font-size:18px;font-weight:800;color:#795426}#finishPage .finish-card[data-save-state="unsent"]>h1{font-size:23px;line-height:1.5}#finishPage .finish-card>.v2-review{margin-top:20px}#finishPage .finish-actions{margin:16px 0}#pinformeSubmitButton{width:100%;min-height:60px;height:auto;padding:18px 12px;white-space:normal}@media print{body{padding-top:0!important}}</style><script id="pin-confirmation-state">// Display completion only after the server acknowledges a saved measurement.
+function pinConfirmationCopy(saved){
+ return saved?{title:'送信が完了しました',message:'採寸協力ありがとうございました。採寸データを保存しました。',mark:'✓',button:'送信・保存済み ✓'}:{title:'まだ送信は完了していません',message:'入力内容を確認して、下の「この内容で送信する」を押してください。',mark:'確認',button:'この内容で送信する'};
+}
+(function(){
+ function update(){
+  const card=document.querySelector('#finishPage .finish-card');if(!card||!PIN_V2)return;
+  const saved=PIN_V2.saved===true,copy=pinConfirmationCopy(saved);
+  card.querySelector('h1').textContent=copy.title;
+  card.querySelector('h1').nextElementSibling.textContent=copy.message;
+  card.querySelector('.finish-mark').textContent=copy.mark;
+  card.dataset.saveState=saved?'saved':'unsent';
+  const review=document.getElementById('v2Review'),actions=card.querySelector('.finish-actions'),status=document.getElementById('sendStatus');
+  const intro=card.querySelector('h1').nextElementSibling;
+  if(review&&actions){intro.after(review);review.after(actions);if(status)actions.after(status);}
+  const button=document.getElementById('pinformeSubmitButton');
+  if(button&&!PINFORME_SUBMITTING){button.textContent=copy.button;button.disabled=saved;}
+  if(status&&!saved&&status.textContent.includes('オンライン保存は、保存先データベース接続後'))status.textContent='内容を確認後、送信ボタンを押してください。';
+  const preview=card.querySelector('[onclick="openKartePage()"]');if(preview)preview.textContent=saved?'採寸カルテを見る':'採寸カルテを確認する';
+ }
+ const previousFinish=showFinish;
+ showFinish=function(...args){const result=previousFinish.apply(this,args);update();return result;};
+ const previousRender=pinV2RenderReview;
+ pinV2RenderReview=function(...args){const result=previousRender.apply(this,args);update();return result;};
+ const previousSend=sendToPinforme;
+ sendToPinforme=async function(...args){try{return await previousSend.apply(this,args);}finally{update();}};
+ function resizeHeader(){const bar=document.querySelector('.v2-testbar');document.documentElement.style.setProperty('--pin-header-height',(bar?Math.ceil(bar.getBoundingClientRect().height):0)+'px');}
+ document.addEventListener('DOMContentLoaded',()=>{resizeHeader();const bar=document.querySelector('.v2-testbar');if(bar&&typeof ResizeObserver!=='undefined')new ResizeObserver(resizeHeader).observe(bar);});
+ window.addEventListener('resize',resizeHeader);
+})();
 </script></body></html>
