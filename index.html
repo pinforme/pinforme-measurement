@@ -7,7 +7,7 @@
 
 <script id="pinforme-latest-version-guard">
 (function(){
-  const PINFORME_BUILD_ID="20261017-five-items-release-v1";
+  const PINFORME_BUILD_ID="20261017-five-items-release-v2";
 
   function forceFresh(reason){
     try{
@@ -785,7 +785,20 @@ body.pinforme-admin-route.pinforme-admin-karte-open #kartePage .karte-actions bu
 #pinV2Home,#pinV2OwnerMenu,#pinV2Purpose,#pinV2Change{display:none!important}#pinV2Home.active,#pinV2OwnerMenu.active,#pinV2Purpose.active,#pinV2Change.active{display:block!important}body{padding-top:80px}.v2-testbar{position:fixed;top:0;left:0;right:0;z-index:999999;background:#eee9df;border-bottom:1px solid #c5baa9;display:flex;align-items:center;justify-content:center;gap:10px;padding:8px;font-size:12px;flex-wrap:wrap}.v2-testbar button{padding:5px 10px;border:1px solid #aaa;background:white;border-radius:5px;width:auto!important;min-height:0!important;height:auto!important;line-height:1.4!important;font-size:12px!important}.v2-wrap{width:min(100%,560px);margin:0 auto;padding:28px 22px 60px;color:#222}.v2-word{letter-spacing:5px;font-size:25px;margin-bottom:24px}.v2-wrap h1{font-size:23px;line-height:1.5}.v2-wrap h2{font-size:18px;margin-top:28px}.v2-wrap p{line-height:1.8;font-size:14px}.v2-wrap select{width:100%;font-size:16px;min-height:52px;border:1px solid #aaa;border-radius:8px;padding:8px}.v2-wrap label{display:block;line-height:1.8;font-size:14px;padding:8px 0}.v2-wrap input[type=checkbox],.v2-wrap input[type=radio]{width:20px!important;height:20px!important;vertical-align:middle;margin-right:8px}.v2-entry-card{border:1px solid #ddd;border-radius:12px;padding:16px;margin:20px 0}.v2-entry-card h2{margin:0 0 10px;font-size:18px;line-height:1.5}.v2-entry-card>p{margin:0 0 16px}.v2-copy-line{display:block;text-wrap:pretty}.v2-entry-card>button.v2-primary{margin:0}.v2-entry-card #v2KeyPanel{margin-top:18px;padding-top:16px;border-top:1px solid #ddd}.v2-entry-card summary{font-size:18px;font-weight:700;cursor:pointer}.v2-entry-card input[type=text]{width:100%;box-sizing:border-box;min-height:48px;border:1px solid #aaa;border-radius:8px;padding:10px;font-size:16px}.v2-registered-dogs{margin-top:24px}.v2-wrap h3{font-size:17px;line-height:1.5;margin:0 0 8px}.v2-dog-card{border:1px solid #ddd;border-radius:10px;padding:12px;margin:12px 0}.v2-new-dog{background:#f5f3ef;border-radius:10px;padding:16px;margin:28px 0 16px}.v2-new-dog p{margin:8px 0 12px}.v2-key-help{margin:20px 0;padding:14px 0;border-top:1px solid #ddd}.v2-key-help summary{font-size:14px;font-weight:600}.v2-dog-title{font-weight:700}.v2-dog-card button{height:auto!important;min-height:48px!important;overflow:visible!important;white-space:normal!important;line-height:1.5!important}.v2-wrap button.v2-owner-choice{height:auto!important;padding:16px;margin:16px 0;border-color:#999}.v2-owner-choice .v2-action-title{font-size:17px}.v2-action-title{display:block;font-weight:700}.v2-action-note{display:block;font-size:12px;font-weight:400;line-height:1.7;margin-top:6px;color:#555}.v2-wrap button{color:#222;display:block;width:100%;min-height:48px;border:1px solid #ccc;background:#fff;border-radius:8px;padding:10px;font-size:15px;margin:12px 0;text-align:left}.v2-wrap button.v2-primary{background:#222;color:#fff;border-color:#222;text-align:center}.v2-note p{font-size:inherit;line-height:inherit;margin:0 0 10px}.v2-note p:last-child{margin-bottom:0}.v2-required-note p{margin:12px 0}.v2-note{background:#f5f3ef;padding:12px;font-size:12px!important;line-height:1.7}.v2-step-status{font-size:13px!important;background:#f5f3ef;padding:8px;margin-top:12px}.v2-wrap fieldset{border:1px solid #ddd;border-radius:10px}.v2-wrap [hidden]{display:none!important}#v2RegisteredValues{margin:20px 0}#v2RegisteredValues summary{font-size:14px;font-weight:600}#v2RegisteredValues table{width:100%;border-collapse:collapse;font-size:12px;margin-top:12px}#v2RegisteredValues th,#v2RegisteredValues td{text-align:left;padding:8px 4px;border-bottom:1px solid #ddd}#v2ChangeError{color:#9a2020}#pinformeKeyRecoveryModal{z-index:1000000}
 .v2-review{border:1px solid #ddd;border-radius:12px;padding:16px;margin:20px 0;text-align:left}.v2-review h2{font-size:18px;margin:0 0 10px;line-height:1.5}.v2-review p{font-size:13px;line-height:1.7;margin:10px 0}.v2-review table{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed}.v2-review th,.v2-review td{padding:10px 5px;border-bottom:1px solid #ddd;text-align:left;vertical-align:top;overflow-wrap:anywhere}.v2-review th{width:48%}.v2-review small{display:block;font-size:11px;color:#555;line-height:1.6;margin-top:3px}.v2-review-note{color:#555}
 @media print{.v2-testbar{display:none}body{padding-top:0}}
-</style></head>
+</style>
+<style id="pin-admin-hide-customer-header">
+/* Customer navigation is not part of the administrator screens. */
+html.pinforme-admin-route-early .v2-testbar,
+body.pinforme-admin-route .v2-testbar,
+body.pinforme-admin-view .v2-testbar { display:none !important; }
+html.pinforme-admin-route-early body,
+body.pinforme-admin-route,
+body.pinforme-admin-view {
+  --pin-header-height:0px !important;
+  padding-top:0 !important;
+}
+</style>
+</head>
 <body>
 <p id="pinDraftStatus" role="status" style="display:none;position:sticky;top:0;z-index:1000;margin:0;padding:12px;background:#fff1ce;color:#442d00;font-size:13px;line-height:1.6"></p>
 
