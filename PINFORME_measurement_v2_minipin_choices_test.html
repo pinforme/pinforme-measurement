@@ -7131,11 +7131,11 @@ window.addEventListener('DOMContentLoaded',()=>{
  const ownerMenu=document.createElement('section');ownerMenu.id='pinV2OwnerMenu';ownerMenu.className='intro-step';document.body.append(ownerMenu);
  const purpose=document.createElement('section');purpose.id='pinV2Purpose';purpose.className='intro-step';document.body.append(purpose);
  const change=document.createElement('section');change.id='pinV2Change';change.className='intro-step';document.body.append(change);
- const bar=document.createElement('div');bar.className='v2-testbar';bar.innerHTML='<strong>改良版 接続確認用</strong><span>保存すると本番データに登録されます</span><button id="v2HomeButton">入口</button><button id="v2ResumeButton">途中から続ける</button>';document.body.prepend(bar);
+ const bar=document.createElement('div');bar.className='v2-testbar';bar.innerHTML='<strong>送信テスト版 v8</strong><span>保存すると本番データに登録されます</span><button id="v2HomeButton">入口</button><button id="v2ResumeButton">途中から続ける</button><button id="pinLiveSendCheckOpen" type="button" onclick="window.pinOpenLiveSendCheck()" style="background:#146c74;color:white;border-color:#146c74">送信テスト</button>';document.body.prepend(bar);
  document.getElementById('v2HomeButton').onclick=pinV2Home;document.getElementById('v2ResumeButton').onclick=pinV2Resume;
  document.getElementById('pinSaveNoPhotoButton').hidden=true;
 
- setTimeout(()=>{if(new URLSearchParams(location.search).get('admin')!=='login'){pinV2Home();pinV2Progress();}else{bar.hidden=true;document.getElementById('adminPage').classList.add('active');}document.documentElement.classList.remove('pinforme-restoring');},100);
+ setTimeout(()=>{if(new URLSearchParams(location.search).get('admin')!=='login'){pinV2Home();pinV2Progress();}else{bar.hidden=true;document.getElementById('adminPage').classList.add('active');}document.documentElement.classList.remove('pinforme-restoring');if(new URLSearchParams(location.search).get('sendtest')==='1')window.pinOpenLiveSendCheck?.();},100);
 });
 document.addEventListener('click',e=>{if(new URLSearchParams(location.search).get('admin')!=='login'&&e.target.closest('.brand,.pinforme-unified-header,.pin-brand')){e.preventDefault();e.stopImmediatePropagation();pinV2Home();}},true);
 
@@ -7481,9 +7481,6 @@ function pinConfirmationCopy(saved){
   };
   pinV2Page('pinLiveSendCheck');
  }
- document.addEventListener('DOMContentLoaded',()=>{
-  const bar=document.querySelector('.v2-testbar');if(!bar)return;
-  const button=document.createElement('button');button.id='pinLiveSendCheckOpen';button.type='button';button.textContent='送信テスト';button.onclick=open;bar.append(button);
- });
+ window.pinOpenLiveSendCheck=open;
 })();
 </script></body></html>
