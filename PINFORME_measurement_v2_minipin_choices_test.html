@@ -4993,7 +4993,11 @@ document.addEventListener("click",function(){
   day.addEventListener("change",sync);
   direct.addEventListener("input",fromDirect);
   fillDays();
-  const restore=()=>{if(hidden.value) applyISO(hidden.value)};
+  window.pinSyncBirthDateSelectors=function(){
+    if(hidden.value){applyISO(hidden.value);return;}
+    year.value='';month.value='';fillDays();day.value='';direct.value='';
+  };
+  const restore=window.pinSyncBirthDateSelectors;
   setTimeout(restore,0); setTimeout(restore,300); window.addEventListener("pageshow",restore);
 })();
 </script>
@@ -7173,7 +7177,7 @@ function pinV2FromServer(dog,snapshot,contact,key){
  PIN_FIELD_GROUPS.flat().forEach(f=>{values[f]=s[f]??null;dates[f]=s.field_measured_on?.[f]||null;});
  (meta.changes||[]).forEach(u=>marks[u.field]=u.mark);
  const name=s.dog_name??dog.dog_name??'',suffix=s.dog_suffix??dog.dog_suffix??'';
- return {id:String(dog.dog_id),ownerId:dog.owner_id,measurementId:s.id??null,ownerGroup:String(dog.owner_id),customerKey:key,dogName:name,suffix,dog:name?name+suffix:'名前未登録',owner:s.owner_name??dog.owner_name??'',anonymous:(s.owner_name??dog.owner_name)==='匿名希望',recoveryEmail:contact?.recovery_email||'',recoveryPhone:contact?.recovery_phone||'',breed:s.breed??dog.breed??'',birthday:s.birth_date??dog.birth_date??'',weight:s.weight??dog.latest_weight??null,sex:s.sex??dog.sex??'',photoPath:snapshot?s.photo_path:dog.photo_path??null,photo:'',values,dates,confirmed:meta.field_confirmed_on||{},marks,history:s.pinforme_v2_history||[],product:meta.purpose||'research'};
+ return {id:String(dog.dog_id),ownerId:dog.owner_id,measurementId:s.id??null,ownerGroup:String(dog.owner_id),customerKey:key,dogName:name,suffix,dog:name?name+suffix:'名前未登録',owner:s.owner_name??dog.owner_name??'',anonymous:(s.owner_name??dog.owner_name)==='匿名希望',recoveryEmail:contact?.recovery_email||'',recoveryPhone:contact?.recovery_phone||'',breed:s.breed??dog.breed??'',birthday:s.birth_date||dog.birth_date||'',weight:s.weight??dog.latest_weight??null,sex:s.sex??dog.sex??'',photoPath:snapshot?s.photo_path:dog.photo_path??null,photo:'',values,dates,confirmed:meta.field_confirmed_on||{},marks,history:s.pinforme_v2_history||[],product:meta.purpose||'research'};
 }
 function pinV2Cache(record){const records=pinV2Records(),index=records.findIndex(r=>r.id===record.id);if(index<0)records.push(record);else records[index]=record;pinV2StoreJSON('PINFORME_V2_RECORDS',records);}
 pinV2KeyRecords=()=>pinV2Records();
@@ -7437,5 +7441,17 @@ function pinConfirmationCopy(saved){
  function resizeHeader(){const bar=document.querySelector('.v2-testbar');document.documentElement.style.setProperty('--pin-header-height',(bar?Math.ceil(bar.getBoundingClientRect().height):0)+'px');}
  document.addEventListener('DOMContentLoaded',()=>{resizeHeader();const bar=document.querySelector('.v2-testbar');if(bar&&typeof ResizeObserver!=='undefined')new ResizeObserver(resizeHeader).observe(bar);});
  window.addEventListener('resize',resizeHeader);
+})();
+</script><script id="pin-birthday-restore">
+(function(){
+ function sync(){window.pinSyncBirthDateSelectors?.();}
+ const previousBegin=pinV2Begin;
+ pinV2Begin=function(...args){const result=previousBegin.apply(this,args);sync();return result;};
+ const previousResume=pinV2Resume;
+ pinV2Resume=function(...args){const result=previousResume.apply(this,args);sync();return result;};
+ const previousSaved=pinV2FinishSaved;
+ pinV2FinishSaved=async function(...args){try{return await previousSaved.apply(this,args);}finally{sync();}};
+ const previousRestore=restorePINFORMEState;
+ restorePINFORMEState=function(...args){const result=previousRestore.apply(this,args);sync();return result;};
 })();
 </script></body></html>
