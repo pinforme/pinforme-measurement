@@ -6866,7 +6866,7 @@ const PIN_V2_PRODUCTS={
 };
 // 表示名には内部ID・お客様キーを使用しない。
 pinAnonymousDogLabel=function(){return textValue('dogName')||'名前未登録';};
-const pinV2BaseHide=hideAll;hideAll=function(){pinV2BaseHide();for(const id of ['pinV2Home','pinV2OwnerMenu','pinV2Purpose','pinV2Change']){const el=document.getElementById(id);if(el){el.classList.remove('active');el.style.removeProperty('display');}}};
+const pinV2BaseHide=hideAll;hideAll=function(){pinV2BaseHide();for(const id of ['pinV2Home','pinV2OwnerMenu','pinV2Purpose','pinV2Change','pinLiveSendCheck']){const el=document.getElementById(id);if(el){el.classList.remove('active');el.style.removeProperty('display');}}};
 const PIN_V2_KEY='PINFORME_V2_WORKING';
 let PIN_V2=null;try{PIN_V2=JSON.parse(localStorage.getItem(PIN_V2_KEY)||'null');}catch{}
 const pinV2Clone=x=>JSON.parse(JSON.stringify(x));
@@ -7453,5 +7453,37 @@ function pinConfirmationCopy(saved){
  pinV2FinishSaved=async function(...args){try{return await previousSaved.apply(this,args);}finally{sync();}};
  const previousRestore=restorePINFORMEState;
  restorePINFORMEState=function(...args){const result=previousRestore.apply(this,args);sync();return result;};
+})();
+</script><style>#pinLiveSendCheck{display:none!important}#pinLiveSendCheck.active{display:block!important}</style><script id="pin-live-send-check">// Test-page helper only. Prepare a separate, clearly named record; never submit automatically.
+(function(){
+ function open(){
+  if(PINFORME_SUBMITTING||PIN_V2?.pending&&!PIN_V2.saved){alert('保存中または保存結果の確認待ちです。先に現在の保存結果を確認してください。');return;}
+  let box=document.getElementById('pinLiveSendCheck');if(!box){box=document.createElement('section');box.id='pinLiveSendCheck';box.className='intro-step';document.body.append(box);}
+  box.innerHTML='<div class="v2-wrap"><h1>実際の送信・保存を確認する</h1><p>採寸値の入力は不要です。「動作確認用」という別の記録を作ります。既存のわんちゃんの採寸値・採寸日は変更しません。</p><p>このあと確認画面の「この内容で送信する」を押すと、テスト記録が実際に1件保存され、入力したアドレスへの通知処理が行われます。確認後、管理画面でテストの子を削除してください。</p><label for="pinLiveTestEmail">ご自身の受信用メールアドレス</label><input id="pinLiveTestEmail" type="email" autocomplete="email" style="width:100%;padding:12px;font-size:16px"><p id="pinLiveTestError" role="alert"></p><button id="pinLiveTestPrepare" class="v2-primary">テストデータの保存・通知に同意して確認画面へ</button><button id="pinLiveTestCancel">入口へ戻る</button></div>';
+  // Prefer the owner just unlocked by the user; never use another stored owner.
+  document.getElementById('pinLiveTestEmail').value=PIN_V2?.baseline?.recoveryEmail||'';
+  document.getElementById('pinLiveTestCancel').onclick=pinV2Home;
+  document.getElementById('pinLiveTestPrepare').onclick=()=>{
+   const field=document.getElementById('pinLiveTestEmail'),email=field.value.trim();
+   if(!email||!field.checkValidity()){document.getElementById('pinLiveTestError').textContent='通知を受け取る、ご自身のメールアドレスを入力してください。';field.focus();return;}
+   const before=PIN_V2;pinV2Begin('tank');if(!PIN_V2||PIN_V2===before)return;
+   const date=pinTodayDate(),name='動作確認用_送信テスト_'+date.replaceAll('-','')+'_'+PIN_V2.sessionId.slice(0,8);
+   for(const [id,value] of Object.entries({ownerName:'PINFORME動作確認用',dogName:name,dogSuffix:'',dogBreed:'ミニチュアピンシャー',recoveryEmail:email,recoveryPhone:'',birthDate:'',weight:'',pinMeasuredOn:date})){document.getElementById(id).value=value;}
+   window.pinSyncBirthDateSelectors?.();pinSetAnonymousMode(false);
+   const appearance=document.getElementById('pinAppearance-upright-long');if(appearance){appearance.checked=true;appearance.dispatchEvent(new Event('change',{bubbles:true}));}
+   document.querySelectorAll('input[name=sex]').forEach(e=>e.checked=e.value==='男の子');
+   document.getElementById('tipsConfirmed').checked=true;document.getElementById('dataConsent').checked=true;document.getElementById('photoPromoConsent').checked=false;
+   PIN_V2.selected=[0,1,2,3,4];PIN_V2.liveTest=true;PIN_V2.liveTestName=name;
+   steps.slice(0,5).forEach(section=>measurementGroups(section).forEach(group=>group.forEach(input=>{input.value='1';input.dispatchEvent(new Event('input',{bubbles:true}));input.dispatchEvent(new Event('change',{bubbles:true}));})));
+   pinV2Persist();showFinish();
+   const banner=document.createElement('p');banner.className='v2-note';banner.textContent='送信テスト用の架空データです。実測値ではありません。保存後は管理画面で「'+name+'」だけを削除してください。';document.querySelector('#finishPage .finish-card h1').before(banner);
+   window.scrollTo(0,0);
+  };
+  pinV2Page('pinLiveSendCheck');
+ }
+ document.addEventListener('DOMContentLoaded',()=>{
+  const bar=document.querySelector('.v2-testbar');if(!bar)return;
+  const button=document.createElement('button');button.id='pinLiveSendCheckOpen';button.type='button';button.textContent='送信テスト';button.onclick=open;bar.append(button);
+ });
 })();
 </script></body></html>
