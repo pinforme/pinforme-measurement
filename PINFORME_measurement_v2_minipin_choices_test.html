@@ -6853,7 +6853,7 @@ window.addEventListener('load',()=>{pinSyncAnonymousMode();if(PINFORME_SUBMITTED
 <script id="pinforme-v2-development">/* PINFORME 改良版 接続確認用。保存ボタンは本番DBに接続します。 */
 const PIN_V2_PRODUCTS={
  undecided:{label:'未定（基本5項目）',items:[0,1,2,3,4]},
- research:{label:'未定（全15項目）',items:Array.from({length:15},(_,i)=>i)},
+ research:{label:'必須5項目＋任意の追加10項目',items:Array.from({length:15},(_,i)=>i)},
  tank:{label:'タンクトップ（5項目）',items:[0,1,2,3,4]},
  short:{label:'半袖（8項目）',items:[0,1,2,3,4,5,7,12]},
  long:{label:'長袖（8項目）',items:[0,1,2,3,4,5,7,12]},
@@ -6892,7 +6892,7 @@ function pinV2OwnerMenu(records){const box=document.getElementById('pinV2OwnerMe
 function pinV2RenderHome(){
  const box=document.getElementById('pinV2Home');box.replaceChildren();
  const wrap=document.createElement('div');wrap.className='v2-wrap';
- wrap.innerHTML='<div class="v2-word">PINFORME</div><h1>採寸を始める</h1><p><span class="v2-copy-line">ご利用状況に合わせて、</span><span class="v2-copy-line">下の入口をお選びください。</span></p><section class="v2-entry-card"><h2>初めてご利用の飼い主様</h2><p><span class="v2-copy-line">愛犬の採寸データを登録し、</span><span class="v2-copy-line">採寸カルテを作成します。</span></p><button id="v2New" class="v2-primary">初めての採寸を始める</button></section><section id="v2Registered" class="v2-entry-card"><h2>お客様キーをお持ちの飼い主様</h2><p><span class="v2-copy-line">登録済みの採寸を更新・追加できます。</span><span class="v2-copy-line">2匹目以降のわんちゃんも登録できます。</span></p><button id="v2RegisteredOpen" class="v2-primary" aria-expanded="false" aria-controls="v2KeyPanel">お客様キーで進む</button><div id="v2KeyPanel" hidden><label for="v2CustomerKey">お客様キー</label><input id="v2CustomerKey" type="text" placeholder="16文字のお客様キー" maxlength="24" autocomplete="off" autocapitalize="characters" spellcheck="false"><button id="v2KeyNext" class="v2-primary">お客様キーを確認して進む</button><p id="v2KeyStatus" role="status"></p><div id="v2Dogs" hidden></div><details class="v2-key-help"><summary>お客様キーを忘れた方はこちら</summary><p>登録時の飼い主様のお名前と、メールアドレスまたは電話番号から再発行の手続きへ進めます。</p><button id="v2RecoverKey">お客様キーの再発行へ</button><p>連絡先を登録していない方や、メールが見つからない方は、InstagramのDMまたはinfo@pinforme.jpへお問い合わせください。</p></details></div></section><p id="v2HomeStatus" role="status"></p>';
+ wrap.innerHTML='<div class="v2-word">PINFORME</div><h1>採寸を始める</h1><p><span class="v2-copy-line">まずは必須5項目から。</span><span class="v2-copy-line">追加10項目は任意です。</span></p><section class="v2-entry-card"><h2>初めてご利用の飼い主様</h2><p><span class="v2-copy-line">愛犬の採寸データを登録し、</span><span class="v2-copy-line">採寸カルテを作成します。</span></p><button id="v2New" class="v2-primary">初めての採寸を始める</button></section><section id="v2Registered" class="v2-entry-card"><h2>お客様キーをお持ちの飼い主様</h2><p><span class="v2-copy-line">登録済みの採寸を更新・追加できます。</span><span class="v2-copy-line">2匹目以降のわんちゃんも登録できます。</span></p><button id="v2RegisteredOpen" class="v2-primary" aria-expanded="false" aria-controls="v2KeyPanel">お客様キーで進む</button><div id="v2KeyPanel" hidden><label for="v2CustomerKey">お客様キー</label><input id="v2CustomerKey" type="text" placeholder="16文字のお客様キー" maxlength="24" autocomplete="off" autocapitalize="characters" spellcheck="false"><button id="v2KeyNext" class="v2-primary">お客様キーを確認して進む</button><p id="v2KeyStatus" role="status"></p><div id="v2Dogs" hidden></div><details class="v2-key-help"><summary>お客様キーを忘れた方はこちら</summary><p>登録時の飼い主様のお名前と、メールアドレスまたは電話番号から再発行の手続きへ進めます。</p><button id="v2RecoverKey">お客様キーの再発行へ</button><p>連絡先を登録していない方や、メールが見つからない方は、InstagramのDMまたはinfo@pinforme.jpへお問い合わせください。</p></details></div></section><p id="v2HomeStatus" role="status"></p>';
  box.append(wrap);pinV2RestoreBrand(wrap);
  document.getElementById('v2New').onclick=()=>pinV2Purpose();
  document.getElementById('v2RegisteredOpen').onclick=()=>{
@@ -7033,7 +7033,7 @@ function pinV2UpdatePlan(){
 }
 const pinV2OriginalValidate=validStep;
 validStep=function(section){
- if(PIN_V2){const index=steps.indexOf(section);if((['add','update'].includes(PIN_V2.mode)||PIN_V2.product!=='research'||index<5)&&PIN_V2.selected.includes(index)&&measurementGroups(section).some(g=>g.some(e=>e.value.trim()===''))){alert('今回測る項目は、各部位の3回分を入力してください。難しい場合は途中保存して、後から続けられます。');return false;}}
+ if(PIN_V2){const index=steps.indexOf(section);if(!pinV2IsOptional(index)&&PIN_V2.selected.includes(index)&&measurementGroups(section).some(g=>g.some(e=>e.value.trim()===''))){alert('今回測る項目は、各部位の3回分を入力してください。難しい場合は途中保存して、後から続けられます。');return false;}}
  return pinV2OriginalValidate(section);
 };
 const pinV2OriginalStart=startMeasurements;
@@ -7045,7 +7045,7 @@ startMeasurements=function(){
  pinV2Persist();pinV2ShowAt(PIN_V2.selected[0]);
 };
 function pinV2ShowAt(index){if(index===undefined){showFinish();return;}hideAll();current=index;steps[index].classList.add('active');pinV2Progress();window.scrollTo(0,0);savePINFORMEState();}
-function pinV2Progress(){steps.forEach((s,i)=>{const optional=s.querySelector('.optional-note');if(optional&&PIN_V2)optional.textContent=!['add','update'].includes(PIN_V2.mode)&&PIN_V2.product==='research'&&i>=5?'※ この項目は任意です。測れない部位は3回とも空欄のまま進められます。':'※ サイズ確認に必要な部位です。測りにくい場合は無理をせず、途中保存してご相談ください。';let note=s.querySelector('.v2-step-status');if(!note){note=document.createElement('p');note.className='v2-step-status';s.prepend(note);}note.textContent=PIN_V2?PIN_V2_PRODUCTS[PIN_V2.product].label+' ／ '+(PIN_V2.selected.indexOf(i)+1)+' / '+PIN_V2.selected.length+'項目'+(PIN_V2.product==='research'&&!['add','update'].includes(PIN_V2.mode)?(i<5?'。基本5項目は入力が必要です。':'。この項目は任意です。測れない部位は3回とも空欄で進められます。'):''):'';});}
+function pinV2Progress(){steps.forEach((s,i)=>{const optional=s.querySelector('.optional-note');if(optional&&PIN_V2)optional.textContent=pinV2IsOptional(i)?'※ この項目は任意です。測れない部位は3回とも空欄のまま進められます。':'※ サイズ確認に必要な部位です。測りにくい場合は無理をせず、途中保存してご相談ください。';let note=s.querySelector('.v2-step-status');if(!note){note=document.createElement('p');note.className='v2-step-status';s.prepend(note);}note.textContent=PIN_V2?PIN_V2_PRODUCTS[PIN_V2.product].label+' ／ '+(PIN_V2.selected.indexOf(i)+1)+' / '+PIN_V2.selected.length+'項目'+(PIN_V2.product==='research'&&!['add','update'].includes(PIN_V2.mode)?(i<5?'。基本5項目は入力が必要です。':'。この項目は任意です。測れない部位は3回とも空欄で進められます。'):''):'';});}
 const pinV2OriginalShow=showStep;
 showStep=function(n){
  if(!PIN_V2)return pinV2OriginalShow(n);
@@ -7358,4 +7358,54 @@ const observer=new MutationObserver(apply);[...originals.map(o=>o.section),docum
 document.addEventListener('DOMContentLoaded',apply);apply();
 })();
 </script>
-</body></html>
+<style>#pinV2OptionalChoice{display:none!important}#pinV2OptionalChoice.active{display:block!important}.v2-skip-optional{display:block;width:100%;margin:16px 0;padding:14px;min-height:48px;white-space:normal}[hidden].v2-skip-optional{display:none!important}</style><script id="pinforme-recruitment-five-items">// Recruitment flow: five required items, followed by an explicit optional choice.
+function pinV2IsOptional(index){
+ return !!PIN_V2 && !['add','update'].includes(PIN_V2.mode) && index>=5 && (PIN_V2.product==='research'||(['tank','undecided'].includes(PIN_V2.product)&&PIN_V2.optionalAdditional===true));
+}
+(function(){
+ const previousHide=hideAll;
+ hideAll=function(){previousHide();document.getElementById('pinV2OptionalChoice')?.classList.remove('active');};
+ const previousPurpose=pinV2Purpose;
+ pinV2Purpose=function(...args){
+  previousPurpose(...args);
+  const select=document.getElementById('v2Product');
+  for(const option of [...select.options])if(['short','long','turtle','romper'].includes(option.value))option.remove();
+  document.querySelector('#pinV2Purpose h1').textContent='採寸の目的を選んでください';
+  document.querySelector('#pinV2Purpose .v2-required-note').innerHTML='<p><strong>まずは5項目の採寸でご協力いただけます。</strong></p><p>首まわり（付け根）・胴まわり・ウエスト・着丈・前身頃を、各3回ずつ測って入力してください。</p>';
+  document.querySelector('#pinV2Purpose .v2-note').innerHTML='<p>第一弾のタンクトップのサイズ設計に、必須5項目を使います。</p><p>追加10項目は、今後の服づくりに役立てるための任意項目です。5項目のあとで、追加するか選べます。追加しなくても送信できます。</p>';
+ };
+ function eligible(){return PIN_V2&&!['add','update'].includes(PIN_V2.mode)&&['tank','undecided','research'].includes(PIN_V2.product);}
+ function review(){pinV2Persist();showFinish();window.scrollTo(0,0);savePINFORMEState();}
+ function choice(){
+  let box=document.getElementById('pinV2OptionalChoice');
+  if(!box){box=document.createElement('section');box.id='pinV2OptionalChoice';box.className='intro-step';document.body.append(box);}
+  box.innerHTML='<div class="v2-wrap"><div class="v2-word">PINFORME</div><h1>必須5項目の入力ができました！</h1><p>ご協力ありがとうございます。<strong>この5項目だけで採寸協力として送信できます。</strong></p><button id="v2FiveReview" class="v2-primary">5項目で確認・送信へ進む</button><div class="v2-note"><h2>追加10項目は任意です</h2><p>半袖・長袖など、今後の服づくりに役立てたいと考えています。余裕があればご協力ください。測りにくい部位は空欄で進められます。</p></div><button id="v2AddOptional">任意の追加10項目も測る</button><button id="v2OptionalBack">5項目目に戻る</button><p>確認画面の「PINFORMEへ送信・保存」で協力完了です。</p></div>';
+  document.getElementById('v2FiveReview').onclick=()=>{
+   // Existing values remain in the record; unvisited optional fields are not fabricated.
+   PIN_V2.selected=PIN_V2.selected.filter(i=>i<5);review();
+  };
+  document.getElementById('v2AddOptional').onclick=()=>{
+   PIN_V2.optionalAdditional=true;PIN_V2.selected=[...new Set([...PIN_V2.selected,...Array.from({length:10},(_,i)=>i+5)])].sort((a,b)=>a-b);
+   pinV2Persist();pinV2ShowAt(5);
+  };
+  document.getElementById('v2OptionalBack').onclick=()=>pinV2ShowAt(4);
+  pinV2RestoreBrand(box);pinV2Page('pinV2OptionalChoice');
+ };
+ const previousShow=showStep;
+ showStep=function(n){
+  if(eligible()&&current===4&&n===5){choice();return;}
+  return previousShow(n);
+ };
+ const previousProgress=pinV2Progress;
+ pinV2Progress=function(){
+  previousProgress();
+  steps.forEach((section,index)=>{
+   const note=section.querySelector('.v2-step-status');
+   if(eligible()&&note)note.textContent=index<5?'必須5項目 ／ '+(index+1)+' / 5項目：タンクトップのサイズ設計に使います。':'任意の追加10項目 ／ '+(index-4)+' / 10項目：今後の服づくりに役立てます。';
+   let skip=section.querySelector('.v2-skip-optional');
+   if(index>=5&&!skip){skip=document.createElement('button');skip.type='button';skip.className='v2-skip-optional';skip.textContent='残りの任意項目を測らず、確認へ進む';section.append(skip);skip.onclick=()=>{if(validStep(section))review();};}
+   if(skip)skip.hidden=!eligible()||!pinV2IsOptional(index);
+  });
+ };
+})();
+</script></body></html>
