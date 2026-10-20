@@ -6239,8 +6239,8 @@ function calculate(){if(!allowed())return;invalidate();try{
  const header=['胴まわりの範囲',...(config.byLength?['着丈の範囲']:[]),...(config.bySex?['性別']:[]),'頭数',...config.fields.map(f=>labels[f])];
  const rows=kind=>analysis.groups.map(g=>[range(g.chest),...(config.byLength?[range(g.length)]:[]),...(config.bySex?[g.sex]:[]),g.n,...config.fields.map(f=>kind==='n'?g.stats[f].n:kind==='rounded'?(g.stats[f].mean==null?'—':Math.round(g.stats[f].mean)):fmt(g.stats[f].mean))]);
  const fieldRows=g=>config.fields.map(f=>{const s=g.stats[f];return '<tr><th scope="row">'+esc(labels[f])+'<small>'+s.n+'頭</small></th><td>'+fmt(s.min)+'<span>〜</span>'+fmt(s.max)+'</td><td><strong>'+fmt(s.mean)+'</strong><small>目安 '+(s.mean==null?'—':Math.round(s.mean))+'</small></td></tr>';}).join('');
- const dogCard=x=>'<article class="ps-dog-card"><header><strong>'+esc(x.dog.dog_name||'名前未入力')+'</strong><span>'+esc(x.sex)+'</span></header><p class="ps-dog-meta">ID '+esc(x.dog.id)+' · 採寸日 '+esc(x.row.measured_on||PinOemExport.day(x.row.created_at))+' · '+(x.age==null?'月齢不明':x.age+'か月')+'</p><dl class="ps-dog-values">'+config.fields.map(f=>'<div><dt>'+esc(labels[f])+'</dt><dd>'+fmt(x.values[f])+'<small> cm</small></dd></div>').join('')+'</dl></article>';
- const groupBody=g=>'<div class="ps-group-body"><h4>実測範囲と平均 <small>cm</small></h4><table class="ps-metric-table"><thead><tr><th>採寸項目／対象頭数</th><th>最小〜最大</th><th>平均／整数目安</th></tr></thead><tbody>'+fieldRows(g)+'</tbody></table><h4>このサイズのわんちゃん <small>'+g.n+'頭</small></h4><div class="ps-dog-cards">'+g.members.map(dogCard).join('')+'</div></div>';
+ const dogCard=x=>'<details class="ps-dog-card ps-dog-disclosure"><summary><strong>'+esc(x.dog.dog_name||'名前未入力')+'</strong><span>'+esc(x.sex)+'</span><span class="ps-dog-toggle" aria-hidden="true">＋</span></summary><div class="ps-dog-detail"><p class="ps-dog-meta">ID '+esc(x.dog.id)+' · 採寸日 '+esc(x.row.measured_on||PinOemExport.day(x.row.created_at))+' · '+(x.age==null?'月齢不明':x.age+'か月')+'</p><dl class="ps-dog-values">'+config.fields.map(f=>'<div><dt>'+esc(labels[f])+'</dt><dd>'+fmt(x.values[f])+'<small> cm</small></dd></div>').join('')+'</dl></div></details>';
+ const groupBody=g=>'<div class="ps-group-body"><h4>このグループのわんちゃん <small>'+g.n+'頭</small></h4><div class="ps-dog-cards">'+g.members.map(dogCard).join('')+'</div><h4>このグループの平均値 <small>cm</small></h4><table class="ps-metric-table"><thead><tr><th>採寸項目／対象頭数</th><th>最小〜最大</th><th>平均／整数目安</th></tr></thead><tbody>'+fieldRows(g)+'</tbody></table></div>';
  const sizeGroups=analysis.chestBins.map(b=>{const members=pop.items.filter(x=>Q.inside(x.values.chest,b));const chest=Q.stats(members,['chest']).chest;return {bin:b,members,name:chest.n?String(Math.round(chest.mean)):'—',groups:analysis.groups.filter(g=>g.n&&g.chest===b)};});
  const detail=sizeGroups.map(s=>'<details class="ps-size-overview"><summary><span class="ps-size-label"><small>SIZE</small><strong>'+esc(s.name)+'</strong></span><span class="ps-size-description"><strong>胴 '+esc(range(s.bin))+' cm</strong><small>'+(config.byLength?'着丈別':'')+(config.byLength&&config.bySex?'・':'')+(config.bySex?'性別':'')+((config.byLength||config.bySex)?'の詳細':'実測値・わんちゃん')+'</small></span><span class="ps-size-total">'+s.members.length+'<small>頭</small></span><span class="ps-size-chevron" aria-hidden="true">＋</span></summary>'+(s.groups.length?(config.byLength||config.bySex?s.groups.map(g=>'<details class="ps-group-card ps-subgroup"><summary><span class="ps-subgroup-name">'+(config.byLength?'着丈 '+esc(range(g.length))+(g.length==='unknown'?'':' cm'):'')+(config.byLength&&config.bySex?' · ':'')+(config.bySex?esc(g.sex):'')+'</span><span class="ps-subgroup-count">'+g.n+'頭</span></summary>'+groupBody(g)+'</details>').join(''):groupBody(s.groups[0])):'<p class="ps-empty-size">この範囲の採寸データはありません。</p>')+'</details>').join('');
  const disclosure=(title,content)=>'<details class="ps-secondary-detail"><summary>'+esc(title)+'</summary><div class="ps-detail-body">'+content+'</div></details>';
@@ -7585,5 +7585,17 @@ function pinRequireSavedKarte(allowAdmin=false){
 #pinSizePanel .ps-empty-size{padding:12px}
 #pinSizePanel .ps-supporting-results{margin-top:18px;padding-top:8px}
 @media(min-width:500px){#pinSizePanel .ps-size-description>strong{font-size:13px}#pinSizePanel .ps-size-description>small{font-size:11px}}
+
+</style><style id="pin-dog-list-view">
+#pinSizePanel .ps-dog-disclosure{padding:0;overflow:hidden}
+#pinSizePanel .ps-dog-disclosure>summary{display:flex;align-items:center;gap:8px;list-style:none;padding:12px;min-height:46px;box-sizing:border-box;font-weight:400}
+#pinSizePanel .ps-dog-disclosure>summary::-webkit-details-marker{display:none}
+#pinSizePanel .ps-dog-disclosure>summary>strong{flex:1;min-width:0;font-size:15px;font-weight:700;overflow-wrap:anywhere;line-height:1.5}
+#pinSizePanel .ps-dog-disclosure>summary>span{font-size:11px;color:#746d60;white-space:nowrap}
+#pinSizePanel .ps-dog-disclosure>summary>.ps-dog-toggle{font-size:17px;margin-left:3px}
+#pinSizePanel .ps-dog-disclosure[open]>summary>.ps-dog-toggle{font-size:0}
+#pinSizePanel .ps-dog-disclosure[open]>summary>.ps-dog-toggle::after{content:'−';font-size:17px}
+#pinSizePanel .ps-dog-detail{padding:0 12px 12px;border-top:1px solid #e9e4da}
+#pinSizePanel .ps-dog-detail .ps-dog-meta{margin:10px 0}
 
 </style></body></html>
