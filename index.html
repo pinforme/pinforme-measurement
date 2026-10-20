@@ -6238,8 +6238,13 @@ function calculate(){if(!allowed())return;invalidate();try{
  const summary=table(['胴まわりの範囲','頭数','着丈 対象頭数','着丈 最小','着丈 平均','着丈 最大'],analysis.chestBins.map(b=>{const members=pop.items.filter(x=>Q.inside(x.values.chest,b)),s=Q.stats(members,['back_length']).back_length;return [range(b),members.length,s.n,fmt(s.min),fmt(s.mean),fmt(s.max)];}));
  const header=['胴まわりの範囲',...(config.byLength?['着丈の範囲']:[]),...(config.bySex?['性別']:[]),'頭数',...config.fields.map(f=>labels[f])];
  const rows=kind=>analysis.groups.map(g=>[range(g.chest),...(config.byLength?[range(g.length)]:[]),...(config.bySex?[g.sex]:[]),g.n,...config.fields.map(f=>kind==='n'?g.stats[f].n:kind==='rounded'?(g.stats[f].mean==null?'—':Math.round(g.stats[f].mean)):fmt(g.stats[f].mean))]);
- const detail=analysis.groups.filter(g=>g.n).map(g=>'<details class="ps-size-card"><summary>'+esc(range(g.chest)+'／'+(config.byLength?range(g.length)+'／':'')+g.sex+'：'+g.n+'頭')+'</summary>'+table(['項目','対象頭数','最小','平均','最大'],config.fields.map(f=>{const s=g.stats[f];return [labels[f],s.n,fmt(s.min),fmt(s.mean),fmt(s.max)];}))+table(['名前／ID','採寸日','性別','採寸時月齢',...config.fields.map(f=>labels[f])],g.members.map(x=>[String(x.dog.dog_name||'名前未入力')+'／'+x.dog.id,x.row.measured_on||PinOemExport.day(x.row.created_at),x.sex,x.age==null?'不明':x.age,...config.fields.map(f=>fmt(x.values[f]))]))+'</details>').join('');
- el('psResults').innerHTML='<h3>胴まわりと着丈の分布</h3>'+counts+summary+'<h3>範囲別の平均（cm）</h3>'+table(header,rows('mean'))+'<h3>身体寸法のサイズ目安（四捨五入・cm）</h3>'+table(header,rows('rounded'))+'<details><summary>項目ごとの対象頭数</summary>'+table(header,rows('n'))+'</details><h3>各区分の実測範囲とわんちゃん</h3>'+detail+'<p>選択した年齢区分の最新履歴を1頭1件で集計。追加項目の空欄・文字・0以下は、その項目からのみ除外します。年齢区分と合わない測定時点の寸法も、その項目から除外します。'+pop.invalidFields+'項目を測定時月齢の条件により除外しました。</p><p>着丈の区切りは各胴まわり区分内の最小値から作成。境界は下限以上・上限未満、最後だけ上限以下。着丈不明・性別不明は別表示し、平均への混入を避けます。</p>';
+ const fieldRows=g=>config.fields.map(f=>{const s=g.stats[f];return '<tr><th scope="row">'+esc(labels[f])+'<small>'+s.n+'頭</small></th><td>'+fmt(s.min)+'<span>〜</span>'+fmt(s.max)+'</td><td><strong>'+fmt(s.mean)+'</strong><small>目安 '+(s.mean==null?'—':Math.round(s.mean))+'</small></td></tr>';}).join('');
+ const dogCard=x=>'<article class="ps-dog-card"><header><strong>'+esc(x.dog.dog_name||'名前未入力')+'</strong><span>'+esc(x.sex)+'</span></header><p class="ps-dog-meta">ID '+esc(x.dog.id)+' · 採寸日 '+esc(x.row.measured_on||PinOemExport.day(x.row.created_at))+' · '+(x.age==null?'月齢不明':x.age+'か月')+'</p><dl class="ps-dog-values">'+config.fields.map(f=>'<div><dt>'+esc(labels[f])+'</dt><dd>'+fmt(x.values[f])+'<small> cm</small></dd></div>').join('')+'</dl></article>';
+ const detail=analysis.groups.filter(g=>g.n).map((g,i)=>'<details class="ps-group-card" open><summary><span class="ps-group-top"><span class="ps-group-index">区分 '+(i+1)+'</span><span class="ps-headcount">'+g.n+'<small>頭</small></span></span><strong class="ps-group-range">胴まわり '+esc(range(g.chest))+'<small> cm</small></strong><span class="ps-group-tags">'+(config.byLength?'<span>着丈 '+esc(range(g.length))+(g.length==='unknown'?'':' cm')+'</span>':'')+(config.bySex?'<span>'+esc(g.sex)+'</span>':'')+'</span><span class="ps-toggle-hint">開く・閉じる</span></summary><div class="ps-group-body"><h4>実測範囲と平均 <small>cm</small></h4><table class="ps-metric-table"><thead><tr><th>採寸項目／対象頭数</th><th>最小〜最大</th><th>平均／整数目安</th></tr></thead><tbody>'+fieldRows(g)+'</tbody></table><h4>この区分のわんちゃん <small>'+g.n+'頭</small></h4><div class="ps-dog-cards">'+g.members.map(dogCard).join('')+'</div></div></details>').join('');
+ const disclosure=(title,content)=>'<details class="ps-secondary-detail"><summary>'+esc(title)+'</summary><div class="ps-detail-body">'+content+'</div></details>';
+ const ageLabel=el('psAge').value==='all'?'全年齢':el('psAge').value==='adult'?'成犬':'パピー';
+ const guide='<p>選択した年齢区分の最新履歴を1頭1件で集計。空欄・文字・0以下は、その項目からのみ除外します。年齢区分と合わない測定時点の寸法も、その項目から除外します。'+pop.invalidFields+'項目を測定時月齢の条件により除外しました。</p><p>胴まわり・着丈とも、最小値から設定幅で区切ります。下限以上・上限未満、最後の区分だけ上限以下です。着丈の区切りは胴まわり区分ごとに作成します。着丈不明・性別不明は別表示します。</p><p>平均・整数目安は犬の身体寸法です。服の仕上がり寸法や販売サイズを確定するものではありません。</p>';
+ el('psResults').innerHTML='<section class="ps-main-results" aria-label="区分別の採寸結果"><div class="ps-result-heading"><p class="ps-result-context">'+esc(el('psBreed').value)+' · '+esc(config.name)+' · '+ageLabel+'</p><h3>各区分の実測範囲とわんちゃん</h3><div class="ps-result-totals"><span>集計対象 <strong>'+analysis.eligible+'頭</strong></span><span>表示区分 <strong>'+analysis.groups.filter(g=>g.n).length+'</strong></span></div><p>各区分の実測値と、所属するわんちゃんを確認できます。区分ごとに折りたたむこともできます。</p></div>'+detail+'</section><section class="ps-supporting-results" aria-label="補足の集計"><h3>ほかの集計・詳細</h3>'+disclosure('胴まわりと着丈の分布',counts+summary)+disclosure('範囲別の平均（cm）',table(header,rows('mean')))+disclosure('身体寸法のサイズ目安（四捨五入・cm）',table(header,rows('rounded')))+disclosure('項目ごとの対象頭数',table(header,rows('n')))+disclosure('集計対象・除外件数と計算方法',counts+guide)+'</section>';
  el('psExportCSV').disabled=false;
  }catch(e){message(e);el('psExportCSV').disabled=true;}}
 function downloadFile(name,text,type){const blob=new Blob([text],{type:type+';charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}
@@ -7494,4 +7499,60 @@ function pinRequireSavedKarte(allowAdmin=false){
  return false;
 }
 
-</script></body></html>
+</script><style id="pin-analysis-results-view">
+/* Focused, mobile-first analysis results. */
+#pinSizePanel #psResults{margin-top:28px;min-width:0}
+#pinSizePanel .ps-result-heading{margin:0 0 20px}
+#pinSizePanel .ps-result-heading h3{font-size:21px;line-height:1.55;margin:8px 0 14px}
+#pinSizePanel .ps-result-context{color:#696253;font-weight:700;overflow-wrap:anywhere}
+#pinSizePanel .ps-result-totals{display:flex;flex-wrap:wrap;gap:8px}
+#pinSizePanel .ps-result-totals>span{background:#eee9de;padding:9px 12px;border-radius:9px;font-size:13px}
+#pinSizePanel .ps-result-totals strong{font-size:18px;margin-left:8px;color:#292a28}
+#pinSizePanel .ps-group-card{margin:16px 0 22px;border:1px solid #d7d1c5;border-radius:15px;background:#fff;overflow:hidden}
+#pinSizePanel .ps-group-card>summary{display:block;position:relative;padding:16px;background:#f3f0e8;list-style:none;cursor:pointer}
+#pinSizePanel .ps-group-card>summary::-webkit-details-marker{display:none}
+#pinSizePanel .ps-group-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}
+#pinSizePanel .ps-group-index{font-size:12px;letter-spacing:.04em;color:#6a6256}
+#pinSizePanel .ps-headcount{font-size:25px;color:#33372e;line-height:1.2}
+#pinSizePanel .ps-headcount small{font-size:12px;margin-left:4px}
+#pinSizePanel .ps-group-range{display:block;font-size:17px;line-height:1.65;overflow-wrap:anywhere}
+#pinSizePanel .ps-group-range>small{font-size:12px;font-weight:400}
+#pinSizePanel .ps-group-tags{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0 0}
+#pinSizePanel .ps-group-tags>span{background:#fff;border:1px solid #ded9ce;border-radius:7px;padding:5px 8px;font-size:12px;line-height:1.5;overflow-wrap:anywhere}
+#pinSizePanel .ps-toggle-hint{display:block;margin-top:10px;text-align:right;color:#686459;font-size:11px;font-weight:400}
+#pinSizePanel .ps-group-card>summary .ps-toggle-hint::before{content:'＋ ';font-weight:700}
+#pinSizePanel .ps-group-card[open]>summary .ps-toggle-hint::before{content:'− ';font-weight:700}
+#pinSizePanel .ps-group-body{padding:0 14px 16px;min-width:0}
+#pinSizePanel .ps-group-body h4{font-size:15px;line-height:1.6;margin:20px 0 10px}
+#pinSizePanel .ps-group-body h4>small{font-weight:400;font-size:12px;color:#777;margin-left:5px}
+#pinSizePanel .ps-metric-table{width:100%;table-layout:fixed;font-size:13px;font-variant-numeric:tabular-nums}
+#pinSizePanel .ps-metric-table th,#pinSizePanel .ps-metric-table td{white-space:normal;overflow-wrap:anywhere;padding:11px 5px;line-height:1.5;vertical-align:middle}
+#pinSizePanel .ps-metric-table thead th{font-size:11px;font-weight:500;color:#67645d;background:#f8f7f3}
+#pinSizePanel .ps-metric-table th:first-child{width:39%;text-align:left}
+#pinSizePanel .ps-metric-table th:nth-child(2){width:32%}
+#pinSizePanel .ps-metric-table th:nth-child(3){width:29%}
+#pinSizePanel .ps-metric-table tbody th{font-size:12px;font-weight:500}
+#pinSizePanel .ps-metric-table td span{font-size:10px;padding:0 2px}
+#pinSizePanel .ps-metric-table small{display:block;font-size:10px;font-weight:400;color:#777;margin-top:4px}
+#pinSizePanel .ps-metric-table td strong{font-size:16px;font-weight:700;color:#33372e}
+#pinSizePanel .ps-dog-cards{display:grid;gap:10px}
+#pinSizePanel .ps-dog-card{padding:13px;border:1px solid #e3dfd5;border-radius:11px;background:#fcfbf8;min-width:0}
+#pinSizePanel .ps-dog-card header{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+#pinSizePanel .ps-dog-card header strong{font-size:16px;overflow-wrap:anywhere}
+#pinSizePanel .ps-dog-card header span{font-size:11px;white-space:nowrap;color:#716c61}
+#pinSizePanel .ps-dog-meta{font-size:10px;line-height:1.7;color:#797469;overflow-wrap:anywhere;margin:6px 0 12px}
+#pinSizePanel .ps-dog-values{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 12px;margin:0}
+#pinSizePanel .ps-dog-values>div{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:3px 6px;padding:8px 0;border-top:1px solid #e8e4dc;min-width:0}
+#pinSizePanel .ps-dog-values dt{font-size:11px;color:#6e685d;overflow-wrap:anywhere}
+#pinSizePanel .ps-dog-values dd{margin:0;font-size:15px;font-weight:700;font-variant-numeric:tabular-nums}
+#pinSizePanel .ps-dog-values dd small{font-size:9px;font-weight:400;color:#777}
+#pinSizePanel .ps-supporting-results{margin-top:30px;border-top:1px solid #ded8cd;padding-top:14px}
+#pinSizePanel .ps-supporting-results h3{font-size:17px}
+#pinSizePanel .ps-secondary-detail{border:1px solid #ddd7cb;border-radius:10px;margin:10px 0;background:#fff;overflow:hidden}
+#pinSizePanel .ps-secondary-detail>summary{padding:15px 13px;font-size:14px;line-height:1.6;background:#f6f4ef}
+#pinSizePanel .ps-detail-body{padding:12px;min-width:0}
+#pinSizePanel .ps-detail-body .ps-scroll{max-width:100%}
+#pinSizePanel .ps-detail-body table{font-size:12px}
+@media(min-width:760px){#pinSizePanel .ps-group-body{padding:0 22px 20px}#pinSizePanel .ps-dog-cards{grid-template-columns:repeat(2,minmax(0,1fr))}#pinSizePanel .ps-metric-table{font-size:15px}#pinSizePanel .ps-metric-table tbody th{font-size:14px}}
+
+</style></body></html>
