@@ -1929,7 +1929,8 @@ body.pinforme-admin-view {
     <h1>採寸完了</h1>
     <p>すべての採寸が完了しました。<br>最後までご協力いただき、ありがとうございました。</p>
     
-<button type="button" class="primary" onclick="openKartePage()">採寸カルテを見る</button>
+<p id="pinKarteAfterSaveNote" style="font-size:14px;line-height:1.7;">採寸カルテは、送信・保存が完了した後にご覧いただけます。</p>
+<button type="button" id="pinSavedKarteButton" class="primary" onclick="openKartePage()" hidden>採寸カルテを見る・PDF保存</button>
 <div style="margin-top:12px;padding:14px;border:1px solid #ddd;border-radius:16px;background:#fafafa;">
       <div style="font-size:14px;font-weight:700;margin-bottom:8px;">修正する採寸項目を選ぶ</div>
       <div style="display:grid;grid-template-columns:minmax(0,1fr);gap:10px;align-items:stretch;width:100%;">
@@ -3213,6 +3214,7 @@ function resizeFinalKarteFrame(){
   }catch(e){ console.error(e); }
 }
 function openKartePage(){
+  if(!pinRequireSavedKarte())return;
   hideAll();
   const page=document.getElementById("kartePage");
   page.classList.add("active");
@@ -3259,6 +3261,7 @@ window.addEventListener("resize",()=>{
 });
 
 async function printFinalKarte(){
+  if(!pinRequireSavedKarte(true))return;
   const frame=document.getElementById("finalKarteFrame");
   if(!frame || !frame.contentDocument) return;
 
@@ -4881,6 +4884,7 @@ function restorePINFORMEState(continueDraft=false){
   }
 
   if(!continueDraft && (navType==="reload" || new URLSearchParams(location.search).has("_pinforme_reason")) && !state.submitted)wanted=pinDraftResumeView(state);
+  if(wanted==="kartePage" && !pinUserKarteReady())wanted="finishPage";
   if(wanted){
     if(String(wanted).startsWith("measure:")){
       const idx=parseInt(String(wanted).split(":")[1],10);
@@ -6120,7 +6124,7 @@ if(typeof module!=='undefined')module.exports=PinSizeCore;
 <style>
 #pinSizePanel{margin:18px 0;padding:18px;border:1px solid #ddd;border-radius:14px;background:#fafafa;color:#222}#pinSizePanel h2{font-size:22px;margin:0 0 14px}#pinSizePanel p{font-size:13px;line-height:1.8}#pinSizePanel label{display:block;font-size:13px;font-weight:700;margin:12px 0 6px}#pinSizePanel input,#pinSizePanel select{width:100%;min-height:44px;border:1px solid #bbb;border-radius:8px;padding:8px;font-size:16px;background:#fff}#pinSizePanel button{min-height:44px;border:1px solid #bbb;border-radius:8px;padding:10px 14px;margin:8px 4px 8px 0;font-weight:700;background:#fff;color:#111}#pinSizePanel .ps-primary{background:#111;color:#fff}#pinSizePanel .ps-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}#pinSizePanel .ps-scroll{overflow-x:auto}#pinSizePanel table{border-collapse:collapse;width:100%;font-size:13px}#pinSizePanel th,#pinSizePanel td{padding:10px 6px;border-bottom:1px solid #ddd;text-align:left;white-space:nowrap}#pinSizePanel .ps-range{display:flex;gap:4px;align-items:center}#pinSizePanel .ps-range input{width:80px}#pinSizePanel .ps-size-name{width:90px}#pinSizePanel .ps-note{background:#eee;padding:12px;border-radius:8px}#pinSizePanel .ps-error{color:#a02020;white-space:pre-line}#pinSizePanel .ps-size-card{padding:14px;margin:12px 0;border:1px solid #ddd;border-radius:10px;background:#fff}#pinSizePanel summary{cursor:pointer;padding:8px 0;font-weight:700}
 
-#pinSizePanel .ps-ratio-dog{display:flex;flex-direction:column;gap:6px;padding:12px 0;border-top:1px solid #e3e0da;font-size:13px;line-height:1.6;min-width:0;overflow-wrap:anywhere}
+#pinSizePanel .ps-field-choice{display:inline-flex;align-items:center;gap:8px;margin:8px 16px 8px 0;font-weight:400}#pinSizePanel input[type=checkbox]{width:20px;min-height:20px;height:20px;flex:none}#pinSizePanel fieldset{border:1px solid #ddd;border-radius:8px;margin:14px 0;padding:12px}#pinSizePanel .ps-ratio-dog{display:flex;flex-direction:column;gap:6px;padding:12px 0;border-top:1px solid #e3e0da;font-size:13px;line-height:1.6;min-width:0;overflow-wrap:anywhere}
 #pinSizePanel .ps-ratio-values{display:flex;flex-wrap:wrap;gap:6px 16px}
 #pinSizePanel .ps-ratio-values span{white-space:nowrap}
 </style>
@@ -6163,16 +6167,83 @@ const PinOemExport=(()=>{
  return {day,rows,workbook};
 })();
 
+/* Clothing analysis v2: read-only measurement analysis; settings are local. */
+const PinClothingCore=(()=>{
+ const number=v=>v==null||String(v).trim()===''||!Number.isFinite(Number(v))||Number(v)<=0?null:Number(v);
+ const sex=v=>['男の子','male','男','オス'].includes(v)?'男の子':['女の子','female','女','メス'].includes(v)?'女の子':'不明';
+ const round=v=>Math.round((v+Number.EPSILON)*100000000)/100000000;
+ function bins(values,width){
+  if(!Number.isFinite(width)||width<=0)throw Error('区切り幅は0より大きい数値にしてください。');
+  if(!values.length)return [];
+  const lo=Math.min(...values),hi=Math.max(...values),count=Math.max(1,Math.ceil(round((hi-lo)/width)));
+  if(count>100)throw Error('区分が100個を超えます。区切り幅を広げてください。');
+  return Array.from({length:count},(_,i)=>({lo:round(lo+i*width),hi:i===count-1?hi:round(lo+(i+1)*width),last:i===count-1}));
+ }
+ const inside=(v,b)=>v!=null&&v>=b.lo&&(b.last?v<=b.hi:v<b.hi);
+ function stats(items,fields){return Object.fromEntries(fields.map(f=>{const vs=items.map(x=>x.values[f]).filter(v=>v!==null&&v!==undefined);return [f,vs.length?{n:vs.length,mean:vs.reduce((a,b)=>a+b,0)/vs.length,min:Math.min(...vs),max:Math.max(...vs)}:{n:0,mean:null,min:null,max:null}];}));}
+ function analyze(items,config){
+  const eligible=items.filter(x=>x.values.chest!=null),chestBins=bins(eligible.map(x=>x.values.chest),config.chestWidth),groups=[];
+  const add=(members,chest,length,sexLabel)=>groups.push({chest,length,sex:sexLabel,n:members.length,stats:stats(members,config.fields),members});
+  for(const chest of chestBins){
+   const members=eligible.filter(x=>inside(x.values.chest,chest));
+   const parts=config.byLength?bins(members.map(x=>x.values.back_length).filter(v=>v!=null),config.lengthWidth).map(b=>({length:b,members:members.filter(x=>inside(x.values.back_length,b))})):[{length:null,members}];
+   if(config.byLength&&members.some(x=>x.values.back_length==null))parts.push({length:'unknown',members:members.filter(x=>x.values.back_length==null)});
+   if(!parts.length)parts.push({length:null,members:[]});
+   for(const part of parts){if(config.bySex){for(const s of ['男の子','女の子','不明']){const subset=part.members.filter(x=>x.sex===s);if(subset.length)add(subset,chest,part.length,s);}}else add(part.members,chest,part.length,'全体');}
+  }
+  return {groups,chestBins,eligible:eligible.length,missingChest:items.length-eligible.length,stats:stats(eligible,config.fields)};
+ }
+ return {number,sex,bins,inside,stats,analyze};
+})();
+
 (()=>{
-const C=PinSizeCore,L={chest:'胴まわり',neck:'首まわり',back_length:'着丈',waist:'ウエスト'};
-let state={items:[],plan:[],signature:'',results:[],report:null};
-const el=id=>document.getElementById(id),esc=v=>adminEsc(v),fmt=v=>v==null?'—':Number(v.toFixed(3)).toString();
-function allowed(){return !!getAdminSession()?.access_token&&isAdminVerified();}
-function signature(){return JSON.stringify([el('psBreed').value,el('psAge').value,el('psMonths').value,PINFORME_ADMIN_ROWS.map(r=>[r.id,r.created_at,r.measured_on,r.field_measured_on]),PINFORME_ADMIN_DOGS.map(d=>[d.id,d.breed,d.birth_date])]);}
-function reset(){if(el('psComparison'))el('psComparison').innerHTML='';state.plan=[];state.results=[];state.report=null;el('psEditor').innerHTML='';el('psResults').innerHTML='';el('psError').textContent='';}
-function refresh(){if(!allowed())return;reset();const old=el('psBreed').value;state.items=C.latest(PINFORME_ADMIN_DOGS,PINFORME_ADMIN_ROWS);const breeds=[...new Set(state.items.map(x=>x.breed).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ja'));el('psBreed').innerHTML='<option value="">犬種を選択</option>'+breeds.map(b=>'<option>'+esc(b)+'</option>').join('');if(breeds.includes(old))el('psBreed').value=old;else if(breeds.includes('ミニチュアピンシャー'))el('psBreed').value='ミニチュアピンシャー';el('psStatus').textContent=`読み込み済み：${state.items.length}頭／採寸履歴${PINFORME_ADMIN_ROWS.length}件。旧データ（dog_idなし）${PINFORME_ADMIN_ROWS.filter(r=>r.dog_id==null).length}件は、個体を確実に識別できないため対象外。`+(PINFORME_ADMIN_ROWS.length>=1000||PINFORME_ADMIN_DOGS.length>=1000?' 読み込み上限に達しています。全件分析には取得処理の拡張が必要です。':'');}
-function population(){const breed=el('psBreed').value,threshold=Number(el('psMonths').value);if(!breed)throw Error('犬種を選んでください。');if(!Number.isInteger(threshold)||threshold<1||threshold>36)throw Error('成犬の境界は1〜36か月の整数で指定してください。');const ageMode=el('psAge').value;const items=state.items.map(x=>{const row=adminDogHistory(x.dog).find(r=>{const age=C.months(x.dog.birth_date||r.birth_date,r.measured_on);return age!==null&&(ageMode==='adult'?age>=threshold:age<threshold);});return {...x,row:row||x.row};});return C.population(items,breed,ageMode,threshold);}
-function error(e){el('psError').textContent=e.message||String(e);}
+const C=PinSizeCore,Q=PinClothingCore,el=id=>document.getElementById(id),esc=v=>adminEsc(v),fmt=v=>v==null?'—':Number(v.toFixed(2)).toString();
+const labels=Object.fromEntries(ADMIN_FIELDS.map(([label,key])=>[key,label.replace(/^[①-⑮]\s*/, '')]));labels.neck='首まわり（付け根）';
+const keys=ADMIN_FIELDS.map(([,key])=>key),storageKey='pinforme_clothing_analysis_v2';
+const defaults=()=>[{id:'tank',name:'タンクトップ',fields:keys.slice(0,5),chestWidth:3,lengthWidth:3,byLength:false,bySex:false},{id:'rompers',name:'ロンパース',fields:[...keys.slice(0,5),...keys.slice(5,15)],chestWidth:3,lengthWidth:3,byLength:true,bySex:true}];
+let profiles=defaults(),active='tank',report=null,state={items:[]},loadWarning='';
+const allowed=()=>!!getAdminSession()?.access_token&&isAdminVerified();
+const selected=()=>profiles.find(p=>p.id===active)||profiles[0];
+function validProfiles(v){return Array.isArray(v)&&v.length>0&&v.length<=100&&new Set(v.map(p=>p.id)).size===v.length&&v.every(p=>typeof p.id==='string'&&p.id.length>0&&typeof p.name==='string'&&p.name.trim()&&p.name.length<=80&&Array.isArray(p.fields)&&p.fields.length>0&&new Set(p.fields).size===p.fields.length&&p.fields.every(f=>keys.includes(f))&&Number.isFinite(p.chestWidth)&&p.chestWidth>0&&Number.isFinite(p.lengthWidth)&&p.lengthWidth>0&&typeof p.byLength==='boolean'&&typeof p.bySex==='boolean');}
+try{const raw=localStorage.getItem(storageKey);if(raw){const saved=JSON.parse(raw);if(!validProfiles(saved))throw Error();profiles=saved;active=profiles[0].id;}}catch(e){loadWarning='保存済み設定を読み込めません。初期設定を表示しています。設定ファイルがあれば読み込んでください。';}
+function message(e){el('psError').textContent=e.message||String(e);}
+function invalidate(){report=null;el('psResults').innerHTML='';el('psError').textContent='';if(el('psExportCSV'))el('psExportCSV').disabled=true;}
+function save(){try{localStorage.setItem(storageKey,JSON.stringify(profiles));el('psConfigStatus').textContent='このブラウザに設定を保存しました。別の端末では設定ファイルを読み込んでください。';return true;}catch(e){message(Error('設定をブラウザに保存できません。設定ファイルとして保存してください。'));return false;}}
+function readConfig(){const p={...selected(),name:el('psClothingName').value.trim(),fields:keys.filter(k=>el('psFields').querySelector('[value="'+k+'"]').checked),chestWidth:Number(el('psChestWidth').value),lengthWidth:Number(el('psLengthWidth').value),byLength:el('psByLength').checked,bySex:el('psBySex').checked};if(!validProfiles([p]))throw Error('服の名前・採寸項目・0より大きい区切り幅を確認してください。');return p;}
+function profileUI(){const p=selected();active=p.id;el('psClothing').innerHTML=profiles.map(p=>'<option value="'+esc(p.id)+'">'+esc(p.name)+'</option>').join('');el('psClothing').value=active;el('psClothingName').value=p.name;el('psChestWidth').value=p.chestWidth;el('psLengthWidth').value=p.lengthWidth;el('psByLength').checked=p.byLength;el('psBySex').checked=p.bySex;el('psLengthWidth').disabled=!p.byLength;el('psFields').innerHTML=keys.map(k=>'<label class="ps-field-choice"><input type="checkbox" value="'+k+'"'+(p.fields.includes(k)?' checked':'')+'>'+esc(labels[k])+'</label>').join('');invalidate();}
+function refresh(){if(!allowed())return;invalidate();const old=el('psBreed').value;state.items=C.latest(PINFORME_ADMIN_DOGS,PINFORME_ADMIN_ROWS);const breeds=[...new Set(state.items.map(x=>x.breed).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ja'));el('psBreed').innerHTML='<option value="">犬種を選択</option>'+breeds.map(b=>'<option>'+esc(b)+'</option>').join('');el('psBreed').value=breeds.includes(old)?old:breeds.includes('ミニチュアピンシャー')?'ミニチュアピンシャー':breeds[0]||'';el('psStatus').textContent='読み込み済み：'+state.items.length+'頭／採寸履歴'+PINFORME_ADMIN_ROWS.length+'件。犬IDなしの旧履歴は集計対象外。'+(PINFORME_ADMIN_ROWS.length>=1000||PINFORME_ADMIN_DOGS.length>=1000?'読み込み上限の可能性があります。現在読み込み済みの範囲で集計します。':'');}
+function population(config){
+ const breed=el('psBreed').value,mode=el('psAge').value,threshold=Number(el('psMonths').value);if(!breed)throw Error('犬種を選択してください。');if(!Number.isInteger(threshold)||threshold<1||threshold>36)throw Error('成犬とする月齢は1〜36の整数にしてください。');
+ const matches=age=>mode==='all'||(age!==null&&(mode==='adult'?age>=threshold:age<threshold));
+ const result=[];let excluded=0,noHistory=0,invalidFields=0;
+ for(const item of state.items.filter(x=>x.breed===breed)){
+  const history=adminDogHistory(item.dog).slice().sort((a,b)=>(Date.parse(b.created_at)||0)-(Date.parse(a.created_at)||0)||Number(b.id)-Number(a.id));
+  const date=r=>String(r.measured_on||PinOemExport.day(r.created_at)||'').slice(0,10);
+  const row=history.find(r=>matches(C.months(item.dog.birth_date||r.birth_date,date(r))));
+  if(!row){excluded++;if(!history.length)noHistory++;continue;}
+  const values={};for(const f of new Set([...config.fields,'chest','back_length'])){
+   const raw=Q.number(row[f]),fieldDate=row.field_measured_on?.[f]||date(row),age=C.months(item.dog.birth_date||row.birth_date,fieldDate);
+   values[f]=raw!==null&&matches(age)?raw:null;if(raw!==null&&values[f]===null)invalidFields++;
+  }
+  result.push({...item,row,age:C.months(item.dog.birth_date||row.birth_date,date(row)),values,sex:Q.sex(item.dog.sex||row.sex)});
+ }
+ return {items:result,excluded,noHistory,invalidFields};
+}
+const range=b=>b==='unknown'?'着丈未入力・対象外':!b?'—':fmt(b.lo)+'以上〜'+fmt(b.hi)+(b.last?'以下':'未満');
+const table=(headers,rows)=>'<div class="ps-scroll"><table><thead><tr>'+headers.map(h=>'<th>'+esc(h)+'</th>').join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr>'+r.map(v=>'<td>'+esc(v)+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>';
+function calculate(){if(!allowed())return;invalidate();try{
+ if(!state.items.length)refresh();const config=readConfig(),pop=population(config),analysis=Q.analyze(pop.items,config);if(!analysis.eligible)throw Error('条件に合う胴まわりのデータがありません。犬種・年齢区分を確認してください。');
+ report={version:2,generated_at:new Date().toISOString(),breed:el('psBreed').value,age_mode:el('psAge').value,adult_months:Number(el('psMonths').value),config,pop,analysis};
+ const counts='<p>'+esc(config.name)+'｜対象 '+analysis.eligible+'頭／胴まわり未入力・対象外 '+analysis.missingChest+'頭／年齢条件外・不明等 '+pop.excluded+'頭（履歴なし '+pop.noHistory+'頭を含む）</p>';
+ const summary=table(['胴まわりの範囲','頭数','着丈 対象頭数','着丈 最小','着丈 平均','着丈 最大'],analysis.chestBins.map(b=>{const members=pop.items.filter(x=>Q.inside(x.values.chest,b)),s=Q.stats(members,['back_length']).back_length;return [range(b),members.length,s.n,fmt(s.min),fmt(s.mean),fmt(s.max)];}));
+ const header=['胴まわりの範囲',...(config.byLength?['着丈の範囲']:[]),...(config.bySex?['性別']:[]),'頭数',...config.fields.map(f=>labels[f])];
+ const rows=kind=>analysis.groups.map(g=>[range(g.chest),...(config.byLength?[range(g.length)]:[]),...(config.bySex?[g.sex]:[]),g.n,...config.fields.map(f=>kind==='n'?g.stats[f].n:kind==='rounded'?(g.stats[f].mean==null?'—':Math.round(g.stats[f].mean)):fmt(g.stats[f].mean))]);
+ const detail=analysis.groups.filter(g=>g.n).map(g=>'<details class="ps-size-card"><summary>'+esc(range(g.chest)+'／'+(config.byLength?range(g.length)+'／':'')+g.sex+'：'+g.n+'頭')+'</summary>'+table(['項目','対象頭数','最小','平均','最大'],config.fields.map(f=>{const s=g.stats[f];return [labels[f],s.n,fmt(s.min),fmt(s.mean),fmt(s.max)];}))+table(['名前／ID','採寸日','性別','採寸時月齢',...config.fields.map(f=>labels[f])],g.members.map(x=>[String(x.dog.dog_name||'名前未入力')+'／'+x.dog.id,x.row.measured_on||PinOemExport.day(x.row.created_at),x.sex,x.age==null?'不明':x.age,...config.fields.map(f=>fmt(x.values[f]))]))+'</details>').join('');
+ el('psResults').innerHTML='<h3>胴まわりと着丈の分布</h3>'+counts+summary+'<h3>範囲別の平均（cm）</h3>'+table(header,rows('mean'))+'<h3>身体寸法のサイズ目安（四捨五入・cm）</h3>'+table(header,rows('rounded'))+'<details><summary>項目ごとの対象頭数</summary>'+table(header,rows('n'))+'</details><h3>各区分の実測範囲とわんちゃん</h3>'+detail+'<p>選択した年齢区分の最新履歴を1頭1件で集計。追加項目の空欄・文字・0以下は、その項目からのみ除外します。年齢区分と合わない測定時点の寸法も、その項目から除外します。'+pop.invalidFields+'項目を測定時月齢の条件により除外しました。</p><p>着丈の区切りは各胴まわり区分内の最小値から作成。境界は下限以上・上限未満、最後だけ上限以下。着丈不明・性別不明は別表示し、平均への混入を避けます。</p>';
+ el('psExportCSV').disabled=false;
+ }catch(e){message(e);el('psExportCSV').disabled=true;}}
+function downloadFile(name,text,type){const blob=new Blob([text],{type:type+';charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+function exportCSV(){if(!allowed()||!report)return;const {config,analysis}=report,head=['胴の下限','胴の上限','胴の上限扱い','着丈の下限','着丈の上限','着丈の上限扱い','性別','頭数',...config.fields.flatMap(f=>[labels[f]+' 平均',labels[f]+' 整数目安',labels[f]+' 対象頭数'])],rows=analysis.groups.map(g=>[g.chest.lo,g.chest.hi,g.chest.last?'以下':'未満',g.length==='unknown'?'不明':g.length?.lo,g.length==='unknown'?'不明':g.length?.hi,g.length&&g.length!=='unknown'?(g.length.last?'以下':'未満'):'',g.sex,g.n,...config.fields.flatMap(f=>[g.stats[f].mean,g.stats[f].mean==null?'':Math.round(g.stats[f].mean),g.stats[f].n])]);const safe=v=>'"'+String(v??'').replace(/^[=+@\-\t\r]/,"'$&").replace(/"/g,'""')+'"';downloadFile('PINFORME_clothing_analysis_'+PinOemExport.day(new Date().toISOString())+'.csv','\uFEFF'+[head,...rows].map(r=>r.map(safe).join(',')).join('\r\n'),'text/csv');}
 async function issueOemList(){
  const button=el('psOemExport'),status=el('psOemStatus'),breed=el('psBreed').value;
  if(!allowed()){status.textContent='管理者としてログインしてください。';return;}
@@ -6201,111 +6272,35 @@ async function issueOemList(){
  }catch(e){status.textContent='発行できませんでした：'+(e.message||String(e));}finally{button.disabled=false;}
 }
 
-function bodyCluster(items,k){
- const fs=['neck','chest','waist'],n=items.length;
- if(n<k)throw Error('区分数以上の採寸データが必要です。');
- const raw=items.map(x=>fs.map(f=>Number(x.values[f])));
- const mean=fs.map((_,j)=>raw.reduce((s,v)=>s+v[j],0)/n);
- const sd=mean.map((m,j)=>Math.sqrt(raw.reduce((s,v)=>s+(v[j]-m)**2,0)/n)||1);
- const z=raw.map(v=>v.map((a,j)=>(a-mean[j])/sd[j]));
- const dist=(a,b)=>a.reduce((s,v,j)=>s+(v-b[j])**2,0);
- const center=g=>fs.map((_,j)=>g.reduce((s,i)=>s+z[i][j],0)/g.length);
- const score=groups=>groups.reduce((s,g)=>s+g.reduce((q,i)=>q+dist(z[i],center(g)),0),0);
- let best=null,method='';
- const take=groups=>{if(groups.some(g=>!g.length))return;const value=score(groups);if(!best||value<best.score-1e-10)best={groups:groups.map(g=>g.slice()),score:value};};
- if(n<=10&&k<=3){
-  method='全分割を比較';const groups=Array.from({length:k},()=>[]);
-  const walk=(i,used)=>{if(i===n){if(used===k)take(groups);return;}for(let g=0;g<Math.min(used+1,k);g++){groups[g].push(i);walk(i+1,Math.max(used,g+1));groups[g].pop();}};walk(0,0);
- }else{
-  method='複数の初期値で探索（近似）';
-  for(let run=0;run<Math.min(n,24);run++){
-   let centers=[z[Math.floor(run*n/Math.min(n,24))].slice()];
-   while(centers.length<k){let ix=0,max=-1;z.forEach((v,i)=>{const d=Math.min(...centers.map(c=>dist(v,c)));if(d>max){max=d;ix=i;}});centers.push(z[ix].slice());}
-   let previous='';
-   for(let iter=0;iter<80;iter++){
-    const groups=Array.from({length:k},()=>[]);z.forEach((v,i)=>{let gi=0;centers.forEach((c,j)=>{if(dist(v,c)<dist(v,centers[gi]))gi=j;});groups[gi].push(i);});
-    // Fill an empty group by moving a distant member from a group with at least two dogs.
-    for(let g=0;g<k;g++)if(!groups[g].length){let donor=-1,point=-1,max=-1;groups.forEach((members,j)=>{if(members.length<2)return;const c=center(members);members.forEach(i=>{const d=dist(z[i],c);if(d>max){max=d;donor=j;point=i;}});});if(donor>=0){groups[donor].splice(groups[donor].indexOf(point),1);groups[g].push(point);}}
-    take(groups);const key=JSON.stringify(groups);if(key===previous)break;previous=key;centers=groups.map(center);
-   }
-  }
- }
- best.groups.sort((a,b)=>a.reduce((s,i)=>s+raw[i][1],0)/a.length-b.reduce((s,i)=>s+raw[i][1],0)/b.length);
- return {...best,method,scoreGroups:score};
+function mount(){const manager=el('adminManagerBox');if(!manager)return;const panel=document.createElement('section');panel.id='pinSizePanel';panel.innerHTML=`
+ <h2>服種別のサイズ設計</h2><p>胴まわりの範囲ごとに身体寸法の平均を確認します。服に合わせて項目・着丈別・性別を設定できます。上の検索・体重・写真同意フィルターとは独立しています。</p>
+ <button type="button" id="psRefresh">読み込み済みデータを取り込む</button><p id="psStatus">管理者一覧の読み込み完了後に取り込んでください。</p>
+ <label for="psBreed">犬種</label><select id="psBreed"><option value="">犬種を選択</option></select>
+ <div class="ps-grid"><div><label for="psAge">年齢区分（採寸時）</label><select id="psAge"><option value="adult">成犬</option><option value="puppy">パピー</option><option value="all">全体（パピーを含む）</option></select></div><div><label for="psMonths">成犬とする月齢</label><input id="psMonths" type="number" value="12" min="1" max="36" step="1"></div></div>
+ <label for="psClothing">服の種類</label><select id="psClothing"></select><button type="button" id="psAddClothing">服の種類を追加</button>
+ <label for="psClothingName">服の名前（変更可能）</label><input id="psClothingName" maxlength="80">
+ <fieldset><legend>集計する採寸項目</legend><div id="psFields"></div></fieldset>
+ <div class="ps-grid"><div><label for="psChestWidth">胴まわりの区切り幅（cm）</label><input id="psChestWidth" type="number" min="0.1" step="any"></div><div><label for="psLengthWidth">着丈の区切り幅（cm）</label><input id="psLengthWidth" type="number" min="0.1" step="any"></div></div>
+ <label class="ps-field-choice"><input id="psByLength" type="checkbox">同じ胴まわり区分の中を着丈別に分ける</label><label class="ps-field-choice"><input id="psBySex" type="checkbox">男の子・女の子・不明で分ける</label>
+ <button type="button" id="psSaveConfig">この服の設定を保存</button><button type="button" id="psExportConfig">設定ファイルを保存</button><label for="psImportConfig">別の端末の設定を読み込む（現在の服設定を置き換えます）</label><input id="psImportConfig" type="file" accept="application/json,.json"><p id="psConfigStatus" role="status">設定はこのブラウザに保存します。別の端末へは設定ファイルで引き継げます。</p>
+ <button type="button" class="ps-primary" id="psCalculate">範囲別の平均・サイズ目安を計算</button><button type="button" id="psExportCSV" disabled>集計CSVを保存</button>
+ <p class="ps-note">胴まわりの最小・最大は自動取得します。平均は犬の身体寸法です。丈の種類や販売サイズは、分布と頭数を見て検討してください。</p><p id="psError" class="ps-error" role="alert"></p><div id="psResults"></div>
+ <details><summary>OEM用の元の採寸一覧</summary><button type="button" id="psOemExport">OEM用の採寸一覧を発行</button><p>既存のタンクトップ用5項目の一覧です。選択犬種の全年齢の最新採寸を匿名番号で出力します。この画面の服・項目・年齢設定は使いません。</p><p id="psOemStatus" role="status"></p></details>`;
+ manager.appendChild(panel);profileUI();if(loadWarning)message(Error(loadWarning));
+ el('psRefresh').onclick=refresh;el('psOemExport').onclick=issueOemList;el('psCalculate').onclick=calculate;el('psExportCSV').onclick=exportCSV;
+ el('psClothing').onchange=()=>{active=el('psClothing').value;profileUI();el('psConfigStatus').textContent='保存済みの服設定を表示しています。';};
+ el('psAddClothing').onclick=()=>{if(!allowed())return;profiles.push({id:'clothing-'+Date.now()+'-'+Math.random().toString(36).slice(2,7),name:'新しい服',fields:keys.slice(0,5),chestWidth:3,lengthWidth:3,byLength:false,bySex:false});active=profiles.at(-1).id;profileUI();el('psClothingName').focus();el('psConfigStatus').textContent='名前と採寸項目を選び、設定を保存してください。';};
+ const commit=()=>{const p=readConfig();profiles[profiles.findIndex(x=>x.id===active)]=p;save();return p;};
+ el('psSaveConfig').onclick=()=>{if(!allowed())return;try{commit();profileUI();}catch(e){message(e);}};
+ el('psExportConfig').onclick=()=>{if(!allowed())return;try{commit();downloadFile('PINFORME_clothing_settings.json',JSON.stringify({version:2,profiles},null,2),'application/json');}catch(e){message(e);}};
+ el('psImportConfig').onchange=async e=>{if(!allowed())return;const file=e.target.files[0];if(!file)return;try{if(file.size>1000000)throw Error('設定ファイルが大きすぎます。');const data=JSON.parse(await file.text());if(!allowed())return;if(data.version!==2||!validProfiles(data.profiles))throw Error('対応する服設定ファイルではありません。');profiles=data.profiles;active=profiles[0].id;save();profileUI();}catch(e){message(e);}finally{el('psImportConfig').value='';}};
+ for(const id of ['psBreed','psAge','psMonths','psClothingName','psFields','psChestWidth','psLengthWidth','psByLength','psBySex'])el(id).addEventListener('input',()=>{invalidate();el('psExportCSV').disabled=true;el('psLengthWidth').disabled=!el('psByLength').checked;});
+ const original=window.renderAdminList;window.renderAdminList=function(...args){const result=original.apply(this,args);if(allowed())refresh();return result;};
+ const logout=window.adminLogout;window.adminLogout=function(...args){invalidate();state.items=[];el('psBreed').innerHTML='<option value="">犬種を選択</option>';el('psStatus').textContent='管理者一覧の読み込み完了後に取り込んでください。';return logout.apply(this,args);};if(allowed())refresh();
 }
-function chestDevelopmentGroups(items,k){
- const order=items.map((_,i)=>i).sort((a,b)=>Number(items[a].values.chest)-Number(items[b].values.chest)||a-b),n=order.length;
- if(!Number.isInteger(k)||k<1||k>n)throw Error('区分数は分析対象の頭数以下にしてください。');
- const sum=[0],sq=[0];order.forEach(i=>{const v=Number(items[i].values.chest);sum.push(sum.at(-1)+v);sq.push(sq.at(-1)+v*v);});
- const cost=(a,b)=>Math.max(0,sq[b]-sq[a]-(sum[b]-sum[a])**2/(b-a));
- const dp=Array.from({length:k+1},()=>Array(n+1).fill(Infinity)),prev=Array.from({length:k+1},()=>Array(n+1).fill(-1));dp[0][0]=0;
- for(let g=1;g<=k;g++)for(let b=g;b<=n;b++)for(let a=g-1;a<b;a++){
-  if(a>0&&Number(items[order[a-1]].values.chest)===Number(items[order[a]].values.chest))continue;
-  const score=dp[g-1][a]+cost(a,b);if(score<dp[g][b]-1e-9){dp[g][b]=score;prev[g][b]=a;}
- }
- if(!Number.isFinite(dp[k][n]))throw Error('同じ胴まわりの値を分けずに指定区分数を作れません。区分数を減らしてください。');
- const groups=[];let b=n;for(let g=k;g>0;g--){const a=prev[g][b];groups.unshift(order.slice(a,b));b=a;}return groups;
-}
-function compareBodies(){
- if(!allowed())return;
- try{
-  if(!state.items.length)refresh();
-  const all=population(),items=all.filter(x=>!x.reason).sort((a,b)=>String(a.dog.id).localeCompare(String(b.dog.id),'en',{numeric:true}));
-  const k=Number(el('psCount').value),plan=C.propose(items,k),multi=bodyCluster(items,k);
-  const chest=plan.map((v,j)=>items.map((x,i)=>({x,i})).filter(({x})=>x.values.chest>=v.ranges.chest[0]&&(j<plan.length-1?x.values.chest<v.ranges.chest[1]:x.values.chest<=v.ranges.chest[1])).map(x=>x.i));
-  const fs=['neck','chest','waist'];
-  const development=chestDevelopmentGroups(items,k);
-  const ratio=(item,field)=>100*Number(item.values[field])/Number(item.values.chest);
-  const ratioFmt=value=>Number(value).toFixed(1)+'%';
-  const cards=(title,groups,showDifferences=false)=>'<h3>'+title+'</h3><p>3部位のばらつき指標：'+fmt(multi.scoreGroups(groups))+'（小さいほど、このデータ内でまとまる）</p>'+groups.map((g,j)=>{
-   const spread=field=>{const v=g.map(i=>ratio(items[i],field));return ratioFmt(Math.min(...v))+'〜'+ratioFmt(Math.max(...v));};
-   const means=Object.fromEntries(fs.map(f=>[f,g.reduce((sum,i)=>sum+Number(items[i].values[f]),0)/g.length]));
-   const diff=value=>(value>0?'+':value<0?'−':'±')+Math.abs(value).toFixed(1)+' cm';
-   return '<section class="ps-size-card"><strong>体型グループ '+(j+1)+'／'+g.length+'頭</strong>'+(showDifferences?'<p>グループ平均（身体寸法）<br>首 '+means.neck.toFixed(1)+'／胴 '+means.chest.toFixed(1)+'／ウエスト '+means.waist.toFixed(1)+' cm</p>':'')+'<p>首／胴：'+spread('neck')+'<br>ウエスト／胴：'+spread('waist')+'</p><div class="ps-ratio-list">'+g.map(i=>{const x=items[i];return '<div class="ps-ratio-dog"><strong>'+esc(x.dog.dog_name||'名前未入力')+'／'+esc(x.dog.id)+'</strong><span>胴まわり '+fmt(x.values.chest)+' cm</span><div class="ps-ratio-values"><span>首／胴 <b>'+ratioFmt(ratio(x,'neck'))+'</b></span><span>ウエスト／胴 <b>'+ratioFmt(ratio(x,'waist'))+'</b></span></div>'+(showDifferences?'<div class="ps-ratio-values">'+fs.map(f=>'<span>'+L[f]+' '+diff(Number(x.values[f])-means[f])).join('</span>')+'</span></div>':'')+'</div>';}).join('')+'</div><details><summary>各部位の実測分布を見る</summary>'+fs.map(f=>{const v=g.map(i=>Number(items[i].values[f])),avg=v.reduce((s,n)=>s+n,0)/v.length,lo=Math.min(...v),hi=Math.max(...v);return '<p>'+L[f]+'：中心 '+fmt(avg)+' cm<br>実測 '+fmt(lo)+'〜'+fmt(hi)+' cm／幅 '+fmt(hi-lo)+' cm</p>';}).join('')+'<small>実測範囲は商品の対応範囲ではありません。</small></details></section>';
-  }).join('');
-  let stability='';
-  if(items.length<=10&&k<=3&&items.length>k){
-   let agree=0,total=0;
-   const groupOf=(gs,i)=>gs.findIndex(g=>g.includes(i));
-   for(let removed=0;removed<items.length;removed++){
-    const indices=items.map((_,i)=>i).filter(i=>i!==removed),sub=bodyCluster(indices.map(i=>items[i]),k).groups.map(g=>g.map(i=>indices[i]));
-    for(let a=0;a<indices.length;a++)for(let b=a+1;b<indices.length;b++){const i=indices[a],j=indices[b];if((groupOf(multi.groups,i)===groupOf(multi.groups,j))===(groupOf(sub,i)===groupOf(sub,j)))agree++;total++;}
-   }
-   stability='<p>1頭ずつ除いて再計算：ペアの同じ／別グループ判定の一致 '+fmt(100*agree/total)+'%。この集計内の安定性の参考で、将来データへの精度ではありません。</p>';
-  }
-  el('psComparison').innerHTML='<h3>体型の分け方を比較</h3><p>分析対象 '+items.length+'頭／条件により除外 '+(all.length-items.length)+'頭。首・胴・ウエストを、それぞれの標準偏差で尺度をそろえて同じ重みで比較。丈・体重はこの分類には使いません。'+esc(multi.method)+'。</p><p class="ps-note">商品サイズ・着用可否・推奨サイズは未確定です。グループ全員を収めるために対応範囲を広げる計算はしていません。</p>'+stability+'<p class="ps-note">身体の大きさは胴まわり、形の違いは首・ウエストの比率で確認します。比率＝各部位 ÷ 胴まわり × 100。ウエストの比率が小さいほど、胴に対してウエストが細いことを表します。比率による分類や適合判定は行いません。</p><details open><summary>胴の大きさで分ける開発案</summary><p>胴まわりのグループ内の二乗偏差の合計が最小になる分け方です。同じ胴寸法の子は分けません。頭数を均等にする条件は設けていません。</p><p>各わんちゃんの差はグループ平均からの差です。＋は平均より大きい、−は平均より小さいことを表します。平均は身体寸法で、服の仕上がり寸法・対応範囲ではありません。</p>'+cards('胴まわりによる開発グループ',development,true)+'</details><details><summary>従来の胴まわり中心</summary>'+cards('胴まわり中心の体型グループ',chest)+'</details><details><summary>首・胴・ウエストを合わせる</summary>'+cards('3部位の体型グループ',multi.groups)+'</details>';
-  el('psError').textContent='';el('psComparison').scrollIntoView({block:'start'});
- }catch(e){el('psComparison').innerHTML='';error(e);}
-}
-function propose(){if(!allowed())return;try{if(!state.items.length)refresh();const p=population();state.plan=C.propose(p,Number(el('psCount').value));state.signature=signature();renderEditor();calculate();}catch(e){reset();error(e);}}
-function renderEditor(){el('psEditor').innerHTML='<h3>開発資料：実測分布の範囲（cm）</h3><p>胴まわりの分布を人数の偏りが小さくなるよう区切り、他3項目は各区分の実測最小〜最大を使います。人数を保証する分割ではありません。商品が対応できる範囲は未検証です。生地の伸び・ゆとりを加えた服の仕上がり寸法ではありません。</p><p>胴まわりは下限以上・上限未満、最後の区分のみ上限を含みます。他の項目は両端を含みます。範囲外は「要確認」です。</p><div class="ps-scroll"><table><thead><tr><th>サイズ</th>'+C.fields.map(f=>'<th>'+L[f]+' 下限／上限</th>').join('')+'</tr></thead><tbody>'+state.plan.map((p,i)=>'<tr><td><input class="ps-size-name" data-size="'+i+'" value="'+esc(p.name)+'" aria-label="サイズ名 '+(i+1)+'"></td>'+C.fields.map(f=>'<td><div class="ps-range">'+p.ranges[f].map((v,j)=>'<input type="number" inputmode="decimal" step="any" min="0.001" data-row="'+i+'" data-field="'+f+'" data-end="'+j+'" value="'+v+'" aria-label="'+esc(p.name)+' '+L[f]+(j?' 上限':' 下限')+'">').join('<span>〜</span>')+'</div></td>').join('')+'</tr>').join('')+'</tbody></table></div><button id="psRecalc" type="button" class="ps-primary">範囲を反映して再計算</button><button id="psCSV" type="button">振り分けCSVを保存</button><button id="psJSON" type="button">サイズ案JSONを保存</button><button id="psProduct" type="button">実測分布を開発中の比較基準へ取り込む</button><p>変更後は再計算してください。設計案はこの画面を閉じると消えます。必要な案はJSONで保存できます。</p>';el('psRecalc').onclick=calculate;el('psCSV').onclick=()=>download('csv');el('psJSON').onclick=()=>download('json');el('psProduct').onclick=()=>{if(!allowed())return;try{const plan=readPlan(),bad=C.validate(plan);if(bad)throw Error(bad);window.dispatchEvent(new CustomEvent('pinforme-size-plan',{detail:{breed:el('psBreed').value,age_mode:el('psAge').value,plan}}));}catch(e){error(e);}};el('psEditor').oninput=()=>{state.report=null;el('psResults').innerHTML='<p class="ps-note">範囲を変更しました。再計算してください。</p>';};}
-function readPlan(){return state.plan.map((p,i)=>({name:el('psEditor').querySelector('[data-size="'+i+'"]').value.trim(),ranges:Object.fromEntries(C.fields.map(f=>[f,[0,1].map(j=>{const v=el('psEditor').querySelector('[data-row="'+i+'"][data-field="'+f+'"][data-end="'+j+'"]').value;return v.trim()===''?null:Number(v);})]))}));}
-function calculate(){if(!allowed())return;state.report=null;el('psResults').innerHTML='';try{if(signature()!==state.signature)throw Error('データまたは対象条件が変わりました。「仮サイズ案を計算」を押してください。');const plan=readPlan(),bad=C.validate(plan);if(bad)throw Error(bad);state.plan=plan;const items=population();state.results=items.map(x=>({...x,...C.classify(x,plan)}));const usable=items.filter(x=>!x.reason);const statsHtml='<div class="ps-scroll"><table><thead><tr><th>項目</th><th>頭数</th><th>最小</th><th>25%</th><th>中央値</th><th>75%</th><th>最大</th></tr></thead><tbody>'+C.fields.map(f=>{const s=C.stats(usable,f);return '<tr><td>'+L[f]+'</td>'+[s?.n||0,s?.min,s?.q1,s?.median,s?.q3,s?.max].map(v=>'<td>'+fmt(v)+'</td>').join('')+'</tr>';}).join('')+'</tbody></table></div>';
-let cards=plan.map(p=>{const m=state.results.filter(x=>x.size===p.name),count=m.length;return '<div class="ps-size-card"><strong>'+esc(p.name)+'：'+count+'頭</strong><p>'+ (count<5?'少数データの仮案。追加募集・着用検証が必要です。':'頭数だけで確定せず、区分の端の子も着用検証してください。')+'</p><div class="ps-scroll"><table><tr><th>項目</th><th>平均</th><th>中央値</th><th>実測範囲</th></tr>'+C.fields.map(f=>{const s=C.stats(m,f);return '<tr><td>'+L[f]+'</td><td>'+fmt(s?.avg)+'</td><td>'+fmt(s?.median)+'</td><td>'+fmt(s?.min)+'〜'+fmt(s?.max)+'</td></tr>';}).join('')+'</table></div></div>';}).join('');
-const unknown=state.results.filter(x=>x.size==='対象外').length,review=state.results.filter(x=>x.size==='要確認').length;
-el('psResults').innerHTML='<h3>計算結果</h3><p>対象犬種 '+items.length+'頭 ／ 4項目が揃った対象 '+usable.length+'頭 ／ 要確認 '+review+'頭 ／ 対象外 '+unknown+'頭</p>'+statsHtml+cards+'<details><summary>わんちゃんごとの振り分けを見る</summary><div class="ps-scroll"><table><thead><tr><th>名前／ID</th><th>測定時の仮サイズ</th><th>現在の参考サイズ</th><th>理由</th><th>採寸時月齢</th>'+C.fields.map(f=>'<th>'+L[f]+'</th>').join('')+'</tr></thead><tbody>'+state.results.map(x=>'<tr><td>'+esc(x.dog.dog_name||x.row?.dog_name||'名前未入力')+'／'+esc(x.dog.id)+'</td><td>'+esc(x.size)+'</td><td>'+esc(pinCurrentReference(x,plan,Number(el('psMonths').value)))+'</td><td>'+esc(x.reason.replace(/chest/g,L.chest).replace(/neck/g,L.neck).replace(/back_length/g,L.back_length).replace(/waist/g,L.waist))+'</td><td>'+ (x.age===null?'不明':x.age+'か月')+'</td>'+C.fields.map(f=>'<td>'+fmt(x.values[f])+'</td>').join('')+'</tr>').join('')+'</tbody></table></div></details>';
-renderHistory(plan);
-state.report={version:1,generated_at:new Date().toISOString(),breed:el('psBreed').value,age_mode:el('psAge').value,adult_months:Number(el('psMonths').value),basis:'body_measurements_cm_not_garment_dimensions',plan:state.plan,counts:{eligible:usable.length,review,excluded:unknown}};el('psError').textContent='';}catch(e){error(e);}}
-function renderHistory(plan){
- const breed=el('psBreed').value,ageMode=el('psAge').value,threshold=Number(el('psMonths').value);
- const groups=state.items.filter(x=>x.breed===breed).map(x=>{
-  const rows=PINFORME_ADMIN_ROWS.filter(r=>r.dog_id!=null&&String(r.dog_id)===String(x.dog.id)).slice().sort((a,b)=>{const aa=Date.parse(a.created_at),bb=Date.parse(b.created_at);return (Number.isFinite(aa)?aa:0)-(Number.isFinite(bb)?bb:0)||Number(a.id)-Number(b.id);});
-  const items=C.population(rows.map(row=>({...x,row})),breed,ageMode,threshold).map(v=>({...v,...C.classify(v,plan)}));
-  return {dog:x.dog,items};
- }).filter(g=>g.items.length);
- const namedReason=v=>String(v||'').replace(/back_length/g,L.back_length).replace(/chest/g,L.chest).replace(/neck/g,L.neck).replace(/waist/g,L.waist);
- const tables=groups.map(g=>'<details class="ps-history-card"><summary>'+esc(g.dog.dog_name||'名前未入力')+'／'+esc(g.dog.id)+'：'+g.items.length+'件</summary><div class="ps-scroll"><table><thead><tr><th>採寸日／履歴ID</th><th>月齢</th><th>仮サイズ</th><th>前回から</th><th>更新方法</th>'+C.fields.map(f=>'<th>'+L[f]+' cm（前回差）／測定日</th>').join('')+'<th>確認理由</th></tr></thead><tbody>'+g.items.map((x,i)=>{
-  const prev=g.items[i-1],change=!prev?'初回':prev.size===x.size?'同じ判定':prev.size+' → '+x.size;
-  const values=C.fields.map(f=>{const v=x.values[f],pv=prev?.values[f],delta=v!=null&&pv!=null?v-pv:null;return '<td>'+fmt(v)+(delta===null?'':'（'+(delta>0?'+':'')+fmt(delta)+'）')+' ／ '+esc(x.row.field_measured_on?.[f]||'不明')+(x.row.field_date_source?.[f]==='submission_date_assumed'?'（補完）':'')+'</td>';}).join('');
-  return '<tr><td>'+esc(x.row.measured_on||'測定日不明')+(x.row.measured_on_source==='submission_date_assumed'?'（送信日から補完）':'')+'／'+esc(x.row.id)+'</td><td>'+(x.age===null?'不明':x.age+'か月')+'</td><td>'+esc(x.size)+'</td><td>'+esc(change)+'</td><td>'+esc(x.row.update_mode==='partial'?'部分更新':x.row.update_mode==='full'?'全項目更新':'記録なし')+'</td>'+values+'<td>'+esc(namedReason(x.reason))+'</td></tr>';
- }).join('')+'</tbody></table></div></details>').join('');
- const box=document.createElement('div');box.innerHTML='<h3>過去の採寸でサイズを検証</h3><p>同じサイズ案を使って、読み込み済みの全履歴を古い順に判定します。履歴はサイズ設計の頭数や平均には加えません。年齢区分は各採寸日の月齢で判定し、対象外も表示します。</p><p>前回差は保存された寸法の差です。部分更新では前の値が引き継がれるため、各寸法の測定日も確認してください。日付不明や異なる年齢区分の寸法がある履歴は判定対象外です。「同じ判定」も着用時のフィットを保証しません。</p>'+tables;el('psResults').appendChild(box);
-}
-function download(type){if(!allowed())return;if(!state.report){error(Error('先に有効なサイズ案を再計算してください。'));return;}if(signature()!==state.signature){error(Error('対象データが変わりました。再計算してください。'));return;}
-let text,mime,ext;if(type==='json'){text=JSON.stringify(state.report,null,2);mime='application/json';ext='json';}else{const safe=v=>{let s=String(v??'');if(/^[=+@\-\t\r]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"';};const rows=[['犬ID','名前','犬種','採寸日','採寸時月齢','仮サイズ','理由',...C.fields.map(f=>L[f]+' cm'),'体重 kg','前身頃 cm'],...state.results.map(x=>[x.dog.id,x.dog.dog_name||x.row?.dog_name,x.breed,x.row?.measured_on,x.age,x.size,x.reason,...C.fields.map(f=>x.values[f]),C.num(x.row?.weight),C.num(x.row?.front_length)])];text='\uFEFF'+rows.map(r=>r.map(safe).join(',')).join('\r\n');mime='text/csv';ext='csv';}const blob=new Blob([text],{type:mime+';charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='PINFORME_size_draft_'+new Date().toISOString().slice(0,10)+'.'+ext;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}
-function mount(){const manager=el('adminManagerBox');if(!manager)return;const panel=document.createElement('section');panel.id='pinSizePanel';panel.innerHTML='<h2>サイズ設計・振り分け</h2><p>選択した年齢区分の最新履歴を1頭1件として、測定日と各寸法の測定時月齢を確認し、犬種ごとに仮のサイズ案を計算します。上の検索・体重・写真同意フィルターとは独立しています。</p><button type="button" id="psRefresh">読み込み済みデータを取り込む</button><p id="psStatus">管理者一覧の読み込み完了後に取り込んでください。</p><label for="psBreed">犬種</label><select id="psBreed"><option value="">犬種を選択</option></select><button type="button" id="psOemExport">OEM用の採寸一覧を発行</button><p>選択した犬種の最新採寸を1頭1件でExcelにします。年齢区分・体重などの分析フィルターは使いません。犬ID・実名・成犬／パピーの区分は載せません。匿名番号はこのブラウザ内で維持します。</p><p id="psOemStatus" role="status"></p><div class="ps-grid"><div><label for="psAge">年齢区分（採寸時）</label><select id="psAge"><option value="adult">成犬</option><option value="puppy">パピー</option></select></div><div><label for="psMonths">成犬とする月齢</label><input id="psMonths" type="number" value="12" min="1" max="36" step="1"></div></div><p>12か月は分析用の仮設定です。必要に応じて変更してください。既存データは送信日を測定日として補完します。先行データも計算に利用します。成犬とパピーを混ぜずに計算します。</p><label for="psCount">仮のサイズ区分数</label><select id="psCount"><option value="1">1区分</option><option value="2">2区分</option><option value="3" selected>3区分</option><option value="4">4区分</option><option value="5">5区分</option></select><button type="button" class="ps-primary" id="psCompare">体型の分け方を比較</button><button type="button" id="psPropose">従来の胴中心の実測分布を計算</button><p class="ps-note">計算だけで販売サイズを確定せず、OEMと生地・ゆとりを相談し、実際の着用で検証してください。この機能は採寸データを保存・変更しません。</p><p id="psError" class="ps-error" role="alert"></p><div id="psComparison"></div><div id="psEditor"></div><div id="psResults"></div>';manager.appendChild(panel);el('psRefresh').onclick=refresh;el('psOemExport').onclick=issueOemList;el('psPropose').onclick=propose;el('psCompare').onclick=compareBodies;['psBreed','psAge','psMonths','psCount'].forEach(id=>el(id).onchange=reset);const original=window.renderAdminList;window.renderAdminList=function(...args){const result=original.apply(this,args);if(allowed())refresh();return result;};const logout=window.adminLogout;window.adminLogout=function(...args){reset();state.items=[];el('psBreed').innerHTML='<option value="">犬種を選択</option>';el('psStatus').textContent='管理者一覧の読み込み完了後に取り込んでください。';return logout.apply(this,args);};if(allowed())refresh();}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount);else mount();
 })();
+
 </script>
 
 <script>
@@ -6911,7 +6906,7 @@ function pinV2StoreJSON(key,value){
 }
 function pinV2Persist(){pinV2StoreJSON(PIN_V2_KEY,PIN_V2);}
 function pinV2Records(){try{return JSON.parse(localStorage.getItem('PINFORME_V2_RECORDS')||'[]');}catch{return [];}}
-function pinV2Page(id){hideAll();document.getElementById(id).classList.add('active');window.scrollTo(0,0);savePINFORMEState();}
+function pinV2Page(id){if(id==='kartePage'&&!pinUserKarteReady())id='finishPage';hideAll();document.getElementById(id).classList.add('active');window.scrollTo(0,0);savePINFORMEState();}
 function pinV2Home(){document.getElementById('pinV2OwnerMenu')?.replaceChildren();pinV2RenderHome();pinV2Page('pinV2Home');}
 function pinV2RestoreBrand(container){const original=document.querySelector('#entryChoicePage .pinforme-brand-lockup');const title=container.querySelector('.v2-word');if(original&&title){const logo=original.cloneNode(true);logo.classList.add('compact');title.replaceWith(logo);}}
 function pinV2TestKey(){return crypto.randomUUID().replace(/-/g,'').slice(0,16).toUpperCase();}
@@ -7442,7 +7437,7 @@ function pinV2IsOptional(index){
   });
  };
 })();
-</script><style id="pin-confirmation-layout">body{padding-top:calc(var(--pin-header-height,140px) + 16px)!important}#finishPage .finish-card[data-save-state="unsent"]>.finish-mark{font-size:18px;font-weight:800;color:#795426}#finishPage .finish-card[data-save-state="unsent"]>h1{font-size:23px;line-height:1.5}#finishPage .finish-card>.v2-review{margin-top:20px}#finishPage .finish-actions{margin:16px 0}#pinformeSubmitButton{width:100%;min-height:60px;height:auto;padding:18px 12px;white-space:normal}@media print{body{padding-top:0!important}}</style><script id="pin-confirmation-state">// Display completion only after the server acknowledges a saved measurement.
+</script><style id="pin-confirmation-layout">#pinSavedKarteButton[hidden],#pinKarteAfterSaveNote[hidden]{display:none!important}body{padding-top:calc(var(--pin-header-height,140px) + 16px)!important}#finishPage .finish-card[data-save-state="unsent"]>.finish-mark{font-size:18px;font-weight:800;color:#795426}#finishPage .finish-card[data-save-state="unsent"]>h1{font-size:23px;line-height:1.5}#finishPage .finish-card>.v2-review{margin-top:20px}#finishPage .finish-actions{margin:16px 0}#pinformeSubmitButton{width:100%;min-height:60px;height:auto;padding:18px 12px;white-space:normal}@media print{body{padding-top:0!important}}</style><script id="pin-confirmation-state">// Display completion only after the server acknowledges a saved measurement.
 function pinConfirmationCopy(saved){
  return saved?{title:'送信が完了しました',message:'採寸協力ありがとうございました。採寸データを保存しました。',mark:'✓',button:'送信・保存済み ✓'}:{title:'まだ送信は完了していません',message:'入力内容を確認して、下の「この内容で送信する」を押してください。',mark:'確認',button:'この内容で送信する'};
 }
@@ -7460,7 +7455,7 @@ function pinConfirmationCopy(saved){
   const button=document.getElementById('pinformeSubmitButton');
   if(button&&!PINFORME_SUBMITTING){button.textContent=copy.button;button.disabled=saved;}
   if(status&&!saved&&status.textContent.includes('オンライン保存は、保存先データベース接続後'))status.textContent='内容を確認後、送信ボタンを押してください。';
-  const preview=card.querySelector('[onclick="openKartePage()"]');if(preview)preview.textContent=saved?'採寸カルテを見る':'採寸カルテを確認する';
+  const preview=card.querySelector('#pinSavedKarteButton'),karteReady=pinUserKarteReady();if(preview){preview.hidden=!karteReady;preview.textContent='採寸カルテを見る・PDF保存';}const karteNote=document.getElementById('pinKarteAfterSaveNote');if(karteNote)karteNote.hidden=karteReady;
  }
  const previousFinish=showFinish;
  showFinish=function(...args){const result=previousFinish.apply(this,args);update();return result;};
@@ -7484,4 +7479,19 @@ function pinConfirmationCopy(saved){
  const previousRestore=restorePINFORMEState;
  restorePINFORMEState=function(...args){const result=previousRestore.apply(this,args);sync();return result;};
 })();
+</script><script id="pin-saved-karte-gate">
+/* The customer carte is available only after acknowledgement of this save. */
+function pinUserKarteReady(){
+ try{
+  return PIN_V2?.saved===true&&PIN_V2.receipt?.measurement_id!=null&&PIN_V2.savedRecord?.measurementId!=null&&String(PIN_V2.receipt.measurement_id)===String(PIN_V2.savedRecord.measurementId)&&String(PIN_V2.dogId)===String(PIN_V2.savedRecord.id);
+ }catch(e){return false;}
+}
+function pinRequireSavedKarte(allowAdmin=false){
+ if(allowAdmin&&document.body.classList.contains('pinforme-admin-karte-open')&&getAdminSession()?.access_token&&isAdminVerified())return true;
+ if(pinUserKarteReady())return true;
+ if(typeof PIN_V2!=='undefined'&&PIN_V2)showFinish();else pinV2Home();
+ const status=document.getElementById('sendStatus');if(status)status.textContent='採寸カルテは、送信・保存が完了した後にご覧いただけます。入力内容を確認して送信してください。';
+ return false;
+}
+
 </script></body></html>
