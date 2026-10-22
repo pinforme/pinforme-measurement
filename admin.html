@@ -332,7 +332,7 @@ restore();
 #pinSiteMascots h3{font-size:16px}
 #pinSiteMascots .site-mascot-paste{height:170px;padding:12px;border:2px dashed #bbb;border-radius:12px;display:flex;align-items:center;justify-content:center;text-align:center;background:#fafafa;margin-bottom:12px;outline-offset:3px}
 #pinSiteMascots .site-mascot-paste img{max-width:100%;height:100%;object-fit:contain}
-#pinSiteMascots .site-mascot-file{display:inline-flex;cursor:pointer}
+#pinSiteMascots .site-mascot-file{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:10px 16px;line-height:1.4;cursor:pointer}
 #pinSiteMascots .site-mascot-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
 #pinSiteMascots p{font-size:13px;line-height:1.7}
 </style>
@@ -345,7 +345,7 @@ function pinMountSiteMascots(manager){
  const allowed=()=>session?.access_token;
  const headers=()=>({apikey:KEY,Authorization:'Bearer '+session?.access_token});
  const publicURL=i=>BASE+'/storage/v1/object/public/'+bucket+'/mascot-'+i+'.webp?v='+Date.now();
- const errors=r=>r.status===401?'ログインの有効期限が切れています。再ログインしてください。':r.status===403?'保存権限を確認してください。初回設定が未実施の場合は、設定用SQLを実行してください。':'画像を保存できませんでした。初回設定と通信状態を確認してください。';
+ const errors=r=>r.status===401?'ログインの有効期限が切れています。再ログインしてください。':r.status===403?'保存権限を確認してください。画像保存用の設定が未実施の場合は、設定用SQLを実行してください。':'画像を保存できませんでした。初回設定と通信状態を確認してください。';
  [1,2,3].forEach((i)=>{
   const card=document.createElement('div');card.className='site-mascot-editor';
   card.innerHTML='<h3>'+i+'枚目：'+['ありがとう・協力頭数','集計グラフ','採寸協力のお願い'][i-1]+'</h3><div class="site-mascot-paste" tabindex="0" role="group" aria-label="'+i+'枚目の画像貼り付け欄"><img alt="'+i+'枚目の画像プレビュー" hidden><span>ここを押して画像を貼り付け<br>または下のボタンで画像を選択</span></div><label class="btn outline site-mascot-file">画像を選択<input type="file" accept="image/png,image/jpeg,image/webp" hidden></label><div class="site-mascot-actions"><button type="button" class="btn dark" disabled>ホームページに反映</button><button type="button" class="btn outline">元のマスコットに戻す</button></div><p role="status" aria-live="polite"></p>';
@@ -368,8 +368,15 @@ function pinMountSiteMascots(manager){
     const scale=Math.min(1,640/Math.max(source.naturalWidth,source.naturalHeight));
     const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(source.naturalWidth*scale));canvas.height=Math.max(1,Math.round(source.naturalHeight*scale));
     canvas.getContext('2d').drawImage(source,0,0,canvas.width,canvas.height);
-    const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/webp',.88));
-    if(seq!==revision)return;if(!blob||blob.type!=='image/webp'||blob.size>512000)throw Error('この画像を処理できません。別の画像を選んでください。');
+    // PNG is supported by iPhone canvas encoders and preserves transparency.
+    let blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));
+    while(blob&&blob.size>512000&&canvas.width>128&&canvas.height>128){
+      const smaller=document.createElement('canvas');smaller.width=Math.max(1,Math.round(canvas.width*.75));smaller.height=Math.max(1,Math.round(canvas.height*.75));
+      smaller.getContext('2d').drawImage(canvas,0,0,smaller.width,smaller.height);
+      canvas.width=smaller.width;canvas.height=smaller.height;canvas.getContext('2d').drawImage(smaller,0,0);
+      blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));
+    }
+    if(seq!==revision)return;if(!blob||blob.type!=='image/png'||blob.size>512000)throw Error('画像を小さくして、もう一度選んでください。');
     pending=blob;previewURL=URL.createObjectURL(blob);show(previewURL);save.disabled=false;status.textContent='プレビューです。まだ公開サイトには反映していません。';
    }catch(e){if(seq===revision)status.textContent=e.message||'画像を読み込めませんでした。';}finally{URL.revokeObjectURL(url);}
   }
@@ -383,7 +390,7 @@ function pinMountSiteMascots(manager){
    try{
     let r;
     if(remove){r=await fetch(BASE+'/storage/v1/object/'+bucket,{method:'DELETE',headers:{...headers(),'Content-Type':'application/json'},body:JSON.stringify({prefixes:['mascot-'+i+'.webp']})});}
-    else{r=await fetch(BASE+'/storage/v1/object/'+bucket+'/mascot-'+i+'.webp',{method:'POST',headers:{...headers(),'Content-Type':'image/webp','x-upsert':'true','cache-control':'0'},body:pending});}
+    else{r=await fetch(BASE+'/storage/v1/object/'+bucket+'/mascot-'+i+'.webp',{method:'POST',headers:{...headers(),'Content-Type':pending.type,'x-upsert':'true','cache-control':'0'},body:pending});}
     if(!r.ok)throw Error(errors(r));clean();
     if(remove){img.hidden=true;img.removeAttribute('src');hint.hidden=false;hint.textContent='元のマスコットを表示します。';}
     else show(publicURL(i));
