@@ -1130,6 +1130,27 @@ footer{padding:34px 0 46px;border-top:1px solid #ececec;font-size:12px;color:#77
 }
 @media(max-width:350px){.teaser-toggle{font-size:9px;padding:3px}.teaser-dot{width:24px}.teaser-dot:after{left:9px}.live-teaser{padding:12px 8px}.teaser-slide h2{font-size:13px}.teaser-mini-row{font-size:9px;grid-template-columns:43px minmax(0,1fr) 12px}.teaser-slide p{font-size:11px}}
 
+
+/* Keep the summary card and its controls in normal document flow. */
+.hero-primary{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(0,.88fr);column-gap:14px;align-items:start}
+.hero-primary>.brand-plate{grid-column:1;grid-row:1;max-width:100%;min-width:0}
+.hero-primary>.recruit-badge{grid-column:1;grid-row:2;max-width:100%;justify-self:start}
+.hero-primary>h1{grid-column:1;grid-row:3;max-width:100%;min-width:0}
+.hero-primary>.hero-copy,.hero-primary>.cta-row,.hero-primary>.hero-note{grid-column:1 / -1}
+.hero-primary>.live-teaser{position:static;grid-column:2;grid-row:1 / 4;width:100%;max-width:none;height:auto;min-height:330px;min-width:0;align-self:stretch}
+.live-teaser>.teaser-slide{flex:1 0 auto;min-height:250px}
+.live-teaser>.teaser-controls{flex:0 0 auto;margin-top:14px;gap:4px;flex-wrap:wrap}
+.live-teaser>.teaser-link,.live-teaser>.teaser-meta{flex:0 0 auto}
+.teaser-toggle{flex-shrink:0}
+@media(max-width:760px){
+ .hero-primary{column-gap:14px}
+ .hero-primary>.hero-copy{margin-top:24px}
+ .live-teaser .teaser-slide h2{font-size:14px}
+ .teaser-dots{flex-shrink:0}
+ .teaser-dot{width:24px}
+ .teaser-dot:after{left:9px}
+}
+
 </style>
 <link rel="canonical" href="https://pinforme.github.io/pinforme-measurement/official.html">
 <meta property="og:type" content="website">
