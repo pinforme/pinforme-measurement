@@ -11,6 +11,27 @@
 
 .visitor-metric-title{font-size:14px;margin:18px 0 0}.visitor-metric-title+.visitor-grid{margin-top:10px}
 </style>
+<style>
+/* Keep every section inside the mobile viewport. */
+html{width:100%;max-width:100%;overflow-x:clip}
+body{width:100%;max-width:100%;overflow-wrap:anywhere}
+.app{width:100%;min-width:0}
+main,#adminArea,.card,.field,.row,.preview{min-width:0;max-width:100%}
+.head{gap:10px;flex-wrap:wrap;min-width:0}
+.head>.brand{flex:1 1 155px;min-width:0}
+.head>div:last-child{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex:0 1 auto;flex-wrap:wrap;max-width:100%;min-width:0}
+.head .brand b{font-size:clamp(17px,4.8vw,20px)}
+.head .tag,.head .btn{flex-shrink:0;white-space:nowrap}
+.grid2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.grid2>*,.btns>*,.visitor-grid>*,.rowactions>*{min-width:0;max-width:100%}
+input,select,textarea,img{min-width:0;max-width:100%}
+.sectionhead,.rowtop,.previewhead{flex-wrap:wrap}
+.sectionhead>*,.rowtop>*,.previewhead>*{min-width:0;max-width:100%}
+.visitor-stat strong{font-size:clamp(20px,7vw,28px);overflow-wrap:anywhere}
+.visitor-actions .btn,#pinSiteMascots .btn{max-width:100%;white-space:normal}
+@media(max-width:640px){.grid2,.btns{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:380px){.head{padding:12px}.head .tag{font-size:9px;padding:0 8px}.brand small{font-size:8px}.head>div:last-child{margin-left:auto}.visitor-stat{padding:12px 4px}}
+</style>
 </head>
 <body>
 <div class="app">
