@@ -6731,7 +6731,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   ['サイズ設計','pinSizePanel'],
   ['商品別サイズ基準','pinProductPanel'],
   ['試着リンク発行','pinWearOnline'],
-  ['試着記録','pinWearPanel']
+  ['試着記録','pinWearPanel'],
+  ['ホームページ画像','pinSiteMascots']
  ];
  function mount(){
   const manager=document.getElementById('adminManagerBox');
@@ -6762,6 +6763,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   wear.insertBefore(manual,localTitle);
   wear.querySelector('h2').textContent='試着記録の管理';
   wear.querySelector('.pw-note').textContent='件数と絞り込みにはオンライン回答と手入力の記録を含みます。オンライン回答はオンライン保存、手入力の記録はこのブラウザに保存されます。';
+  pinMountSiteMascots(manager);
   const menu=document.createElement('div');menu.id='pinAdminMenu';
   const heading=document.createElement('h2');heading.textContent='管理メニュー';
   const help=document.createElement('p');help.textContent='確認したい項目を選んでください。';
@@ -7598,4 +7600,76 @@ function pinRequireSavedKarte(allowAdmin=false){
 #pinSizePanel .ps-dog-detail{padding:0 12px 12px;border-top:1px solid #e9e4da}
 #pinSizePanel .ps-dog-detail .ps-dog-meta{margin:10px 0}
 
-</style></body></html>
+</style><style>
+#pinSiteMascots .site-mascot-editor{margin:18px 0;padding:16px;border:1px solid #ddd;border-radius:14px}
+#pinSiteMascots h3{font-size:16px}
+#pinSiteMascots .site-mascot-paste{height:170px;padding:12px;border:2px dashed #bcbcbc;border-radius:12px;display:flex;align-items:center;justify-content:center;text-align:center;background:#fafafa;margin-bottom:12px;outline-offset:3px}
+#pinSiteMascots .site-mascot-paste img{max-width:100%;height:100%;object-fit:contain}
+#pinSiteMascots .site-mascot-file{display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+#pinSiteMascots .site-mascot-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+#pinSiteMascots p{font-size:13px;line-height:1.7}
+</style>
+<script>
+function pinMountSiteMascots(manager){
+ if(document.getElementById('pinSiteMascots'))return;
+ const bucket='pinforme-site-mascots';
+ const root=document.createElement('section');root.id='pinSiteMascots';root.hidden=true;
+ root.innerHTML='<h2>ホームページのマスコット画像</h2><p>各画面の画像を選ぶか、画像をコピーして枠内に貼り付けてください。プレビューを確認して「ホームページに反映」を押すと、訪問者にも表示されます。</p><p>PNG・JPEG・WebP（10MBまで）。画像全体が枠に収まるように表示します。</p>';
+ const allowed=()=>getAdminSession()?.access_token&&isAdminVerified();
+ const headers=()=>({apikey:PINFORME_SUPABASE_KEY,Authorization:'Bearer '+getAdminSession()?.access_token});
+ const publicURL=i=>PINFORME_SUPABASE_BASE+'/storage/v1/object/public/'+bucket+'/mascot-'+i+'.webp?v='+Date.now();
+ const errors=r=>r.status===401?'ログインの有効期限が切れています。再ログインしてください。':r.status===403?'保存権限を確認してください。初回設定が未実施の場合は、設定用SQLを実行してください。':'画像を保存できませんでした。初回設定と通信状態を確認してください。';
+ [1,2,3].forEach((i)=>{
+  const card=document.createElement('div');card.className='site-mascot-editor';
+  card.innerHTML='<h3>'+i+'枚目：'+['ありがとう・協力頭数','集計グラフ','採寸協力のお願い'][i-1]+'</h3><div class="site-mascot-paste" tabindex="0" role="group" aria-label="'+i+'枚目の画像貼り付け欄"><img alt="'+i+'枚目の画像プレビュー" hidden><span>ここを押して画像を貼り付け<br>または下のボタンで画像を選択</span></div><label class="admin-btn light site-mascot-file">画像を選択<input type="file" accept="image/png,image/jpeg,image/webp" hidden></label><div class="site-mascot-actions"><button type="button" class="admin-btn primary" disabled>ホームページに反映</button><button type="button" class="admin-btn light">元のマスコットに戻す</button></div><p role="status" aria-live="polite"></p>';
+  const zone=card.querySelector('.site-mascot-paste'),img=card.querySelector('img'),hint=card.querySelector('span'),file=card.querySelector('input');
+  const [save,reset]=card.querySelectorAll('button'),status=card.querySelector('[role="status"]');
+  let pending=null,previewURL=null,busy=false,revision=0;
+  function show(url){img.hidden=false;hint.hidden=true;img.src=url;}
+  function clean(){if(previewURL)URL.revokeObjectURL(previewURL);previewURL=null;pending=null;save.disabled=true;}
+  async function prepare(f){
+   if(busy)return;if(!allowed()){status.textContent='管理者としてログインしてください。';return;}
+   const seq=++revision;clean();
+   if(!f||!['image/png','image/jpeg','image/webp'].includes(f.type)){status.textContent='PNG・JPEG・WebPの画像を選んでください。';return;}
+   if(f.size>10*1024*1024){status.textContent='10MB以下の画像を選んでください。';return;}
+   status.textContent='プレビューを準備しています…';
+   const url=URL.createObjectURL(f),source=new Image();
+   try{
+    await new Promise((resolve,reject)=>{source.onload=resolve;source.onerror=reject;source.src=url;});
+    if(seq!==revision)return;
+    if(source.naturalWidth*source.naturalHeight>24000000)throw Error('画像が大きすぎます。小さくして選び直してください。');
+    const scale=Math.min(1,640/Math.max(source.naturalWidth,source.naturalHeight));
+    const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(source.naturalWidth*scale));canvas.height=Math.max(1,Math.round(source.naturalHeight*scale));
+    canvas.getContext('2d').drawImage(source,0,0,canvas.width,canvas.height);
+    const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/webp',.88));
+    if(seq!==revision)return;if(!blob||blob.type!=='image/webp'||blob.size>512000)throw Error('この画像を処理できません。別の画像を選んでください。');
+    pending=blob;previewURL=URL.createObjectURL(blob);show(previewURL);save.disabled=false;status.textContent='プレビューです。まだ公開サイトには反映していません。';
+   }catch(e){if(seq===revision)status.textContent=e.message||'画像を読み込めませんでした。';}finally{URL.revokeObjectURL(url);}
+  }
+  file.onchange=()=>{prepare(file.files[0]);file.value='';};
+  zone.addEventListener('paste',e=>{const f=Array.from(e.clipboardData?.files||[]).find(f=>f.type.startsWith('image/'));if(f){e.preventDefault();prepare(f);}});
+  zone.addEventListener('dragover',e=>e.preventDefault());zone.addEventListener('drop',e=>{e.preventDefault();prepare(e.dataTransfer.files[0]);});
+  zone.onclick=()=>zone.focus();
+  async function write(remove){
+   if(busy)return;if(!allowed()){status.textContent='管理者としてログインしてください。';return;}if(!remove&&!pending)return;
+   busy=true;save.disabled=true;reset.disabled=true;file.disabled=true;revision++;status.textContent=remove?'元の画像に戻しています…':'公開サイトに反映しています…';
+   try{
+    let r;
+    if(remove){r=await fetch(PINFORME_SUPABASE_BASE+'/storage/v1/object/'+bucket,{method:'DELETE',headers:{...headers(),'Content-Type':'application/json'},body:JSON.stringify({prefixes:['mascot-'+i+'.webp']})});}
+    else{r=await fetch(PINFORME_SUPABASE_BASE+'/storage/v1/object/'+bucket+'/mascot-'+i+'.webp',{method:'POST',headers:{...headers(),'Content-Type':'image/webp','x-upsert':'true','cache-control':'0'},body:pending});}
+    if(!r.ok)throw Error(errors(r));clean();
+    if(remove){img.hidden=true;img.removeAttribute('src');hint.hidden=false;hint.textContent='元のマスコットを表示します。';}
+    else show(publicURL(i));
+    status.textContent=remove?'元のマスコットに戻しました。':'反映しました。ホームページを開き直すか、最大1分ほどお待ちください。';
+   }catch(e){status.textContent=e.message;}finally{busy=false;save.disabled=!pending;reset.disabled=false;file.disabled=false;}
+  }
+  save.onclick=()=>write(false);reset.onclick=()=>write(true);
+  const check=new Image();check.onload=()=>{if(!pending&&!busy)show(check.src);};check.src=publicURL(i);
+  const logout=window.adminLogout;window.adminLogout=function(...args){revision++;clean();return logout.apply(this,args);};
+  root.append(card);
+ });
+ const link=document.createElement('a');link.href='./official.html';link.target='_blank';link.rel='noopener';link.textContent='ホームページを確認する ↗';root.append(link);manager.append(root);
+}
+
+</script>
+</body></html>
