@@ -99,7 +99,7 @@ function headers(json=true){const h={apikey:KEY,Authorization:'Bearer '+session.
 async function request(path,opt={}){const r=await fetch(BASE+path,opt);const t=await r.text();let j;try{j=t?JSON.parse(t):null}catch(e){j=t}if(!r.ok)throw new Error(j?.message||j?.error_description||j?.msg||j?.hint||t||('HTTP '+r.status));return j}
 async function verify(token){const r=await fetch(BASE+'/rest/v1/rpc/is_pinforme_admin',{method:'POST',headers:{apikey:KEY,Authorization:'Bearer '+token,'Content-Type':'application/json'},body:'{}'});return r.ok&&(await r.json())===true}
 async function login(){const e=$('email').value.trim(),p=$('password').value,st=$('loginStatus');if(!e||!p){st.className='status err';st.textContent='メールアドレスとパスワードを入力してください。';return}st.className='status';st.textContent='認証中…';try{const j=await request('/auth/v1/token?grant_type=password',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({email:e,password:p})});if(!await verify(j.access_token))throw new Error('このアカウントにはPINFORME管理者権限がありません。');saveSession(j);$('password').value='';showAdmin();await loadAll()}catch(err){saveSession(null);st.className='status err';st.textContent='ログインエラー：'+err.message}}
-function showAdmin(){initVisitors();$('loginCard').classList.add('hidden');$('adminArea').classList.remove('hidden');$('logoutBtn').classList.remove('hidden')}
+function showAdmin(){pinMountSiteMascots($('adminArea'));initVisitors();$('loginCard').classList.add('hidden');$('adminArea').classList.remove('hidden');$('logoutBtn').classList.remove('hidden')}
 function logout(){clearVisitors();saveSession(null);$('adminArea').classList.add('hidden');$('loginCard').classList.remove('hidden');$('logoutBtn').classList.add('hidden');$('loginStatus').textContent='ログアウトしました。'}
 async function restore(){const s=getSession();if(!s?.access_token)return;try{if(await verify(s.access_token)){session=s;showAdmin();await loadAll()}else saveSession(null)}catch(e){saveSession(null)}}
 function projectLabel(c){const p=types.find(x=>x.project_code===c);return p?c.replace('P','PROJECT ')+'｜'+p.project_name:c}
@@ -315,6 +315,79 @@ async function refreshVisitors(){
 }
 
 restore();
+</script>
+<style>
+#pinSiteMascots [hidden]{display:none!important}
+#pinSiteMascots .site-mascot-editor{margin:18px 0;padding:14px;border:1px solid #ddd;border-radius:14px}
+#pinSiteMascots h3{font-size:16px}
+#pinSiteMascots .site-mascot-paste{height:170px;padding:12px;border:2px dashed #bbb;border-radius:12px;display:flex;align-items:center;justify-content:center;text-align:center;background:#fafafa;margin-bottom:12px;outline-offset:3px}
+#pinSiteMascots .site-mascot-paste img{max-width:100%;height:100%;object-fit:contain}
+#pinSiteMascots .site-mascot-file{display:inline-flex;cursor:pointer}
+#pinSiteMascots .site-mascot-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+#pinSiteMascots p{font-size:13px;line-height:1.7}
+</style>
+<script>
+function pinMountSiteMascots(manager){
+ if(document.getElementById('pinSiteMascots'))return;
+ const bucket='pinforme-site-mascots';
+ const root=document.createElement('section');root.id='pinSiteMascots';root.hidden=false;root.className='card';
+ root.innerHTML='<h2>ホームページのマスコット画像</h2><p>各画面の画像を選ぶか、画像をコピーして枠内に貼り付けてください。プレビューを確認して「ホームページに反映」を押すと、訪問者にも表示されます。</p><p>PNG・JPEG・WebP（10MBまで）。画像全体が枠に収まるように表示します。</p>';
+ const allowed=()=>session?.access_token;
+ const headers=()=>({apikey:KEY,Authorization:'Bearer '+session?.access_token});
+ const publicURL=i=>BASE+'/storage/v1/object/public/'+bucket+'/mascot-'+i+'.webp?v='+Date.now();
+ const errors=r=>r.status===401?'ログインの有効期限が切れています。再ログインしてください。':r.status===403?'保存権限を確認してください。初回設定が未実施の場合は、設定用SQLを実行してください。':'画像を保存できませんでした。初回設定と通信状態を確認してください。';
+ [1,2,3].forEach((i)=>{
+  const card=document.createElement('div');card.className='site-mascot-editor';
+  card.innerHTML='<h3>'+i+'枚目：'+['ありがとう・協力頭数','集計グラフ','採寸協力のお願い'][i-1]+'</h3><div class="site-mascot-paste" tabindex="0" role="group" aria-label="'+i+'枚目の画像貼り付け欄"><img alt="'+i+'枚目の画像プレビュー" hidden><span>ここを押して画像を貼り付け<br>または下のボタンで画像を選択</span></div><label class="btn outline site-mascot-file">画像を選択<input type="file" accept="image/png,image/jpeg,image/webp" hidden></label><div class="site-mascot-actions"><button type="button" class="btn dark" disabled>ホームページに反映</button><button type="button" class="btn outline">元のマスコットに戻す</button></div><p role="status" aria-live="polite"></p>';
+  const zone=card.querySelector('.site-mascot-paste'),img=card.querySelector('img'),hint=card.querySelector('span'),file=card.querySelector('input');
+  const [save,reset]=card.querySelectorAll('button'),status=card.querySelector('[role="status"]');
+  let pending=null,previewURL=null,busy=false,revision=0;
+  function show(url){img.hidden=false;hint.hidden=true;img.src=url;}
+  function clean(){if(previewURL)URL.revokeObjectURL(previewURL);previewURL=null;pending=null;save.disabled=true;}
+  async function prepare(f){
+   if(busy)return;if(!allowed()){status.textContent='管理者としてログインしてください。';return;}
+   const seq=++revision;clean();
+   if(!f||!['image/png','image/jpeg','image/webp'].includes(f.type)){status.textContent='PNG・JPEG・WebPの画像を選んでください。';return;}
+   if(f.size>10*1024*1024){status.textContent='10MB以下の画像を選んでください。';return;}
+   status.textContent='プレビューを準備しています…';
+   const url=URL.createObjectURL(f),source=new Image();
+   try{
+    await new Promise((resolve,reject)=>{source.onload=resolve;source.onerror=reject;source.src=url;});
+    if(seq!==revision)return;
+    if(source.naturalWidth*source.naturalHeight>24000000)throw Error('画像が大きすぎます。小さくして選び直してください。');
+    const scale=Math.min(1,640/Math.max(source.naturalWidth,source.naturalHeight));
+    const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(source.naturalWidth*scale));canvas.height=Math.max(1,Math.round(source.naturalHeight*scale));
+    canvas.getContext('2d').drawImage(source,0,0,canvas.width,canvas.height);
+    const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/webp',.88));
+    if(seq!==revision)return;if(!blob||blob.type!=='image/webp'||blob.size>512000)throw Error('この画像を処理できません。別の画像を選んでください。');
+    pending=blob;previewURL=URL.createObjectURL(blob);show(previewURL);save.disabled=false;status.textContent='プレビューです。まだ公開サイトには反映していません。';
+   }catch(e){if(seq===revision)status.textContent=e.message||'画像を読み込めませんでした。';}finally{URL.revokeObjectURL(url);}
+  }
+  file.onchange=()=>{prepare(file.files[0]);file.value='';};
+  zone.addEventListener('paste',e=>{const f=Array.from(e.clipboardData?.files||[]).find(f=>f.type.startsWith('image/'));if(f){e.preventDefault();prepare(f);}});
+  zone.addEventListener('dragover',e=>e.preventDefault());zone.addEventListener('drop',e=>{e.preventDefault();prepare(e.dataTransfer.files[0]);});
+  zone.onclick=()=>zone.focus();
+  async function write(remove){
+   if(busy)return;if(!allowed()){status.textContent='管理者としてログインしてください。';return;}if(!remove&&!pending)return;
+   busy=true;save.disabled=true;reset.disabled=true;file.disabled=true;revision++;status.textContent=remove?'元の画像に戻しています…':'公開サイトに反映しています…';
+   try{
+    let r;
+    if(remove){r=await fetch(BASE+'/storage/v1/object/'+bucket,{method:'DELETE',headers:{...headers(),'Content-Type':'application/json'},body:JSON.stringify({prefixes:['mascot-'+i+'.webp']})});}
+    else{r=await fetch(BASE+'/storage/v1/object/'+bucket+'/mascot-'+i+'.webp',{method:'POST',headers:{...headers(),'Content-Type':'image/webp','x-upsert':'true','cache-control':'0'},body:pending});}
+    if(!r.ok)throw Error(errors(r));clean();
+    if(remove){img.hidden=true;img.removeAttribute('src');hint.hidden=false;hint.textContent='元のマスコットを表示します。';}
+    else show(publicURL(i));
+    status.textContent=remove?'元のマスコットに戻しました。':'反映しました。ホームページを開き直すか、最大1分ほどお待ちください。';
+   }catch(e){status.textContent=e.message;}finally{busy=false;save.disabled=!pending;reset.disabled=false;file.disabled=false;}
+  }
+  save.onclick=()=>write(false);reset.onclick=()=>write(true);
+  const check=new Image();check.onload=()=>{if(!pending&&!busy)show(check.src);};check.src=publicURL(i);
+  const logout=window.logout;window.logout=function(...args){revision++;clean();return logout.apply(this,args);};
+  root.append(card);
+ });
+ const link=document.createElement('a');link.href='./official.html';link.target='_blank';link.rel='noopener';link.textContent='ホームページを確認する ↗';root.append(link);manager.append(root);document.getElementById('visitorCard').after(root);
+}
+
 </script>
 </body>
 </html>
