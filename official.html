@@ -1170,6 +1170,15 @@ footer{padding:34px 0 46px;border-top:1px solid #ececec;font-size:12px;color:#77
 .teaser-mascot img{width:100%;height:100%;max-height:100%;object-fit:contain}
 @media(max-width:760px){.teaser-mascot{height:90px;flex-basis:90px}}
 
+
+/* Wider summary card and full-width images on phones. */
+@media(max-width:760px){
+ .hero-primary{grid-template-columns:minmax(0,1.04fr) minmax(0,.96fr);column-gap:10px}
+ .hero-primary>.live-teaser{padding-left:10px;padding-right:10px}
+ .live-teaser .teaser-mascot{height:108px;flex-basis:108px}
+ .live-teaser .teaser-mascot img{width:100%;max-width:none;height:100%;max-height:100%;object-fit:contain}
+}
+
 </style>
 <link rel="canonical" href="https://pinforme.github.io/pinforme-measurement/official.html">
 <meta property="og:type" content="website">
