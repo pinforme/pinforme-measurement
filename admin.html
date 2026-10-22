@@ -245,12 +245,23 @@ async function loadHistory(){const id=$('editingId').value;if(!id){$('historySta
 const VISITOR_CLIENT_ID='967560514252-lm8e0hks9rdti25ti1aso5i88rqdk285.apps.googleusercontent.com';
 const VISITOR_PROPERTY='559583175';
 const VISITOR_START='2026-10-19';
-let visitorToken=null,visitorExpires=0,visitorGeneration=0,visitorBusy=false;
+let visitorToken=null,visitorExpires=0,visitorGeneration=0,visitorBusy=false,visitorTimer=null;
+const VISITOR_SESSION='PINFORME_SITE_VISITOR_CONNECTION_V1';
+function storeVisitors(counts){try{const previous=JSON.parse(sessionStorage.getItem(VISITOR_SESSION)||'null');sessionStorage.setItem(VISITOR_SESSION,JSON.stringify({token:visitorToken,expires:visitorExpires,counts:counts||previous?.counts||null,at:counts?Date.now():previous?.at||null}));}catch(e){}}
+function showVisitorCounts(counts,at){['visitorsAll','visitorsWeek','visitorsToday'].forEach((id,i)=>{$(id).textContent=counts[i].toLocaleString('ja-JP')});$('visitorUpdated').textContent='最終取得：'+new Date(at).toLocaleString('ja-JP',{timeZone:'Asia/Tokyo'})+'（日本時間）。今日の人数は反映が遅れる場合があります。';}
 function visitorMessage(message,error=false){$('visitorStatus').textContent=message;$('visitorStatus').className='status'+(error?' err':'');}
 function initVisitors(){
-  visitorMessage('Googleと連携すると訪問者数を表示します。');
+  let saved;try{saved=JSON.parse(sessionStorage.getItem(VISITOR_SESSION)||'null');}catch(e){}
+  if(Array.isArray(saved?.counts)&&saved.counts.length===3&&saved.counts.every(n=>Number.isSafeInteger(n)&&n>=0)&&saved.at){showVisitorCounts(saved.counts,saved.at);}
+  if(saved?.token&&Number(saved.expires)>Date.now()){
+    visitorToken=saved.token;visitorExpires=Number(saved.expires);
+    $('visitorConnect').textContent='Googleを再接続';$('visitorRefresh').disabled=false;refreshVisitors();
+  }else visitorMessage(saved?.counts?'前回取得した人数です。最新の人数を取得するにはGoogleを再接続してください。':'最初にGoogleと連携すると、接続の有効期間中は自動表示します。');
+  if(visitorTimer)clearInterval(visitorTimer);
+  visitorTimer=setInterval(()=>{if(document.visibilityState==='visible'&&session?.access_token&&visitorToken&&Date.now()<visitorExpires)refreshVisitors();},300000);
 }
 function clearVisitors(){
+  if(visitorTimer)clearInterval(visitorTimer);visitorTimer=null;try{sessionStorage.removeItem(VISITOR_SESSION);}catch(e){}
   visitorGeneration++;visitorToken=null;visitorExpires=0;visitorBusy=false;
   for(const id of ['visitorsAll','visitorsWeek','visitorsToday'])$(id).textContent='—';
   $('visitorRefresh').disabled=true;$('visitorConnect').disabled=false;
@@ -267,7 +278,7 @@ function connectVisitors(){
       if(generation!==visitorGeneration||!session)return;
       if(response.error||!response.access_token){visitorMessage('連携が完了しませんでした。Googleアカウントと権限を確認してください。',true);return;}
       visitorToken=response.access_token;visitorExpires=Date.now()+Math.max(0,Number(response.expires_in||3600)-60)*1000;
-      $('visitorConnect').textContent='Googleを再接続';$('visitorRefresh').disabled=false;
+      storeVisitors();$('visitorConnect').textContent='Googleを再接続';$('visitorRefresh').disabled=false;
       await refreshVisitors();
     },
     error_callback:()=>{if(generation===visitorGeneration)visitorMessage('連携画面を開けなかったか、閉じられました。もう一度お試しください。',true);}
@@ -304,13 +315,12 @@ async function refreshVisitors(){
   try{
     const counts=await Promise.all([fetchVisitorCount(VISITOR_START,token),fetchVisitorCount('6daysAgo',token),fetchVisitorCount('today',token)]);
     if(generation!==visitorGeneration||!session)return;
-    ['visitorsAll','visitorsWeek','visitorsToday'].forEach((id,i)=>{$(id).textContent=counts[i].toLocaleString('ja-JP')});
+    storeVisitors(counts);showVisitorCounts(counts,Date.now());
     visitorMessage('取得しました。Googleアナリティクスの集計値です。');
     $('visitorUpdated').textContent='最終取得：'+new Date().toLocaleString('ja-JP',{timeZone:'Asia/Tokyo'})+'（日本時間）。今日の人数は反映が遅れる場合があります。';
   }catch(e){
     if(generation!==visitorGeneration)return;
-    for(const id of ['visitorsAll','visitorsWeek','visitorsToday'])$(id).textContent='—';
-    $('visitorUpdated').textContent='現在の値を取得できていません。';visitorMessage(e.message,true);
+    visitorMessage(e.message+' 表示中の人数は最終取得時点の値です。',true);
   }finally{if(generation===visitorGeneration){visitorBusy=false;$('visitorRefresh').disabled=!visitorToken;}}
 }
 
