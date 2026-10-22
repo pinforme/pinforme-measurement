@@ -1179,6 +1179,16 @@ footer{padding:34px 0 46px;border-top:1px solid #ececec;font-size:12px;color:#77
  .live-teaser .teaser-mascot img{width:100%;max-width:none;height:100%;max-height:100%;object-fit:contain}
 }
 
+
+/* Give the summary more width and room for legible previews. */
+@media(max-width:760px){
+ .hero-primary{grid-template-columns:minmax(0,.88fr) minmax(0,1.12fr);column-gap:8px}
+ .hero-primary>.live-teaser{padding-left:10px;padding-right:10px}
+ .live-teaser .teaser-mascot{height:140px;flex-basis:140px}
+ .live-teaser .teaser-mascot img{width:100%;max-width:none;height:100%;max-height:100%;object-fit:contain}
+ .hero-primary>.recruit-badge{white-space:normal;line-height:1.5;text-align:center}
+}
+
 </style>
 <link rel="canonical" href="https://pinforme.github.io/pinforme-measurement/official.html">
 <meta property="og:type" content="website">
