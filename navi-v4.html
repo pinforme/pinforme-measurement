@@ -40,31 +40,35 @@ h2{font-size:18px;margin:18px 0 8px}
 .status:empty{display:none}
 /* ===== 進捗メーター（§6.1） ===== */
 /* B7：進捗テキスト行は廃止し、「何項目めか」は項目名の横（.step-pos）へ移した。バーは従来の見やすい形（8pxセグメント＋必須/任意の境目）を残す */
+/* B8：この全体バーは区切り画面（任意の追加選択）でのみ使う。測定ステップでは新ヘッダー内のゲージ（.hd-gauge）が進捗を示すため、ステップ表示中は出さない（二重表示の防止）。セグメントの様式は .segbar として両者で共用する */
 #progressHeader{display:none;background:#fff;border-bottom:1px solid var(--line);padding:7px 14px 8px}
-body.measuring #progressHeader{display:block}
-#progressBar{display:flex;gap:2px;margin-top:0}
-#progressBar .seg{flex:1;height:8px;border-radius:4px;background:#dcdce0;position:relative}
-#progressBar .seg.done{background:var(--accent)}
-#progressBar .seg.current{background:#8e8e93}
-#progressBar .seg.opt{background:#e4e4e7}
-#progressBar .seg.opt.done{background:#6e6e73}
-#progressBar .seg.opt.current{background:#aeaeb2}
-#progressBar .seg.divider-after::after{content:"";position:absolute;right:-4px;top:-3px;width:2px;height:14px;background:#1c1c1e}
+body.on-choice #progressHeader{display:block}
+.segbar{display:flex;gap:2px;margin-top:0}
+.segbar .seg{flex:1;height:8px;border-radius:4px;background:#dcdce0;position:relative}
+.segbar .seg.done{background:var(--accent)}
+.segbar .seg.current{background:#8e8e93}
+.segbar .seg.opt{background:#e4e4e7}
+.segbar .seg.opt.done{background:#6e6e73}
+.segbar .seg.opt.current{background:#aeaeb2}
+.segbar .seg.divider-after::after{content:"";position:absolute;right:-4px;top:-3px;width:2px;height:14px;background:#1c1c1e}
 /* ===== 測定画面（シート型をページ本体として実装） ===== */
 /* B6：キー寸法は実測した「正常時」の固定値で組み直した（§12）。キーパッド＋決定行は .kp-zone として下部に独立させ、兄弟要素の高さ変化に影響されない。収まらない小画面ではステップ全体のスクロールにフォールバックする */
 .step.active{display:flex;flex-direction:column;height:calc(var(--v4h) - var(--progH));overflow-y:auto;overflow-x:hidden;background:var(--bg)}
-.step .sheet-head{display:flex;align-items:center;gap:8px;height:46px;padding:0 12px;flex:none}
-.step .sheet-head .num{background:var(--accent);color:#fff;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-weight:800;flex:none}
-.step .sheet-head .item-title{font-size:19px;font-weight:800;flex:1}
-/* B7：進捗テキスト行から移した「何項目めか」表示（例 4/15）。項目名の横に固定表示し、レイアウトは押し広げない */
-.step .sheet-head .step-pos{font-size:13px;font-weight:700;color:#5a5a5e;flex:none;white-space:nowrap}
+/* B8：ユーザーの手描きモック（2026-10-25 07:51）に沿ってヘッダーを作り替えた。左＝大きな黒丸に白抜き数字（その項目のグループ内通し番号）、右列＝項目名（大きく）／位置テキスト（「5項目のうち 3項目め／残り2項目」）／その真下にセグメント式ゲージ（.hd-gauge、様式はB7のバーと同一）。B7の .step-pos（n/総数）はこのヘッダーに置き換え、廃止した（二重表示にしない）。長い項目名（首の長さ(スヌーズ)等）でも位置テキストとゲージの幅が潰れないよう、タイトルと位置情報は右列に縦積みする */
+.step .sheet-head{display:flex;align-items:center;gap:10px;height:74px;padding:8px 12px;flex:none}
+.step .sheet-head .num{background:var(--ink);color:#fff;border-radius:50%;width:48px;height:48px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:23px;line-height:1;flex:none}
+.step .sheet-head .hd-main{flex:1;min-width:0}
+.step .sheet-head .item-title{display:block;font-size:22px;font-weight:800;line-height:1.25;white-space:nowrap}
+.step .sheet-head .hd-pos{font-size:12px;font-weight:700;color:#5a5a5e;line-height:1.3;margin-top:1px;white-space:nowrap}
+.step .sheet-head .hd-gauge{margin-top:4px}
 /* B7：帯・進捗テキスト行の撤去で空いた高さを図の拡大に充てた（帯 106→124、図 166×88→200×106。縦横比は B6 実測の図と同一） */
-.step .guide-band{display:flex;gap:10px;align-items:center;height:124px;margin:0 12px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px 10px;flex:none}
+/* B8：モックに沿ってガイドカードを作り替えた。左＝犬種イラスト（大きく）、右＝黒ピルラベル「測定位置」＋測定位置テキスト＋「タップで拡大・詳細 ›」の縦積み。別置きだった進捗ヘッダー（24）がステップでは不要になり、見出しも統合したため、空いた分をカード拡大に充てた（帯 124→130、図 200×106→218×116。縦横比は従来図と同一） */
+.step .guide-band{display:flex;gap:10px;align-items:center;height:130px;margin:0 12px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:6px 10px;flex:none}
 /* B6：図は実測ベースの固定値（キー寸法と同じく svh 連動を排除）。ボタン廃止で空いた分と入力枠の圧縮分を図の拡大に充てた */
-.step .guide-band img{width:200px;height:106px;object-fit:contain;background:#eeeef0;border-radius:8px;flex:none}
-.step .guide-band .loc-badge{display:inline-block;background:var(--brand);color:#fff;font-size:11px;font-weight:700;border-radius:6px;padding:1px 7px;margin-bottom:3px}
-.step .guide-band .loc-text{font-size:14px;line-height:1.5}
-.step .guide-band .tap-hint{font-size:11px;color:var(--accent);font-weight:700;margin-top:2px}
+.step .guide-band img{width:218px;height:116px;object-fit:contain;background:#eeeef0;border-radius:8px;flex:none}
+.step .guide-band .loc-badge{display:inline-block;background:var(--ink);color:#fff;font-size:12px;font-weight:700;border-radius:999px;padding:3px 10px;line-height:1.3;margin-bottom:4px}
+.step .guide-band .loc-text{font-size:15px;line-height:1.5}
+.step .guide-band .tap-hint{font-size:11.5px;color:var(--accent);font-weight:700;margin-top:3px}
 .group-chips{display:flex;gap:6px;padding:2px 12px;flex:none;flex-wrap:wrap}
 .group-chips .chip{min-height:36px;padding:4px 10px;font-size:13px;border-radius:18px}
 .group-chips .chip.active{background:var(--brand);color:#fff;border-color:var(--brand);font-weight:700}
@@ -103,9 +107,13 @@ body.measuring #progressHeader{display:block}
 .sheet-actions .next-btn{flex:1;background:var(--accent);border-color:var(--accent);color:#fff;font-weight:800;font-size:17px}
 .skip-optional{margin:4px 12px;flex:none;height:40px;min-height:40px}
 /* B7：複合グループ項目はチップ行＋サブタイトル分だけ高いため、.multi でのみ帯・余白を詰めて総高630以下に収める（キー寸法 34px は単独と同一） */
-.step.multi .sheet-head{height:42px}
-.step.multi .guide-band{height:100px}
-.step.multi .guide-band img{width:154px;height:82px}
+.step.multi .sheet-head{height:66px;padding:6px 12px}
+.step.multi .sheet-head .num{width:42px;height:42px;font-size:20px}
+.step.multi .sheet-head .item-title{font-size:20px}
+.step.multi .sheet-head .hd-pos{font-size:11.5px}
+.step.multi .sheet-head .hd-gauge{margin-top:3px}
+.step.multi .guide-band{height:106px}
+.step.multi .guide-band img{width:173px;height:92px}
 .step.multi .guide-band .loc-text{line-height:1.4}
 .step.multi .group-chips{padding:0 12px}
 .step.multi .group-chips .chip{min-height:30px}
@@ -189,7 +197,7 @@ label.confirm input{margin-top:4px;width:20px;height:20px;flex:none}
 <div id="testBadge" role="button" tabindex="0">確認用テストモード（送信されません）</div>
 
 <header id="progressHeader" aria-label="採寸の進捗">
-  <div id="progressBar" aria-hidden="true"></div>
+  <div id="progressBar" class="segbar" aria-hidden="true"></div>
 </header>
 
 <!-- 入口（統合） -->
@@ -1544,6 +1552,9 @@ function hideAll(){
 function syncProgressChrome(){
   const active = document.querySelector('.step.active') || (document.getElementById('pinV2OptionalChoice')?.classList.contains('active') ? document.getElementById('pinV2OptionalChoice') : null);
   document.body.classList.toggle('measuring', !!active);
+  /* B8：全体バー（#progressHeader）は区切り画面のときだけ表示する（ステップ表示中は新ヘッダーのゲージが進捗を示すため）。--progH の実測より前に付け外しする */
+  const onChoice = !document.querySelector('.step.active') && !!document.getElementById('pinV2OptionalChoice')?.classList.contains('active');
+  document.body.classList.toggle('on-choice', onChoice);
   /* B7：ドキュメント側スクロールの封じ（html.v4-measuring）も測定中だけに連動させる */
   document.documentElement.classList.toggle('v4-measuring', !!active);
   const badgeH = document.getElementById('testBadge')?.offsetHeight || 0;
@@ -1579,6 +1590,18 @@ function progressPlan(){
   const pos = Math.max(1, list.indexOf(current)+1);
   return {list, requiredCount, pos, currentIndex:current};
 }
+/* B8：計画リストを「必須グループ／任意グループ」に分ける。新ヘッダーの丸数字・位置テキスト・ゲージはこのグループ単位で出す。
+   任意フローが成立しない回（部分更新・項目追加など）は対象リスト全体を1グループとし、分母はその回の対象項目数になる（従来の規則どおり） */
+function planGroups(plan){
+  const split = PIN_V2 ? pinEligibleOptionalFlow() : true;
+  if(!split) return [{items:[...plan.list], opt:false}];
+  const req = plan.list.filter(i=>i<5);
+  const opt = plan.list.filter(i=>i>=5);
+  const gs = [];
+  if(req.length) gs.push({items:req, opt:false});
+  if(opt.length) gs.push({items:opt, opt:true});
+  return gs.length ? gs : [{items:[...plan.list], opt:false}];
+}
 function updateProgressMeter(){
   const bar = document.getElementById('progressBar');
   if(!bar) return;
@@ -1590,20 +1613,35 @@ function updateProgressMeter(){
     return;
   }
   const plan = progressPlan();
-  const total = plan.list.length;
-  /* B7：「何項目めか」は進捗テキスト行ではなく、各ステップの項目名の横（.step-pos）に pos/総数 で出す */
-  steps.forEach(sec=>{ const el = sec.querySelector('.step-pos'); if(el) el.textContent = ''; });
-  plan.list.forEach((stepIdx, k)=>{
-    const el = steps[stepIdx]?.querySelector('.step-pos');
-    if(el) el.textContent = `${k+1}/${total}`;
-  });
+  /* B8：ステップ表示中は全体バーを使わない（#progressHeader 自体が非表示）。進捗は各ステップの新ヘッダーに出す：
+     丸数字＝グループ内の通し番号、位置テキスト＝「{グループ総数}項目のうち {位置}項目め／残り{残り}項目」、ゲージ＝グループ分セグメント */
   bar.replaceChildren();
-  plan.list.forEach((stepIdx, k)=>{
-    const s = document.createElement('span');
-    const isOpt = pinEligibleOptionalFlow() && stepIdx >= 5;
-    s.className = 'seg' + (isOpt?' opt':'') + (k < plan.pos-1 ? ' done' : k === plan.pos-1 ? ' current' : '');
-    if(pinEligibleOptionalFlow() && k === plan.requiredCount-1 && plan.requiredCount < total) s.classList.add('divider-after');
-    bar.append(s);
+  const groups = planGroups(plan);
+  steps.forEach((sec, i)=>{
+    const numEl = sec.querySelector('.sheet-head .num');
+    const posEl = sec.querySelector('.hd-pos');
+    const gauge = sec.querySelector('.hd-gauge');
+    let hit = null;
+    groups.forEach(g=>{ const k = g.items.indexOf(i); if(k >= 0) hit = {g, k}; });
+    if(!hit){
+      /* この回の対象外のステップ：丸数字は全体の通し番号に戻し、位置テキストとゲージは空にする */
+      if(numEl) numEl.textContent = String(i+1);
+      if(posEl) posEl.textContent = '';
+      if(gauge) gauge.replaceChildren();
+      return;
+    }
+    const total = hit.g.items.length;
+    const pos = hit.k + 1;
+    if(numEl) numEl.textContent = String(pos);
+    if(posEl) posEl.textContent = `${total}項目のうち ${pos}項目め／残り${total - pos}項目`;
+    if(gauge){
+      gauge.replaceChildren();
+      hit.g.items.forEach((_, j)=>{
+        const s = document.createElement('span');
+        s.className = 'seg' + (hit.g.opt ? ' opt' : '') + (j < hit.k ? ' done' : j === hit.k ? ' current' : '');
+        gauge.append(s);
+      });
+    }
   });
 }
 /* ================= 測定画面の生成（シート型UIをページ本体として実装） ================= */
@@ -1622,9 +1660,12 @@ function buildSteps(){
     if(multi) sec.classList.add('multi');
     sec.innerHTML = `
       <div class="sheet-head">
-        <span class="num">${i+1}</span>
-        <span class="item-title">${item.title}</span>
-        <span class="step-pos"></span>
+        <span class="num">${i<5 ? i+1 : i-4}</span>
+        <div class="hd-main">
+          <span class="item-title">${item.title}</span>
+          <div class="hd-pos"></div>
+          <div class="hd-gauge segbar" aria-hidden="true"></div>
+        </div>
       </div>
       <div class="guide-band" role="button" tabindex="0" aria-label="測り方の詳細を開く">
         <img alt="${item.title}の採寸位置">
