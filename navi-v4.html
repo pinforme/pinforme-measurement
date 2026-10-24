@@ -145,13 +145,30 @@ body.on-choice #progressHeader{display:block}
 .step.multi.opt-step .slot .slot-label{height:16px;line-height:16px}
 .step.multi.opt-step .adjust-row button{height:38px}
 .step.multi.opt-step .keypad{gap:4px;padding:5px 12px}
-/* B9（C案）：目的選択画面の「測る範囲（測定セット）」選択肢。様式は入口の選択ボタン（.owner-choice）に揃える */
-.scope-opt{display:block;width:100%;text-align:left;margin:8px 0;padding:12px 16px}
-.scope-opt .t{display:block;font-weight:800;font-size:16px}
-.scope-opt .n{display:block;font-size:12.5px;color:#5a5a5e;margin-top:2px}
+/* B9（C案）：目的選択画面の「測る範囲（測定セット）」選択肢。様式は入口の選択ボタン（.owner-choice）に揃える
+   B11：選択はカード方式に一本化し（旧ドロップダウンは撤去）、縦に高いカード形式をやめて行形式
+   （タイトル＋項目数バッジを1行に）に変更した。分類→セットの2段階表示とあわせ、各段階が
+   アプリ内ブラウザの実効高（約650px）にスクロールなしで収まるようにする（§17） */
+.scope-opt{display:flex;align-items:center;gap:10px;width:100%;text-align:left;margin:5px 0;padding:8px 14px;min-height:48px}
+.scope-opt .t{flex:1;font-weight:800;font-size:15.5px;line-height:1.3}
+.scope-opt .n{display:block;font-size:12.5px;font-weight:400;color:#5a5a5e;margin-top:1px;line-height:1.35}
+.scope-opt .c{font-size:13px;font-weight:700;color:#5a5a5e;white-space:nowrap}
 .scope-opt.active{background:var(--brand);color:#fff;border-color:var(--brand)}
 .scope-opt.active .n{color:#e8e8ea}
+.scope-opt.active .c{color:#e8e8ea}
+/* B11：.scope-head は2段階化で生成しなくなった（分類は独立した第1段階になった）。様式だけ残置する */
 .scope-head{font-weight:800;font-size:13.5px;color:#5a5a5e;margin:16px 0 0}
+/* B11：目的選択画面の専用様式。余白を詰め、各段階がスクロールなしに収まる寸法にする（概算は§17） */
+#pinV2Purpose .wrap{padding:12px 16px 12px}
+#pinV2Purpose .brand{margin:0 0 2px}
+#pinV2Purpose h1{margin:6px 0 4px}
+#pinV2Purpose #v2PurposeDog{margin:0 0 6px;font-size:14.5px}
+#pinV2Purpose .field{margin:8px 0}
+#pinV2Purpose .card-box{padding:14px;margin:10px 0}
+#pinV2Purpose .card-box p{margin:0 0 6px}
+#pinV2Purpose .card-box p:last-child{margin-bottom:0}
+#pinV2Purpose #v2PurposeBack{width:100%;min-height:44px;margin-top:6px}
+.scope-backlink{min-height:36px;padding:4px 10px;font-size:14px;font-weight:700;margin:2px 0 4px}
 /* B9：区切り画面（C案では新規フローの途中に挟まないが、再開導線で表示され得る）は通常ページとしてスクロールできる前提で、上下の余白だけ少し詰める */
 #pinV2OptionalChoice .wrap{padding-top:12px;padding-bottom:28px}
 /* B5：旧 @media (max-height:760px/580px) の圧縮ルールは復活させない。あれは画面高で文字サイズ・
@@ -1169,10 +1186,20 @@ const PIN_V2_PRODUCTS = {
  short:{label:'半袖（8項目）',items:[0,1,2,3,4,5,7,12]},
  long:{label:'長袖（8項目）',items:[0,1,2,3,4,5,7,12]},
  turtle:{label:'タートルネック（8項目）',items:[0,1,2,3,4,9,11,13]},
- romper:{label:'ロンパース（15項目）',items:Array.from({length:15},(_,i)=>i)}
+ romper:{label:'ロンパース（15項目）',items:Array.from({length:15},(_,i)=>i)},
+ /* B11：服別セット（B10）の product 受け皿。保存データの目的（purpose／purposeLabel）を実態に一致させるため、
+    セットと同キーで定義する。items は対応する測定セットと同一に保つこと */
+ tshirt:{label:'Tシャツ（6項目）',items:[0,1,2,3,4,5]},
+ raglan:{label:'ラグラン長袖（7項目）',items:[0,1,2,3,4,5,7]},
+ hoodie:{label:'パーカー（8項目）',items:[0,1,2,3,4,5,9,11]},
+ pants:{label:'ズボン（4項目）',items:[2,6,8,14]}
 };
-/* 現行運用（s33）：目的の選択肢は undecided / tank / research のみ表示 */
-const PIN_V2_PRODUCT_UI = ['undecided','tank','research'];
+/* B11：服別セット由来の product キー。任意/追加区間の成立判定（pinV2IsOptional／pinEligibleOptionalFlow）で
+   従来の3値（tank／undecided／research）と並べて扱う */
+const PIN_V2_WEAR_PRODUCTS = ['tshirt','raglan','hoodie','romper','pants'];
+/* B11：従来のドロップダウン（旧 PIN_V2_PRODUCT_UI＝undecided／tank／research の3値表示）は撤去し、
+   選択は測定セットのカードに一本化した。旧3値の受け皿は core→undecided／tank→tank／all→research
+   （各セットの product 対応づけ。§17 の対応表参照） */
 /* B9（C案）：「測定セット」の定義。範囲選択はこの一箇所だけを置き場とし、選択肢UI・開始時の項目決定・
    ゲージ/ヘッダーの分母はすべてこの定義（＝項目リストの集合）に追従する汎用構造にする。
    B10：2026-10-24 に合意した服ラインナップ（タンクトップ→Tシャツ→ラグラン長袖→パーカー→ロンパース／四脚タイプ）の
@@ -1181,16 +1208,18 @@ const PIN_V2_PRODUCT_UI = ['undecided','tank','research'];
    必須5のうち下半身に関わるウエストのみ＋下半身系の項目で構成する（尻まわりの項目は15項目に実在しないため、
    最も近い尻尾の太さを使う）。
    group は目的選択画面の見出し分け（basic＝基本／wear＝服で選ぶ）。addName は境目の後半の呼び名
-   （基本セットは「任意」、服別セットは「追加」）で、位置テキスト・スキップ・ガイド注意文が参照する */
+   （基本セットは「任意」、服別セットは「追加」）で、位置テキスト・スキップ・ガイド注意文が参照する
+   B11：各セットに product（保存される目的キー）を持たせた。旧ドロップダウンの3値（undecided／tank／research）は
+   core／tank／all の product として受け継ぎ、服別セットは同キーの product 定義（PIN_V2_PRODUCTS）に対応づける */
 const PIN_MEASURE_SETS = {
-  core:{label:'必須5項目だけ測る', note:'首まわり・胴まわり・ウエスト・着丈・前身頃', items:[0,1,2,3,4], group:'basic', addName:'任意'},
-  all:{label:'全部の15項目を測る', note:'必須5項目＋任意の追加10項目', items:Array.from({length:15},(_,i)=>i), group:'basic', addName:'任意'},
-  tank:{label:'タンクトップ用（5項目）', note:'必須5項目だけ（首まわり・胴まわり・ウエスト・着丈・前身頃）', items:[0,1,2,3,4], group:'wear', addName:'追加'},
-  tshirt:{label:'Tシャツ用（6項目）', note:'必須5項目＋前脚の太さ（袖まわり）', items:[0,1,2,3,4,5], group:'wear', addName:'追加'},
-  raglan:{label:'ラグラン長袖用（7項目）', note:'必須5項目＋前脚の太さ・前脚の長さ', items:[0,1,2,3,4,5,7], group:'wear', addName:'追加'},
-  hoodie:{label:'パーカー用（8項目）', note:'必須5項目＋前脚の太さ・首の長さ（ネック）・頭まわり', items:[0,1,2,3,4,5,9,11], group:'wear', addName:'追加'},
-  romper:{label:'ロンパース／四脚タイプ用（15項目）', note:'必須5項目＋脚・首・頭まわりなど追加10項目の全部', items:Array.from({length:15},(_,i)=>i), group:'wear', addName:'追加'},
-  pants:{label:'ズボン用（4項目）', note:'下半身だけ：ウエスト＋後脚の太さ・後脚の長さ・尻尾の太さ', items:[2,6,8,14], group:'wear', addName:'追加'}
+  core:{label:'必須5項目だけ測る', note:'首まわり・胴まわり・ウエスト・着丈・前身頃', items:[0,1,2,3,4], group:'basic', addName:'任意', product:'undecided'},
+  all:{label:'全部の15項目を測る', note:'必須5項目＋任意の追加10項目', items:Array.from({length:15},(_,i)=>i), group:'basic', addName:'任意', product:'research'},
+  tank:{label:'タンクトップ用（5項目）', note:'必須5項目だけ（首まわり・胴まわり・ウエスト・着丈・前身頃）', items:[0,1,2,3,4], group:'wear', addName:'追加', product:'tank'},
+  tshirt:{label:'Tシャツ用（6項目）', note:'必須5項目＋前脚の太さ（袖まわり）', items:[0,1,2,3,4,5], group:'wear', addName:'追加', product:'tshirt'},
+  raglan:{label:'ラグラン長袖用（7項目）', note:'必須5項目＋前脚の太さ・前脚の長さ', items:[0,1,2,3,4,5,7], group:'wear', addName:'追加', product:'raglan'},
+  hoodie:{label:'パーカー用（8項目）', note:'必須5項目＋前脚の太さ・首の長さ（ネック）・頭まわり', items:[0,1,2,3,4,5,9,11], group:'wear', addName:'追加', product:'hoodie'},
+  romper:{label:'ロンパース／四脚タイプ用（15項目）', note:'必須5項目＋脚・首・頭まわりなど追加10項目の全部', items:Array.from({length:15},(_,i)=>i), group:'wear', addName:'追加', product:'romper'},
+  pants:{label:'ズボン用（4項目）', note:'下半身だけ：ウエスト＋後脚の太さ・後脚の長さ・尻尾の太さ', items:[2,6,8,14], group:'wear', addName:'追加', product:'pants'}
 };
 const PIN_MEASURE_SET_ORDER = ['core','all','tank','tshirt','raglan','hoodie','romper','pants'];
 const PIN_MEASURE_SET_GROUPS = {basic:'基本の測り方', wear:'服で選ぶ'};
@@ -1637,7 +1666,9 @@ function renderHome(){ pinRefreshDraftButton(); }
 
 /* ================= 進捗メーター（設計メモ §6.1） ================= */
 function pinV2IsOptional(index){
-  return !!PIN_V2 && !['add','update'].includes(PIN_V2.mode) && index>=5 && (PIN_V2.product==='research' || (['tank','undecided'].includes(PIN_V2.product) && PIN_V2.optionalAdditional===true));
+  /* B11：服別セット由来の product（PIN_V2_WEAR_PRODUCTS）も、従来の tank／undecided と同じく
+     optionalAdditional が立っている回では追加区間（index>=5）を任意扱いにする */
+  return !!PIN_V2 && !['add','update'].includes(PIN_V2.mode) && index>=5 && (PIN_V2.product==='research' || (['tank','undecided',...PIN_V2_WEAR_PRODUCTS].includes(PIN_V2.product) && PIN_V2.optionalAdditional===true));
 }
 /* B10：境目の後半の呼び名。基本セット（core／all）は「任意」、服別セットは「追加」。
    セット未指定の経路（再採寸・部分更新など）や PIN_V2 未生成時は従来どおり「任意」 */
@@ -1646,7 +1677,9 @@ function pinScopeAddName(){
   return (set && set.addName) || '任意';
 }
 function pinEligibleOptionalFlow(){
-  return !!PIN_V2 && !['add','update'].includes(PIN_V2.mode) && ['tank','undecided','research'].includes(PIN_V2.product);
+  /* B11：服別セット由来の product も対象に含める（B10 までは product が従来3値のいずれか＋scope で
+     服別フローを表していたため、対象範囲は従来の新規フローと等価） */
+  return !!PIN_V2 && !['add','update'].includes(PIN_V2.mode) && ['tank','undecided','research',...PIN_V2_WEAR_PRODUCTS].includes(PIN_V2.product);
 }
 function progressPlan(){
   /* 戻り値: {list:対象ステップindex配列, requiredCount:list内の必須数, pos:現在の位置(1始まり), currentIndex} */
@@ -2088,51 +2121,91 @@ function pinV2SetScopeChoice(key){
   pinV2ScopeChoice = key;
   document.querySelectorAll('#v2ScopeOptions .scope-opt').forEach(b=>b.classList.toggle('active', b.dataset.scope === key));
 }
-function pinV2Purpose(id=null, ownerSource=null){
-  const box = document.getElementById('pinV2Purpose');
-  const previous = pinV2Records().find(r=>r.id===id);
-  box.innerHTML = `<div class="wrap">
-    <div class="brand"><div class="word" style="font-size:22px">PINFORME</div></div>
-    <h1>採寸の目的を選んでください</h1>
-    <p id="v2PurposeDog"></p>
-    <div class="field"><label for="v2Product">採寸目的・お洋服の選択</label>
-    <select id="v2Product"></select></div>
-    ${id ? '' : `<div class="field"><label>測る範囲を選んでください</label><div id="v2ScopeOptions"></div>
-    <p class="note">必須5項目だけでも送信できます。任意項目は、あとから追加することもできます。</p></div>`}
-    <div class="card-box"><p><strong>まずは5項目の採寸でご協力いただけます。</strong></p><p class="note">首まわり（付け根）・胴まわり・ウエスト・着丈・前身頃を、各3回ずつ測って入力してください。</p></div>
-    <div class="card-box"><p class="note">第一弾のタンクトップのサイズ設計に、必須5項目を使います。</p><p class="note">追加10項目は、今後の服づくりに役立てるための任意項目です。測る範囲は上の選択で決められます。追加しなくても送信できます。</p></div>
-    <p class="status" id="v2PurposeStatus" role="alert"></p>
-    <button type="button" class="v2-primary" id="v2PurposeNext">次へ</button>
-    <button type="button" id="v2PurposeBack" style="width:100%;margin-top:10px">入口に戻る</button></div>`;
-  document.getElementById('v2PurposeDog').textContent = previous ? (previous.dogName ? previous.dog : '名前未登録') + 'の再採寸' : ownerSource ? '同じ飼い主様の、2匹目以降のわんちゃんを登録します。' : '今回測りたいお洋服や目的を選ぶと、必要な採寸項目をご案内します。';
-  const select = document.getElementById('v2Product');
-  const placeholder = new Option('選んでください',''); placeholder.disabled = true; select.add(placeholder);
-  for(const key of PIN_V2_PRODUCT_UI) select.add(new Option(PIN_V2_PRODUCTS[key].label, key));
-  select.value = '';
-  select.onchange = ()=>{ document.getElementById('v2PurposeStatus').textContent = ''; select.removeAttribute('aria-invalid'); if(select.value === 'research') pinV2SetScopeChoice('all'); };
-  /* B9（C案）：測定セットの選択肢は PIN_MEASURE_SETS の定義から生成する（新規フローのみ表示）。
-     B10：服別セットの追加に合わせ、定義の group（basic／wear）が変わる箇所に見出しを挟む */
-  const scopeBox = document.getElementById('v2ScopeOptions');
-  if(scopeBox){
-    let lastGroup = null;
-    PIN_MEASURE_SET_ORDER.forEach(key=>{
+/* B11：選択の一本化＋2段階化。旧来はドロップダウン（目的）とカード（測る範囲）が上下に並んで二重だった。
+   ドロップダウンは撤去し、目的（product）は選択した測定セットの product 対応づけから決める。
+   画面は第1段階（分類を選ぶ）→第2段階（その分類のセットを選ぶ）の2段階とし、各段階が
+   アプリ内ブラウザの実効高（約650px）にスクロールなしで収まる寸法にした（概算は§17）。
+   再採寸（id あり）では従来どおり選択UIを出さず、前回の目的を引き継ぐ */
+let pinV2PurposeStep = 'group';
+let pinV2PurposeGroup = 'basic';
+function pinV2RenderPurposeStep(){
+  const body = document.getElementById('v2PurposeBody');
+  const next = document.getElementById('v2PurposeNext');
+  const title = document.getElementById('v2PurposeTitle');
+  const dog = document.getElementById('v2PurposeDog');
+  if(!body || !next) return;
+  /* 第2段階は dog 説明行を隠して縦を詰める（第1段階の案内で役割は果たしている） */
+  if(dog) dog.style.display = pinV2PurposeStep === 'group' ? '' : 'none';
+  if(pinV2PurposeStep === 'group'){
+    next.style.display = 'none';
+    if(title) title.textContent = '測る範囲を選んでください';
+    body.innerHTML = `<div class="field"><label>分類を選んでください</label><div id="v2GroupOptions"></div></div>
+    <div class="card-box"><p><strong>まずは5項目の採寸でご協力いただけます。</strong></p><p class="note">必須5項目は、第一弾のタンクトップのサイズ設計に使います。追加の項目は今後の服づくりのための任意項目で、あとから追加することもできます。</p></div>`;
+    const gbox = document.getElementById('v2GroupOptions');
+    Object.keys(PIN_MEASURE_SET_GROUPS).forEach(g=>{
+      const keys = PIN_MEASURE_SET_ORDER.filter(k=>PIN_MEASURE_SETS[k].group === g);
+      if(!keys.length) return;
+      const chosen = PIN_MEASURE_SETS[pinV2ScopeChoice];
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'scope-opt'; b.dataset.group = g;
+      b.innerHTML = `<span style="flex:1;min-width:0"><span class="t">${PIN_MEASURE_SET_GROUPS[g]}</span>${chosen && chosen.group === g ? `<span class="n">選択中：${chosen.label}</span>` : ''}</span><span class="c">${keys.length}種類 ›</span>`;
+      b.addEventListener('click', ()=>{ pinV2PurposeGroup = g; pinV2PurposeStep = 'set'; pinV2RenderPurposeStep(); });
+      gbox.append(b);
+    });
+  } else {
+    next.style.display = '';
+    if(title) title.textContent = PIN_MEASURE_SET_GROUPS[pinV2PurposeGroup] || '';
+    body.innerHTML = `<button type="button" class="scope-backlink" id="v2ScopeBack">← 分類を選び直す</button>
+    <div class="field"><div id="v2ScopeOptions"></div></div>`;
+    document.getElementById('v2ScopeBack').addEventListener('click', ()=>{ pinV2PurposeStep = 'group'; pinV2RenderPurposeStep(); });
+    const scopeBox = document.getElementById('v2ScopeOptions');
+    PIN_MEASURE_SET_ORDER.filter(k=>PIN_MEASURE_SETS[k].group === pinV2PurposeGroup).forEach(key=>{
       const set = PIN_MEASURE_SETS[key];
-      if(set.group && set.group !== lastGroup){
-        lastGroup = set.group;
-        const h = document.createElement('div');
-        h.className = 'scope-head'; h.textContent = PIN_MEASURE_SET_GROUPS[set.group] || '';
-        scopeBox.append(h);
-      }
       const b = document.createElement('button');
       b.type = 'button'; b.className = 'scope-opt'; b.dataset.scope = key;
-      b.innerHTML = `<span class="t">${set.label}</span><span class="n">${set.note}</span>`;
+      b.innerHTML = `<span class="t">${set.label.replace(/（[^）]*）$/,'')}</span><span class="c">${set.items.length}項目</span>`;
       b.addEventListener('click', ()=>pinV2SetScopeChoice(key));
       scopeBox.append(b);
     });
     pinV2SetScopeChoice(pinV2ScopeChoice);
   }
-  document.getElementById('v2PurposeNext').onclick = ()=>pinV2Begin(select.value, id, ownerSource, id ? 'remeasure' : '');
+}
+function pinV2Purpose(id=null, ownerSource=null){
+  const box = document.getElementById('pinV2Purpose');
+  const previous = pinV2Records().find(r=>r.id===id);
+  if(id){
+    /* B11：再採寸では選択UIを出さない。前回の目的（product）を引き継ぐ。
+       前回の目的が現行の定義に無い場合は 'research' に倒す（部分更新の既存フォールバックと同じ） */
+    const prevProduct = previous && PIN_V2_PRODUCTS[previous.product] ? previous.product : 'research';
+    box.innerHTML = `<div class="wrap">
+    <div class="brand"><div class="word" style="font-size:22px">PINFORME</div></div>
+    <h1>採寸の目的</h1>
+    <p id="v2PurposeDog"></p>
+    <div class="card-box"><p>前回と同じ目的「${PIN_V2_PRODUCTS[prevProduct].label}」で再採寸します。</p><p class="note">目的を変える場合は、入口から新規の採寸としてはじめてください。</p></div>
+    <p class="status" id="v2PurposeStatus" role="alert"></p>
+    <button type="button" class="v2-primary" id="v2PurposeNext">次へ</button>
+    <button type="button" id="v2PurposeBack">入口に戻る</button></div>`;
+    document.getElementById('v2PurposeDog').textContent = previous ? (previous.dogName ? previous.dog : '名前未登録') + 'の再採寸' : '登録済みのわんちゃんの再採寸';
+    document.getElementById('v2PurposeNext').onclick = ()=>pinV2Begin(prevProduct, id, ownerSource, 'remeasure');
+    document.getElementById('v2PurposeBack').onclick = pinV2Home;
+    showPage('pinV2Purpose');
+    return;
+  }
+  pinV2PurposeStep = 'group';
+  pinV2PurposeGroup = (PIN_MEASURE_SETS[pinV2ScopeChoice] || {}).group || 'basic';
+  box.innerHTML = `<div class="wrap">
+    <div class="brand"><div class="word" style="font-size:22px">PINFORME</div></div>
+    <h1 id="v2PurposeTitle">測る範囲を選んでください</h1>
+    <p id="v2PurposeDog"></p>
+    <div id="v2PurposeBody"></div>
+    <p class="status" id="v2PurposeStatus" role="alert"></p>
+    <button type="button" class="v2-primary" id="v2PurposeNext">次へ</button>
+    <button type="button" id="v2PurposeBack">入口に戻る</button></div>`;
+  document.getElementById('v2PurposeDog').textContent = ownerSource ? '同じ飼い主様の、2匹目以降のわんちゃんを登録します。' : '今回測りたいお洋服や目的を選ぶと、必要な採寸項目をご案内します。';
+  /* B11：目的（product）はドロップダウンではなく、選択中の測定セットの対応づけから決める */
+  document.getElementById('v2PurposeNext').onclick = ()=>pinV2Begin(PIN_MEASURE_SETS[pinV2ScopeChoice].product, null, ownerSource, '');
   document.getElementById('v2PurposeBack').onclick = pinV2Home;
+  pinV2RenderPurposeStep();
   showPage('pinV2Purpose');
 }
 function pinV2Needed(){ return PIN_V2_PRODUCTS[PIN_V2.product].items; }
@@ -2175,10 +2248,9 @@ function resetNewDogSession(){
 }
 function pinV2Begin(product, id=null, ownerSource=null, mode=''){
   if(!Object.prototype.hasOwnProperty.call(PIN_V2_PRODUCTS, product)){
-    const select = document.getElementById('v2Product');
+    /* B11：ドロップダウン撤去に伴い、エラー表示はステータス文のみ（選択UIは測定セットのカード） */
     const status = document.getElementById('v2PurposeStatus');
-    if(status) status.textContent = '採寸目的・お洋服を選んでください。';
-    if(select){ select.setAttribute('aria-invalid','true'); select.focus(); }
+    if(status) status.textContent = '測る範囲を選んでください。';
     return;
   }
   if(PINFORME_SUBMITTING) return;
@@ -2258,7 +2330,7 @@ function goDogInfo(){
   showPage('dogInfoPage');
 }
 function startMeasurements(){
-  if(!PIN_V2 || !PIN_V2_PRODUCTS[PIN_V2.product]){ pinV2Home(); const s = document.getElementById('v2HomeStatus'); if(s) s.textContent = '採寸目的・お洋服を選んでください。'; return; }
+  if(!PIN_V2 || !PIN_V2_PRODUCTS[PIN_V2.product]){ pinV2Home(); const s = document.getElementById('v2HomeStatus'); if(s) s.textContent = '測る範囲を選んでください。'; return; }
   if(!pinValidateCustomerEmail() || !pinValidateMeasuredOn()) return;
   PINFORME_PHOTO_PROMO_CONSENT = document.getElementById("photoPromoConsent")?.checked === true;
   try{ localStorage.setItem("PINFORME_PHOTO_PROMO_CONSENT_V1", PINFORME_PHOTO_PROMO_CONSENT ? "1" : "0"); }catch(e){}
