@@ -17,6 +17,9 @@ button.primary,.primary-action{background:var(--accent);border-color:var(--accen
 button:disabled{opacity:.55;cursor:default}
 input,select,textarea{font:inherit;font-size:16px}
 input[type=text],input[type=email],input[type=tel],input[type=date],input[type=number],select,textarea{width:100%;padding:12px;border:1px solid #bdbdc2;border-radius:10px;background:#fff;min-height:48px}
+/* B3：iOS Safari の date 入力は内部の最小幅が残り width:100% でもはみ出すため、min-width:0 と max-width で打ち消す */
+input[type=date]{min-width:0;max-width:100%}
+.pin-birth-selects select{min-width:0}
 .wrap{max-width:560px;margin:0 auto;padding:20px 16px 48px}
 .brand{text-align:center;margin:10px 0 4px}
 .brand-logo{display:block;width:min(240px,68%);height:auto;margin:0 auto}
@@ -74,11 +77,18 @@ body.measuring #progressHeader{display:block}
 .sheet-note{height:38px;flex:none;padding:2px 12px;font-size:13px;line-height:1.45;color:var(--err);display:flex;align-items:center}
 .sheet-note.info{color:#5a5a5e}
 .adjust-row{display:flex;gap:8px;padding:0 12px;flex:none}
-.adjust-row button{flex:1;min-height:40px;font-weight:700}
+.adjust-row button{flex:1;min-height:40px;font-weight:700;display:flex;align-items:center;justify-content:center;line-height:1.2;text-align:center}
+.adjust-row .next-slot{flex:2 1 0}
 .keypad{flex:1 1 auto;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(4,minmax(0,1fr));gap:6px;padding:8px 12px;min-height:0;overflow:hidden}
-.keypad button{font-size:24px;font-weight:700;min-height:0;height:auto;padding:0;background:#fff;border:1px solid #c9c9ce;border-radius:12px;touch-action:manipulation}
+.keypad button{font-size:24px;font-weight:700;min-height:0;height:auto;padding:0;background:#fff;border:1px solid #c9c9ce;border-radius:12px;touch-action:manipulation;display:flex;align-items:center;justify-content:center;line-height:1;text-align:center}
 .keypad button:active{background:#e9e9ec}
+.keypad button.kp-bs{flex-direction:column;gap:1px}
+.keypad button .kp-glyph{font-size:.92em;line-height:1}
+.keypad button .kp-sub{font-size:10px;font-weight:600;line-height:1;color:#5a5a5e;white-space:nowrap}
 .sheet-actions{display:flex;gap:8px;padding:0 12px calc(10px + env(safe-area-inset-bottom));flex:none}
+.sheet-actions button{display:flex;align-items:center;justify-content:center;line-height:1.2;text-align:center}
+.sheet-actions .next-btn.pulse{animation:v4nextpulse .55s ease-in-out 2}
+@keyframes v4nextpulse{0%,100%{box-shadow:0 0 0 0 rgba(58,58,60,0)}50%{box-shadow:0 0 0 5px rgba(58,58,60,.5)}}
 .sheet-actions .back-btn{flex:0 0 34%}
 .sheet-actions .next-btn{flex:1;background:var(--accent);border-color:var(--accent);color:#fff;font-weight:800;font-size:17px;min-height:52px}
 .skip-optional{margin:6px 12px;flex:none}
@@ -134,7 +144,6 @@ label.confirm input{margin-top:4px;width:20px;height:20px;flex:none}
 .name-row input{flex:1}
 .name-row .suffix{min-height:48px}
 .name-row .suffix.active{background:var(--brand);color:#fff;border-color:var(--brand)}
-.name-row select{width:auto;flex:none}
 .summary-box{display:flex;gap:12px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;margin:12px 0}
 .summary-box div{flex:1}
 .summary-box small{display:block;color:#5a5a5e}
@@ -245,7 +254,7 @@ label.confirm input{margin-top:4px;width:20px;height:20px;flex:none}
       <div class="name-row"><input id="dogName" type="text">
         <button type="button" class="suffix active" data-value="くん">くん</button>
         <button type="button" class="suffix" data-value="ちゃん">ちゃん</button>
-        <select id="dogSuffix" aria-label="呼び方"><option value="くん" selected>くん</option><option value="ちゃん">ちゃん</option></select>
+        <input type="hidden" id="dogSuffix" value="くん">
       </div></div>
     <div class="field"><label for="dogBreed">犬種 <span class="req">必須</span></label><input id="dogBreed" type="text" placeholder="犬種を入力"></div>
     <fieldset id="pinDogAppearance" hidden><legend>耳と尻尾のタイプ <span class="req">必須</span></legend>
@@ -296,7 +305,7 @@ label.confirm input{margin-top:4px;width:20px;height:20px;flex:none}
     </div>
     <div class="field"><label for="pinMeasuredOn">今回の測定日（必須）</label><input id="pinMeasuredOn" type="date" required aria-label="今回の測定日">
       <p class="note">実際に測った日を選んでください。部分更新では、今回測り直す項目だけにこの日付を記録します。</p></div>
-    <div class="field"><label for="weight">体重</label><div style="display:flex;gap:8px;align-items:center"><input type="number" inputmode="decimal" step="0.1" id="weight" style="flex:1"><span>kg</span></div></div>
+    <div class="field"><label for="weight">体重</label><div style="display:flex;gap:8px;align-items:center"><input type="number" inputmode="decimal" step="0.1" id="weight" style="flex:1;min-width:0"><span>kg</span></div></div>
     <div class="field"><label for="dogPhoto">わんちゃんの写真</label>
       <div class="note">※ カルテ管理・わんちゃんの識別のために使用します。</div>
       <input type="file" id="dogPhoto" accept="image/*">
@@ -1194,6 +1203,7 @@ async function pinFunction(body){
 function textValue(id){ const el = document.getElementById(id); return el ? (el.value||el.textContent||"").trim() : ""; }
 function pinTodayDate(){ return new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date()); }
 function getDogSuffix(){ const el = document.getElementById("dogSuffix"); return el ? el.value : "くん"; }
+function pinSyncSuffixButtons(){ const v = getDogSuffix(); document.querySelectorAll('.name-row .suffix').forEach(b=>b.classList.toggle('active', b.dataset.value === v)); }
 function pinAnonymousActive(){ return document.getElementById('pinAnonymousMode')?.checked === true; }
 function pinAnonymousDogLabel(){ return textValue('dogName') || '名前未登録'; }
 function pinSetAnonymousMode(on){ const c = document.getElementById('pinAnonymousMode'); if(c) c.checked = !!on; pinSyncAnonymousMode(); }
@@ -1487,6 +1497,7 @@ function restorePINFORMEState(continueDraft=false){
     if(photo?.context===pinPhotoContext()){ state.photo = photo.data; state.photoDogId = photo.context; state.photoSource = "selected"; }
   }catch(e){}
   pinSyncAnonymousMode();
+  pinSyncSuffixButtons();
   PINFORME_SUBMITTED = state.submitted === true;
   if(Array.isArray(state.measurementInputs)){
     steps.forEach((step,index)=>{
@@ -1614,12 +1625,13 @@ function buildSteps(){
       <div class="group-zone"></div>
       <div class="sheet-note" role="status"></div>
       <div class="adjust-row">
-        <button type="button" class="adj" data-adj="-0.1">−0.1</button>
-        <button type="button" class="adj" data-adj="0.1">＋0.1</button>
-        <button type="button" class="adj-clear">消す</button>
+        <button type="button" class="next-slot">次の入力欄へ ›</button>
+        <button type="button" class="adj-clear">全消し</button>
       </div>
       <div class="keypad">
-        ${['1','2','3','4','5','6','7','8','9','.','0','⌫'].map(k=>`<button type="button" data-key="${k}">${k}</button>`).join('')}
+        ${['1','2','3','4','5','6','7','8','9','.','0','⌫'].map(k=> k==='⌫'
+          ? `<button type="button" data-key="⌫" class="kp-bs" aria-label="1文字消す"><span class="kp-glyph">⌫</span><span class="kp-sub">1文字消す</span></button>`
+          : `<button type="button" data-key="${k}">${k}</button>`).join('')}
       </div>
       <button type="button" class="skip-optional" hidden>残りの任意項目を測らず、確認へ進む</button>
       <div class="sheet-actions">
@@ -1802,9 +1814,7 @@ function bindStepEvents(sec){
   sec.querySelectorAll('.keypad button').forEach(btn=>{
     btn.addEventListener('click', ()=>keypadPress(sec, btn.dataset.key));
   });
-  sec.querySelectorAll('.adj').forEach(btn=>{
-    btn.addEventListener('click', ()=>adjustSlot(sec, Number(btn.dataset.adj)));
-  });
+  sec.querySelector('.next-slot')?.addEventListener('click', ()=>goNextSlot(sec));
   sec.querySelector('.adj-clear')?.addEventListener('click', ()=>{
     const inputs = sec.querySelectorAll('.group-zone input');
     const inp = inputs[st.slot]; if(inp){ inp.value = ''; afterEdit(sec); }
@@ -1837,12 +1847,12 @@ function keypadPress(sec, key){
   /* 小数第1位まで入ったら次の欄へ自動で移る */
   if(/^\d{1,3}\.\d$/.test(v) && st.slot < 2) setActiveSlot(sec, st.group, st.slot+1);
 }
-function adjustSlot(sec, delta){
-  const inp = activeInput(sec); if(!inp) return;
-  const cur = parseFloat(inp.value);
-  const base = Number.isFinite(cur) ? cur : 0;
-  inp.value = Math.max(0, base + delta).toFixed(1);
-  afterEdit(sec);
+/* 「次の入力欄へ」：アクティブスロットを1つ進める。3回目ではその場に留まり「決めて次へ」を目立たせる */
+function goNextSlot(sec){
+  const st = sheetState.get(sec);
+  if(st.slot < 2){ setActiveSlot(sec, st.group, st.slot + 1); return; }
+  const next = sec.querySelector('.next-btn');
+  if(next){ next.classList.remove('pulse'); void next.offsetWidth; next.classList.add('pulse'); }
 }
 /* 「決めて次へ」：グループを確定し、次グループまたは次ステップへ */
 function onDecideNext(sec){
@@ -2615,7 +2625,7 @@ async function pinV2FinishSaved(pending, receipt){
   for(const [fid, value] of Object.entries({ownerName:saved.owner, dogName:saved.dogName, dogBreed:saved.breed, birthDate:saved.birthday, weight:saved.weight, recoveryEmail:saved.recoveryEmail, recoveryPhone:saved.recoveryPhone, pinMeasuredOn:pending.args.p_payload.measured_on})){
     const el = document.getElementById(fid); if(el) el.value = value ?? '';
   }
-  const suffixEl = document.getElementById('dogSuffix'); if(suffixEl && saved.suffix) suffixEl.value = saved.suffix;
+  const suffixEl = document.getElementById('dogSuffix'); if(suffixEl && saved.suffix){ suffixEl.value = saved.suffix; pinSyncSuffixButtons(); }
   pinSetAnonymousMode(saved.anonymous);
   document.querySelectorAll('input[name=sex]').forEach(el=>el.checked = el.value === saved.sex);
   window.pinSyncBirthDateSelectors?.();
@@ -2853,9 +2863,7 @@ function initNaviV4(){
     document.querySelectorAll('.name-row .suffix').forEach(x=>x.classList.toggle('active', x === b));
     savePINFORMEState();
   }));
-  document.getElementById('dogSuffix').addEventListener('change', ()=>{
-    document.querySelectorAll('.name-row .suffix').forEach(x=>x.classList.toggle('active', x.dataset.value === getDogSuffix()));
-  });
+  pinSyncSuffixButtons();
   document.getElementById('goDogInfoBtn').addEventListener('click', goDogInfo);
   document.getElementById('backStartBtn').addEventListener('click', ()=>showPage('startPage'));
   document.getElementById('startMeasureBtn').addEventListener('click', startMeasurements);
