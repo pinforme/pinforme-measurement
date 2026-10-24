@@ -49,15 +49,14 @@ body.measuring #progressHeader{display:block}
 #progressBar .seg.opt.current{background:#aeaeb2}
 #progressBar .seg.divider-after::after{content:"";position:absolute;right:-4px;top:-3px;width:2px;height:14px;background:#1c1c1e}
 /* ===== 測定画面（シート型をページ本体として実装） ===== */
-/* B5：キー寸法はB3の可変配分に戻し、コンテナ高（--v4h）は開いた時点でpx固定して変化だけを止める。測定画面内はスクロールなし */
-.step.active{display:flex;flex-direction:column;height:calc(var(--v4h) - var(--progH));overflow:hidden;background:var(--bg)}
-.step .sheet-head{display:flex;align-items:center;gap:8px;padding:6px 12px 2px}
-.step .sheet-head .num{background:var(--accent);color:#fff;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-weight:800;flex:none}
+/* B6：キー寸法は実測した「正常時」の固定値で組み直した（§12）。キーパッド＋決定行は .kp-zone として下部に独立させ、兄弟要素の高さ変化に影響されない。収まらない小画面ではステップ全体のスクロールにフォールバックする */
+.step.active{display:flex;flex-direction:column;height:calc(var(--v4h) - var(--progH));overflow-y:auto;overflow-x:hidden;background:var(--bg)}
+.step .sheet-head{display:flex;align-items:center;gap:8px;height:46px;padding:0 12px;flex:none}
+.step .sheet-head .num{background:var(--accent);color:#fff;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-weight:800;flex:none}
 .step .sheet-head .item-title{font-size:19px;font-weight:800;flex:1}
-.step .guide-btn{flex:none;min-height:40px;padding:6px 12px;font-weight:700;color:var(--accent);border-color:var(--accent)}
-.step .guide-band{display:flex;gap:10px;align-items:center;margin:4px 12px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px 10px;flex:none}
-/* B5：図・入力枠の寸法はB3の値に復元（svhは小さい方のビューポート基準でツールバーの出入りに連動しない） */
-.step .guide-band img{width:150px;height:min(96px,13svh);object-fit:contain;background:#eeeef0;border-radius:8px;flex:none}
+.step .guide-band{display:flex;gap:10px;align-items:center;height:106px;margin:0 12px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px 10px;flex:none}
+/* B6：図は実測ベースの固定値（キー寸法と同じく svh 連動を排除）。ボタン廃止で空いた分と入力枠の圧縮分を図の拡大に充てた */
+.step .guide-band img{width:166px;height:88px;object-fit:contain;background:#eeeef0;border-radius:8px;flex:none}
 .step .guide-band .loc-badge{display:inline-block;background:var(--brand);color:#fff;font-size:11px;font-weight:700;border-radius:6px;padding:1px 7px;margin-bottom:3px}
 .step .guide-band .loc-text{font-size:14px;line-height:1.5}
 .step .guide-band .tap-hint{font-size:11px;color:var(--accent);font-weight:700;margin-top:2px}
@@ -68,21 +67,22 @@ body.measuring #progressHeader{display:block}
 .group-zone .sub-title{font-weight:800;font-size:15px;margin:2px 0 6px}
 .slots{display:flex;gap:8px}
 .slot{flex:1}
-.slot .slot-label{font-size:12px;color:#5a5a5e;text-align:center;margin-bottom:3px}
-.slot input{width:100%;height:min(56px,8.5svh);text-align:center;font-size:24px;font-weight:700;border:2px solid #bdbdc2;border-radius:12px;background:#fff;padding:0}
+.slot .slot-label{font-size:12px;color:#5a5a5e;text-align:center;height:18px;line-height:18px;margin-bottom:2px}
+.slot input{width:100%;height:42px;text-align:center;font-size:24px;font-weight:700;border:2px solid #bdbdc2;border-radius:12px;background:#fff;padding:0}
 .slot.active input{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,0,0,.16)}
 .slot.err input{border-color:var(--err);color:var(--err);background:#fdf0ee}
-.avg-row{display:flex;align-items:center;gap:10px;margin-top:8px;font-size:14px}
+.avg-row{display:flex;align-items:center;gap:10px;margin-top:6px;height:32px;font-size:14px}
 .avg-row .avg-label{color:#5a5a5e}
 .avg-row .avg-value{font-size:20px;font-weight:800}
 .avg-row .spread{margin-left:auto;color:#5a5a5e;font-size:13px}
 .sheet-note{height:38px;flex:none;padding:2px 12px;font-size:13px;line-height:1.45;color:var(--err);display:flex;align-items:center}
 .sheet-note.info{color:#5a5a5e}
 .adjust-row{display:flex;gap:8px;padding:0 12px;flex:none}
-/* B5：ユーティリティ行はB3どおり自然高（全体の button 規則：min-height:48px）。固定px高は使わない */
-.adjust-row button{flex:1;font-weight:700;display:flex;align-items:center;justify-content:center;line-height:1.2;text-align:center}
+/* B6：ユーティリティ行は実測の正常時寸法 41px に固定（自然高だと状態で変わるため） */
+.adjust-row button{flex:1;height:41px;min-height:0;padding:0 12px;font-weight:700;display:flex;align-items:center;justify-content:center;line-height:1.2;text-align:center}
 .adjust-row .next-slot{flex:2 1 0}
-.keypad{flex:1 1 auto;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(4,minmax(0,1fr));gap:6px;padding:8px 12px}
+.kp-zone{margin-top:auto;flex:none}
+.keypad{flex:none;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(4,34px);gap:6px;padding:8px 12px}
 .keypad button{font-size:24px;font-weight:700;min-height:0;height:auto;padding:0;background:#fff;border:1px solid #c9c9ce;border-radius:12px;touch-action:manipulation;display:flex;align-items:center;justify-content:center;line-height:1;text-align:center}
 .keypad button:active{background:#e9e9ec}
 /* B4で導入した「1文字消す」の横並び1行化はB5でも維持（B3比率のキー高でもラベルがはみ出さないため） */
@@ -90,7 +90,7 @@ body.measuring #progressHeader{display:block}
 .keypad button .kp-glyph{font-size:.92em;line-height:1}
 .keypad button .kp-sub{font-size:11px;font-weight:600;line-height:1;color:#5a5a5e;white-space:nowrap}
 .sheet-actions{display:flex;gap:8px;padding:0 12px calc(10px + env(safe-area-inset-bottom));flex:none}
-.sheet-actions button{display:flex;align-items:center;justify-content:center;line-height:1.2;text-align:center}
+.sheet-actions button{display:flex;align-items:center;justify-content:center;line-height:1.2;text-align:center;height:48px;min-height:48px}
 .sheet-actions .next-btn.pulse{animation:v4nextpulse .55s ease-in-out 2}
 @keyframes v4nextpulse{0%,100%{box-shadow:0 0 0 0 rgba(58,58,60,0)}50%{box-shadow:0 0 0 5px rgba(58,58,60,.5)}}
 .sheet-actions .back-btn{flex:0 0 34%}
@@ -1603,7 +1603,6 @@ function buildSteps(){
       <div class="sheet-head">
         <span class="num">${i+1}</span>
         <span class="item-title">${item.title}</span>
-        <button type="button" class="guide-btn">測り方を見る ›</button>
       </div>
       <div class="guide-band" role="button" tabindex="0" aria-label="測り方の詳細を開く">
         <img alt="${item.title}の採寸位置">
@@ -1612,6 +1611,7 @@ function buildSteps(){
       ${multi ? '<div class="group-chips"></div>' : ''}
       <div class="group-zone"></div>
       <div class="sheet-note" role="status"></div>
+      <div class="kp-zone">
       <div class="adjust-row">
         <button type="button" class="next-slot">次の入力欄へ ›</button>
         <button type="button" class="adj-clear">全消し</button>
@@ -1625,6 +1625,7 @@ function buildSteps(){
       <div class="sheet-actions">
         <button type="button" class="back back-btn">← 戻る</button>
         <button type="button" class="next next-btn">決めて次へ</button>
+      </div>
       </div>`;
     container.append(sec);
     sheetState.set(sec, {group:0, slot:0});
@@ -1807,7 +1808,6 @@ function bindStepEvents(sec){
     const inputs = sec.querySelectorAll('.group-zone input');
     const inp = inputs[st.slot]; if(inp){ inp.value = ''; afterEdit(sec); }
   });
-  sec.querySelector('.guide-btn')?.addEventListener('click', ()=>openGuide(sec));
   sec.querySelector('.guide-band')?.addEventListener('click', ()=>openGuide(sec));
   sec.querySelector('.next')?.addEventListener('click', ()=>onDecideNext(sec));
   sec.querySelector('.back')?.addEventListener('click', ()=>{ if(PINFORME_EDIT_FROM_FINISH){ showFinish(); } else showStep(current-1); });
