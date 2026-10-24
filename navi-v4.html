@@ -10,6 +10,9 @@
 html,body{margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;color:var(--ink);background:var(--bg);font-size:16px;line-height:1.6;-webkit-text-size-adjust:100%}
 body.measuring{overflow:hidden}
+/* B7：測定ステップ表示中はドキュメント側のスクロールも止める（保険）。適用範囲は body.measuring と同一（syncProgressChrome が html にも v4-measuring を付け外しする）。固定配置モーダルの内部スクロールには影響しない */
+html.v4-measuring{overflow:hidden;overscroll-behavior:none}
+html.v4-measuring body{overscroll-behavior:none}
 .page{display:none}
 .page.active{display:block}
 button{font:inherit;cursor:pointer;border-radius:12px;border:1px solid var(--line);background:#fff;color:var(--ink);min-height:48px;padding:10px 16px}
@@ -36,11 +39,10 @@ h2{font-size:18px;margin:18px 0 8px}
 .status{font-size:14px;line-height:1.7;margin:10px 0;white-space:pre-line}
 .status:empty{display:none}
 /* ===== 進捗メーター（§6.1） ===== */
-#progressHeader{display:none;background:#fff;border-bottom:1px solid var(--line);padding:8px 14px 10px}
+/* B7：進捗テキスト行は廃止し、「何項目めか」は項目名の横（.step-pos）へ移した。バーは従来の見やすい形（8pxセグメント＋必須/任意の境目）を残す */
+#progressHeader{display:none;background:#fff;border-bottom:1px solid var(--line);padding:7px 14px 8px}
 body.measuring #progressHeader{display:block}
-#progressHeader .ph-main{font-size:14px;font-weight:700}
-#progressHeader .ph-main strong{color:var(--accent)}
-#progressBar{display:flex;gap:2px;margin-top:7px}
+#progressBar{display:flex;gap:2px;margin-top:0}
 #progressBar .seg{flex:1;height:8px;border-radius:4px;background:#dcdce0;position:relative}
 #progressBar .seg.done{background:var(--accent)}
 #progressBar .seg.current{background:#8e8e93}
@@ -54,9 +56,12 @@ body.measuring #progressHeader{display:block}
 .step .sheet-head{display:flex;align-items:center;gap:8px;height:46px;padding:0 12px;flex:none}
 .step .sheet-head .num{background:var(--accent);color:#fff;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-weight:800;flex:none}
 .step .sheet-head .item-title{font-size:19px;font-weight:800;flex:1}
-.step .guide-band{display:flex;gap:10px;align-items:center;height:106px;margin:0 12px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px 10px;flex:none}
+/* B7：進捗テキスト行から移した「何項目めか」表示（例 4/15）。項目名の横に固定表示し、レイアウトは押し広げない */
+.step .sheet-head .step-pos{font-size:13px;font-weight:700;color:#5a5a5e;flex:none;white-space:nowrap}
+/* B7：帯・進捗テキスト行の撤去で空いた高さを図の拡大に充てた（帯 106→124、図 166×88→200×106。縦横比は B6 実測の図と同一） */
+.step .guide-band{display:flex;gap:10px;align-items:center;height:124px;margin:0 12px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px 10px;flex:none}
 /* B6：図は実測ベースの固定値（キー寸法と同じく svh 連動を排除）。ボタン廃止で空いた分と入力枠の圧縮分を図の拡大に充てた */
-.step .guide-band img{width:166px;height:88px;object-fit:contain;background:#eeeef0;border-radius:8px;flex:none}
+.step .guide-band img{width:200px;height:106px;object-fit:contain;background:#eeeef0;border-radius:8px;flex:none}
 .step .guide-band .loc-badge{display:inline-block;background:var(--brand);color:#fff;font-size:11px;font-weight:700;border-radius:6px;padding:1px 7px;margin-bottom:3px}
 .step .guide-band .loc-text{font-size:14px;line-height:1.5}
 .step .guide-band .tap-hint{font-size:11px;color:var(--accent);font-weight:700;margin-top:2px}
@@ -82,20 +87,30 @@ body.measuring #progressHeader{display:block}
 .adjust-row button{flex:1;height:41px;min-height:0;padding:0 12px;font-weight:700;display:flex;align-items:center;justify-content:center;line-height:1.2;text-align:center}
 .adjust-row .next-slot{flex:2 1 0}
 .kp-zone{margin-top:auto;flex:none}
-.keypad{flex:none;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(4,34px);gap:6px;padding:8px 12px}
+.keypad{flex:none;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(4,34px);gap:6px;padding:7px 12px}
 .keypad button{font-size:24px;font-weight:700;min-height:0;height:auto;padding:0;background:#fff;border:1px solid #c9c9ce;border-radius:12px;touch-action:manipulation;display:flex;align-items:center;justify-content:center;line-height:1;text-align:center}
 .keypad button:active{background:#e9e9ec}
 /* B4で導入した「1文字消す」の横並び1行化はB5でも維持（B3比率のキー高でもラベルがはみ出さないため） */
 .keypad button.kp-bs{flex-direction:row;gap:5px}
 .keypad button .kp-glyph{font-size:.92em;line-height:1}
 .keypad button .kp-sub{font-size:11px;font-weight:600;line-height:1;color:#5a5a5e;white-space:nowrap}
-.sheet-actions{display:flex;gap:8px;padding:0 12px calc(10px + env(safe-area-inset-bottom));flex:none}
+/* B7：safe-area の寄与を最大12pxで頭打ちにし、総高の会計から外れないようにした（従来は無制限で数十pxの超過要因になり得た） */
+.sheet-actions{display:flex;gap:8px;padding:0 12px calc(8px + min(env(safe-area-inset-bottom), 12px));flex:none}
 .sheet-actions button{display:flex;align-items:center;justify-content:center;line-height:1.2;text-align:center;height:48px;min-height:48px}
 .sheet-actions .next-btn.pulse{animation:v4nextpulse .55s ease-in-out 2}
 @keyframes v4nextpulse{0%,100%{box-shadow:0 0 0 0 rgba(58,58,60,0)}50%{box-shadow:0 0 0 5px rgba(58,58,60,.5)}}
 .sheet-actions .back-btn{flex:0 0 34%}
 .sheet-actions .next-btn{flex:1;background:var(--accent);border-color:var(--accent);color:#fff;font-weight:800;font-size:17px}
-.skip-optional{margin:6px 12px;flex:none}
+.skip-optional{margin:4px 12px;flex:none;height:40px;min-height:40px}
+/* B7：複合グループ項目はチップ行＋サブタイトル分だけ高いため、.multi でのみ帯・余白を詰めて総高630以下に収める（キー寸法 34px は単独と同一） */
+.step.multi .sheet-head{height:42px}
+.step.multi .guide-band{height:100px}
+.step.multi .guide-band img{width:154px;height:82px}
+.step.multi .guide-band .loc-text{line-height:1.4}
+.step.multi .group-chips{padding:0 12px}
+.step.multi .group-chips .chip{min-height:30px}
+.step.multi .group-zone .sub-title{margin:0 0 4px;line-height:1.35}
+.step.multi .keypad{gap:5px;padding:6px 12px}
 /* B5：旧 @media (max-height:760px/580px) の圧縮ルールは復活させない。あれは画面高で文字サイズ・
    寸法を切り替え、B3で「状態によりサイズが変わる」原因の1つだった（§10 原因2）。B5では寸法体系を
    B3の可変配分に戻したうえで、コンテナ高を開いた時点でpx固定して「変化」だけを止める（§11 参照） */
@@ -157,7 +172,8 @@ label.confirm input{margin-top:4px;width:20px;height:20px;flex:none}
 #finalKarteFrame{width:100%;border:0;display:block;background:#fff}
 .karte-actions{display:flex;gap:10px;padding:12px}
 /* ===== テストモード ===== */
-#testBadge{display:block;width:100%;background:#2c2c2e;color:#fff;font-size:12px;font-weight:700;text-align:center;min-height:32px;padding:7px 10px;border:0;border-radius:0;cursor:pointer}
+/* B7：テストモード帯は画面表示から撤去（見た目のみ）。要素とクリック結線・テストモードの挙動（送信ブロックと完了画面での送信内容表示）は従来通り維持し、識別はページタイトルに残す。offsetHeight は 0 になり --progH の実測からも自動で外れる */
+#testBadge{display:none}
 #testPanel{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000040;display:none}
 #testPanel.open{display:block}
 #testPanel .tp-panel{background:#fff;height:100%;overflow-y:auto;padding:18px 16px 40px;max-width:640px;margin:0 auto}
@@ -173,7 +189,6 @@ label.confirm input{margin-top:4px;width:20px;height:20px;flex:none}
 <div id="testBadge" role="button" tabindex="0">確認用テストモード（送信されません）</div>
 
 <header id="progressHeader" aria-label="採寸の進捗">
-  <div class="ph-main" id="phMain"></div>
   <div id="progressBar" aria-hidden="true"></div>
 </header>
 
@@ -1529,6 +1544,8 @@ function hideAll(){
 function syncProgressChrome(){
   const active = document.querySelector('.step.active') || (document.getElementById('pinV2OptionalChoice')?.classList.contains('active') ? document.getElementById('pinV2OptionalChoice') : null);
   document.body.classList.toggle('measuring', !!active);
+  /* B7：ドキュメント側スクロールの封じ（html.v4-measuring）も測定中だけに連動させる */
+  document.documentElement.classList.toggle('v4-measuring', !!active);
   const badgeH = document.getElementById('testBadge')?.offsetHeight || 0;
   const headH = active ? (document.getElementById('progressHeader')?.offsetHeight || 0) : 0;
   document.documentElement.style.setProperty('--progH', (badgeH + headH) + 'px');
@@ -1563,11 +1580,10 @@ function progressPlan(){
   return {list, requiredCount, pos, currentIndex:current};
 }
 function updateProgressMeter(){
-  const main = document.getElementById('phMain'), bar = document.getElementById('progressBar');
-  if(!main || !bar) return;
+  const bar = document.getElementById('progressBar');
+  if(!bar) return;
   const onChoice = document.getElementById('pinV2OptionalChoice')?.classList.contains('active');
   if(onChoice){
-    main.innerHTML = '必須5項目が完了しました ／ <strong>任意はあと10項目</strong>';
     bar.replaceChildren();
     const total = 15;
     for(let i=0;i<total;i++){ const s = document.createElement('span'); s.className = 'seg' + (i<5?' done':' opt') + (i===4?' divider-after':''); bar.append(s); }
@@ -1575,8 +1591,12 @@ function updateProgressMeter(){
   }
   const plan = progressPlan();
   const total = plan.list.length;
-  const remain = total - plan.pos;
-  main.innerHTML = `${total}項目のうち <strong>${plan.pos}項目め</strong>／残り${remain}項目`;
+  /* B7：「何項目めか」は進捗テキスト行ではなく、各ステップの項目名の横（.step-pos）に pos/総数 で出す */
+  steps.forEach(sec=>{ const el = sec.querySelector('.step-pos'); if(el) el.textContent = ''; });
+  plan.list.forEach((stepIdx, k)=>{
+    const el = steps[stepIdx]?.querySelector('.step-pos');
+    if(el) el.textContent = `${k+1}/${total}`;
+  });
   bar.replaceChildren();
   plan.list.forEach((stepIdx, k)=>{
     const s = document.createElement('span');
@@ -1599,10 +1619,12 @@ function buildSteps(){
     const sec = document.createElement('section');
     sec.className = 'page step'; sec.dataset.step = String(i);
     const multi = item.groups.length > 1;
+    if(multi) sec.classList.add('multi');
     sec.innerHTML = `
       <div class="sheet-head">
         <span class="num">${i+1}</span>
         <span class="item-title">${item.title}</span>
+        <span class="step-pos"></span>
       </div>
       <div class="guide-band" role="button" tabindex="0" aria-label="測り方の詳細を開く">
         <img alt="${item.title}の採寸位置">
