@@ -105,7 +105,8 @@ body.on-choice #progressHeader{display:block}
 @keyframes v4nextpulse{0%,100%{box-shadow:0 0 0 0 rgba(58,58,60,0)}50%{box-shadow:0 0 0 5px rgba(58,58,60,.5)}}
 .sheet-actions .back-btn{flex:0 0 34%}
 .sheet-actions .next-btn{flex:1;background:var(--accent);border-color:var(--accent);color:#fff;font-weight:800;font-size:17px}
-.skip-optional{margin:4px 12px;flex:none;height:40px;min-height:40px}
+/* B9（C案）：スキップは任意区間の全ステップに常時表示される前提で、細身のボタンにし、占有高を 48→36（高さ32＋margin 2×2）にした。表示/非表示で寸法が変わらないよう、任意ステップ側は .opt-step の専用圧縮でこの分を常時賄う */
+.skip-optional{margin:2px 12px;flex:none;height:32px;min-height:32px;font-size:14px;padding:4px 12px}
 /* B7：複合グループ項目はチップ行＋サブタイトル分だけ高いため、.multi でのみ帯・余白を詰めて総高630以下に収める（キー寸法 34px は単独と同一） */
 .step.multi .sheet-head{height:66px;padding:6px 12px}
 .step.multi .sheet-head .num{width:42px;height:42px;font-size:20px}
@@ -119,6 +120,40 @@ body.on-choice #progressHeader{display:block}
 .step.multi .group-chips .chip{min-height:30px}
 .step.multi .group-zone .sub-title{margin:0 0 4px;line-height:1.35}
 .step.multi .keypad{gap:5px;padding:6px 12px}
+/* B9（C案）：任意ステップ専用圧縮（.opt-step は refreshStepUI が「任意フロー成立＋この項目が任意」のステップだけに付ける）。
+   スキップボタンの占有 36 をこの圧縮で賄い、任意区間のどのステップでも総高 630 以下・キー 34px 不変を保つ。
+   必須ステップ（ユーザーが高評価した B8 の形）には一切適用しない */
+.step.opt-step .sheet-head{height:72px;padding:7px 12px}
+.step.opt-step .guide-band{height:110px}
+.step.opt-step .guide-band img{width:180px;height:96px}
+.step.opt-step .slot input{height:38px}
+.step.opt-step .avg-row{margin-top:2px}
+.step.opt-step .keypad{gap:5px;padding:6px 12px}
+.step.opt-step .sheet-actions{padding-bottom:calc(6px + min(env(safe-area-inset-bottom), 12px))}
+.step.multi.opt-step .sheet-head{height:56px;padding:3px 12px}
+.step.multi.opt-step .sheet-head .num{width:40px;height:40px;font-size:19px}
+.step.multi.opt-step .sheet-head .item-title{font-size:19px}
+.step.multi.opt-step .sheet-head .hd-pos{font-size:11px;line-height:1.25}
+.step.multi.opt-step .sheet-head .hd-gauge{margin-top:2px}
+.step.multi.opt-step .guide-band{height:94px}
+.step.multi.opt-step .guide-band img{width:147px;height:78px}
+.step.multi.opt-step .guide-band .loc-badge{font-size:11.5px;padding:2px 9px;margin-bottom:3px}
+.step.multi.opt-step .guide-band .loc-text{font-size:14px;line-height:1.35}
+.step.multi.opt-step .guide-band .tap-hint{margin-top:2px}
+.step.multi.opt-step .group-chips .chip{min-height:27px;padding:2px 10px}
+.step.multi.opt-step .group-zone .sub-title{margin:0 0 2px;line-height:1.3}
+.step.multi.opt-step .slot .slot-label{height:16px;line-height:16px}
+.step.multi.opt-step .adjust-row button{height:38px}
+.step.multi.opt-step .keypad{gap:4px;padding:5px 12px}
+/* B9（C案）：目的選択画面の「測る範囲（測定セット）」選択肢。様式は入口の選択ボタン（.owner-choice）に揃える */
+.scope-opt{display:block;width:100%;text-align:left;margin:8px 0;padding:12px 16px}
+.scope-opt .t{display:block;font-weight:800;font-size:16px}
+.scope-opt .n{display:block;font-size:12.5px;color:#5a5a5e;margin-top:2px}
+.scope-opt.active{background:var(--brand);color:#fff;border-color:var(--brand)}
+.scope-opt.active .n{color:#e8e8ea}
+.scope-head{font-weight:800;font-size:13.5px;color:#5a5a5e;margin:16px 0 0}
+/* B9：区切り画面（C案では新規フローの途中に挟まないが、再開導線で表示され得る）は通常ページとしてスクロールできる前提で、上下の余白だけ少し詰める */
+#pinV2OptionalChoice .wrap{padding-top:12px;padding-bottom:28px}
 /* B5：旧 @media (max-height:760px/580px) の圧縮ルールは復活させない。あれは画面高で文字サイズ・
    寸法を切り替え、B3で「状態によりサイズが変わる」原因の1つだった（§10 原因2）。B5では寸法体系を
    B3の可変配分に戻したうえで、コンテナ高を開いた時点でpx固定して「変化」だけを止める（§11 参照） */
@@ -1138,6 +1173,28 @@ const PIN_V2_PRODUCTS = {
 };
 /* 現行運用（s33）：目的の選択肢は undecided / tank / research のみ表示 */
 const PIN_V2_PRODUCT_UI = ['undecided','tank','research'];
+/* B9（C案）：「測定セット」の定義。範囲選択はこの一箇所だけを置き場とし、選択肢UI・開始時の項目決定・
+   ゲージ/ヘッダーの分母はすべてこの定義（＝項目リストの集合）に追従する汎用構造にする。
+   B10：2026-10-24 に合意した服ラインナップ（タンクトップ→Tシャツ→ラグラン長袖→パーカー→ロンパース／四脚タイプ）の
+   服別セットを追加した。各セットは「必須5＋その服に必要な追加項目」で構成する。
+   あわせてユーザー指示（2026-10-25 08:19「ズボンも作れたらいいな」）でズボン用を新規追加した。ズボンだけは例外で、
+   必須5のうち下半身に関わるウエストのみ＋下半身系の項目で構成する（尻まわりの項目は15項目に実在しないため、
+   最も近い尻尾の太さを使う）。
+   group は目的選択画面の見出し分け（basic＝基本／wear＝服で選ぶ）。addName は境目の後半の呼び名
+   （基本セットは「任意」、服別セットは「追加」）で、位置テキスト・スキップ・ガイド注意文が参照する */
+const PIN_MEASURE_SETS = {
+  core:{label:'必須5項目だけ測る', note:'首まわり・胴まわり・ウエスト・着丈・前身頃', items:[0,1,2,3,4], group:'basic', addName:'任意'},
+  all:{label:'全部の15項目を測る', note:'必須5項目＋任意の追加10項目', items:Array.from({length:15},(_,i)=>i), group:'basic', addName:'任意'},
+  tank:{label:'タンクトップ用（5項目）', note:'必須5項目だけ（首まわり・胴まわり・ウエスト・着丈・前身頃）', items:[0,1,2,3,4], group:'wear', addName:'追加'},
+  tshirt:{label:'Tシャツ用（6項目）', note:'必須5項目＋前脚の太さ（袖まわり）', items:[0,1,2,3,4,5], group:'wear', addName:'追加'},
+  raglan:{label:'ラグラン長袖用（7項目）', note:'必須5項目＋前脚の太さ・前脚の長さ', items:[0,1,2,3,4,5,7], group:'wear', addName:'追加'},
+  hoodie:{label:'パーカー用（8項目）', note:'必須5項目＋前脚の太さ・首の長さ（ネック）・頭まわり', items:[0,1,2,3,4,5,9,11], group:'wear', addName:'追加'},
+  romper:{label:'ロンパース／四脚タイプ用（15項目）', note:'必須5項目＋脚・首・頭まわりなど追加10項目の全部', items:Array.from({length:15},(_,i)=>i), group:'wear', addName:'追加'},
+  pants:{label:'ズボン用（4項目）', note:'下半身だけ：ウエスト＋後脚の太さ・後脚の長さ・尻尾の太さ', items:[2,6,8,14], group:'wear', addName:'追加'}
+};
+const PIN_MEASURE_SET_ORDER = ['core','all','tank','tshirt','raglan','hoodie','romper','pants'];
+const PIN_MEASURE_SET_GROUPS = {basic:'基本の測り方', wear:'服で選ぶ'};
+let pinV2ScopeChoice = 'core'; /* 目的選択画面（新規フロー）での測定セット選択。pinV2Begin が PIN_V2.scope へ引き継ぐ */
 
 const PINFORME_FORM_STATE_KEY = "PINFORME_FORM_STATE_V1";
 const PINFORME_VIEW_KEY = "PINFORME_CURRENT_VIEW";
@@ -1550,13 +1607,16 @@ function hideAll(){
   steps.forEach(x=>x.classList.remove('active'));
 }
 function syncProgressChrome(){
-  const active = document.querySelector('.step.active') || (document.getElementById('pinV2OptionalChoice')?.classList.contains('active') ? document.getElementById('pinV2OptionalChoice') : null);
-  document.body.classList.toggle('measuring', !!active);
+  const stepEl = document.querySelector('.step.active');
+  const choiceEl = document.getElementById('pinV2OptionalChoice');
+  const onChoice = !stepEl && !!choiceEl?.classList.contains('active');
+  const active = stepEl || (onChoice ? choiceEl : null);
+  /* B9：スクロールの封じ（body.measuring／html.v4-measuring）は測定ステップ表示中だけに限定する。
+     区切り画面は通常のページとしてスクロールできるようにする（従来は active 扱いで封じられ、内容が画面高を超えると下部のボタンに届かなかった） */
+  document.body.classList.toggle('measuring', !!stepEl);
   /* B8：全体バー（#progressHeader）は区切り画面のときだけ表示する（ステップ表示中は新ヘッダーのゲージが進捗を示すため）。--progH の実測より前に付け外しする */
-  const onChoice = !document.querySelector('.step.active') && !!document.getElementById('pinV2OptionalChoice')?.classList.contains('active');
   document.body.classList.toggle('on-choice', onChoice);
-  /* B7：ドキュメント側スクロールの封じ（html.v4-measuring）も測定中だけに連動させる */
-  document.documentElement.classList.toggle('v4-measuring', !!active);
+  document.documentElement.classList.toggle('v4-measuring', !!stepEl);
   const badgeH = document.getElementById('testBadge')?.offsetHeight || 0;
   const headH = active ? (document.getElementById('progressHeader')?.offsetHeight || 0) : 0;
   document.documentElement.style.setProperty('--progH', (badgeH + headH) + 'px');
@@ -1578,6 +1638,12 @@ function renderHome(){ pinRefreshDraftButton(); }
 /* ================= 進捗メーター（設計メモ §6.1） ================= */
 function pinV2IsOptional(index){
   return !!PIN_V2 && !['add','update'].includes(PIN_V2.mode) && index>=5 && (PIN_V2.product==='research' || (['tank','undecided'].includes(PIN_V2.product) && PIN_V2.optionalAdditional===true));
+}
+/* B10：境目の後半の呼び名。基本セット（core／all）は「任意」、服別セットは「追加」。
+   セット未指定の経路（再採寸・部分更新など）や PIN_V2 未生成時は従来どおり「任意」 */
+function pinScopeAddName(){
+  const set = PIN_V2 && PIN_V2.scope ? PIN_MEASURE_SETS[PIN_V2.scope] : null;
+  return (set && set.addName) || '任意';
 }
 function pinEligibleOptionalFlow(){
   return !!PIN_V2 && !['add','update'].includes(PIN_V2.mode) && ['tank','undecided','research'].includes(PIN_V2.product);
@@ -1633,14 +1699,31 @@ function updateProgressMeter(){
     const total = hit.g.items.length;
     const pos = hit.k + 1;
     if(numEl) numEl.textContent = String(pos);
-    if(posEl) posEl.textContent = `${total}項目のうち ${pos}項目め／残り${total - pos}項目`;
-    if(gauge){
-      gauge.replaceChildren();
-      hit.g.items.forEach((_, j)=>{
-        const s = document.createElement('span');
-        s.className = 'seg' + (hit.g.opt ? ' opt' : '') + (j < hit.k ? ' done' : j === hit.k ? ' current' : '');
-        gauge.append(s);
-      });
+    if(groups.length === 2){
+      /* B9（C案）：必須＋任意の2グループ構成（「全部」セット等）では、ゲージを選んだセット全体の通し表示にする。
+         セグメントは計画リストの順に全数並べ、必須／任意の境目に divider、任意側は opt 様式。
+         位置テキストは「全体の中の位置＋グループとグループ内の位置」を出す。丸数字はグループ内通し番号のまま */
+      const oi = plan.list.indexOf(i);
+      if(posEl) posEl.textContent = `全${plan.list.length}項目のうち ${oi + 1}項目め（${hit.g.opt ? pinScopeAddName() : '必須'} ${pos}/${total}）`;
+      if(gauge){
+        gauge.replaceChildren();
+        plan.list.forEach((itemIdx, p)=>{
+          const s = document.createElement('span');
+          const boundary = itemIdx < 5 && p + 1 < plan.list.length && plan.list[p + 1] >= 5;
+          s.className = 'seg' + (itemIdx >= 5 ? ' opt' : '') + (p < oi ? ' done' : p === oi ? ' current' : '') + (boundary ? ' divider-after' : '');
+          gauge.append(s);
+        });
+      }
+    } else {
+      if(posEl) posEl.textContent = `${total}項目のうち ${pos}項目め／残り${total - pos}項目`;
+      if(gauge){
+        gauge.replaceChildren();
+        hit.g.items.forEach((_, j)=>{
+          const s = document.createElement('span');
+          s.className = 'seg' + (hit.g.opt ? ' opt' : '') + (j < hit.k ? ' done' : j === hit.k ? ' current' : '');
+          gauge.append(s);
+        });
+      }
     }
   });
 }
@@ -1775,7 +1858,15 @@ function refreshStepUI(sec){
   if(spreadEl) spreadEl.textContent = vals.every(v=>v!=='') && nums.every(Number.isFinite) ? '差 ' + (Math.max(...nums)-Math.min(...nums)).toFixed(1) + ' cm' : '';
   if(sec.dataset.rangeCheckActive === "1") validateSection(sec, {live:true});
   const skip = sec.querySelector('.skip-optional');
-  if(skip) skip.hidden = !(pinEligibleOptionalFlow() && pinV2IsOptional(Number(sec.dataset.step)));
+  if(skip){
+    const showSkip = pinEligibleOptionalFlow() && pinV2IsOptional(Number(sec.dataset.step));
+    skip.hidden = !showSkip;
+    /* B10：スキップの文言もセットの呼び名に合わせる（基本セット＝任意／服別セット＝追加） */
+    skip.textContent = `残りの${pinScopeAddName()}項目を測らず、確認へ進む`;
+    /* B9（C案）：任意ステップには専用圧縮クラスを付け、スキップボタンの占有高をレイアウト側で常時賄う
+       （任意区間では全ステップ同じ条件になるため、表示の有無で寸法が変わることはない） */
+    sec.classList.toggle('opt-step', showSkip);
+  }
 }
 function sheetNote(sec, message, isInfo){
   const note = sec.querySelector('.sheet-note'); if(!note) return;
@@ -1935,7 +2026,7 @@ function openGuide(sec){
   goImg.src = img?.getAttribute('src') || ''; goImg.alt = item.title + 'の採寸位置';
   document.getElementById('goLoc').textContent = item.loc;
   document.getElementById('goDesc').textContent = item.desc;
-  document.getElementById('goNoteKind').textContent = (PIN_V2 && pinV2IsOptional(i)) ? '※ この項目は任意です。測れない部位は3回とも空欄のまま進められます。' : '※ サイズ確認に必要な部位です。測りにくい場合は無理をせず、途中保存してご相談ください。';
+  document.getElementById('goNoteKind').textContent = (PIN_V2 && pinV2IsOptional(i)) ? `※ この項目は${pinScopeAddName() === '任意' ? '任意' : pinScopeAddName() + '項目'}です。測れない部位は3回とも空欄のまま進められます。` : '※ サイズ確認に必要な部位です。測りにくい場合は無理をせず、途中保存してご相談ください。';
   document.getElementById('guideOverlay').classList.add('open');
 }
 
@@ -1950,8 +2041,8 @@ function showStep(n){
     return;
   }
   if(PIN_V2){
-    /* 区切り画面：必須5項目の直後（現行 s33 の運用。スキップ判定より前に拦截） */
-    if(n > current && current === 4 && pinEligibleOptionalFlow() && !PIN_V2.optionalAdditional){ showOptionalChoice(); return; }
+    /* B9（C案）：測る範囲は開始前に「測定セット」で選ぶため、必須5項目の直後に区切り画面は挟まない
+       （旧：current===4 で showOptionalChoice へ分岐していた処理は廃止。区切り画面自体は再開導線用に残置） */
     const direction = n > current ? 1 : -1;
     let target = n;
     while(target>=0 && target<steps.length && !PIN_V2.selected.includes(target)) target += direction;
@@ -1991,6 +2082,12 @@ function showOptionalChoice(){
 }
 
 /* ================= 入口フロー（v2） ================= */
+/* B9（C案）：測定セット選択の現在値を保持し、目的選択画面の選択肢の active 表示を同期する */
+function pinV2SetScopeChoice(key){
+  if(!PIN_MEASURE_SETS[key]) return;
+  pinV2ScopeChoice = key;
+  document.querySelectorAll('#v2ScopeOptions .scope-opt').forEach(b=>b.classList.toggle('active', b.dataset.scope === key));
+}
 function pinV2Purpose(id=null, ownerSource=null){
   const box = document.getElementById('pinV2Purpose');
   const previous = pinV2Records().find(r=>r.id===id);
@@ -2000,8 +2097,10 @@ function pinV2Purpose(id=null, ownerSource=null){
     <p id="v2PurposeDog"></p>
     <div class="field"><label for="v2Product">採寸目的・お洋服の選択</label>
     <select id="v2Product"></select></div>
+    ${id ? '' : `<div class="field"><label>測る範囲を選んでください</label><div id="v2ScopeOptions"></div>
+    <p class="note">必須5項目だけでも送信できます。任意項目は、あとから追加することもできます。</p></div>`}
     <div class="card-box"><p><strong>まずは5項目の採寸でご協力いただけます。</strong></p><p class="note">首まわり（付け根）・胴まわり・ウエスト・着丈・前身頃を、各3回ずつ測って入力してください。</p></div>
-    <div class="card-box"><p class="note">第一弾のタンクトップのサイズ設計に、必須5項目を使います。</p><p class="note">追加10項目は、今後の服づくりに役立てるための任意項目です。5項目のあとで、追加するか選べます。追加しなくても送信できます。</p></div>
+    <div class="card-box"><p class="note">第一弾のタンクトップのサイズ設計に、必須5項目を使います。</p><p class="note">追加10項目は、今後の服づくりに役立てるための任意項目です。測る範囲は上の選択で決められます。追加しなくても送信できます。</p></div>
     <p class="status" id="v2PurposeStatus" role="alert"></p>
     <button type="button" class="v2-primary" id="v2PurposeNext">次へ</button>
     <button type="button" id="v2PurposeBack" style="width:100%;margin-top:10px">入口に戻る</button></div>`;
@@ -2010,7 +2109,28 @@ function pinV2Purpose(id=null, ownerSource=null){
   const placeholder = new Option('選んでください',''); placeholder.disabled = true; select.add(placeholder);
   for(const key of PIN_V2_PRODUCT_UI) select.add(new Option(PIN_V2_PRODUCTS[key].label, key));
   select.value = '';
-  select.onchange = ()=>{ document.getElementById('v2PurposeStatus').textContent = ''; select.removeAttribute('aria-invalid'); };
+  select.onchange = ()=>{ document.getElementById('v2PurposeStatus').textContent = ''; select.removeAttribute('aria-invalid'); if(select.value === 'research') pinV2SetScopeChoice('all'); };
+  /* B9（C案）：測定セットの選択肢は PIN_MEASURE_SETS の定義から生成する（新規フローのみ表示）。
+     B10：服別セットの追加に合わせ、定義の group（basic／wear）が変わる箇所に見出しを挟む */
+  const scopeBox = document.getElementById('v2ScopeOptions');
+  if(scopeBox){
+    let lastGroup = null;
+    PIN_MEASURE_SET_ORDER.forEach(key=>{
+      const set = PIN_MEASURE_SETS[key];
+      if(set.group && set.group !== lastGroup){
+        lastGroup = set.group;
+        const h = document.createElement('div');
+        h.className = 'scope-head'; h.textContent = PIN_MEASURE_SET_GROUPS[set.group] || '';
+        scopeBox.append(h);
+      }
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'scope-opt'; b.dataset.scope = key;
+      b.innerHTML = `<span class="t">${set.label}</span><span class="n">${set.note}</span>`;
+      b.addEventListener('click', ()=>pinV2SetScopeChoice(key));
+      scopeBox.append(b);
+    });
+    pinV2SetScopeChoice(pinV2ScopeChoice);
+  }
   document.getElementById('v2PurposeNext').onclick = ()=>pinV2Begin(select.value, id, ownerSource, id ? 'remeasure' : '');
   document.getElementById('v2PurposeBack').onclick = pinV2Home;
   showPage('pinV2Purpose');
@@ -2071,6 +2191,8 @@ function pinV2Begin(product, id=null, ownerSource=null, mode=''){
     ownerId: previous?.ownerId ?? ownerSource?.ownerId ?? null,
     serverDogId: previous ? Number(previous.id) : null,
     ownerCode: 'v2-owner-'+crypto.randomUUID(), dogCode: getOrCreateActiveDogCode()};
+  /* B9（C案）：新規フローのときだけ、目的選択画面で選んだ測定セットを引き継ぐ（再採寸・追加・部分更新では範囲選択を出さない） */
+  if(!previous && !mode) PIN_V2.scope = pinV2ScopeChoice;
   resetNewDogSession();
   document.querySelectorAll('input[name=sex]').forEach(e=>e.checked = false);
   for(const fid of ['ownerName','dogName','dogBreed','recoveryEmail','recoveryPhone','weight','birthDate']){ const e = document.getElementById(fid); if(e) e.value = ''; }
@@ -2140,7 +2262,16 @@ function startMeasurements(){
   if(!pinValidateCustomerEmail() || !pinValidateMeasuredOn()) return;
   PINFORME_PHOTO_PROMO_CONSENT = document.getElementById("photoPromoConsent")?.checked === true;
   try{ localStorage.setItem("PINFORME_PHOTO_PROMO_CONSENT_V1", PINFORME_PHOTO_PROMO_CONSENT ? "1" : "0"); }catch(e){}
-  if(!PIN_V2.baseline) PIN_V2.selected = [...pinV2Needed()];
+  /* B9（C案）：新規フローは選んだ測定セットの項目をそのまま対象にする（セット未指定の経路は従来どおり目的別の必要項目） */
+  if(!PIN_V2.baseline){
+    const set = PIN_MEASURE_SETS[PIN_V2.scope];
+    if(set){
+      PIN_V2.selected = [...set.items];
+      PIN_V2.optionalAdditional = set.items.some(i=>i>=5);
+    } else {
+      PIN_V2.selected = [...pinV2Needed()];
+    }
+  }
   pinV2Persist();
   const first = PIN_V2.selected[0];
   if(first === undefined){ showFinish(); return; }
