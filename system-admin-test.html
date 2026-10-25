@@ -877,6 +877,8 @@
             <p class="adm-crumbs">管理画面 ＞ 犬の詳細 ＞ 採寸カルテ</p>
             <div class="adm-view-head"><button type="button" class="adm-back" id="adm-karte-close">← 犬の詳細に戻る</button><h3>採寸カルテ</h3></div>
             <p class="adm-note" id="adm-karte-note"></p>
+            <button type="button" class="adm-btn" id="adm-karte-pdf">カルテを保存（PDF）</button>
+            <p class="adm-note">ボタンを押すと印刷画面が開きます。印刷画面の共有ボタンから「ファイルに保存」を選ぶと、PDFで保存してそのまま送れます。</p>
             <template id="adm-karte-tpl"><iframe id="adm-karte-frame" class="adm-karte-frame" title="PINFORME 採寸カルテ" srcdoc="&lt;!doctype html&gt;&lt;html lang=&quot;ja&quot;&gt;&lt;head&gt;&lt;script id=&quot;pinforme-test-isolation&quot;&gt;
 (function(){
  const prefix=&#x27;PINFORME_V2_READY_20261010:&#x27;;
@@ -2885,7 +2887,7 @@ setPINFORMEKarte=function(d){
               : '<p class="adm-note">採寸履歴がありません。</p>') +
 
             '<h4 class="adm-sec-head">採寸カルテ</h4>' +
-            '<p class="adm-note">最新記録のカルテを、採寸ナビと同じ様式で表示します。お客様から「カルテが欲しい」と言われた時の確認用です。各履歴の「カルテ」ボタンでは、その記録時点のカルテも表示できます。</p>' +
+            '<p class="adm-note">最新記録のカルテを、採寸ナビと同じ様式で表示します。お客様から「カルテが欲しい」と言われた時の確認・受け渡し用です。各履歴の「カルテ」ボタンでは、その記録時点のカルテも表示できます。カルテ画面の「カルテを保存（PDF）」からPDFで保存して渡せます。</p>' +
             '<button type="button" class="adm-btn" id="adm-karte-latest">カルテを見る（最新記録）</button>' +
 
             '<div class="adm-danger-zone"><h3 style="margin-top:0">この子を削除（犬ごと削除）</h3>' +
@@ -3346,6 +3348,7 @@ setPINFORMEKarte=function(d){
                 frame.contentWindow.setPINFORMEKarte(data);
                 if (typeof frame.contentWindow.fit === "function") frame.contentWindow.fit();
                 applied = true;
+                frame.setAttribute("data-adm-karte-applied", "1");
                 setTimeout(resizeAdmKarteFrame, 60);
               }
             } catch (e) {}
@@ -3355,6 +3358,67 @@ setPINFORMEKarte=function(d){
           var iv = setInterval(function () { apply(); if (applied || ++tries > 24) clearInterval(iv); }, 150);
           apply();
           kar.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+
+        /* ---------- karte PDF save (print) ----------
+           Same method as the production navi's printFinalKarte: iPhone
+           Safari drops absolutely-positioned elements and images when an
+           iframe is printed directly, so the iframe itself is not printed.
+           Instead the displayed karte (#sheet, with the values already
+           applied) is copied into a top-level print-only page and that
+           page is printed. In the print sheet, the share button's
+           "ファイルに保存" saves it as a PDF that can be sent on. */
+        async function printAdmKarte() {
+          var frame = $("adm-karte-frame");
+          if (!frame || !frame.contentDocument) return;
+          if (!frame.getAttribute("data-adm-karte-applied")) {
+            alert("カルテを準備中です。少し待ってから、もう一度お試しください。");
+            return;
+          }
+          try {
+            var kdoc = frame.contentDocument;
+            var sheet = kdoc.getElementById("sheet");
+            if (!sheet) return;
+            var printWin = window.open("", "_blank");
+            if (!printWin) {
+              alert("PDF保存画面を開けませんでした。Safariのポップアップを許可して、もう一度お試しください。");
+              return;
+            }
+            // Copy the styles and the finished sheet as displayed in the iframe.
+            var styles = Array.prototype.map.call(kdoc.querySelectorAll("style"), function (el) { return el.outerHTML; }).join("\n");
+            var cloned = sheet.cloneNode(true);
+            cloned.removeAttribute("style");
+            // Pin img srcs to currentSrc and computed display so nothing is lost in iOS printing.
+            var srcImgs = sheet.querySelectorAll("img");
+            var dstImgs = cloned.querySelectorAll("img");
+            Array.prototype.forEach.call(srcImgs, function (img, i) {
+              if (dstImgs[i]) {
+                var u = img.currentSrc || img.src;
+                if (u) dstImgs[i].setAttribute("src", u);
+                try { dstImgs[i].style.display = frame.contentWindow.getComputedStyle(img).display; } catch (e) {}
+              }
+            });
+            var extraCss =
+              "@page{size:A4 landscape;margin:0!important}\n" +
+              "html,body{margin:0!important;padding:0!important;width:297mm!important;height:190mm!important;min-height:0!important;background:#fff!important;overflow:hidden!important}\n" +
+              ".view{position:relative!important;width:297mm!important;height:190mm!important;margin:0!important;padding:0!important;overflow:hidden!important;background:#fff!important}\n" +
+              ".sheet{position:absolute!important;left:calc((297mm - 1055.62px)/2)!important;top:0!important;width:1123px!important;height:794px!important;min-width:1123px!important;min-height:794px!important;margin:0!important;padding:24px 30px!important;transform:scale(.94)!important;transform-origin:top left!important;box-shadow:none!important;background:#fff!important;overflow:hidden!important}\n" +
+              "@media print{html,body{width:297mm!important;height:190mm!important;min-height:0!important;margin:0!important;padding:0!important;overflow:hidden!important}.view{position:relative!important;width:297mm!important;height:190mm!important;margin:0!important;padding:0!important;overflow:hidden!important}.sheet{position:absolute!important;left:calc((297mm - 1055.62px)/2)!important;top:0!important;width:1123px!important;height:794px!important;min-width:1123px!important;min-height:794px!important;margin:0!important;transform:scale(.94)!important;transform-origin:top left!important;overflow:hidden!important;page-break-inside:avoid!important;break-inside:avoid-page!important}}";
+            printWin.document.open();
+            printWin.document.write("<!doctype html><html lang=\"ja\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">" +
+              styles + "\n<style>\n" + extraCss + "\n</style></head><body><div class=\"view\">" + cloned.outerHTML + "</div></body></html>");
+            printWin.document.close();
+            // Print only after every image (breed art, dog photo) has loaded.
+            await Promise.all(Array.prototype.map.call(printWin.document.images, function (img) {
+              if (img.complete) return Promise.resolve();
+              return new Promise(function (resolve) { img.onload = resolve; img.onerror = resolve; });
+            }));
+            await new Promise(function (r) { setTimeout(r, 350); });
+            printWin.focus();
+            printWin.print();
+          } catch (err) {
+            alert("カルテのPDF保存画面を開けませんでした。もう一度お試しください。");
+          }
         }
 
         /* ---------- §13 admin home / tabs / public collapse ---------- */
@@ -3510,6 +3574,8 @@ setPINFORMEKarte=function(d){
             showList(); renderBreeds();
             var h = $("adm-home"); if (h) h.scrollIntoView({ behavior: "smooth", block: "start" });
           });
+          var kartePdf = $("adm-karte-pdf");
+          if (kartePdf) kartePdf.addEventListener("click", function () { printAdmKarte(); });
           var karteClose = $("adm-karte-close");
           if (karteClose) karteClose.addEventListener("click", function () {
             var kar = $("adm-karte"); if (kar) kar.classList.add("adm-hidden");
