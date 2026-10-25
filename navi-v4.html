@@ -87,8 +87,9 @@ body.on-choice #progressHeader{display:block}
 .step .guide-band .loc-badge{display:inline-block;background:var(--ink);color:#fff;font-size:12px;font-weight:700;border-radius:999px;padding:3px 10px;line-height:1.3;margin-bottom:4px}
 .step .guide-band .loc-text{font-size:15px;line-height:1.5}
 .step .guide-band .tap-hint{font-size:11.5px;color:var(--accent);font-weight:700;margin-top:3px}
-.group-chips{display:flex;gap:6px;padding:2px 12px;flex:none;flex-wrap:wrap}
-.group-chips .chip{min-height:36px;padding:4px 10px;font-size:13px;border-radius:18px}
+/* B16：小項目チップは必ず横1列に固定する（flex-wrap:nowrap＋チップ自身の nowrap／flex:none で、折り返しも潰れも構造的に起きない）。チップの表示は番号＋位置語＋状態のコンパクト形（renderGroupChips の chipLabel）にし、項目名の全文は直下のサブタイトルが担う */
+.group-chips{display:flex;gap:6px;padding:2px 12px;flex:none;flex-wrap:nowrap}
+.group-chips .chip{min-height:36px;padding:4px 10px;font-size:13px;border-radius:18px;white-space:nowrap;flex:none}
 .group-chips .chip.active{background:var(--brand);color:#fff;border-color:var(--brand);font-weight:700}
 .group-zone{padding:2px 12px;flex:none}
 .group-zone .sub-title{font-weight:800;font-size:15px;margin:2px 0 6px}
@@ -1959,6 +1960,20 @@ function setActiveGroup(sec, g){
   buildGroupZone(sec, g);
   renderGroupChips(sec);
 }
+/* B16：チップの表示名は「番号＋位置語」だけにする（例：⑨-1 後脚の長さ 1 → ⑨-1 1／⑥-1 前脚・上側 → ⑥-1 上側）。
+   項目名の全文はチップ直下のサブタイトル（buildGroupZone が groups[g] をそのまま大きく表示）とヘッダーの項目名が担うため、
+   チップ側を短くしても「どの小項目か」は画面上で一意に分かる。形式に合わないラベルは全文のまま返す。 */
+function chipLabel(label){
+  const sp = label.indexOf(' ');
+  if(sp < 0) return label;
+  const head = label.slice(0, sp);
+  const rest = label.slice(sp + 1);
+  const dot = rest.lastIndexOf('・');
+  if(dot >= 0) return head + ' ' + rest.slice(dot + 1);
+  const m = rest.match(/\s(\S+)$/);
+  if(m) return head + ' ' + m[1];
+  return label;
+}
 function renderGroupChips(sec){
   const chips = sec.querySelector('.group-chips'); if(!chips) return;
   const i = Number(sec.dataset.step); const st = sheetState.get(sec);
@@ -1969,7 +1984,9 @@ function renderGroupChips(sec){
     const filled = vals.filter(v=>String(v).trim()!=='').length;
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'chip' + (g===st.group ? ' active' : '');
-    b.textContent = label + (filled===3 ? ' ✓' : filled>0 ? '（入力中）' : '');
+    /* B16：状態もコンパクトに（完了＝✓／入力中＝n/3）。aria-label には全文ラベルと状態を残す */
+    b.textContent = chipLabel(label) + (filled===3 ? ' ✓' : filled>0 ? ' ' + filled + '/3' : '');
+    b.setAttribute('aria-label', label + (filled===3 ? '（入力済み）' : filled>0 ? '（' + filled + '/3 入力済み）' : ''));
     b.addEventListener('click', ()=>setActiveGroup(sec, g));
     chips.append(b);
   });
