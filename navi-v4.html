@@ -310,6 +310,12 @@ label.confirm input{margin-top:4px;width:20px;height:20px;flex:none}
       <p class="note">この端末に保存された下書きから続けられます。</p>
       <button type="button" class="v2-primary" id="resumeDraftBtn">途中の入力を再開</button>
     </div>
+    <div id="pinPendingGuardBox" class="entry-card" hidden>
+      <h2>前回の保存が確認できていません</h2>
+      <p class="note">前回、送信した内容がサーバーに保存できたかどうか確認できないまま終わっています。同じ内容でもう一度保存を試すか、未確認の状態を消して最初から始めるか選べます。</p>
+      <button type="button" class="v2-primary" id="pinPendingResumeBtn">途中の入力を再開して保存を再試行</button>
+      <button type="button" id="pinPendingDiscardBtn" style="margin-top:10px">未確認の状態を消して、はじめから始める</button>
+    </div>
     <div class="entry-card">
       <h2>初めてご利用の飼い主様</h2>
       <p class="note">愛犬の採寸データを登録し、採寸カルテを作成します。</p>
@@ -1159,6 +1165,27 @@ setPINFORMEKarte=function(d){
   </div>
 </div>
 
+<!-- 保存未確認ガードモーダル（B27） -->
+<div class="modal" id="pinPendingGuardModal" aria-hidden="true">
+  <div class="modal-card">
+    <div id="pinPendingGuardMain">
+      <h2 style="margin-top:0">前回の保存結果が確認できていません</h2>
+      <p class="note">前回、送信した内容がサーバーに保存できたかどうか確認できないまま終わっています。入力内容をなくさないため、このままでは新しい採寸を始められません。</p>
+      <p class="note">同じ内容でもう一度保存を試すか、未確認の状態を消して最初から始めるか選べます。</p>
+      <button type="button" class="primary" id="pinPendingGuardResume" style="width:100%">途中の入力を再開して、同じ内容で保存を再試行する</button>
+      <button type="button" class="secondary" id="pinPendingGuardDiscard" style="width:100%;margin-top:10px">未確認の状態を消して、はじめから始める</button>
+      <button type="button" class="secondary" id="pinPendingGuardClose" style="width:100%;margin-top:10px">閉じる</button>
+    </div>
+    <div id="pinPendingGuardConfirm" hidden>
+      <h2 style="margin-top:0">未確認の状態を消しますか？</h2>
+      <p class="note">消すと、前回の未確認の入力内容は<strong>送信されず、元に戻すことはできません</strong>。</p>
+      <p class="note">消えるのは、この端末に残っている作業中の状態だけです。サーバーに保存済みの採寸記録・カルテ・お客様キーは消えません。</p>
+      <button type="button" class="primary" id="pinPendingGuardDiscardYes" style="width:100%">消して、はじめから始める</button>
+      <button type="button" class="secondary" id="pinPendingGuardDiscardNo" style="width:100%;margin-top:10px">やめる（消さない）</button>
+    </div>
+  </div>
+</div>
+
 <!-- 測り方ガイド -->
 <div id="guideOverlay" role="dialog" aria-modal="true">
   <div class="go-panel">
@@ -1287,6 +1314,7 @@ const PINFORME_REMEASURE_OWNER_ID_KEY = "PINFORME_REMEASURE_OWNER_ID_V1";
 const PINFORME_REMEASURE_PHOTO_PATH_KEY = "PINFORME_REMEASURE_PHOTO_PATH_V1";
 const PINFORME_OWNER_REMEASURE_KEY = "PINFORME_REMEASURE_ACCESS_KEY_V1";
 const PIN_V2_KEY = 'PINFORME_V2_WORKING';
+const PIN_DISCARD_DONE_KEY = 'PINFORME_PENDING_DISCARDED_V1'; /* B27：未確認状態の破棄完了を再読み込み後に一度だけ知らせる印（sessionStorage） */
 
 /* ================= 状態 ================= */
 let steps = [];           // 測定ステップ section 要素（data-step 0..14）
@@ -1668,6 +1696,58 @@ function restorePINFORMEState(continueDraft=false){
   pinApplyBreedGuide();
   steps.forEach(sec=>refreshStepUI(sec));
 }
+/* ================= 保存未確認ガードの出口（B27） =================
+   送信の保存結果が確認できないまま終わった作業状態（PIN_V2.pending があり saved でない）があると、
+   入力内容をなくさないため新規開始と項目修正を止めている（従来のガード）。その出口として、
+   従来の「途中の入力を再開して同じ内容で保存を再試行」に加えて、
+   「未確認の状態を消して、はじめから始める」を用意する。
+   破棄で消すのは端末内の作業状態だけ（pinDiscardUnconfirmedState の3点）。
+   サーバーに保存済みの記録・カルテ・お客様キー関連の保存情報は消さない。 */
+function pinHasUnconfirmedPending(){ return !!(PIN_V2 && PIN_V2.pending && !PIN_V2.saved); }
+function pinRefreshPendingGuard(){
+  const box = document.getElementById('pinPendingGuardBox');
+  if(box) box.hidden = !pinHasUnconfirmedPending();
+}
+function pinOpenPendingGuard(){
+  const modal = document.getElementById('pinPendingGuardModal');
+  if(!modal) return;
+  const main = document.getElementById('pinPendingGuardMain');
+  const confirmBox = document.getElementById('pinPendingGuardConfirm');
+  if(main) main.hidden = false;
+  if(confirmBox) confirmBox.hidden = true;
+  modal.classList.add('open'); modal.setAttribute('aria-hidden','false');
+}
+function pinClosePendingGuard(){
+  const modal = document.getElementById('pinPendingGuardModal');
+  if(modal){ modal.classList.remove('open'); modal.setAttribute('aria-hidden','true'); }
+}
+function pinAskDiscardPending(){
+  const main = document.getElementById('pinPendingGuardMain');
+  const confirmBox = document.getElementById('pinPendingGuardConfirm');
+  if(main) main.hidden = true;
+  if(confirmBox) confirmBox.hidden = false;
+}
+function pinResumeFromPendingGuard(){ pinClosePendingGuard(); pinResumeDraft(); }
+function pinReloadPage(){ location.reload(); }
+/* 未確認の作業状態だけを消去する。消すもの（端末内のみ）：
+   - PINFORME_V2_WORKING（作業状態そのもの。未確認の pending を含む）
+   - PINFORME_FORM_STATE_V1（同じ未送信セッションの入力下書き）
+   - PINFORME_DRAFT_PHOTO_V2（その下書きに紐づく写真の下書き）
+   消さないもの：PINFORME_V2_RECORDS（保存済み記録のキャッシュ）、PINFORME_LAST_KARTE、
+   お客様キー関連（PINFORME_REMEASURE_ACCESS_KEY_V1・PINFORME_ACTIVE_*_CODE_V1・
+   PINFORME_REMEASURE_*_ID_V1 等）、外見・同意などの保存情報。
+   消去後はページを再読み込みし、作業状態なし・下書きなしの初期状態で入口に戻る。 */
+function pinDiscardUnconfirmedState(){
+  PINFORME_DRAFT_READY = false; /* この後の自動保存で下書きが復活しないようにする（再読み込みで初期化される） */
+  PIN_V2 = null;
+  pinV2Persist(); /* PIN_V2 が null のため PINFORME_V2_WORKING を除去する */
+  try{ localStorage.removeItem(PINFORME_FORM_STATE_KEY); }catch(e){}
+  try{ localStorage.removeItem(PINFORME_DRAFT_PHOTO_KEY); }catch(e){}
+  try{ sessionStorage.setItem(PIN_DISCARD_DONE_KEY, '1'); }catch(e){}
+  pinClosePendingGuard();
+  pinReloadPage();
+}
+
 function pinResumeDraft(){
   restorePINFORMEState(true);
   const state = pinStoredDraft();
@@ -1733,7 +1813,7 @@ function showPage(id){
 }
 function pinV2Page(id){ showPage(id); }
 function pinV2Home(){ renderHome(); showPage('homePage'); }
-function renderHome(){ pinRefreshDraftButton(); }
+function renderHome(){ pinRefreshDraftButton(); pinRefreshPendingGuard(); }
 
 /* ================= 進捗メーター（設計メモ §6.1） ================= */
 /* B12：服別セット（single:true）は「その服の必須」だけの単一グループで、全項目が必須になる。
@@ -2410,7 +2490,7 @@ function pinV2Begin(product, id=null, ownerSource=null, mode=''){
     return;
   }
   if(PINFORME_SUBMITTING) return;
-  if(PIN_V2?.pending && !PIN_V2.saved){ alert('前回の保存結果が確認できていません。「途中の入力を再開」から、同じ内容で保存を再試行してください。'); return; }
+  if(pinHasUnconfirmedPending()){ pinOpenPendingGuard(); return; }
   const previous = pinV2Records().find(r=>r.id===id);
   PIN_V2 = {product, mode, dogId:id || ('test-'+crypto.randomUUID()), baseline:previous ? pinV2Clone(previous) : null,
     customerKey: previous?.customerKey || ownerSource?.customerKey || pinformeGenerateRemeasureKey(),
@@ -2861,7 +2941,7 @@ function showFinish(){
 }
 function openMeasurementForEdit(index){
   if(PINFORME_SUBMITTING) return;
-  if(PIN_V2?.pending && !PIN_V2.saved && !PIN_V2.pending.testMode){ alert('前回と同じ内容で保存を再試行して、結果を確認してください。'); return; }
+  if(PIN_V2?.pending && !PIN_V2.saved && !PIN_V2.pending.testMode){ pinOpenPendingGuard(); return; }
   const wasSaved = !!PIN_V2?.saved;
   if(PIN_V2?.saved){
     PIN_V2.baseline = pinV2Clone(pinV2Records().find(r=>r.id===PIN_V2.dogId));
@@ -3270,6 +3350,14 @@ function initNaviV4(){
   document.getElementById('v2RecoverKey').addEventListener('click', pinformeOpenKeyRecovery);
   document.getElementById('v2CustomerKey').addEventListener('input', ()=>{ document.getElementById('v2KeyStatus').textContent = ''; });
   document.getElementById('resumeDraftBtn').addEventListener('click', pinResumeDraft);
+  /* B27：保存未確認ガードの出口の結線 */
+  document.getElementById('pinPendingResumeBtn').addEventListener('click', pinResumeDraft);
+  document.getElementById('pinPendingDiscardBtn').addEventListener('click', pinOpenPendingGuard);
+  document.getElementById('pinPendingGuardResume').addEventListener('click', pinResumeFromPendingGuard);
+  document.getElementById('pinPendingGuardDiscard').addEventListener('click', pinAskDiscardPending);
+  document.getElementById('pinPendingGuardDiscardYes').addEventListener('click', pinDiscardUnconfirmedState);
+  document.getElementById('pinPendingGuardDiscardNo').addEventListener('click', pinOpenPendingGuard);
+  document.getElementById('pinPendingGuardClose').addEventListener('click', pinClosePendingGuard);
   /* 情報入力 */
   document.getElementById('startBackBtn').addEventListener('click', pinV2Home);
   document.getElementById('pinAnonymousMode').addEventListener('change', ()=>{ pinSyncAnonymousMode(); savePINFORMEState(); });
@@ -3324,7 +3412,7 @@ function initNaviV4(){
   /* 再発行モーダル */
   document.getElementById('pinformeKeyRecoverySubmit').addEventListener('click', pinformeSubmitKeyRecovery);
   document.getElementById('pinformeKeyRecoveryClose').addEventListener('click', pinformeCloseKeyRecovery);
-  document.addEventListener('keydown', e=>{ if(e.key === 'Escape'){ pinformeCloseKeyRecovery(); pinCloseGuide(); } });
+  document.addEventListener('keydown', e=>{ if(e.key === 'Escape'){ pinformeCloseKeyRecovery(); pinCloseGuide(); pinClosePendingGuard(); } });
   /* テストパネル */
   document.getElementById('testBadge').addEventListener('click', ()=>document.getElementById('testPanel').classList.add('open'));
   document.getElementById('testPanelClose').addEventListener('click', ()=>document.getElementById('testPanel').classList.remove('open'));
@@ -3345,7 +3433,14 @@ function initNaviV4(){
   if(PIN_V2?.pending && !PIN_V2.saved && !PIN_V2.pending.testMode){
     const s = document.getElementById('v2HomeStatus');
     if(s) s.textContent = '前回の保存結果が確認できていません。「途中の入力を再開」から、同じ内容で保存を再試行してください。';
-  }
+  }  pinRefreshPendingGuard();
+  try{
+    if(sessionStorage.getItem(PIN_DISCARD_DONE_KEY) === '1'){
+      sessionStorage.removeItem(PIN_DISCARD_DONE_KEY);
+      const doneStatus = document.getElementById('v2HomeStatus');
+      if(doneStatus && !pinHasUnconfirmedPending()) doneStatus.textContent = '未確認の状態を消去しました。新しい採寸をはじめられます。';
+    }
+  }catch(e){}
 }
 document.addEventListener('DOMContentLoaded', initNaviV4);
 
