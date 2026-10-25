@@ -511,6 +511,8 @@
       .adm-home-summary { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
       .adm-chip { background: #f2f2f3; border: 1px solid #d8d8dc; border-radius: 999px; padding: 6px 12px; font-size: 13px; }
       .adm-chip strong { font-size: 15px; }
+      .adm-chip-btn { font-family: inherit; color: inherit; cursor: pointer; }
+      .adm-chip-btn:active { background: #e4e4e8; }
       .adm-tabs { display: flex; gap: 8px; margin: 10px 0 4px; }
       .adm-tab { flex: 1; padding: 12px; border-radius: 10px; border: 1px solid #d8d8dc; background: #fff; font-size: 15px; cursor: pointer; }
       .adm-tab.active { background: #333; color: #fff; border-color: #333; }
@@ -859,6 +861,13 @@
 
           <div class="adm-card" id="adm-list-card">
             <div id="adm-breeds"><p class="adm-note">読み込み中…</p></div>
+          </div>
+
+          <div class="adm-card adm-hidden" id="adm-due">
+            <p class="adm-crumbs">管理画面 ＞ 管理用ホーム ＞ 再採寸候補</p>
+            <div class="adm-view-head"><button type="button" class="adm-back" id="adm-due-close">← 管理用ホームに戻る</button><h3>再採寸候補</h3></div>
+            <p class="adm-note">最終採寸から3か月以上たった子を、経過日数の多い順に並べています。タップすると犬の詳細が開きます。お声がけは、管理者が文面を確認してから送ります（この画面から自動では送りません）。</p>
+            <div class="adm-list" id="adm-due-list"><p class="adm-note">読み込み中…</p></div>
           </div>
 
           <div class="adm-card adm-hidden" id="adm-detail"></div>
@@ -2537,6 +2546,19 @@ setPINFORMEKarte=function(d){
           var l = latestOf(dog.id);
           return String((l && l.dog_name) || "").trim();
         }
+        /* Owner name lives on the same admin-fetched rows: owner_name is a
+           column of both dogs and measurements (written at submission from
+           the owner-name field; the former built-in admin read it from the
+           same select=* rows and passed r.owner_name || d.owner_name into
+           its karte). It is used ONLY for the karte, at the moment the
+           admin explicitly opens it — never in list/detail initial views,
+           and never on the public side. Record value wins; the dog row is
+           the fallback. No RPC and no server-side change is needed. */
+        function ownerNameOf(dog, rec) {
+          var n = String((rec && rec.owner_name) || "").trim();
+          if (n) return n;
+          return String((dog && dog.owner_name) || "").trim();
+        }
         function dogTitleOf(dog) {
           var n = dogNameOf(dog);
           return n ? (n + "（ID " + dog.id + "）") : ("名前なし（ID " + dog.id + "）");
@@ -2572,6 +2594,36 @@ setPINFORMEKarte=function(d){
           if (isNaN(d.getTime())) return false;
           var due = new Date(d.getFullYear(), d.getMonth() + 3, d.getDate());
           return due <= new Date();
+        }
+        /* Elapsed days since the latest measurement (date-only, local).
+           Candidate membership is decided by remeasureDue() — the one rule
+           shared with the home chip count, the badges, the admin checker and
+           the public checker (latest date + 3 calendar months, i.e. ~90
+           days) — so the candidate list and the chip count always agree. */
+        function daysSinceMeasured(r) {
+          var p = String(measuredDate(r) || "").split("-");
+          if (p.length !== 3) return null;
+          var d = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+          if (isNaN(d.getTime())) return null;
+          var t = new Date();
+          var today = new Date(t.getFullYear(), t.getMonth(), t.getDate());
+          var n = Math.round((today - d) / 86400000);
+          return n < 0 ? 0 : n;
+        }
+        function dueCandidates() {
+          var out = [];
+          A.dogs.forEach(function (d) {
+            var l = latestOf(d.id);
+            if (!l || !remeasureDue(l)) return;
+            out.push({ dog: d, latest: l, days: daysSinceMeasured(l) });
+          });
+          out.sort(function (a, b) {
+            var da = a.days === null ? -1 : a.days;
+            var db = b.days === null ? -1 : b.days;
+            if (db !== da) return db - da;
+            return Number(a.dog.id) - Number(b.dog.id);
+          });
+          return out;
         }
         /* Band rule: one canonical algorithm, shared with the public checker
            (section 04): start at the data minimum, 3cm steps, lower bound
@@ -2667,6 +2719,7 @@ setPINFORMEKarte=function(d){
           var det = $("adm-detail"); if (det) det.classList.add("adm-hidden");
           var own = $("adm-owner"); if (own) own.classList.add("adm-hidden");
           var kar = $("adm-karte"); if (kar) kar.classList.add("adm-hidden");
+          var dueC = $("adm-due"); if (dueC) dueC.classList.add("adm-hidden");
           renderHome();
         }
         function hideAdminCards() {
@@ -2676,6 +2729,7 @@ setPINFORMEKarte=function(d){
           var det = $("adm-detail"); if (det) det.classList.add("adm-hidden");
           var own = $("adm-owner"); if (own) own.classList.add("adm-hidden");
           var kar = $("adm-karte"); if (kar) kar.classList.add("adm-hidden");
+          var dueC = $("adm-due"); if (dueC) dueC.classList.add("adm-hidden");
         }
         function dogCardHTML(d) {
           var l = latestOf(d.id);
@@ -3183,12 +3237,16 @@ setPINFORMEKarte=function(d){
            Data is rebuilt from the admin-side dogs/measurements rows in the
            shape collectKarteV2() produces, then handed over through the
            same contract: contentWindow.setPINFORMEKarte(data) + fit().
+           Owner name is taken from the admin-fetched rows (owner_name on
+           the record, dog row as fallback — see ownerNameOf) and passed
+           through as stored (e.g. 匿名希望）, exactly as the navi itself
+           prints it; it is rendered only when the karte is opened.
            Not reproducible from admin data (shown blank on the karte):
-           owner name (not part of the standard admin fetch), the v2 block
-           (update history / revision markers / purpose — derived on the
-           customer's device at submission time), dog appearance and name
-           suffix (only used when a matching column exists on the rows),
-           and the photo unless a Storage path is stored on the record. */
+           the v2 block (update history / revision markers / purpose —
+           derived on the customer's device at submission time), dog
+           appearance and name suffix (only used when a matching column
+           exists on the rows), and the photo unless a Storage path is
+           stored on the record. */
         var KARTE_FIELD_GROUPS = [["neck"],["chest"],["waist"],["back_length"],["front_length"],
           ["front_leg_girth_up","front_leg_girth_low"],["hind_leg_girth_up","hind_leg_girth_low"],
           ["front_leg_length_1","front_leg_length_2","front_leg_length_3"],
@@ -3216,7 +3274,7 @@ setPINFORMEKarte=function(d){
           return {
             createdAt: new Date().toISOString(),
             measuredOn: date,
-            owner: "",
+            owner: ownerNameOf(d, l),
             dog: name ? (name + suffix) : "名前未登録",
             breed: normalizeBreed(rawBreedOf(d)) || rawBreedOf(d) || "",
             dogAppearance: String((d && (d.dog_appearance || d.appearance)) || (l && (l.dog_appearance || l.appearance)) || ""),
@@ -3311,11 +3369,47 @@ setPINFORMEKarte=function(d){
               '<span class="adm-chip">登録 <strong>' + A.dogs.length + '</strong> 頭</span>' +
               '<span class="adm-chip">犬種 <strong>' + Object.keys(breeds).length + '</strong> 種</span>' +
               '<span class="adm-chip">採寸履歴 <strong>' + A.measurements.length + '</strong> 件</span>' +
-              '<span class="adm-chip">再採寸候補 <strong>' + due + '</strong> 頭</span>';
+              '<button type="button" class="adm-chip adm-chip-btn" id="adm-due-chip">再採寸候補 <strong>' + due + '</strong> 頭 ›</button>';
           }
+          var dueChip = $("adm-due-chip");
+          if (dueChip) dueChip.addEventListener("click", openDueList);
           var tl = $("adm-tab-list"), tc = $("adm-tab-checker");
           if (tl) tl.classList.toggle("active", A.tab !== "checker");
           if (tc) tc.classList.toggle("active", A.tab === "checker");
+        }
+        /* ---------- §16 re-measurement candidate list (stage A) ----------
+           Opened from the home summary chip. Membership = remeasureDue on the
+           latest record only (same rule as the chip count); rows are sorted
+           by elapsed days, most first. Tapping a row opens the dog detail.
+           This view never sends anything — outreach stays a manual,
+           admin-confirmed step (stage B design, memo §17). */
+        function renderDueList() {
+          var box = $("adm-due-list"); if (!box) return;
+          var cands = dueCandidates();
+          if (!cands.length) {
+            box.innerHTML = '<p class="adm-note">いまは再採寸候補はいません。</p>';
+            return;
+          }
+          box.innerHTML = cands.map(function (c) {
+            var d = c.dog;
+            return '<button type="button" class="adm-card-row" data-adm-due-dog="' + esc(d.id) + '">' +
+              '<span class="adm-card-body">' +
+              '<span class="adm-card-main">' + esc(dogTitleOf(d)) + '</span>' +
+              '<span class="adm-card-sub">' + esc(normalizeBreed(rawBreedOf(d)) || "犬種未登録") + " ・ 最終採寸 " + esc(measuredDate(c.latest)) + '</span>' +
+              '<span class="adm-card-sub">経過 ' + (c.days === null ? "—" : c.days + "日") + '</span>' +
+              '</span><span class="adm-card-arrow">›</span></button>';
+          }).join("");
+          box.querySelectorAll("[data-adm-due-dog]").forEach(function (btn) {
+            btn.addEventListener("click", function () { openDog(btn.getAttribute("data-adm-due-dog")); });
+          });
+        }
+        function openDueList() {
+          A.view = "due"; A.activeDogId = null; A.activeOwnerId = null;
+          hideAdminCards();
+          var card = $("adm-due"); if (!card) return;
+          renderDueList();
+          card.classList.remove("adm-hidden");
+          card.scrollIntoView({ behavior: "smooth", block: "start" });
         }
         function setTab(tab) {
           A.tab = tab === "checker" ? "checker" : "list";
@@ -3409,6 +3503,12 @@ setPINFORMEKarte=function(d){
           var pubToggle = $("adm-pub-toggle");
           if (pubToggle) pubToggle.addEventListener("click", function () {
             setPublicCollapsed(!document.body.classList.contains("adm-on"));
+          });
+          var dueClose = $("adm-due-close");
+          if (dueClose) dueClose.addEventListener("click", function () {
+            A.view = "breeds"; A.activeDogId = null; A.activeOwnerId = null;
+            showList(); renderBreeds();
+            var h = $("adm-home"); if (h) h.scrollIntoView({ behavior: "smooth", block: "start" });
           });
           var karteClose = $("adm-karte-close");
           if (karteClose) karteClose.addEventListener("click", function () {
