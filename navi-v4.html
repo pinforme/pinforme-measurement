@@ -2183,6 +2183,7 @@ function openGuide(sec){
   document.getElementById('goLoc').textContent = item.loc;
   document.getElementById('goDesc').textContent = item.desc;
   document.getElementById('goNoteKind').textContent = (PIN_V2 && pinV2IsOptional(i)) ? `※ この項目は${pinScopeAddName() === '任意' ? '任意' : pinScopeAddName() + '項目'}です。測れない部位は3回とも空欄のまま進められます。` : '※ サイズ確認に必要な部位です。測りにくい場合は無理をせず、途中保存してご相談ください。';
+  document.querySelector('#guideOverlay .go-scroll').scrollTop = 0;
   document.getElementById('guideOverlay').classList.add('open');
 }
 
