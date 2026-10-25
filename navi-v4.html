@@ -21,8 +21,19 @@ button:disabled{opacity:.55;cursor:default}
 input,select,textarea{font:inherit;font-size:16px}
 input[type=text],input[type=email],input[type=tel],input[type=date],input[type=number],select,textarea{width:100%;padding:12px;border:1px solid #bdbdc2;border-radius:10px;background:#fff;min-height:48px}
 /* B3：iOS Safari の date 入力は内部の最小幅が残り width:100% でもはみ出すため、min-width:0 と max-width で打ち消す */
-input[type=date]{min-width:0;max-width:100%}
+/* B12：B3対策だけでは実機で「今回の測定日」欄の右端のはみ出しが解消しなかった。iOS のネイティブ日付コントロールは
+   インラインレベルの置換要素として内部の最小コンテンツ幅を保持し、min-width:0／max-width:100% だけでは used width が
+   コンテナ幅にクランプされないため、display:block でブロックレベルボックスにし、width:100%（border-box）を権威づける */
+input[type=date]{display:block;width:100%;min-width:0;max-width:100%}
+.pin-birth-selects{max-width:100%}
 .pin-birth-selects select{min-width:0}
+/* B12：犬情報フォームの横はみ出し監査（§18）に基づくクランプの明示。ファイル入力は幅ルールが無く固有幅のままだった。
+   ページ側の overflow-x:clip は残留はみ出しで画面全体が横スクロールしないための保険（測定日欄の主対策は上記の block 化） */
+input[type=file]{max-width:100%}
+#dogInfoPage{overflow-x:clip}
+#dogInfoPage .summary-box div{min-width:0}
+#dogInfoPage .sex-row label{min-width:0}
+#dogInfoPage label.confirm>span{min-width:0}
 .wrap{max-width:560px;margin:0 auto;padding:20px 16px 48px}
 .brand{text-align:center;margin:10px 0 4px}
 .brand-logo{display:block;width:min(240px,68%);height:auto;margin:0 auto}
@@ -1207,19 +1218,22 @@ const PIN_V2_WEAR_PRODUCTS = ['tshirt','raglan','hoodie','romper','pants'];
    あわせてユーザー指示（2026-10-25 08:19「ズボンも作れたらいいな」）でズボン用を新規追加した。ズボンだけは例外で、
    必須5のうち下半身に関わるウエストのみ＋下半身系の項目で構成する（尻まわりの項目は15項目に実在しないため、
    最も近い尻尾の太さを使う）。
-   group は目的選択画面の見出し分け（basic＝基本／wear＝服で選ぶ）。addName は境目の後半の呼び名
-   （基本セットは「任意」、服別セットは「追加」）で、位置テキスト・スキップ・ガイド注意文が参照する
+   group は目的選択画面の見出し分け（basic＝基本／wear＝服で選ぶ）。addName は境目のあるセット（基本セット）専用の
+   後半の呼び名（「任意」）で、位置テキスト・スキップ・ガイド注意文が参照する
+   B12：服別セットは「共通の必須5＋追加項目」という組み立てではなく、その服に必要な項目はすべて「その服の必須」が
+   正しいという設計指摘を受け、single:true（境目なし・全項目が必須の単一グループ）＋ name（位置テキスト用のセット名）を
+   持たせた。服別セットは addName を持たない（境目の一般化は境目のあるセット専用として残す）
    B11：各セットに product（保存される目的キー）を持たせた。旧ドロップダウンの3値（undecided／tank／research）は
    core／tank／all の product として受け継ぎ、服別セットは同キーの product 定義（PIN_V2_PRODUCTS）に対応づける */
 const PIN_MEASURE_SETS = {
   core:{label:'必須5項目だけ測る', note:'首まわり・胴まわり・ウエスト・着丈・前身頃', items:[0,1,2,3,4], group:'basic', addName:'任意', product:'undecided'},
   all:{label:'全部の15項目を測る', note:'必須5項目＋任意の追加10項目', items:Array.from({length:15},(_,i)=>i), group:'basic', addName:'任意', product:'research'},
-  tank:{label:'タンクトップ用（5項目）', note:'必須5項目だけ（首まわり・胴まわり・ウエスト・着丈・前身頃）', items:[0,1,2,3,4], group:'wear', addName:'追加', product:'tank'},
-  tshirt:{label:'Tシャツ用（6項目）', note:'必須5項目＋前脚の太さ（袖まわり）', items:[0,1,2,3,4,5], group:'wear', addName:'追加', product:'tshirt'},
-  raglan:{label:'ラグラン長袖用（7項目）', note:'必須5項目＋前脚の太さ・前脚の長さ', items:[0,1,2,3,4,5,7], group:'wear', addName:'追加', product:'raglan'},
-  hoodie:{label:'パーカー用（8項目）', note:'必須5項目＋前脚の太さ・首の長さ（ネック）・頭まわり', items:[0,1,2,3,4,5,9,11], group:'wear', addName:'追加', product:'hoodie'},
-  romper:{label:'ロンパース／四脚タイプ用（15項目）', note:'必須5項目＋脚・首・頭まわりなど追加10項目の全部', items:Array.from({length:15},(_,i)=>i), group:'wear', addName:'追加', product:'romper'},
-  pants:{label:'ズボン用（4項目）', note:'下半身だけ：ウエスト＋後脚の太さ・後脚の長さ・尻尾の太さ', items:[2,6,8,14], group:'wear', addName:'追加', product:'pants'}
+  tank:{label:'タンクトップ用（5項目）', note:'必須5項目だけ（首まわり・胴まわり・ウエスト・着丈・前身頃）', items:[0,1,2,3,4], group:'wear', single:true, name:'タンクトップ用', product:'tank'},
+  tshirt:{label:'Tシャツ用（6項目）', note:'必須5項目＋前脚の太さ（袖まわり）', items:[0,1,2,3,4,5], group:'wear', single:true, name:'Tシャツ用', product:'tshirt'},
+  raglan:{label:'ラグラン長袖用（7項目）', note:'必須5項目＋前脚の太さ・前脚の長さ', items:[0,1,2,3,4,5,7], group:'wear', single:true, name:'ラグラン長袖用', product:'raglan'},
+  hoodie:{label:'パーカー用（8項目）', note:'必須5項目＋前脚の太さ・首の長さ（ネック）・頭まわり', items:[0,1,2,3,4,5,9,11], group:'wear', single:true, name:'パーカー用', product:'hoodie'},
+  romper:{label:'ロンパース／四脚タイプ用（15項目）', note:'必須5項目＋脚・首・頭まわりなど追加10項目の全部', items:Array.from({length:15},(_,i)=>i), group:'wear', single:true, name:'ロンパース／四脚タイプ用', product:'romper'},
+  pants:{label:'ズボン用（4項目）', note:'下半身だけ：ウエスト＋後脚の太さ・後脚の長さ・尻尾の太さ', items:[2,6,8,14], group:'wear', single:true, name:'ズボン用', product:'pants'}
 };
 const PIN_MEASURE_SET_ORDER = ['core','all','tank','tshirt','raglan','hoodie','romper','pants'];
 const PIN_MEASURE_SET_GROUPS = {basic:'基本の測り方', wear:'服で選ぶ'};
@@ -1665,13 +1679,23 @@ function pinV2Home(){ renderHome(); showPage('homePage'); }
 function renderHome(){ pinRefreshDraftButton(); }
 
 /* ================= 進捗メーター（設計メモ §6.1） ================= */
+/* B12：服別セット（single:true）は「その服の必須」だけの単一グループで、全項目が必須になる。
+   対象は scope を持つ新規フローのみ（再採寸・部分更新など scope を持たない経路は従来どおり）。
+   この判定を pinV2IsOptional に組み込むことで、服別セットでは必須ゲート・ガイド注意文・
+   スキップ非表示・opt-step なしまで一貫して「全項目が必須」になる */
+function pinScopeSingleSet(){
+  const set = PIN_V2 && PIN_V2.scope ? PIN_MEASURE_SETS[PIN_V2.scope] : null;
+  return (set && set.single === true) ? set : null;
+}
 function pinV2IsOptional(index){
   /* B11：服別セット由来の product（PIN_V2_WEAR_PRODUCTS）も、従来の tank／undecided と同じく
-     optionalAdditional が立っている回では追加区間（index>=5）を任意扱いにする */
-  return !!PIN_V2 && !['add','update'].includes(PIN_V2.mode) && index>=5 && (PIN_V2.product==='research' || (['tank','undecided',...PIN_V2_WEAR_PRODUCTS].includes(PIN_V2.product) && PIN_V2.optionalAdditional===true));
+     optionalAdditional が立っている回では追加区間（index>=5）を任意扱いにする
+     B12：ただし服別セット（single）の回では全項目が必須のため、任意扱いにしない */
+  return !!PIN_V2 && !pinScopeSingleSet() && !['add','update'].includes(PIN_V2.mode) && index>=5 && (PIN_V2.product==='research' || (['tank','undecided',...PIN_V2_WEAR_PRODUCTS].includes(PIN_V2.product) && PIN_V2.optionalAdditional===true));
 }
-/* B10：境目の後半の呼び名。基本セット（core／all）は「任意」、服別セットは「追加」。
-   セット未指定の経路（再採寸・部分更新など）や PIN_V2 未生成時は従来どおり「任意」 */
+/* B10：境目の後半の呼び名。境目のあるセット（基本セット core／all）は「任意」。
+   B12：服別セットは単一グループ（境目なし）になったため addName を持たず、この関数の対象外
+   （セット未指定の経路＝再採寸・部分更新などや PIN_V2 未生成時は従来どおり「任意」） */
 function pinScopeAddName(){
   const set = PIN_V2 && PIN_V2.scope ? PIN_MEASURE_SETS[PIN_V2.scope] : null;
   return (set && set.addName) || '任意';
@@ -1685,13 +1709,16 @@ function progressPlan(){
   /* 戻り値: {list:対象ステップindex配列, requiredCount:list内の必須数, pos:現在の位置(1始まり), currentIndex} */
   if(!PIN_V2) return {list:steps.map((_,i)=>i), requiredCount:5, pos:current+1, currentIndex:current};
   const list = (PIN_V2.selected && PIN_V2.selected.length) ? [...PIN_V2.selected] : [...PIN_V2_PRODUCTS[PIN_V2.product].items];
-  const requiredCount = pinEligibleOptionalFlow() ? list.filter(i=>i<5).length : list.length;
+  /* B12：服別セット（single）の回は全項目が必須なので、必須数はリスト全数 */
+  const requiredCount = (pinEligibleOptionalFlow() && !pinScopeSingleSet()) ? list.filter(i=>i<5).length : list.length;
   const pos = Math.max(1, list.indexOf(current)+1);
   return {list, requiredCount, pos, currentIndex:current};
 }
 /* B8：計画リストを「必須グループ／任意グループ」に分ける。新ヘッダーの丸数字・位置テキスト・ゲージはこのグループ単位で出す。
    任意フローが成立しない回（部分更新・項目追加など）は対象リスト全体を1グループとし、分母はその回の対象項目数になる（従来の規則どおり） */
 function planGroups(plan){
+  /* B12：服別セット（single）の回は必須／任意に割らず、対象リスト全体を1グループ（全項目が必須）にする */
+  if(pinScopeSingleSet()) return [{items:[...plan.list], opt:false}];
   const split = PIN_V2 ? pinEligibleOptionalFlow() : true;
   if(!split) return [{items:[...plan.list], opt:false}];
   const req = plan.list.filter(i=>i<5);
@@ -1748,7 +1775,10 @@ function updateProgressMeter(){
         });
       }
     } else {
-      if(posEl) posEl.textContent = `${total}項目のうち ${pos}項目め／残り${total - pos}項目`;
+      /* B12：服別セット（single）の回は「（セット名）全N項目のうち n項目め／残りm項目」とし、
+         必須・追加の語は使わない（ゲージは単一グループの通し表示で境目 divider・opt 様式なし） */
+      const singleSet = pinScopeSingleSet();
+      if(posEl) posEl.textContent = singleSet ? `（${singleSet.name}）全${total}項目のうち ${pos}項目め／残り${total - pos}項目` : `${total}項目のうち ${pos}項目め／残り${total - pos}項目`;
       if(gauge){
         gauge.replaceChildren();
         hit.g.items.forEach((_, j)=>{
@@ -1894,7 +1924,9 @@ function refreshStepUI(sec){
   if(skip){
     const showSkip = pinEligibleOptionalFlow() && pinV2IsOptional(Number(sec.dataset.step));
     skip.hidden = !showSkip;
-    /* B10：スキップの文言もセットの呼び名に合わせる（基本セット＝任意／服別セット＝追加） */
+    /* B10：スキップの文言もセットの呼び名に合わせる（基本セット＝任意／服別セット＝追加）
+       B12：服別セット（single）では pinV2IsOptional が常に false になるため、スキップは表示されず
+       opt-step も付かない（全項目が必須＝通常レイアウトで測り切る）。文言の対象は基本セットのみになった */
     skip.textContent = `残りの${pinScopeAddName()}項目を測らず、確認へ進む`;
     /* B9（C案）：任意ステップには専用圧縮クラスを付け、スキップボタンの占有高をレイアウト側で常時賄う
        （任意区間では全ステップ同じ条件になるため、表示の有無で寸法が変わることはない） */
