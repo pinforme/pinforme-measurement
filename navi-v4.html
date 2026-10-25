@@ -21,16 +21,16 @@ button:disabled{opacity:.55;cursor:default}
 input,select,textarea{font:inherit;font-size:16px}
 input[type=text],input[type=email],input[type=tel],input[type=date],input[type=number],select,textarea{width:100%;padding:12px;border:1px solid #bdbdc2;border-radius:10px;background:#fff;min-height:48px}
 /* B3：iOS Safari の date 入力は内部の最小幅が残り width:100% でもはみ出すため、min-width:0 と max-width で打ち消す */
-/* B12：B3対策だけでは実機で「今回の測定日」欄の右端のはみ出しが解消しなかった。iOS のネイティブ日付コントロールは
-   インラインレベルの置換要素として内部の最小コンテンツ幅を保持し、min-width:0／max-width:100% だけでは used width が
-   コンテナ幅にクランプされないため、display:block でブロックレベルボックスにし、width:100%（border-box）を権威づける */
-input[type=date]{display:block;width:100%;min-width:0;max-width:100%}
+/* B13：B12 で加えた display:block／width:100% は撤回し、B3 で実機確認済みの指定に復元した。B3完了時点の
+   ファイルとの直接diffで、日付欄とその祖先に効く規則の差分はこの書き換えと B12 の overflow-x:clip 追加
+   だけだったことが証拠づけられたため（§19）。部品・データ契約・必須チェックは現行のまま一切変えていない */
+input[type=date]{min-width:0;max-width:100%}
 .pin-birth-selects{max-width:100%}
 .pin-birth-selects select{min-width:0}
 /* B12：犬情報フォームの横はみ出し監査（§18）に基づくクランプの明示。ファイル入力は幅ルールが無く固有幅のままだった。
-   ページ側の overflow-x:clip は残留はみ出しで画面全体が横スクロールしないための保険（測定日欄の主対策は上記の block 化） */
+   B13：ページ側の overflow-x:clip は撤去した（はみ出しを直さず枠を「切れて見せる」マスクになっていたため。B3時点にも無い）。
+   以下のクランプは幅を狭める方向だけに働き、日付欄の幅の決まり方には関与しないため維持する */
 input[type=file]{max-width:100%}
-#dogInfoPage{overflow-x:clip}
 #dogInfoPage .summary-box div{min-width:0}
 #dogInfoPage .sex-row label{min-width:0}
 #dogInfoPage label.confirm>span{min-width:0}
@@ -156,6 +156,28 @@ body.on-choice #progressHeader{display:block}
 .step.multi.opt-step .slot .slot-label{height:16px;line-height:16px}
 .step.multi.opt-step .adjust-row button{height:38px}
 .step.multi.opt-step .keypad{gap:4px;padding:5px 12px}
+/* B13：位置テキスト（.hd-pos）は原則1行（nowrap）。ただし服別セットの正式名＋全15項目という最長ケース
+   （例：（ロンパース／四脚タイプ用）全15項目のうち 15項目め／残り0項目）だけは右列（約311px）に収まらず
+   右端が切れていたため、その場合だけ pos-long クラスで2行折り返しを許可する。名前・文言は省略しない。
+   増える1行分は、ヘッダーを同量だけ高くし、ガイド帯と余白を同量だけ詰めて相殺する（総高は不変・§19）：
+   単独＝ヘッダー74→90（+16）／ガイド帯130→114（−16）で相殺。
+   複合＝ヘッダー66→81（+15）／ガイド帯106→99（−7）＋チップ（min-height 30→27・padding 4→2 で −3）
+   ＋サブタイトル下余白 4→2（−2）＋入力欄ラベル 18→16（−2）＋平均行の上余白 6→4（−2）で −16
+   （純増減 −1 は kp-zone の margin-top:auto が吸収）。帯内の収まり用に、複合では位置テキストの
+   行間（1.4→1.3）とバッジ下余白（4→3）も詰める（帯の内寸 87 に対し右列の内容 約85 が収まる） */
+.step.pos-long .sheet-head{height:90px}
+.step.pos-long .sheet-head .hd-pos{white-space:normal}
+.step.pos-long .guide-band{height:114px}
+.step.pos-long .guide-band img{width:188px;height:100px}
+.step.multi.pos-long .sheet-head{height:81px}
+.step.multi.pos-long .guide-band{height:99px}
+.step.multi.pos-long .guide-band img{width:160px;height:85px}
+.step.multi.pos-long .guide-band .loc-badge{margin-bottom:3px}
+.step.multi.pos-long .guide-band .loc-text{line-height:1.3}
+.step.multi.pos-long .group-chips .chip{min-height:27px;padding:2px 10px}
+.step.multi.pos-long .group-zone .sub-title{margin:0 0 2px}
+.step.multi.pos-long .slot .slot-label{height:16px;line-height:16px}
+.step.multi.pos-long .avg-row{margin-top:4px}
 /* B9（C案）：目的選択画面の「測る範囲（測定セット）」選択肢。様式は入口の選択ボタン（.owner-choice）に揃える
    B11：選択はカード方式に一本化し（旧ドロップダウンは撤去）、縦に高いカード形式をやめて行形式
    （タイトル＋項目数バッジを1行に）に変更した。分類→セットの2段階表示とあわせ、各段階が
@@ -1728,6 +1750,13 @@ function planGroups(plan){
   if(opt.length) gs.push({items:opt, opt:true});
   return gs.length ? gs : [{items:[...plan.list], opt:false}];
 }
+/* B13：位置テキストの概算幅（em）。全角＝1、ASCII＝0.6、空白＝0.3 として見積もる
+   （最長ケースの判定専用。実レイアウトの最終判定は実機確認に委ねる） */
+function pinPosTextEm(text){
+  let w = 0;
+  for(const ch of String(text)) w += (ch === ' ') ? 0.3 : (/[\x00-\x7F]/.test(ch) ? 0.6 : 1);
+  return w;
+}
 function updateProgressMeter(){
   const bar = document.getElementById('progressBar');
   if(!bar) return;
@@ -1751,6 +1780,7 @@ function updateProgressMeter(){
     groups.forEach(g=>{ const k = g.items.indexOf(i); if(k >= 0) hit = {g, k}; });
     if(!hit){
       /* この回の対象外のステップ：丸数字は全体の通し番号に戻し、位置テキストとゲージは空にする */
+      sec.classList.remove('pos-long');
       if(numEl) numEl.textContent = String(i+1);
       if(posEl) posEl.textContent = '';
       if(gauge) gauge.replaceChildren();
@@ -1760,6 +1790,7 @@ function updateProgressMeter(){
     const pos = hit.k + 1;
     if(numEl) numEl.textContent = String(pos);
     if(groups.length === 2){
+      sec.classList.remove('pos-long');
       /* B9（C案）：必須＋任意の2グループ構成（「全部」セット等）では、ゲージを選んだセット全体の通し表示にする。
          セグメントは計画リストの順に全数並べ、必須／任意の境目に divider、任意側は opt 様式。
          位置テキストは「全体の中の位置＋グループとグループ内の位置」を出す。丸数字はグループ内通し番号のまま */
@@ -1778,7 +1809,13 @@ function updateProgressMeter(){
       /* B12：服別セット（single）の回は「（セット名）全N項目のうち n項目め／残りm項目」とし、
          必須・追加の語は使わない（ゲージは単一グループの通し表示で境目 divider・opt 様式なし） */
       const singleSet = pinScopeSingleSet();
-      if(posEl) posEl.textContent = singleSet ? `（${singleSet.name}）全${total}項目のうち ${pos}項目め／残り${total - pos}項目` : `${total}項目のうち ${pos}項目め／残り${total - pos}項目`;
+      const posText = singleSet ? `（${singleSet.name}）全${total}項目のうち ${pos}項目め／残り${total - pos}項目` : `${total}項目のうち ${pos}項目め／残り${total - pos}項目`;
+      if(posEl) posEl.textContent = posText;
+      /* B13：位置テキストが右列に1行で収まらない場合だけ pos-long（2行折り返し＋高さ相殺）を付ける。
+         右列幅＝ビューポート幅 − ヘッダー左右padding 24 − 丸数字 48 − gap 10。フォントは単独12px／複合11.5px */
+      const colPxB13 = (window.innerWidth || 393) - 82;
+      const fontPxB13 = sec.classList.contains('multi') ? 11.5 : 12;
+      sec.classList.toggle('pos-long', pinPosTextEm(posText) * fontPxB13 > colPxB13);
       if(gauge){
         gauge.replaceChildren();
         hit.g.items.forEach((_, j)=>{
