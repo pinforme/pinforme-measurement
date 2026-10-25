@@ -2173,6 +2173,35 @@ function onDecideNext(sec){
 }
 
 /* ================= ガイド詳細オーバーレイ ================= */
+/* ガイド詳細を開くたびに、スクロール位置を持ち得る要素をすべて先頭へ戻す（B19）。
+   録画で確定した主因は .go-scroll の位置残存だが、オーバーレイ配下（.go-panel／#guideOverlay）と
+   背後のページ本体（document）も含めて戻し、復元先を残さない。
+   注意：#guideOverlay は閉じている間 display:none で、その状態での scrollTop 代入は WebKit が破棄し、
+   再表示時に前回位置が復元される（＝B18 が実機で効かなかった理由）。必ず表示状態になってから呼ぶこと。 */
+function pinResetGuideScroll(){
+  const reset = ()=>{
+    document.querySelectorAll('#guideOverlay .go-panel, #guideOverlay .go-scroll').forEach(el=>{ el.scrollTop = 0; });
+    const ov = document.getElementById('guideOverlay');
+    if(ov) ov.scrollTop = 0;
+    if(document.scrollingElement) document.scrollingElement.scrollTop = 0;
+    if(document.documentElement) document.documentElement.scrollTop = 0;
+    if(document.body) document.body.scrollTop = 0;
+    window.scrollTo(0, 0);
+  };
+  reset();
+  /* 表示直後の初回描画で位置復元が起きても先頭に戻るよう、次の描画フレームでも再設定する */
+  requestAnimationFrame(()=>{ reset(); requestAnimationFrame(reset); });
+}
+/* ガイド詳細を閉じる（B19）。閉じる直前＝表示中にもオーバーレイ配下のスクロールを先頭へ戻し、
+   次回開いたときに復元される位置自体を先頭にしておく（二重化）。 */
+function pinCloseGuide(){
+  const ov = document.getElementById('guideOverlay');
+  if(ov.classList.contains('open')){
+    ov.querySelectorAll('.go-panel, .go-scroll').forEach(el=>{ el.scrollTop = 0; });
+    ov.scrollTop = 0;
+  }
+  ov.classList.remove('open');
+}
 function openGuide(sec){
   const i = Number(sec.dataset.step);
   const item = PIN_ITEMS[i];
@@ -2183,8 +2212,8 @@ function openGuide(sec){
   document.getElementById('goLoc').textContent = item.loc;
   document.getElementById('goDesc').textContent = item.desc;
   document.getElementById('goNoteKind').textContent = (PIN_V2 && pinV2IsOptional(i)) ? `※ この項目は${pinScopeAddName() === '任意' ? '任意' : pinScopeAddName() + '項目'}です。測れない部位は3回とも空欄のまま進められます。` : '※ サイズ確認に必要な部位です。測りにくい場合は無理をせず、途中保存してご相談ください。';
-  document.querySelector('#guideOverlay .go-scroll').scrollTop = 0;
   document.getElementById('guideOverlay').classList.add('open');
+  pinResetGuideScroll();
 }
 
 /* ================= ステップ遷移（v2の選択項目スキップ＋区切り画面） ================= */
@@ -3291,11 +3320,11 @@ function initNaviV4(){
   document.getElementById('karteBackBtn').addEventListener('click', backFromKartePage);
   document.getElementById('kartePrintBtn').addEventListener('click', printFinalKarte);
   /* ガイド */
-  document.getElementById('goCloseX').addEventListener('click', ()=>document.getElementById('guideOverlay').classList.remove('open'));
+  document.getElementById('goCloseX').addEventListener('click', ()=>pinCloseGuide());
   /* 再発行モーダル */
   document.getElementById('pinformeKeyRecoverySubmit').addEventListener('click', pinformeSubmitKeyRecovery);
   document.getElementById('pinformeKeyRecoveryClose').addEventListener('click', pinformeCloseKeyRecovery);
-  document.addEventListener('keydown', e=>{ if(e.key === 'Escape'){ pinformeCloseKeyRecovery(); document.getElementById('guideOverlay').classList.remove('open'); } });
+  document.addEventListener('keydown', e=>{ if(e.key === 'Escape'){ pinformeCloseKeyRecovery(); pinCloseGuide(); } });
   /* テストパネル */
   document.getElementById('testBadge').addEventListener('click', ()=>document.getElementById('testPanel').classList.add('open'));
   document.getElementById('testPanelClose').addEventListener('click', ()=>document.getElementById('testPanel').classList.remove('open'));
