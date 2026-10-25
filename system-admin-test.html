@@ -449,11 +449,19 @@
 
     
       /* ---------- admin (test build) ---------- */
-      .adm-wrap { margin-top: 28px; }
-      .adm-card { background: #fff; border: 1px solid var(--line, #d8d8dc); border-radius: 14px; padding: 16px; margin: 14px 0; }
-      .adm-card h3 { margin: 0 0 10px; font-size: 17px; }
+      /* §20 contrast fix: the public theme flips --ink to a light cream
+         (#f0e8da) under prefers-color-scheme: dark, while admin cards keep a
+         hardcoded white background. The admin CSS never set a text color, so
+         in dark mode the inherited cream text landed on white and became
+         unreadable. All admin text colors are now explicit and pinned with
+         color-scheme: light so the device theme cannot bleed in. */
+      .adm-wrap { margin-top: 28px; color-scheme: light; }
+      .adm-wrap > .adm-more summary { color: var(--ink-soft); }
+      .adm-wrap > .adm-more .adm-note { color: var(--ink-soft); }
+      .adm-card { background: #fff; border: 1px solid #d8d8dc; border-radius: 14px; padding: 16px; margin: 14px 0; color: #222; color-scheme: light; }
+      .adm-card h3 { margin: 0 0 10px; font-size: 17px; color: #111; }
       .adm-note { font-size: 12.5px; color: #666; line-height: 1.6; }
-      .adm-status { font-size: 13.5px; line-height: 1.6; margin: 8px 0; }
+      .adm-status { font-size: 13.5px; line-height: 1.6; margin: 8px 0; color: #333; }
       .adm-status:not(:empty) { background: #f2f2f3; border-radius: 9px; padding: 8px 11px; }
       .adm-status.err { color: #b3261e; }
       .adm-status.err:not(:empty) { background: #fdecea; }
@@ -469,7 +477,7 @@
       .adm-btn:disabled { opacity: .45; cursor: not-allowed; }
       .adm-hidden { display: none !important; }
       /* view navigation: breadcrumb + big heading + back button */
-      .adm-crumbs { font-size: 12.5px; color: #777; margin: 0 0 6px; }
+      .adm-crumbs { font-size: 12.5px; color: #6b6b6b; margin: 0 0 6px; }
       .adm-view-head { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 0 12px; }
       .adm-view-head h3 { margin: 0; font-size: 20px; flex: 1 1 auto; }
       .adm-back { min-height: 44px; padding: 9px 14px; border-radius: 9px; border: 1px solid #aaa; background: #fff; color: #222; font-size: 14.5px; cursor: pointer; }
@@ -480,16 +488,16 @@
       .adm-card-body { flex: 1 1 auto; min-width: 0; }
       .adm-card-main { display: block; font-size: 16.5px; font-weight: 700; color: #222; line-height: 1.35; }
       .adm-card-sub { display: block; font-size: 13px; color: #555; line-height: 1.45; margin-top: 2px; }
-      .adm-card-arrow { flex: 0 0 auto; font-size: 22px; color: #999; line-height: 1; }
+      .adm-card-arrow { flex: 0 0 auto; font-size: 22px; color: #767676; line-height: 1; }
       .adm-badge { display: inline-block; font-size: 11.5px; padding: 2px 8px; border-radius: 999px; background: #333; color: #fff; vertical-align: 2px; }
-      .adm-badge.warn { background: #a86e00; }
-      .adm-badge.gray { background: #888; }
+      .adm-badge.warn { background: #8a5c00; }
+      .adm-badge.gray { background: #6f6f6f; }
       /* detail key-value rows */
       .adm-kvrows { border-top: 1px solid #eee; margin-top: 4px; }
       .adm-kvrow { display: flex; gap: 10px; padding: 9px 0; border-bottom: 1px solid #eee; font-size: 14.5px; align-items: flex-start; }
       .adm-kvrow .k { flex: 0 0 88px; color: #666; font-size: 13px; padding-top: 2px; }
       .adm-kvrow .v { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
-      .adm-sec-head { font-size: 16px; margin: 24px 0 8px; padding-left: 9px; border-left: 5px solid #222; }
+      .adm-sec-head { font-size: 16px; margin: 24px 0 8px; padding-left: 9px; border-left: 5px solid #222; color: #111; }
       /* folded long explanations */
       .adm-more { margin: 8px 0 0; }
       .adm-more summary { font-size: 13px; color: #555; cursor: pointer; padding: 8px 0; }
@@ -508,13 +516,25 @@
          admin side only — public markup/scripts are not modified. */
       body.adm-on .wrap > header.hero { display: none; }
       body.adm-on .wrap > section:not(.adm-wrap) > *:not(.sec-head) { display: none; }
-      .adm-home-summary { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
-      .adm-chip { background: #f2f2f3; border: 1px solid #d8d8dc; border-radius: 999px; padding: 6px 12px; font-size: 13px; }
-      .adm-chip strong { font-size: 15px; }
-      .adm-chip-btn { font-family: inherit; color: inherit; cursor: pointer; }
-      .adm-chip-btn:active { background: #e4e4e8; }
+      .adm-home-summary { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; align-items: center; }
+      .adm-chip { background: #f2f2f3; border: 1px solid #d8d8dc; border-radius: 999px; padding: 6px 12px; font-size: 13px; color: #333; }
+      .adm-chip strong { font-size: 15px; color: #111; }
+      /* §20: only the re-measurement chip is tappable — make it read as a
+         button (solid black, white text, bold arrow), unlike the quiet
+         display-only chips above. */
+      .adm-chip-btn { font-family: inherit; cursor: pointer; background: #333; border: 1px solid #333; color: #fff; font-weight: 700; padding: 9px 16px; box-shadow: 0 1px 3px rgba(0, 0, 0, .3); }
+      .adm-chip-btn strong { color: #fff; font-size: 16px; }
+      .adm-chip-btn .adm-chip-arrow { font-size: 17px; font-weight: 900; margin-left: 3px; }
+      .adm-chip-btn:active { background: #111; border-color: #111; }
       .adm-tabs { display: flex; gap: 8px; margin: 10px 0 4px; }
-      .adm-tab { flex: 1; padding: 12px; border-radius: 10px; border: 1px solid #d8d8dc; background: #fff; font-size: 15px; cursor: pointer; }
+      .adm-tab { flex: 1; padding: 12px; border-radius: 10px; border: 1px solid #d8d8dc; background: #fff; color: #222; font-size: 15px; cursor: pointer; }
+      /* §20: logged-in session strip, merged into the home card (was a
+         separate full card). One slim bar: label + mail left, actions right. */
+      .adm-session-bar { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; background: #f2f2f3; border: 1px solid #d8d8dc; border-radius: 10px; padding: 7px 12px; margin: 0 0 14px; }
+      .adm-session-label { font-size: 13px; font-weight: 700; color: #333; }
+      .adm-session-mail { font-size: 13px; color: #555; overflow-wrap: anywhere; }
+      .adm-session-actions { margin-left: auto; display: flex; gap: 6px; }
+      .adm-btn.small { min-height: 36px; padding: 5px 12px; font-size: 13px; border-radius: 8px; }
       .adm-tab.active { background: #333; color: #fff; border-color: #333; }
       /* login form */
       #adm-login-box label { font-size: 14px; font-weight: 600; color: #333; }
@@ -831,24 +851,24 @@
 
         <div id="adm-app" class="adm-hidden">
           <div class="adm-card" id="adm-home">
+            <div class="adm-session-bar">
+              <span class="adm-session-label">管理者としてログイン中</span>
+              <span class="adm-session-mail" id="adm-session-note"></span>
+              <span class="adm-session-actions">
+                <button class="adm-btn light small" id="adm-reload" type="button">一覧を更新</button>
+                <button class="adm-btn light small" id="adm-logout" type="button">ログアウト</button>
+              </span>
+            </div>
             <h3>管理用ホーム</h3>
             <div class="adm-home-summary" id="adm-home-summary"><span class="adm-chip">読み込み中…</span></div>
             <div class="adm-tabs" role="tablist" aria-label="管理機能の切り替え">
               <button type="button" class="adm-tab active" id="adm-tab-list">犬種・犬の一覧</button>
               <button type="button" class="adm-tab" id="adm-tab-checker">対象の子チェッカー</button>
             </div>
-            <p class="adm-note">ログイン中は、公開ページの各セクションを見出しだけに畳んでいます（管理作業中のスクロールを減らすため）。</p>
-            <button type="button" class="adm-btn light" id="adm-pub-toggle">ページ全体を表示する</button>
-          </div>
-          <div class="adm-card">
-            <div class="adm-row">
-              <strong>管理者としてログイン中</strong>
-              <span class="adm-note" id="adm-session-note"></span>
-              <button class="adm-btn light" id="adm-reload" type="button">一覧を更新</button>
-              <button class="adm-btn light" id="adm-logout" type="button">ログアウト</button>
-            </div>
             <p class="adm-status" id="adm-status" role="status"></p>
             <p class="adm-note">一覧は犬の名前で表示します（IDは補助表示）。連絡先は飼い主ビューで、必要な時だけ取得します。</p>
+            <p class="adm-note">ログイン中は、公開ページの各セクションを見出しだけに畳んでいます（管理作業中のスクロールを減らすため）。</p>
+            <button type="button" class="adm-btn light" id="adm-pub-toggle">ページ全体を表示する</button>
           </div>
 
           <div class="adm-card" id="adm-checker">
@@ -2565,12 +2585,23 @@ setPINFORMEKarte=function(d){
           var n = dogNameOf(dog);
           return n ? (n + "（ID " + dog.id + "）") : ("名前なし（ID " + dog.id + "）");
         }
+        /* Search-only normalization: hiragana and katakana are treated as
+           the same kana, and full-/half-width forms are folded (NFKC covers
+           half-width katakana and full-width alphanumerics), so a name finds
+           its dog regardless of the kana/width the admin typed. Displayed
+           names are never changed — this is applied only when comparing. */
+        function normalizeForSearch(s) {
+          return String(s || "").normalize("NFKC").toLowerCase()
+            .replace(/[ぁ-ゖ]/g, function (c) { return String.fromCharCode(c.charCodeAt(0) + 0x60); });
+        }
         function dogMatchesQuery(dog, q) {
           q = String(q || "").trim();
           if (!q) return true;
           if (String(dog.id).indexOf(q) >= 0) return true;
-          var n = dogNameOf(dog);
-          return !!n && n.toLowerCase().indexOf(q.toLowerCase()) >= 0;
+          var nq = normalizeForSearch(q);
+          if (nq && String(dog.id).indexOf(nq) >= 0) return true;
+          var n = normalizeForSearch(dogNameOf(dog));
+          return !!n && !!nq && n.indexOf(nq) >= 0;
         }
         function latestOf(dogId) { var h = historyOf(dogId); return h.length ? h[0] : null; }
         function measuredDate(r) {
@@ -3433,7 +3464,7 @@ setPINFORMEKarte=function(d){
               '<span class="adm-chip">登録 <strong>' + A.dogs.length + '</strong> 頭</span>' +
               '<span class="adm-chip">犬種 <strong>' + Object.keys(breeds).length + '</strong> 種</span>' +
               '<span class="adm-chip">採寸履歴 <strong>' + A.measurements.length + '</strong> 件</span>' +
-              '<button type="button" class="adm-chip adm-chip-btn" id="adm-due-chip">再採寸候補 <strong>' + due + '</strong> 頭 ›</button>';
+              '<button type="button" class="adm-chip adm-chip-btn" id="adm-due-chip">再採寸候補 <strong>' + due + '</strong> 頭<span class="adm-chip-arrow">›</span></button>';
           }
           var dueChip = $("adm-due-chip");
           if (dueChip) dueChip.addEventListener("click", openDueList);
