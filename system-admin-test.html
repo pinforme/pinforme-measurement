@@ -461,6 +461,7 @@
       .adm-row > * { margin: 0; }
       .adm-input { min-height: 52px; padding: 10px 12px; border: 1px solid #bbb; border-radius: 9px; font-size: 16px; width: 100%; box-sizing: border-box; background: #fff; color: #222; }
       .adm-input.inline { width: auto; flex: 1 1 200px; }
+      .adm-search { margin: 0 0 10px; }
       .adm-btn { min-height: 44px; padding: 9px 16px; border-radius: 9px; border: 1px solid #333; background: #333; color: #fff; font-size: 14.5px; cursor: pointer; }
       .adm-btn.light { background: #fff; color: #222; border-color: #aaa; }
       .adm-btn.danger { background: #b3261e; border-color: #b3261e; }
@@ -822,7 +823,7 @@
               <button class="adm-btn light" id="adm-logout" type="button">ログアウト</button>
             </div>
             <p class="adm-status" id="adm-status" role="status"></p>
-            <p class="adm-note">一覧はIDのみで表示します。連絡先は飼い主ビューで、必要な時だけ取得します。</p>
+            <p class="adm-note">一覧は犬の名前で表示します（IDは補助表示）。連絡先は飼い主ビューで、必要な時だけ取得します。</p>
           </div>
 
           <div class="adm-card" id="adm-list-card">
@@ -1745,7 +1746,7 @@
         var A = {
           dogs: [], measurements: [], verified: false,
           activeDogId: null, activeOwnerId: null, busy: false,
-          view: "breeds", activeBreed: null
+          view: "breeds", activeBreed: null, query: ""
         };
 
         function $(id) { return document.getElementById(id); }
@@ -1835,6 +1836,27 @@
         function rawBreedOf(dog) {
           var h = historyOf(dog.id);
           return String(dog.breed || (h[0] && h[0].breed) || "").trim();
+        }
+        /* Dog name lives on the dogs row (dog_name, saved at registration via
+           create_dog_and_link_owner_secure p_dog_name; the former admin read the
+           same select=* rows). The latest measurement row is only a fallback in
+           case a name was ever stored there. Admin-section display only. */
+        function dogNameOf(dog) {
+          var n = String((dog && dog.dog_name) || "").trim();
+          if (n) return n;
+          var l = latestOf(dog.id);
+          return String((l && l.dog_name) || "").trim();
+        }
+        function dogTitleOf(dog) {
+          var n = dogNameOf(dog);
+          return n ? (n + "（ID " + dog.id + "）") : ("名前なし（ID " + dog.id + "）");
+        }
+        function dogMatchesQuery(dog, q) {
+          q = String(q || "").trim();
+          if (!q) return true;
+          if (String(dog.id).indexOf(q) >= 0) return true;
+          var n = dogNameOf(dog);
+          return !!n && n.toLowerCase().indexOf(q.toLowerCase()) >= 0;
         }
         function latestOf(dogId) { var h = historyOf(dogId); return h.length ? h[0] : null; }
         function measuredDate(r) {
@@ -1927,10 +1949,27 @@
           var due = remeasureDue(l) ? ' <span class="adm-badge warn">再採寸候補</span>' : "";
           return '<button type="button" class="adm-card-row" data-adm-dog="' + esc(d.id) + '">' +
             '<span class="adm-card-body">' +
-            '<span class="adm-card-main">ID ' + esc(d.id) + aliasNote + due + "</span>" +
+            '<span class="adm-card-main">' + esc(dogTitleOf(d)) + aliasNote + due + "</span>" +
             '<span class="adm-card-sub">' + esc(d.sex || "性別不明") + " ・ " + esc(ageText(d.birth_date || (l && l.birth_date))) + "</span>" +
             '<span class="adm-card-sub">胴まわり ' + fmt(l && l.chest, "cm") + " ・ 最終採寸 " + esc(l ? measuredDate(l) : "記録なし") + "</span>" +
             '</span><span class="adm-card-arrow">›</span></button>';
+        }
+        function searchBoxHTML() {
+          return '<input class="adm-input adm-search" id="adm-search" type="search" placeholder="名前・IDで探す" value="' + esc(A.query || "") + '" />';
+        }
+        function attachSearch() {
+          var inp = $("adm-search"); if (!inp) return;
+          inp.addEventListener("input", function () {
+            A.query = inp.value;
+            var pos = null;
+            try { pos = inp.selectionStart; } catch (e) {}
+            renderBreeds();
+            var again = $("adm-search");
+            if (again) {
+              again.focus();
+              if (pos !== null) { try { again.setSelectionRange(pos, pos); } catch (e) {} }
+            }
+          });
         }
         function renderBreeds() {
           var box = $("adm-breeds"); if (!box) return;
@@ -1938,22 +1977,45 @@
           var g = breedGroups();
           if (A.view === "dogs" && A.activeBreed && g.groups[A.activeBreed]) {
             var b = A.activeBreed;
-            var dogs = g.groups[b].slice().sort(function (x, y) { return Number(x.id) - Number(y.id); });
+            var allDogs = g.groups[b].slice().sort(function (x, y) { return Number(x.id) - Number(y.id); });
+            var dogs = allDogs.filter(function (d) { return dogMatchesQuery(d, A.query); });
             box.innerHTML =
               '<p class="adm-crumbs">管理画面 ＞ 犬種 ＞ 犬の一覧</p>' +
               '<div class="adm-view-head"><button type="button" class="adm-back" id="adm-back-breeds">← 犬種に戻る</button>' +
-              "<h3>" + esc(b) + "（" + dogs.length + "頭）</h3></div>" +
-              '<div class="adm-list">' + dogs.map(dogCardHTML).join("") + "</div>";
+              "<h3>" + esc(b) + "（" + allDogs.length + "頭）</h3></div>" +
+              searchBoxHTML() +
+              (dogs.length
+                ? '<div class="adm-list">' + dogs.map(dogCardHTML).join("") + "</div>"
+                : '<p class="adm-note">「' + esc(A.query) + '」に一致する子は、この犬種にはいません。</p>');
+            attachSearch();
             $("adm-back-breeds").addEventListener("click", function () {
-              A.view = "breeds"; A.activeBreed = null; renderBreeds();
+              A.view = "breeds"; A.activeBreed = null; A.query = ""; renderBreeds();
               var c = $("adm-list-card"); if (c) c.scrollIntoView({ behavior: "smooth", block: "start" });
             });
           } else {
             if (A.view === "dogs") { A.view = "breeds"; A.activeBreed = null; }
+            if (String(A.query || "").trim()) {
+              var found = A.dogs.filter(function (d) { return dogMatchesQuery(d, A.query); })
+                .slice().sort(function (x, y) { return Number(x.id) - Number(y.id); });
+              box.innerHTML =
+                '<p class="adm-crumbs">管理画面 ＞ 犬種</p>' +
+                '<div class="adm-view-head"><h3>犬種 → 犬の一覧</h3></div>' +
+                searchBoxHTML() +
+                '<p class="adm-note" style="margin:0 0 10px">「' + esc(A.query) + '」の検索結果：' + found.length + '頭</p>' +
+                (found.length
+                  ? '<div class="adm-list">' + found.map(dogCardHTML).join("") + "</div>"
+                  : '<p class="adm-note">一致する子はいません。名前の一部かIDで試してください。</p>');
+              attachSearch();
+              box.querySelectorAll("[data-adm-dog]").forEach(function (btn) {
+                btn.addEventListener("click", function () { openDog(btn.getAttribute("data-adm-dog")); });
+              });
+              return;
+            }
             box.innerHTML =
               '<p class="adm-crumbs">管理画面 ＞ 犬種</p>' +
               '<div class="adm-view-head"><h3>犬種 → 犬の一覧</h3></div>' +
-              '<p class="adm-note" style="margin:0 0 10px">犬種を選ぶと、その犬種の犬の一覧が出ます。</p>' +
+              '<p class="adm-note" style="margin:0 0 10px">犬種を選ぶと、その犬種の犬の一覧が出ます。名前・IDでも探せます。</p>' +
+              searchBoxHTML() +
               '<div class="adm-list">' + g.order.map(function (bname) {
                 var dogsOfBreed = g.groups[bname];
                 var dueCount = dogsOfBreed.filter(function (d) { return remeasureDue(latestOf(d.id)); }).length;
@@ -1962,6 +2024,7 @@
                   '<span class="adm-card-sub">' + dogsOfBreed.length + "頭" + (dueCount ? " ・ 再採寸候補 " + dueCount + "頭" : "") + "</span></span>" +
                   '<span class="adm-card-arrow">›</span></button>';
               }).join("") + "</div>";
+            attachSearch();
             box.querySelectorAll("[data-adm-breed]").forEach(function (btn) {
               btn.addEventListener("click", function () {
                 A.activeBreed = btn.getAttribute("data-adm-breed"); A.view = "dogs"; renderBreeds();
@@ -1998,8 +2061,9 @@
           box.innerHTML =
             '<p class="adm-crumbs">管理画面 ＞ 犬種 ＞ 犬の一覧 ＞ 犬の詳細</p>' +
             '<div class="adm-view-head"><button type="button" class="adm-back" id="adm-detail-close">← 犬の一覧に戻る</button>' +
-            "<h3>犬の詳細（ID " + esc(d.id) + "）</h3></div>" +
+            "<h3>" + esc(dogTitleOf(d)) + "</h3></div>" +
             '<div class="adm-kvrows">' +
+            '<div class="adm-kvrow"><span class="k">名前</span><span class="v"><strong>' + esc(dogNameOf(d) || "名前なし") + "</strong>（ID " + esc(d.id) + "）</span></div>" +
             '<div class="adm-kvrow"><span class="k">犬種</span><span class="v"><strong>' + esc(formal || "—") + "</strong>" +
             (raw && raw !== formal ? ' <span class="adm-badge gray">登録表記：' + esc(raw) + "</span>" : "") + "</span></div>" +
             '<div class="adm-kvrow"><span class="k">性別</span><span class="v">' + esc(d.sex || (latest && latest.sex) || "—") + "</span></div>" +
@@ -2033,7 +2097,7 @@
               : '<p class="adm-note">採寸履歴がありません。</p>') +
 
             '<div class="adm-danger-zone"><h3 style="margin-top:0">この子を削除（犬ごと削除）</h3>' +
-            "<p class='adm-note'>対象は dog_id " + esc(d.id) + " の犬情報と採寸履歴 " + hist.length + " 件です。削除後は元に戻せません。<br />" +
+            "<p class='adm-note'>対象は " + esc(dogTitleOf(d)) + "（dog_id " + esc(d.id) + "）の犬情報と採寸履歴 " + hist.length + " 件です。削除後は元に戻せません。<br />" +
             "写真は Storage（" + PHOTO_BUCKET + "）から先に削除し、失敗した場合はDBの削除を行いません。</p>" +
             '<button type="button" class="adm-btn danger" id="adm-dog-delete">この子を削除する</button>' +
             '<p class="adm-status" id="adm-delete-status" role="status"></p></div>';
@@ -2074,7 +2138,7 @@
           if (!tok || !A.verified) { setS("管理者としてログインしてください。"); return; }
           var currentRaw = String(d.breed === null || d.breed === undefined ? "" : d.breed);
           if (breed === currentRaw) { setS("犬種名は変更されていません。"); return; }
-          if (!window.confirm("ID " + dogId + " の犬種名を「" + (currentRaw || "未登録") + "」から「" + breed + "」へ修正しますか？\nこの子のすべての採寸履歴にも反映します。")) return;
+          if (!window.confirm(dogTitleOf(d) + "（ID " + dogId + "）の犬種名を「" + (currentRaw || "未登録") + "」から「" + breed + "」へ修正しますか？\nこの子のすべての採寸履歴にも反映します。")) return;
           A.busy = true; if (btn) btn.disabled = true; setS("犬種名を保存しています…");
           try {
             var saved = await rpc("admin_update_dog_breed",
@@ -2148,8 +2212,8 @@
             p = String(p || "").trim();
             if (p && photoPaths.indexOf(p) < 0) photoPaths.push(p);
           });
-          if (!window.confirm("dog_id " + dogId + " のデータを削除しますか？\n\n・犬情報\n・採寸履歴 " + hist.length + " 件\n・保存写真 " + photoPaths.length + " 件（Storageから先に削除を試みます）\n\n削除後は元に戻せません。")) return;
-          var typed = window.prompt("誤操作防止のため「削除」と入力してください。\n\n対象：dog_id " + dogId, "");
+          if (!window.confirm(dogTitleOf(d) + "（dog_id " + dogId + "）のデータを削除しますか？\n\n・犬情報\n・採寸履歴 " + hist.length + " 件\n・保存写真 " + photoPaths.length + " 件（Storageから先に削除を試みます）\n\n削除後は元に戻せません。")) return;
+          var typed = window.prompt("誤操作防止のため「削除」と入力してください。\n\n対象：" + dogTitleOf(d) + "（dog_id " + dogId + "）", "");
           if (typed !== "削除") { if (typed !== null) setS("削除を中止しました。"); return; }
           var tok = token();
           if (!tok || !A.verified) { setS("管理者ログインが必要です。"); return; }
@@ -2202,7 +2266,7 @@
             '<div class="adm-list">' + dogs.map(function (d) {
               var l = latestOf(d.id);
               return '<button type="button" class="adm-card-row" data-adm-owner-dog="' + esc(d.id) + '">' +
-                '<span class="adm-card-body"><span class="adm-card-main">ID ' + esc(d.id) + "</span>" +
+                '<span class="adm-card-body"><span class="adm-card-main">' + esc(dogTitleOf(d)) + "</span>" +
                 '<span class="adm-card-sub">' + esc(normalizeBreed(rawBreedOf(d))) + " ・ 胴まわり " + fmt(l && l.chest, "cm") + "</span></span>" +
                 '<span class="adm-card-arrow">›</span></button>';
             }).join("") + "</div>" +
@@ -2272,7 +2336,7 @@
               fetchAll("/rest/v1/measurements?select=*&order=created_at.desc,id.desc", tok)
             ]);
             A.dogs = results[0]; A.measurements = results[1];
-            A.view = "breeds"; A.activeBreed = null; A.activeDogId = null; A.activeOwnerId = null;
+            A.view = "breeds"; A.activeBreed = null; A.activeDogId = null; A.activeOwnerId = null; A.query = "";
             showList();
             renderBreeds();
             setStatus("犬 " + A.dogs.length + " 頭・採寸履歴 " + A.measurements.length + " 件を取得しました。");
@@ -2318,7 +2382,7 @@
           });
           $("adm-logout").addEventListener("click", function () {
             setSession(null); A.verified = false; A.dogs = []; A.measurements = [];
-            A.view = "breeds"; A.activeBreed = null; A.activeDogId = null; A.activeOwnerId = null;
+            A.view = "breeds"; A.activeBreed = null; A.activeDogId = null; A.activeOwnerId = null; A.query = "";
             showLogin("");
           });
           $("adm-reload").addEventListener("click", function () { if (A.verified) loadAdminData(); });
