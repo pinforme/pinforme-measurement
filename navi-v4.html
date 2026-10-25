@@ -16,6 +16,13 @@ html.v4-measuring body{overscroll-behavior:none}
 .page{display:none}
 .page.active{display:block}
 button{font:inherit;cursor:pointer;border-radius:12px;border:1px solid var(--line);background:#fff;color:var(--ink);min-height:48px;padding:10px 16px}
+/* B15：ダブルタップ拡大の抑止（§21）。manipulation はピンチ拡大とスクロールは許可したまま、ダブルタップでの拡大だけを無効化する。
+   従来は .keypad button にだけ付いており、「次の入力欄へ」などキーパッド以外のタップ対象には付いていなかったため、
+   数字キーの連打の直後に押すと、そのタップが直前のタップと対になってダブルタップと判定され、ページが拡大していた。
+   ボタン全般に行き渡らせ、ボタンでないタップ対象（ガイド帯・入力スロット）にも個別に付ける */
+button{touch-action:manipulation}
+.step .guide-band{touch-action:manipulation}
+.slot{touch-action:manipulation}
 button.primary,.primary-action{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
 button:disabled{opacity:.55;cursor:default}
 input,select,textarea{font:inherit;font-size:16px}
@@ -1691,6 +1698,24 @@ function syncProgressChrome(){
   document.documentElement.style.setProperty('--progH', (badgeH + headH) + 'px');
   if(active) updateProgressMeter();
 }
+/* B15：表示倍率を初期（initial-scale=1）へ戻す（§21）。
+   拡大した状態で次の画面へ進む・戻る・再読み込みしても、普段の大きさで表示し直すための処理。
+   手順はメタビューポートの付け替え（一時的に maximum-scale=1 を付けてブラウザに倍率1へ戻させ、
+   次のフレームで元の指定へ戻す）。付けっぱなしにはしないため、この処理自体はユーザーが
+   意図してピンチで広げる操作まで封じるものではない（遷移の瞬間に初期倍率へ戻すだけ） */
+const PIN_VIEWPORT_BASE = 'width=device-width, initial-scale=1, viewport-fit=cover';
+let pinZoomResetBusy = false;
+function pinResetZoom(){
+  const meta = document.querySelector('meta[name="viewport"]');
+  if(!meta || pinZoomResetBusy) return;
+  pinZoomResetBusy = true;
+  meta.setAttribute('content', PIN_VIEWPORT_BASE + ', maximum-scale=1');
+  const restore = ()=>{ meta.setAttribute('content', PIN_VIEWPORT_BASE); pinZoomResetBusy = false; };
+  if(typeof window.requestAnimationFrame === 'function'){ requestAnimationFrame(()=>requestAnimationFrame(restore)); }
+  else{ setTimeout(restore, 60); }
+}
+/* ブラウザの戻る／進む（bfcache 復元）・再読み込みの表示タイミングでも倍率を初期へ戻す */
+window.addEventListener('pageshow', ()=>pinResetZoom());
 function showPage(id){
   if(id === 'kartePage' && !pinUserKarteReady()){ showFinish(); return; }
   hideAll();
@@ -1698,6 +1723,7 @@ function showPage(id){
   if(el) el.classList.add('active');
   syncProgressChrome();
   window.scrollTo(0,0);
+  pinResetZoom();
   try{ savePINFORMEState(); }catch(e){}
 }
 function pinV2Page(id){ showPage(id); }
@@ -2146,6 +2172,7 @@ function showStep(n){
     if(n>=steps.length){ showFinish(); return; }
     hideAll(); current = n; steps[current].classList.add('active');
     syncProgressChrome(); refreshStepUI(steps[current]); window.scrollTo(0,0);
+    pinResetZoom();
     try{ savePINFORMEState(); }catch(e){}
     return;
   }
@@ -2159,6 +2186,7 @@ function showStep(n){
     if(target >= steps.length){ showFinish(); return; }
     hideAll(); current = target; steps[current].classList.add('active');
     syncProgressChrome(); refreshStepUI(steps[current]); window.scrollTo(0,0);
+    pinResetZoom();
     try{ savePINFORMEState(); }catch(e){}
     return;
   }
@@ -2166,6 +2194,7 @@ function showStep(n){
   if(n >= steps.length){ showFinish(); return; }
   hideAll(); current = n; steps[current].classList.add('active');
   syncProgressChrome(); refreshStepUI(steps[current]); window.scrollTo(0,0);
+  pinResetZoom();
   try{ savePINFORMEState(); }catch(e){}
 }
 function showOptionalChoice(){
@@ -2776,6 +2805,7 @@ function showFinish(){
   document.getElementById('pinKarteAfterSaveNote').hidden = karteReady;
   if(saved) document.getElementById('pinformePostSaveChoice').style.display = 'block';
   window.scrollTo(0,0);
+  pinResetZoom();
   try{ savePINFORMEState(); }catch(e){}
 }
 function openMeasurementForEdit(index){
