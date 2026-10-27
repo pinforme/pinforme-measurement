@@ -2467,7 +2467,7 @@ setPINFORMEKarte=function(d){
         var A = {
           dogs: [], measurements: [], verified: false,
           activeDogId: null, activeOwnerId: null, busy: false,
-          view: "breeds", activeBreed: null, query: "", checkQuery: "", checkDogId: null, tab: "list", pubOpen: false
+          view: "breeds", activeBreed: null, query: "", checkQuery: "", checkDogId: null, tab: "list", pubOpen: false, keyQuery: "", keyState: null
         };
 
         function $(id) { return document.getElementById(id); }
@@ -2793,6 +2793,58 @@ setPINFORMEKarte=function(d){
             }
           });
         }
+        function keySearchHTML() {
+          var ks = A.keyState, out = "";
+          out += '<div style="display:flex;gap:8px;align-items:stretch;margin:0 0 6px">' +
+            '<input class="adm-input inline" id="adm-key" type="text" autocomplete="off" placeholder="お客様キーで探す（XXXX-XXXX-XXXX-XXXX）" value="' + esc(A.keyQuery || "") + '" />' +
+            '<button type="button" class="adm-btn" id="adm-key-btn"' + (ks && ks.status === "searching" ? " disabled" : "") + '>キーで検索</button></div>';
+          out += '<p class="adm-note" style="margin:0 0 10px">匿名の方はお客様キーでしか辿れません。キーを貼り付けると、その飼い主さんの犬が出ます。</p>';
+          if (!ks) return out;
+          if (ks.status === "searching") {
+            out += '<p class="adm-note">検索しています…</p>';
+          } else if (ks.status === "done") {
+            out += '<p class="adm-note" style="margin:0 0 10px">お客様キーの検索結果：' + ks.dogs.length + '頭</p>' +
+              '<div class="adm-list">' + ks.dogs.map(dogCardHTML).join("") + "</div>";
+          } else if (ks.status === "none") {
+            out += '<p class="adm-note">そのキーの登録は見つかりませんでした。キーが途中で切れていないか確認してください。</p>';
+          } else if (ks.status === "notready") {
+            out += '<p class="adm-note">まだ使えません。サーバー側の準備（検索用RPC admin_find_owner_by_key の作成）が必要です。SQL案をSupabaseに適用すると使えるようになります。</p>';
+          } else if (ks.status === "error") {
+            out += '<p class="adm-note">検索に失敗しました（' + esc(ks.message || "") + '）。</p>';
+          }
+          return out;
+        }
+        function attachKeySearch() {
+          var inp = $("adm-key"), btn = $("adm-key-btn");
+          if (inp) {
+            inp.addEventListener("input", function () { A.keyQuery = inp.value; });
+            inp.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); runKeySearch(); } });
+          }
+          if (btn) btn.addEventListener("click", runKeySearch);
+        }
+        async function runKeySearch() {
+          var inp = $("adm-key");
+          var v = ((inp && inp.value) || A.keyQuery || "").trim();
+          if (!v) return;
+          A.keyQuery = v;
+          var tok = token();
+          if (!tok || !A.verified) { A.keyState = { status: "error", message: "ログイン確認ができていません" }; renderBreeds(); return; }
+          A.keyState = { status: "searching" };
+          renderBreeds();
+          try {
+            var res = await rpc("admin_find_owner_by_key", { p_key: v }, tok);
+            var owners = (Array.isArray(res) ? res : []).map(Number);
+            var dogs = A.dogs.filter(function (d) {
+              var l = latestOf(d.id);
+              return owners.indexOf(Number(d.owner_id || (l && l.owner_id) || 0)) >= 0;
+            }).slice().sort(function (x, y) { return Number(x.id) - Number(y.id); });
+            A.keyState = dogs.length ? { status: "done", dogs: dogs } : { status: "none" };
+          } catch (e) {
+            if (e && (e.code === "PGRST202" || e.http === 404)) A.keyState = { status: "notready" };
+            else A.keyState = { status: "error", message: (e && e.message) || String(e) };
+          }
+          renderBreeds();
+        }
         function renderBreeds() {
           var box = $("adm-breeds"); if (!box) return;
           if (!A.dogs.length) { box.innerHTML = '<p class="adm-note">登録されている犬がいません。</p>'; return; }
@@ -2837,7 +2889,7 @@ setPINFORMEKarte=function(d){
               '<p class="adm-crumbs">管理画面 ＞ 犬種</p>' +
               '<div class="adm-view-head"><h3>犬種 → 犬の一覧</h3></div>' +
               '<p class="adm-note" style="margin:0 0 10px">犬種を選ぶと、その犬種の犬の一覧が出ます。名前・IDでも探せます。</p>' +
-              searchBoxHTML() +
+              searchBoxHTML() + keySearchHTML() +
               '<div class="adm-list">' + g.order.map(function (bname) {
                 var dogsOfBreed = g.groups[bname];
                 var dueCount = dogsOfBreed.filter(function (d) { return remeasureDue(latestOf(d.id)); }).length;
@@ -2847,6 +2899,7 @@ setPINFORMEKarte=function(d){
                   '<span class="adm-card-arrow">›</span></button>';
               }).join("") + "</div>";
             attachSearch();
+            attachKeySearch();
             box.querySelectorAll("[data-adm-breed]").forEach(function (btn) {
               btn.addEventListener("click", function () {
                 A.activeBreed = btn.getAttribute("data-adm-breed"); A.view = "dogs"; renderBreeds();
@@ -3146,7 +3199,7 @@ setPINFORMEKarte=function(d){
               : "お客様キー：登録が見つかりませんでした。");
           } catch (e) {
             if (e && (e.code === "PGRST202" || e.http === 404)) {
-              lines.push("お客様キー：まだ表示できません。サーバー側の準備（参照用RPC admin_get_owner_remeasure_key の作成）が必要です。SQL案をSupabaseに適用すると表示できるようになります。");
+              lines.push("お客様キー：暗号化して保存されているため、画面で確認することはできません。キーが分かるのは、発行・再発行のときだけです。");
             } else if (e && e.data && e.data.message === "owner_not_found") {
               lines.push("お客様キー：対象の飼い主が見つかりませんでした。");
             } else {
