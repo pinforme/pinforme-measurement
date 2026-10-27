@@ -2714,6 +2714,7 @@ function pinV2OwnerMenu(records){
       <h1>今回は何をしますか？</h1>
       <p>ご希望の操作をお選びください。</p>
       <button type="button" class="owner-choice" id="v2ExistingDogs"><span class="t">登録済みの子の採寸</span><span class="n">再採寸・部分更新・項目の追加</span></button>
+      <button type="button" class="owner-choice" id="v2KarteView"><span class="t">採寸カルテを見る・保存する</span><span class="n">送信済みのカルテを表示します。PDFで保存もできます</span></button>
       <button type="button" class="owner-choice" id="v2AnotherDog"><span class="t">2匹目以降のわんちゃんを登録</span><span class="n">同じ飼い主様で、新しい子のカルテを作成</span></button>
       <button type="button" id="v2MenuHome" style="width:100%;margin-top:10px">入口に戻る</button>
     </div>
@@ -2722,6 +2723,12 @@ function pinV2OwnerMenu(records){
       <h2>登録済みのわんちゃん</h2>
       <p class="note">対象の子と操作をお選びください。今回測らない部位は、数値・採寸日を引き継ぎます。</p>
       <div id="v2OwnerDogList"></div>
+    </div>
+    <div id="v2KarteDogs" hidden>
+      <button type="button" id="v2KarteMenuBack">操作の選択に戻る</button>
+      <h2>カルテを見る子を選んでください</h2>
+      <p class="note">送信済みの採寸カルテを表示します。カルテの画面からPDFで保存もできます。</p>
+      <div id="v2KarteDogList"></div>
     </div></div>`;
   const list = document.getElementById('v2OwnerDogList');
   for(const r of records){
@@ -2738,7 +2745,27 @@ function pinV2OwnerMenu(records){
     if(r.measurementId != null) card.append(mk('v2-karte', 'カルテを見る・保存する', '送信済みの採寸カルテを表示します。PDFで保存もできます。', ()=>pinV2ShowKarte(r.id)));
     list.append(card);
   }
-  document.getElementById('v2ExistingDogs').onclick = ()=>{ document.getElementById('v2OwnerChoices').hidden = true; document.getElementById('v2OwnerDogs').hidden = false; window.scrollTo(0,0); };
+  const karteList = document.getElementById('v2KarteDogList');
+  let karteCount = 0;
+  for(const r of records){
+    if(r.measurementId == null) continue;
+    karteCount++;
+    const card = document.createElement('div'); card.className = 'dog-card';
+    const title = document.createElement('p'); title.className = 'dog-title';
+    title.textContent = (r.dogName ? r.dog : '名前未登録') + ' ／ 最新記録 ' + (r.history[0]?.date || '未採寸');
+    card.append(title);
+    const mkK = (cls, t, n, fn)=>{ const b = document.createElement('button'); b.type = 'button'; b.className = cls; b.innerHTML = `<span class="t">${t}</span><span class="n">${n}</span>`; b.onclick = fn; return b; };
+    card.append(mkK('v2-karte', 'カルテを見る', 'カルテが開きます。PDF保存はカルテの画面からできます。', ()=>pinV2ShowKarte(r.id)));
+    karteList.append(card);
+  }
+  if(!karteCount){
+    const note = document.createElement('p'); note.className = 'note';
+    note.textContent = 'まだ送信済みのカルテがありません。採寸を送信すると、ここからカルテを見られます。';
+    karteList.append(note);
+  }
+  document.getElementById('v2ExistingDogs').onclick = ()=>{ document.getElementById('v2OwnerChoices').hidden = true; document.getElementById('v2KarteDogs').hidden = true; document.getElementById('v2OwnerDogs').hidden = false; window.scrollTo(0,0); };
+  document.getElementById('v2KarteView').onclick = ()=>{ document.getElementById('v2OwnerChoices').hidden = true; document.getElementById('v2OwnerDogs').hidden = true; document.getElementById('v2KarteDogs').hidden = false; window.scrollTo(0,0); };
+  document.getElementById('v2KarteMenuBack').onclick = ()=>{ document.getElementById('v2KarteDogs').hidden = true; document.getElementById('v2OwnerChoices').hidden = false; window.scrollTo(0,0); };
   document.getElementById('v2OwnerMenuBack').onclick = ()=>{ document.getElementById('v2OwnerDogs').hidden = true; document.getElementById('v2OwnerChoices').hidden = false; window.scrollTo(0,0); };
   document.getElementById('v2AnotherDog').onclick = ()=>pinV2Purpose(null, records[0]);
   document.getElementById('v2MenuHome').onclick = pinV2Home;
