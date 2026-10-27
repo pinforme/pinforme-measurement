@@ -235,7 +235,7 @@ body.on-choice #progressHeader{display:block}
 /* 入口（homePage）だけ詰める：新規＋お客様キーの2枚、再開カードが増えた3枚でもスクロールなしで収める。文字サイズは変えず、ロゴと余白だけを調整 */
 #homePage .wrap{padding:10px 16px 20px}
 #homePage .brand{margin:0}
-#homePage .brand-logo{width:min(128px,38%)}
+#homePage .brand-logo{width:min(96px,30%)}
 #homePage h1{margin:6px 0 4px}
 #homePage .wrap>p{margin:4px 0}
 #homePage .entry-card{padding:12px 14px;margin:8px 0}
@@ -251,7 +251,9 @@ body.on-choice #progressHeader{display:block}
 #homePage .home-tile.tile-off .note{color:#aeaeb2}
 #homePage .home-tile.tile-off .v2-primary{background:#c7c7cc;border-color:#c7c7cc;color:#f7f7f9;opacity:1}
 #homePage .home-tile h2{font-size:16px}
-#homePage .home-tile .v2-primary{font-size:15px}
+#homePage .home-tile{display:flex;flex-direction:column}
+#homePage .home-tile .note{line-height:1.55;margin-bottom:8px}
+#homePage .home-tile .v2-primary{margin-top:auto;font-size:14px}
 .owner-choice{display:block;width:100%;text-align:left;margin:10px 0;padding:16px}
 .owner-choice .t{display:block;font-weight:800;font-size:17px}
 .owner-choice .n{display:block;font-size:13px;color:#5a5a5e;margin-top:3px}
@@ -333,23 +335,23 @@ label.confirm input{margin-top:4px;width:20px;height:20px;flex:none}
     <div class="home-grid">
       <div class="entry-card home-tile">
         <h2>初めての採寸</h2>
-        <p class="note">愛犬の採寸データを登録し、採寸カルテを作成します。</p>
-        <button type="button" class="v2-primary" id="homeNewBtn">初めての採寸を始める</button>
+        <p class="note">採寸データを登録し、カルテを作成します。</p>
+        <button type="button" class="v2-primary" id="homeNewBtn">採寸を始める</button>
       </div>
       <div id="pinResumeDraftBox" class="entry-card home-tile tile-off">
         <h2>途中の入力を再開</h2>
-        <p class="note">この端末に保存された下書きから続けられます。</p>
-        <button type="button" class="v2-primary" id="resumeDraftBtn" disabled>途中の入力を再開</button>
+        <p class="note">この端末の下書きから続けられます。</p>
+        <button type="button" class="v2-primary" id="resumeDraftBtn" disabled>再開する</button>
       </div>
       <div class="entry-card home-tile">
         <h2>お客様キー</h2>
-        <p class="note">登録済みの採寸の更新・追加、2匹目以降の登録ができます。</p>
-        <button type="button" class="v2-primary" id="homeKeyOpenBtn" aria-expanded="false" aria-controls="homeKeyPanel">お客様キーで進む</button>
+        <p class="note">更新・追加、2匹目以降の登録ができます。</p>
+        <button type="button" class="v2-primary" id="homeKeyOpenBtn" aria-expanded="false" aria-controls="homeKeyPanel">キーで進む</button>
       </div>
       <div class="entry-card home-tile">
         <h2>採寸カルテ</h2>
-        <p class="note">お客様キーをお持ちの方は、ここから採寸カルテの表示・保存ができます。</p>
-        <button type="button" class="v2-primary" id="homeKarteBtn">カルテを見る・保存する</button>
+        <p class="note">お客様キーをお持ちの方は、ここからカルテの表示・保存ができます。</p>
+        <button type="button" class="v2-primary" id="homeKarteBtn">カルテを見る</button>
       </div>
     </div>
     <div id="homeKeyPanel" class="entry-card" hidden>
