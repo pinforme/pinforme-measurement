@@ -1157,6 +1157,11 @@ setPINFORMEKarte=function(d){
     <button type="button" class="secondary" id="karteBackBtn">← 戻る</button>
     <button type="button" class="primary grow" id="kartePrintBtn" style="flex:1">カルテをPDF保存・印刷</button>
   </div>
+  <div style="padding:0 12px 14px;font-size:13px;line-height:1.8;color:#444">
+    <p style="margin:0 0 4px;font-weight:700">PDFの保存方法</p>
+    <p style="margin:0">・iPhone：上のボタンを押す → 印刷画面でプレビューを2本指で広げる（または右上の共有アイコンを押す）→「ファイルに保存」を選ぶ</p>
+    <p style="margin:0">・Android・パソコン：上のボタンを押す → 印刷画面の送信先で「PDFに保存」を選ぶ</p>
+  </div>
 </section>
 
 <!-- お客様キー再発行モーダル -->
@@ -2730,6 +2735,7 @@ function pinV2OwnerMenu(records){
       mk('v2-partial-update', '部分更新する', '選んだ部位だけ測り直します。', ()=>pinV2Begin(r.product || r.history[0]?.product || 'research', r.id, null, 'update')),
       mk('v2-add-items', '未採寸の項目を追加する', '未登録の部位を選んで測ります。', ()=>pinV2Begin(r.product || r.history[0]?.product || 'research', r.id, null, 'add'))
     );
+    if(r.measurementId != null) card.append(mk('v2-karte', 'カルテを見る・保存する', '送信済みの採寸カルテを表示します。PDFで保存もできます。', ()=>pinV2ShowKarte(r.id)));
     list.append(card);
   }
   document.getElementById('v2ExistingDogs').onclick = ()=>{ document.getElementById('v2OwnerChoices').hidden = true; document.getElementById('v2OwnerDogs').hidden = false; window.scrollTo(0,0); };
@@ -2737,6 +2743,40 @@ function pinV2OwnerMenu(records){
   document.getElementById('v2AnotherDog').onclick = ()=>pinV2Purpose(null, records[0]);
   document.getElementById('v2MenuHome').onclick = pinV2Home;
   showPage('pinV2OwnerMenu');
+}
+
+/* ================= カルテの閲覧・保存（キー解錠後の読み取り専用経路） =================
+   送信済みレコードのカルテを表示するだけの経路。保存・送信・メール等の副作用は起こさない。
+   門番（pinUserKarteReady）は「サーバー保存済みの measurementId を持つレコード」を
+   このセッションの savedRecord として提示することで通す。永続化はしない。 */
+async function pinV2ShowKarte(id){
+  const r = pinV2Records().find(x=>x.id===id);
+  if(!r || r.measurementId == null) return;
+  const product = r.product || r.history[0]?.product || 'research';
+  if(!Object.prototype.hasOwnProperty.call(PIN_V2_PRODUCTS, product)) return;
+  if(PINFORME_SUBMITTING) return;
+  if(pinHasUnconfirmedPending()){ pinOpenPendingGuard(); return; }
+  PIN_V2 = {product, mode:'karte', dogId:r.id, baseline:pinV2Clone(r),
+    customerKey:r.customerKey || '', ownerGroup:r.ownerGroup || String(r.ownerId ?? ''),
+    selected:[], change:'', sessionId:crypto.randomUUID(), saved:true,
+    receipt:{measurement_id:r.measurementId}, savedRecord:r,
+    ownerId:r.ownerId ?? null, serverDogId:Number(r.id),
+    ownerCode:'v2-owner-'+crypto.randomUUID(), dogCode:getOrCreateActiveDogCode()};
+  resetNewDogSession();
+  document.querySelectorAll('input[name=sex]').forEach(e=>e.checked = false);
+  for(const [fid,value] of Object.entries({ownerName:r.owner, dogName:r.dogName, dogBreed:r.breed, birthDate:r.birthday, weight:r.weight, recoveryEmail:r.recoveryEmail||'', recoveryPhone:r.recoveryPhone||''})){
+    const e = document.getElementById(fid); if(e) e.value = value ?? '';
+  }
+  const suffixEl = document.getElementById('dogSuffix'); if(suffixEl && r.suffix) suffixEl.value = r.suffix;
+  document.querySelectorAll('.name-row .suffix').forEach(b=>b.classList.toggle('active', b.dataset.value === getDogSuffix()));
+  pinSetAnonymousMode(r.anonymous === true);
+  const sexEl = [...document.querySelectorAll('input[name="sex"]')].find(e=>e.value===r.sex); if(sexEl) sexEl.checked = true;
+  window.pinSyncBirthDateSelectors?.();
+  const latestDate = (r.history[0]?.date) || Object.values(r.dates || {}).filter(Boolean).sort().pop() || '';
+  const mo = document.getElementById('pinMeasuredOn'); if(mo && latestDate) mo.value = latestDate;
+  pinApplyBreedGuide();
+  if(r.photoPath) await pinLoadRegisteredDogPhoto(r.photoPath);
+  openKartePage();
 }
 
 /* ================= 体型変化の確認（現行 pinV2ChangePage 相当） ================= */
@@ -2943,6 +2983,20 @@ function collectKarteV2(){
   const data = collectKarte();
   if(!PIN_V2) return data;
   data.dog = textValue('dogName') ? textValue('dogName')+getDogSuffix() : '名前未登録';
+  if(PIN_V2.mode === 'karte' && PIN_V2.baseline){
+    const b = PIN_V2.baseline;
+    data.measurements = PIN_FIELD_GROUPS.map((fields,i)=>({number:i+1, groups:fields.map(f=>({
+      average:(b.values||{})[f] ?? '', measuredOn:(b.dates||{})[f] || '', confirmedOn:(b.confirmed||{})[f] || '', mark:(b.marks||{})[f] || '',
+      revisions:(b.history||[]).slice(0,3).filter(h=>h.revision>0 && (h.updates||[]).some(u=>u.field===f)).map(h=>({revision:h.revision, mark:h.updates.find(u=>u.field===f).mark})).reverse(),
+      source:(b.marks||{})[f] ? 'measured' : 'previous'}))}));
+    const initialK = (b.history||[]).find(h=>h.revision===0);
+    data.v2 = {initialPurpose:initialK?.purposeLabel || PIN_V2_PRODUCTS[initialK?.product]?.label || '目的未記録',
+      registeredCount:PIN_FIELD_GROUPS.filter(fs=>fs.some(f=>pinV2Has((b.values||{})[f]))).length,
+      measuredCount:PIN_FIELD_GROUPS.filter(fs=>fs.some(f=>(((b.history||[])[0]?.updates)||[]).some(u=>u.field===f))).length,
+      product:PIN_V2_PRODUCTS[PIN_V2.product].label, selected:[], history:(b.history||[]).slice(0,3),
+      dates:b.dates||{}, confirmed:b.confirmed||{}, marks:b.marks||{}, change:'', recordDate:data.measuredOn};
+    return data;
+  }
   const record = pinV2Snapshot();
   data.measurements = PIN_FIELD_GROUPS.map((fields,i)=>({number:i+1, groups:fields.map(f=>({
     average:record.values[f] ?? '', measuredOn:record.dates[f] || '', confirmedOn:record.confirmed[f] || '', mark:record.marks[f] || '',
@@ -3131,7 +3185,7 @@ html,body{margin:0!important;padding:0!important;width:297mm!important;height:19
     alert("カルテのPDF保存画面を開けませんでした。もう一度お試しください。");
   }
 }
-function backFromKartePage(){ showFinish(); }
+function backFromKartePage(){ if(PIN_V2 && PIN_V2.mode === 'karte'){ const recs = pinV2Records(); if(recs.length){ pinV2OwnerMenu(recs); return; } } showFinish(); }
 
 /* ================= メール（絶対要件A4） ================= */
 let pinCustomerMailContext = null;
