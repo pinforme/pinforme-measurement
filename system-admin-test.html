@@ -2772,7 +2772,7 @@ setPINFORMEKarte=function(d){
           return '<button type="button" class="adm-card-row" data-adm-dog="' + esc(d.id) + '">' +
             '<span class="adm-card-body">' +
             '<span class="adm-card-main">' + esc(dogTitleOf(d)) + aliasNote + due + "</span>" +
-            '<span class="adm-card-sub">' + esc(d.sex || "性別不明") + " ・ " + esc(ageText(d.birth_date || (l && l.birth_date))) + "</span>" +
+            '<span class="adm-card-sub">' + esc(d.sex || (l && l.sex) || "性別不明") + " ・ " + esc(ageText(d.birth_date || (l && l.birth_date))) + "</span>" +
             '<span class="adm-card-sub">胴まわり ' + fmt(l && l.chest, "cm") + " ・ 最終採寸 " + esc(l ? measuredDate(l) : "記録なし") + "</span>" +
             '</span><span class="adm-card-arrow">›</span></button>';
         }
