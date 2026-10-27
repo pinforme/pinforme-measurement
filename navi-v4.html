@@ -232,6 +232,26 @@ body.on-choice #progressHeader{display:block}
 .entry-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px;margin:14px 0}
 .entry-card h2{margin-top:0}
 .v2-primary{width:100%;background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700;margin-top:10px}
+/* 入口（homePage）だけ詰める：新規＋お客様キーの2枚、再開カードが増えた3枚でもスクロールなしで収める。文字サイズは変えず、ロゴと余白だけを調整 */
+#homePage .wrap{padding:10px 16px 20px}
+#homePage .brand{margin:0}
+#homePage .brand-logo{width:min(128px,38%)}
+#homePage h1{margin:6px 0 4px}
+#homePage .wrap>p{margin:4px 0}
+#homePage .entry-card{padding:12px 14px;margin:8px 0}
+#homePage .entry-card h2{margin-bottom:4px}
+#homePage .v2-primary{margin-top:8px}
+#homePage .home-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}
+#homePage .home-grid .entry-card{margin:0}
+#homePage .home-grid .home-tile:nth-child(1){grid-row:1;grid-column:1}
+#homePage .home-grid .home-tile:nth-child(2){grid-row:1;grid-column:2}
+#homePage .home-grid .home-tile:nth-child(3){grid-row:2;grid-column:1}
+#homePage .home-grid .home-tile:nth-child(4){grid-row:2;grid-column:2}
+#homePage .home-tile.tile-off{background:#f2f2f4;border-color:#e5e5ea;color:#aeaeb2}
+#homePage .home-tile.tile-off .note{color:#aeaeb2}
+#homePage .home-tile.tile-off .v2-primary{background:#c7c7cc;border-color:#c7c7cc;color:#f7f7f9;opacity:1}
+#homePage .home-tile h2{font-size:16px}
+#homePage .home-tile .v2-primary{font-size:15px}
 .owner-choice{display:block;width:100%;text-align:left;margin:10px 0;padding:16px}
 .owner-choice .t{display:block;font-weight:800;font-size:17px}
 .owner-choice .n{display:block;font-size:13px;color:#5a5a5e;margin-top:3px}
@@ -310,27 +330,30 @@ label.confirm input{margin-top:4px;width:20px;height:20px;flex:none}
       <h2>アプリ内ブラウザで開いています</h2>
       <p class="note">Instagramの中で開いたままだと、写真の送信などでエラーになることがあります。右上の「…」を押して「ブラウザで開く」を選び、いつものブラウザ（Safari・Chrome）で開き直すのがおすすめです。このまま続けることもできます。</p>
     </div>
-    <div id="pinResumeDraftBox" class="entry-card" hidden>
-      <h2>途中の入力があります</h2>
-      <p class="note">この端末に保存された下書きから続けられます。</p>
-      <button type="button" class="v2-primary" id="resumeDraftBtn">途中の入力を再開</button>
+    <div class="home-grid">
+      <div class="entry-card home-tile">
+        <h2>初めての採寸</h2>
+        <p class="note">愛犬の採寸データを登録し、採寸カルテを作成します。</p>
+        <button type="button" class="v2-primary" id="homeNewBtn">初めての採寸を始める</button>
+      </div>
+      <div id="pinResumeDraftBox" class="entry-card home-tile tile-off">
+        <h2>途中の入力を再開</h2>
+        <p class="note">この端末に保存された下書きから続けられます。</p>
+        <button type="button" class="v2-primary" id="resumeDraftBtn" disabled>途中の入力を再開</button>
+      </div>
+      <div class="entry-card home-tile">
+        <h2>お客様キー</h2>
+        <p class="note">登録済みの採寸の更新・追加、2匹目以降の登録ができます。</p>
+        <button type="button" class="v2-primary" id="homeKeyOpenBtn" aria-expanded="false" aria-controls="homeKeyPanel">お客様キーで進む</button>
+      </div>
+      <div class="entry-card home-tile">
+        <h2>採寸カルテ</h2>
+        <p class="note">お客様キーをお持ちの方は、ここから採寸カルテの表示・保存ができます。</p>
+        <button type="button" class="v2-primary" id="homeKarteBtn">カルテを見る・保存する</button>
+      </div>
     </div>
-    <div id="pinPendingGuardBox" class="entry-card" hidden>
-      <h2>前回の保存が確認できていません</h2>
-      <p class="note">前回、送信した内容がサーバーに保存できたかどうか確認できないまま終わっています。同じ内容でもう一度保存を試すか、未確認の状態を消して最初から始めるか選べます。</p>
-      <button type="button" class="v2-primary" id="pinPendingResumeBtn">途中の入力を再開して保存を再試行</button>
-      <button type="button" id="pinPendingDiscardBtn" style="margin-top:10px">未確認の状態を消して、はじめから始める</button>
-    </div>
-    <div class="entry-card">
-      <h2>初めてご利用の飼い主様</h2>
-      <p class="note">愛犬の採寸データを登録し、採寸カルテを作成します。</p>
-      <button type="button" class="v2-primary" id="homeNewBtn">初めての採寸を始める</button>
-    </div>
-    <div class="entry-card">
-      <h2>お客様キーをお持ちの飼い主様</h2>
-      <p class="note">登録済みの採寸を更新・追加できます。2匹目以降のわんちゃんも登録できます。</p>
-      <button type="button" class="v2-primary" id="homeKeyOpenBtn" aria-expanded="false" aria-controls="homeKeyPanel">お客様キーで進む</button>
-      <div id="homeKeyPanel" hidden>
+    <div id="homeKeyPanel" class="entry-card" hidden>
+      <h2 id="homeKeyPanelTitle">お客様キーで進む</h2>
         <div class="field"><label for="v2CustomerKey">お客様キー</label>
         <input id="v2CustomerKey" type="text" placeholder="16文字のお客様キー" maxlength="24" autocomplete="off" autocapitalize="characters" spellcheck="false"></div>
         <button type="button" class="v2-primary" id="v2KeyNext">お客様キーを確認して進む</button>
@@ -340,7 +363,12 @@ label.confirm input{margin-top:4px;width:20px;height:20px;flex:none}
           <button type="button" id="v2RecoverKey">お客様キーの再発行へ</button>
           <p class="note">連絡先を登録していない方や、メールが見つからない方は、InstagramのDMまたはinfo@pinforme.jpへお問い合わせください。</p>
         </details>
-      </div>
+    </div>
+    <div id="pinPendingGuardBox" class="entry-card" hidden>
+      <h2>前回の保存が確認できていません</h2>
+      <p class="note">前回、送信した内容がサーバーに保存できたかどうか確認できないまま終わっています。同じ内容でもう一度保存を試すか、未確認の状態を消して最初から始めるか選べます。</p>
+      <button type="button" class="v2-primary" id="pinPendingResumeBtn">途中の入力を再開して保存を再試行</button>
+      <button type="button" id="pinPendingDiscardBtn" style="margin-top:10px">未確認の状態を消して、はじめから始める</button>
     </div>
     <p class="status" id="v2HomeStatus" role="status"></p>
     <div id="pinDraftStatus" role="status"></div>
@@ -1685,7 +1713,10 @@ function pinHasUnsentDraft(){
   return !!(state && !state.submitted && (state.fields?.ownerName?.value || state.fields?.dogName?.value || state.fields?.pinAnonymousMode?.checked));
 }
 function pinRefreshDraftButton(){
-  const box = document.getElementById('pinResumeDraftBox'); if(box) box.hidden = !pinHasUnsentDraft();
+  const box = document.getElementById('pinResumeDraftBox'); if(!box) return;
+  const has = pinHasUnsentDraft();
+  box.classList.toggle('tile-off', !has);
+  const btn = document.getElementById('resumeDraftBtn'); if(btn) btn.disabled = !has;
 }
 const PIN_RESUME_VIEWS = ['startPage','dogInfoPage','finishPage','kartePage','pinV2Purpose','pinV2OwnerMenu','pinV2Change','pinV2OptionalChoice'];
 function pinDraftResumeView(state){
@@ -2686,6 +2717,7 @@ function pinV2FromServer(dog, snapshot, contact, key){
 }
 /* ================= お客様キーの解錠（現行契約：読み取りRPCで照合） ================= */
 let pinV2UnlockGeneration = 0;
+let pinHomeIntent = 'menu';
 async function pinV2Unlock(){
   const input = document.getElementById('v2CustomerKey');
   const key = pinformeNormalizeRemeasureKey(input.value);
@@ -2770,6 +2802,7 @@ function pinV2OwnerMenu(records){
   document.getElementById('v2AnotherDog').onclick = ()=>pinV2Purpose(null, records[0]);
   document.getElementById('v2MenuHome').onclick = pinV2Home;
   showPage('pinV2OwnerMenu');
+  if(pinHomeIntent === 'karte'){ pinHomeIntent = 'menu'; document.getElementById('v2KarteView').click(); }
 }
 
 /* ================= カルテの閲覧・保存（キー解錠後の読み取り専用経路） =================
@@ -3517,9 +3550,20 @@ function initNaviV4(){
   /* 入口 */
   document.getElementById('homeNewBtn').addEventListener('click', ()=>pinV2Purpose());
   document.getElementById('homeKeyOpenBtn').addEventListener('click', ()=>{
+    pinHomeIntent = 'menu';
+    document.getElementById('homeKeyPanelTitle').textContent = 'お客様キーで進む';
     const panel = document.getElementById('homeKeyPanel'), button = document.getElementById('homeKeyOpenBtn');
     panel.hidden = !panel.hidden;
     button.setAttribute('aria-expanded', String(!panel.hidden));
+  });
+  document.getElementById('homeKarteBtn').addEventListener('click', ()=>{
+    pinHomeIntent = 'karte';
+    document.getElementById('homeKeyPanelTitle').textContent = '採寸カルテを見る・保存する';
+    const panel = document.getElementById('homeKeyPanel'), button = document.getElementById('homeKeyOpenBtn');
+    panel.hidden = false;
+    button.setAttribute('aria-expanded', 'true');
+    panel.scrollIntoView({behavior:'smooth', block:'start'});
+    document.getElementById('v2CustomerKey').focus({preventScroll:true});
   });
   document.getElementById('v2KeyNext').addEventListener('click', pinV2Unlock);
   document.getElementById('v2RecoverKey').addEventListener('click', pinformeOpenKeyRecovery);
