@@ -2593,8 +2593,21 @@ setPINFORMEKarte=function(d){
            its dog regardless of the kana/width the admin typed. Displayed
            names are never changed — this is applied only when comparing. */
         function normalizeForSearch(s) {
-          return String(s || "").normalize("NFKC").toLowerCase()
+          var t = String(s || "").normalize("NFKC").toLowerCase()
             .replace(/[ぁ-ゖ]/g, function (c) { return String.fromCharCode(c.charCodeAt(0) + 0x60); });
+          /* Also fold small kana to full size and drop dakuten/handakuten,
+             so a name finds its dog even when typed without them
+             (e.g. しや for シャ, はな for バナ, ひん for ぴん). */
+          var fold = {
+            "ァ":"ア","ィ":"イ","ゥ":"ウ","ェ":"エ","ォ":"オ","ッ":"ツ","ャ":"ヤ","ュ":"ユ","ョ":"ヨ","ヮ":"ワ","ヵ":"カ","ヶ":"ケ",
+            "ガ":"カ","ギ":"キ","グ":"ク","ゲ":"ケ","ゴ":"コ",
+            "ザ":"サ","ジ":"シ","ズ":"ス","ゼ":"セ","ゾ":"ソ",
+            "ダ":"タ","ヂ":"チ","ヅ":"ツ","デ":"テ","ド":"ト",
+            "バ":"ハ","ビ":"ヒ","ブ":"フ","ベ":"ヘ","ボ":"ホ",
+            "パ":"ハ","ピ":"ヒ","プ":"フ","ペ":"ヘ","ポ":"ホ",
+            "ヴ":"ウ"
+          };
+          return t.replace(/[ァィゥェォッャュョヮヵヶガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポヴ]/g, function (c) { return fold[c] || c; });
         }
         function dogMatchesQuery(dog, q) {
           q = String(q || "").trim();
