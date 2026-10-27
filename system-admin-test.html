@@ -2900,6 +2900,9 @@ setPINFORMEKarte=function(d){
               }).join("") + "</div>";
             attachSearch();
             attachKeySearch();
+            box.querySelectorAll("[data-adm-dog]").forEach(function (btn) {
+              btn.addEventListener("click", function () { openDog(btn.getAttribute("data-adm-dog")); });
+            });
             box.querySelectorAll("[data-adm-breed]").forEach(function (btn) {
               btn.addEventListener("click", function () {
                 A.activeBreed = btn.getAttribute("data-adm-breed"); A.view = "dogs"; renderBreeds();
