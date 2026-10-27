@@ -1810,7 +1810,7 @@ document.addEventListener('click',function(event){
 
 </script>
 
-<div id="karteZoom" hidden style="position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:999;display:flex;align-items:center;justify-content:center;padding:12px">
+<div id="karteZoom" style="position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:999;display:none;align-items:center;justify-content:center;padding:12px">
   <img id="karteZoomImg" alt="採寸カルテ（拡大）" style="max-width:100%;max-height:100%;border-radius:8px;background:#fff">
   <button type="button" id="karteZoomClose" aria-label="閉じる" style="position:absolute;top:10px;right:10px;width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.92);font-size:20px;line-height:1;cursor:pointer">×</button>
 </div>
@@ -1819,8 +1819,8 @@ document.addEventListener('click',function(event){
   var zoom=document.getElementById('karteZoom'), zimg=document.getElementById('karteZoomImg');
   var simg=document.getElementById('karteSlideImg');
   if(!zoom||!zimg||!simg)return;
-  simg.addEventListener('click',function(){ zimg.src=simg.src; zoom.hidden=false; });
-  function close(){ zoom.hidden=true; }
+  simg.addEventListener('click',function(){ zimg.src=simg.src; zoom.style.display='flex'; });
+  function close(){ zoom.style.display='none'; }
   zoom.addEventListener('click',close);
   document.getElementById('karteZoomClose').addEventListener('click',close);
 })();
