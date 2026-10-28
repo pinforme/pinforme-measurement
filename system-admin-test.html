@@ -537,6 +537,16 @@
       body.adm-on .wrap > header.hero { display: none; }
       body.adm-on .wrap > section:not(.adm-wrap) > *:not(.sec-head) { display: none; }
       .adm-home-summary { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; align-items: center; }
+      .adm-stage { margin: 12px 0 4px; padding: 10px 12px; border: 1px solid #e2ddd5; border-radius: 10px; background: #faf8f4; }
+      .adm-stage-head { font-size: 13px; font-weight: 700; margin-bottom: 8px; }
+      .adm-stage-head strong { color: var(--terra-deep); }
+      .adm-stage-flow { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-bottom: 8px; }
+      .adm-stage-step { font-size: 12px; font-weight: 700; color: #777; background: #eee; border-radius: 999px; padding: 3px 10px; }
+      .adm-stage-step.current { color: #fff; background: var(--terra-deep); }
+      .adm-stage-arrow { color: #bbb; font-size: 11px; }
+      .adm-stage-notes { list-style: none; margin: 0; padding: 0; font-size: 11.5px; line-height: 1.65; color: #555; }
+      .adm-stage-notes strong { color: #333; }
+      .adm-stage-notes li.current, .adm-stage-notes li.current strong { color: var(--terra-deep); }
       .adm-chip { background: #f2f2f3; border: 1px solid #d8d8dc; border-radius: 999px; padding: 6px 12px; font-size: 13px; color: #333; }
       .adm-chip strong { font-size: 15px; color: #111; }
       /* §20: only the re-measurement chip is tappable — make it read as a
@@ -881,6 +891,19 @@
             </div>
             <h3>管理用ホーム</h3>
             <div class="adm-home-summary" id="adm-home-summary"><span class="adm-chip">読み込み中…</span></div>
+            <!-- 製品化の段階：段階が進んだら current の位置と見出しの段階名を移す。運用マニュアル §1 の段階メモと一致させること -->
+            <div class="adm-stage" id="adm-stage">
+              <div class="adm-stage-head">製品化の段階：<strong>製作中</strong></div>
+              <div class="adm-stage-flow"><span class="adm-stage-step current">製作中</span><span class="adm-stage-arrow">→</span><span class="adm-stage-step">試着確認</span><span class="adm-stage-arrow">→</span><span class="adm-stage-step">モニター試着</span><span class="adm-stage-arrow">→</span><span class="adm-stage-step">修正</span><span class="adm-stage-arrow">→</span><span class="adm-stage-step">量産決定</span><span class="adm-stage-arrow">→</span><span class="adm-stage-step">販売</span></div>
+              <ul class="adm-stage-notes">
+                <li class="current"><strong>製作中</strong>：OEMで最初のサンプルを製作中</li>
+                <li><strong>試着確認</strong>：届いたサンプルを、まず自分の犬で確認する</li>
+                <li><strong>モニター試着</strong>：採寸協力者に試着してもらい、合う・合わないを集める</li>
+                <li><strong>修正</strong>：モニターの声で、型とサイズを直す</li>
+                <li><strong>量産決定</strong>：最終サンプルを確定し、量産と販売の準備へ</li>
+                <li><strong>販売</strong>：販売開始（クラウドファンディング含む）</li>
+              </ul>
+            </div>
             <div class="adm-tabs" role="tablist" aria-label="管理機能の切り替え">
               <button type="button" class="adm-tab active" id="adm-tab-list">犬種・犬の一覧</button>
               <button type="button" class="adm-tab" id="adm-tab-checker">対象の子チェッカー</button>
