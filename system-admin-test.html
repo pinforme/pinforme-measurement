@@ -262,6 +262,26 @@
       .bar.hot { background: var(--terra); }
       .chart-row .cnt { font-weight: 900; font-size: 16px; text-align: right; white-space: nowrap; }
       .chart-row .cnt small { font-size: 12px; color: var(--ink-soft); font-weight: 700; }
+      .tag-candidate {
+        display: inline-block;
+        font-size: 11.5px;
+        font-weight: 900;
+        color: #555;
+        background: #e8e8e8;
+        border: 1px solid #bbb;
+        border-radius: 999px;
+        padding: 2px 9px;
+        margin-left: 8px;
+        vertical-align: 2px;
+      }
+      .tag-rank {
+        display: inline-block;
+        font-size: 11.5px;
+        font-weight: 700;
+        color: #888;
+        margin-left: 8px;
+        vertical-align: 2px;
+      }
       .tag-sample {
         display: inline-block;
         font-size: 11.5px;
@@ -635,7 +655,7 @@
         <p class="sec-lead" id="dist-lead">ミニチュア・ピンシャーの胴まわり分布です。サイズ名は、その帯にいる子たちの胴まわりの平均を四捨五入した数字になっています。</p>
         <div class="card">
           <div class="chart" id="chart"><p class="hint">読み込み中…</p></div>
-          <p class="chart-note">「サンプル対象」は、1個飛ばしで選んだ SIZE 37／42／49 の3サイズ。OEMへサンプル製作を依頼するサイズです。これは現在の26頭のデータから「先行して製作を進める範囲」として決めたもので、作るサイズが隣の帯を補う・カバーするわけではありません。各サイズが合わせるのは、自分の帯の子だけです。飛ばした帯（34・39・45）は、今回の製作対象には入りません。試着モニターには各サイズの中心の子に加えて、帯の境目にいる子も入り、境目の位置そのものを検証します。</p>
+          <p class="chart-note">「サンプル対象」は、1個飛ばしで選んだ3つの帯（胴まわり35〜38cm・41〜44cm・47〜50cm）。OEMへサンプル製作を依頼するサイズです。作るサイズが隣の帯を補う・カバーするわけではありません。各サイズが合わせるのは、自分の帯の子だけです。飛ばした帯は今回の製作対象には入りませんが、5頭以上集まった帯は「開発候補」として次の製作候補になり、頭数の少ない帯はオーダーメイドで対応します。順位は頭数の多い順です。試着モニターには各サイズの中心の子に加えて、帯の境目にいる子も入り、境目の位置そのものを検証します。</p>
         </div>
       </section>
 
@@ -1573,7 +1593,14 @@ setPINFORMEKarte=function(d){
         // Returns consented dogs only, latest record per dog, no personal info.
         var RPC_URL = "https://dsbvaoqgvtoeukigdjdj.supabase.co/rest/v1/rpc/pattern_measurements_export_v1";
         var PUBLISHABLE_KEY = "sb_publishable_403lLhKUQ9X9N1RaxaDduA_9ZQEZ6na";
-        var SAMPLE = { 37: true, 42: true, 49: true }; // sizes picked for the first OEM samples
+        var SAMPLE_RANGES = [[35, 38], [41, 44], [47, 50]]; // first OEM sample bands, keyed by chest range (band names drift as the mean moves)
+        var CANDIDATE_MIN_DOGS = 5; // bands with at least this many dogs (and not sample bands) are development candidates
+        function isSampleBand(b) { return !!b && SAMPLE_RANGES.some(function (r) { return Number(b.lo) === r[0] && Number(b.hi) === r[1]; }); }
+        function bandBadge(b) {
+          if (isSampleBand(b)) return '<span class="tag-sample">サンプル対象</span>';
+          if (b && b.count >= CANDIDATE_MIN_DOGS) return '<span class="tag-candidate">開発候補</span>';
+          return "";
+        }
         var BAND_MIN_DOGS = 5; // a breed gets its own size bands once it has at least this many dogs
 
         var TODAY = new Date();
@@ -1696,15 +1723,19 @@ setPINFORMEKarte=function(d){
           chart.innerHTML = "";
           var maxCount = 0;
           BANDS.forEach(function (b) { if (b.count > maxCount) maxCount = b.count; });
+          var ranked = BANDS.slice().sort(function (a, b) { return (b.count - a.count) || (a.lo - b.lo); });
+          var rankOf = {};
+          ranked.forEach(function (b, i) { rankOf[b.lo + "-" + b.hi] = i + 1; });
           BANDS.forEach(function (b) {
             var row = document.createElement("div");
             row.className = "chart-row";
             var pct = maxCount ? Math.round((b.count / maxCount) * 100) : 0;
             row.innerHTML =
               '<div class="sz">SIZE ' + b.name +
-                (SAMPLE[b.name] ? '<span class="tag-sample">サンプル対象</span>' : "") +
+                bandBadge(b) +
+                '<span class="tag-rank">' + rankOf[b.lo + "-" + b.hi] + "位</span>" +
                 "<span>胴まわり " + fmt(b.lo) + "〜" + fmt(b.hi) + "cm</span></div>" +
-              '<div class="track"><div class="bar' + (SAMPLE[b.name] ? " hot" : "") + '" style="width:' + pct + '%"></div></div>' +
+              '<div class="track"><div class="bar' + (isSampleBand(b) ? " hot" : "") + '" style="width:' + pct + '%"></div></div>' +
               '<div class="cnt">' + b.count + "<small>頭</small></div>";
             chart.appendChild(row);
           });
@@ -1785,7 +1816,7 @@ setPINFORMEKarte=function(d){
               dSize.textContent = "帯の範囲外";
               dBand.textContent = "";
             } else {
-              dSize.innerHTML = "SIZE " + band.name + (SAMPLE[band.name] ? '<span class="tag-sample">サンプル対象</span>' : "");
+              dSize.innerHTML = "SIZE " + band.name + bandBadge(band);
               dBand.textContent = "胴まわり " + fmt(d.chest) + "cm → " + fmt(band.lo) + "〜" + fmt(band.hi) + "cm の帯（現在 " + band.count + "頭）";
               var ne = nearEdge(d.chest, band, bands);
               if (ne) {
@@ -2593,21 +2624,8 @@ setPINFORMEKarte=function(d){
            its dog regardless of the kana/width the admin typed. Displayed
            names are never changed — this is applied only when comparing. */
         function normalizeForSearch(s) {
-          var t = String(s || "").normalize("NFKC").toLowerCase()
+          return String(s || "").normalize("NFKC").toLowerCase()
             .replace(/[ぁ-ゖ]/g, function (c) { return String.fromCharCode(c.charCodeAt(0) + 0x60); });
-          /* Also fold small kana to full size and drop dakuten/handakuten,
-             so a name finds its dog even when typed without them
-             (e.g. しや for シャ, はな for バナ, ひん for ぴん). */
-          var fold = {
-            "ァ":"ア","ィ":"イ","ゥ":"ウ","ェ":"エ","ォ":"オ","ッ":"ツ","ャ":"ヤ","ュ":"ユ","ョ":"ヨ","ヮ":"ワ","ヵ":"カ","ヶ":"ケ",
-            "ガ":"カ","ギ":"キ","グ":"ク","ゲ":"ケ","ゴ":"コ",
-            "ザ":"サ","ジ":"シ","ズ":"ス","ゼ":"セ","ゾ":"ソ",
-            "ダ":"タ","ヂ":"チ","ヅ":"ツ","デ":"テ","ド":"ト",
-            "バ":"ハ","ビ":"ヒ","ブ":"フ","ベ":"ヘ","ボ":"ホ",
-            "パ":"ハ","ピ":"ヒ","プ":"フ","ペ":"ヘ","ポ":"ホ",
-            "ヴ":"ウ"
-          };
-          return t.replace(/[ァィゥェォッャュョヮヵヶガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポヴ]/g, function (c) { return fold[c] || c; });
         }
         function dogMatchesQuery(dog, q) {
           q = String(q || "").trim();
@@ -2703,7 +2721,14 @@ setPINFORMEKarte=function(d){
           return out;
         }
         var BAND_MIN_DOGS = 5; // same threshold as the public side
-        var SAMPLE_SIZES = { 37: true, 42: true, 49: true }; // display tag only; mirrors the public SAMPLE (first OEM sample sizes)
+        var SAMPLE_RANGES = [[35, 38], [41, 44], [47, 50]]; // first OEM sample bands, keyed by chest range (band names drift as the mean moves)
+        var CANDIDATE_MIN_DOGS = 5; // bands with at least this many dogs (and not sample bands) are development candidates
+        function isSampleBand(b) { return !!b && SAMPLE_RANGES.some(function (r) { return Number(b.lo) === r[0] && Number(b.hi) === r[1]; }); }
+        function bandBadge(b) {
+          if (isSampleBand(b)) return '<span class="tag-sample">サンプル対象</span>';
+          if (b && b.count >= CANDIDATE_MIN_DOGS) return '<span class="tag-candidate">開発候補</span>';
+          return "";
+        }
         function latestChestsOfBreed(breed) {
           var chests = [];
           A.dogs.forEach(function (d) {
@@ -2796,16 +2821,17 @@ setPINFORMEKarte=function(d){
         }
         function attachSearch() {
           var inp = $("adm-search"); if (!inp) return;
-          /* While typing, only the results region below the input is
-             re-rendered; the input element itself is never rebuilt, so the
-             keyboard session (IME composition and the dakuten / small-kana
-             toggles) is left completely untouched. */
-          var apply = function () { A.query = inp.value; renderBreedResults(); };
-          inp.addEventListener("input", function (e) {
-            if (e && e.isComposing) return;
-            apply();
+          inp.addEventListener("input", function () {
+            A.query = inp.value;
+            var pos = null;
+            try { pos = inp.selectionStart; } catch (e) {}
+            renderBreeds();
+            var again = $("adm-search");
+            if (again) {
+              again.focus();
+              if (pos !== null) { try { again.setSelectionRange(pos, pos); } catch (e) {} }
+            }
           });
-          inp.addEventListener("compositionend", function () { apply(); });
         }
         function keySearchHTML() {
           var ks = A.keyState, out = "";
@@ -2859,50 +2885,6 @@ setPINFORMEKarte=function(d){
           }
           renderBreeds();
         }
-        function breedResultsHTML(g) {
-          if (A.view === "dogs" && A.activeBreed && g.groups[A.activeBreed]) {
-            var allDogs = g.groups[A.activeBreed].slice().sort(function (x, y) { return Number(x.id) - Number(y.id); });
-            var dogs = allDogs.filter(function (d) { return dogMatchesQuery(d, A.query); });
-            return dogs.length
-              ? '<div class="adm-list">' + dogs.map(dogCardHTML).join("") + "</div>"
-              : '<p class="adm-note">「' + esc(A.query) + '」に一致する子は、この犬種にはいません。</p>';
-          }
-          if (String(A.query || "").trim()) {
-            var found = A.dogs.filter(function (d) { return dogMatchesQuery(d, A.query); })
-              .slice().sort(function (x, y) { return Number(x.id) - Number(y.id); });
-            return '<p class="adm-note" style="margin:0 0 10px">「' + esc(A.query) + '」の検索結果：' + found.length + '頭</p>' +
-              (found.length
-                ? '<div class="adm-list">' + found.map(dogCardHTML).join("") + "</div>"
-                : '<p class="adm-note">一致する子はいません。名前の一部かIDで試してください。</p>');
-          }
-          return keySearchHTML() +
-            '<div class="adm-list">' + g.order.map(function (bname) {
-              var dogsOfBreed = g.groups[bname];
-              var dueCount = dogsOfBreed.filter(function (d) { return remeasureDue(latestOf(d.id)); }).length;
-              return '<button type="button" class="adm-card-row" data-adm-breed="' + esc(bname) + '">' +
-                '<span class="adm-card-body"><span class="adm-card-main">' + esc(bname) + "</span>" +
-                '<span class="adm-card-sub">' + dogsOfBreed.length + "頭" + (dueCount ? " ・ 再採寸候補 " + dueCount + "頭" : "") + "</span></span>" +
-                '<span class="adm-card-arrow">›</span></button>';
-            }).join("") + "</div>";
-        }
-        function bindBreedResults(scope) {
-          scope.querySelectorAll("[data-adm-dog]").forEach(function (btn) {
-            btn.addEventListener("click", function () { openDog(btn.getAttribute("data-adm-dog")); });
-          });
-          scope.querySelectorAll("[data-adm-breed]").forEach(function (btn) {
-            btn.addEventListener("click", function () {
-              A.activeBreed = btn.getAttribute("data-adm-breed"); A.view = "dogs"; renderBreeds();
-              var c = $("adm-list-card"); if (c) c.scrollIntoView({ behavior: "smooth", block: "start" });
-            });
-          });
-          attachKeySearch();
-        }
-        function renderBreedResults() {
-          var region = $("adm-breed-results");
-          if (!region) { renderBreeds(); return; }
-          region.innerHTML = breedResultsHTML(breedGroups());
-          bindBreedResults(region);
-        }
         function renderBreeds() {
           var box = $("adm-breeds"); if (!box) return;
           if (!A.dogs.length) { box.innerHTML = '<p class="adm-note">登録されている犬がいません。</p>'; return; }
@@ -2910,29 +2892,68 @@ setPINFORMEKarte=function(d){
           if (A.view === "dogs" && A.activeBreed && g.groups[A.activeBreed]) {
             var b = A.activeBreed;
             var allDogs = g.groups[b].slice().sort(function (x, y) { return Number(x.id) - Number(y.id); });
+            var dogs = allDogs.filter(function (d) { return dogMatchesQuery(d, A.query); });
             box.innerHTML =
               '<p class="adm-crumbs">管理画面 ＞ 犬種 ＞ 犬の一覧</p>' +
               '<div class="adm-view-head"><button type="button" class="adm-back" id="adm-back-breeds">← 犬種に戻る</button>' +
               "<h3>" + esc(b) + "（" + allDogs.length + "頭）</h3></div>" +
               searchBoxHTML() +
-              '<div id="adm-breed-results">' + breedResultsHTML(g) + "</div>";
+              (dogs.length
+                ? '<div class="adm-list">' + dogs.map(dogCardHTML).join("") + "</div>"
+                : '<p class="adm-note">「' + esc(A.query) + '」に一致する子は、この犬種にはいません。</p>');
             attachSearch();
             $("adm-back-breeds").addEventListener("click", function () {
               A.view = "breeds"; A.activeBreed = null; A.query = ""; renderBreeds();
               var c = $("adm-list-card"); if (c) c.scrollIntoView({ behavior: "smooth", block: "start" });
             });
-            bindBreedResults(box);
+          } else {
+            if (A.view === "dogs") { A.view = "breeds"; A.activeBreed = null; }
+            if (String(A.query || "").trim()) {
+              var found = A.dogs.filter(function (d) { return dogMatchesQuery(d, A.query); })
+                .slice().sort(function (x, y) { return Number(x.id) - Number(y.id); });
+              box.innerHTML =
+                '<p class="adm-crumbs">管理画面 ＞ 犬種</p>' +
+                '<div class="adm-view-head"><h3>犬種 → 犬の一覧</h3></div>' +
+                searchBoxHTML() +
+                '<p class="adm-note" style="margin:0 0 10px">「' + esc(A.query) + '」の検索結果：' + found.length + '頭</p>' +
+                (found.length
+                  ? '<div class="adm-list">' + found.map(dogCardHTML).join("") + "</div>"
+                  : '<p class="adm-note">一致する子はいません。名前の一部かIDで試してください。</p>');
+              attachSearch();
+              box.querySelectorAll("[data-adm-dog]").forEach(function (btn) {
+                btn.addEventListener("click", function () { openDog(btn.getAttribute("data-adm-dog")); });
+              });
+              return;
+            }
+            box.innerHTML =
+              '<p class="adm-crumbs">管理画面 ＞ 犬種</p>' +
+              '<div class="adm-view-head"><h3>犬種 → 犬の一覧</h3></div>' +
+              '<p class="adm-note" style="margin:0 0 10px">犬種を選ぶと、その犬種の犬の一覧が出ます。名前・IDでも探せます。</p>' +
+              searchBoxHTML() + keySearchHTML() +
+              '<div class="adm-list">' + g.order.map(function (bname) {
+                var dogsOfBreed = g.groups[bname];
+                var dueCount = dogsOfBreed.filter(function (d) { return remeasureDue(latestOf(d.id)); }).length;
+                return '<button type="button" class="adm-card-row" data-adm-breed="' + esc(bname) + '">' +
+                  '<span class="adm-card-body"><span class="adm-card-main">' + esc(bname) + "</span>" +
+                  '<span class="adm-card-sub">' + dogsOfBreed.length + "頭" + (dueCount ? " ・ 再採寸候補 " + dueCount + "頭" : "") + "</span></span>" +
+                  '<span class="adm-card-arrow">›</span></button>';
+              }).join("") + "</div>";
+            attachSearch();
+            attachKeySearch();
+            box.querySelectorAll("[data-adm-dog]").forEach(function (btn) {
+              btn.addEventListener("click", function () { openDog(btn.getAttribute("data-adm-dog")); });
+            });
+            box.querySelectorAll("[data-adm-breed]").forEach(function (btn) {
+              btn.addEventListener("click", function () {
+                A.activeBreed = btn.getAttribute("data-adm-breed"); A.view = "dogs"; renderBreeds();
+                var c = $("adm-list-card"); if (c) c.scrollIntoView({ behavior: "smooth", block: "start" });
+              });
+            });
             return;
           }
-          if (A.view === "dogs") { A.view = "breeds"; A.activeBreed = null; }
-          box.innerHTML =
-            '<p class="adm-crumbs">管理画面 ＞ 犬種</p>' +
-            '<div class="adm-view-head"><h3>犬種 → 犬の一覧</h3></div>' +
-            (String(A.query || "").trim() ? "" : '<p class="adm-note" style="margin:0 0 10px">犬種を選ぶと、その犬種の犬の一覧が出ます。名前・IDでも探せます。</p>') +
-            searchBoxHTML() +
-            '<div id="adm-breed-results">' + breedResultsHTML(g) + "</div>";
-          attachSearch();
-          bindBreedResults(box);
+          box.querySelectorAll("[data-adm-dog]").forEach(function (btn) {
+            btn.addEventListener("click", function () { openDog(btn.getAttribute("data-adm-dog")); });
+          });
         }
 
         function openDog(dogId) {
@@ -3307,7 +3328,7 @@ setPINFORMEKarte=function(d){
             if (!band) {
               sizeHTML = "帯の範囲外";
             } else {
-              sizeHTML = "SIZE " + band.name + (SAMPLE_SIZES[band.name] ? '<span class="tag-sample">サンプル対象</span>' : "");
+              sizeHTML = "SIZE " + band.name + bandBadge(band);
               bandText = "胴まわり " + fmt(l.chest) + "cm → " + fmt(band.lo) + "〜" + fmt(band.hi) + "cm の帯（現在 " + band.count + "頭）";
               var ne = nearEdgeOf(Number(l.chest), band, bands);
               if (ne) warnText = "帯の境目（" + fmt(ne.edge) + "cm）に近い値です。試着モニターでは SIZE " + ne.other.name + " との両方試着の対象になります。";
@@ -3662,17 +3683,10 @@ setPINFORMEKarte=function(d){
           });
           $("adm-reload").addEventListener("click", function () { if (A.verified) loadAdminData(); });
           var checkSearch = $("adm-check-search");
-          if (checkSearch) {
-            var applyCheck = function () {
-              A.checkQuery = checkSearch.value;
-              renderCheckList();
-            };
-            checkSearch.addEventListener("input", function (e) {
-              if (e && e.isComposing) return;
-              applyCheck();
-            });
-            checkSearch.addEventListener("compositionend", applyCheck);
-          }
+          if (checkSearch) checkSearch.addEventListener("input", function () {
+            A.checkQuery = checkSearch.value;
+            renderCheckList();
+          });
           var tabListBtn = $("adm-tab-list");
           if (tabListBtn) tabListBtn.addEventListener("click", function () { setTab("list"); });
           var tabCheckerBtn = $("adm-tab-checker");
