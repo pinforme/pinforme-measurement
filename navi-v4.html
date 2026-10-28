@@ -337,7 +337,7 @@ label.confirm input{margin-top:4px;width:20px;height:20px;flex:none}
       <div class="home-record" id="homeRecordBox" hidden>
         <p class="home-record-title">これまでの採寸記録</p>
         <p class="home-record-main"><span id="homeRecordTotal"></span><span class="unit">頭</span></p>
-        <p class="home-record-note">ミニチュアピンシャー <span id="homeRecordMinpin"></span>頭</p>
+        <p class="home-record-note"><span id="homeRecordTopBreed"></span> <span id="homeRecordTopCount"></span>頭<span id="homeRecordRest"></span></p>
       </div>
     </div>
     <h1>採寸を始める</h1>
@@ -1735,11 +1735,15 @@ async function pinLoadHomeRecord(){
     if(!res.ok) return;
     const rows = await res.json();
     if(!Array.isArray(rows) || !rows.length) return;
-    let total = 0, minpin = 0;
-    for(const r of rows){ const n = Number(r.dog_count || 0); total += n; if(String(r.canonical_breed || '').includes('ピンシャー')) minpin = n; }
+    let total = 0;
+    for(const r of rows){ total += Number(r.dog_count || 0); }
     if(!total) return;
+    const sorted = rows.slice().sort((a,b)=> Number(b.dog_count || 0) - Number(a.dog_count || 0));
+    const top = sorted[0]; const topN = Number(top.dog_count || 0); const rest = total - topN;
     document.getElementById('homeRecordTotal').textContent = String(total);
-    document.getElementById('homeRecordMinpin').textContent = String(minpin);
+    document.getElementById('homeRecordTopBreed').textContent = String(top.canonical_breed || '');
+    document.getElementById('homeRecordTopCount').textContent = String(topN);
+    document.getElementById('homeRecordRest').textContent = rest > 0 ? ' ・ ほか' + rest + '頭' : '';
     box.hidden = false;
   }catch(e){ /* 読めない時は記録欄を出さないだけ */ }
 }
