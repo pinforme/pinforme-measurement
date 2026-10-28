@@ -338,6 +338,7 @@ label.confirm input{margin-top:4px;width:20px;height:20px;flex:none}
         <p class="home-record-title">これまでの採寸記録</p>
         <p class="home-record-main"><span id="homeRecordTotal"></span><span class="unit">頭</span></p>
         <p class="home-record-note"><span id="homeRecordTopBreed"></span> <span id="homeRecordTopCount"></span>頭<span id="homeRecordRest"></span></p>
+        <p class="home-record-note" id="homeRecordLatest" hidden>最新追加：<span id="homeRecordLatestBreed"></span></p>
       </div>
     </div>
     <h1>採寸を始める</h1>
@@ -1745,6 +1746,16 @@ async function pinLoadHomeRecord(){
     document.getElementById('homeRecordTopCount').textContent = String(topN);
     document.getElementById('homeRecordRest').textContent = rest > 0 ? ' ・ ほか' + rest + '頭' : '';
     box.hidden = false;
+    try{
+      const res2 = await fetch(PINFORME_SUPABASE_BASE + '/rest/v1/site_latest_breed_public?select=canonical_breed', {headers: pinSupabaseHeaders(), signal: AbortSignal.timeout(10000)});
+      if(res2.ok){
+        const rows2 = await res2.json();
+        if(Array.isArray(rows2) && rows2.length && rows2[0].canonical_breed){
+          document.getElementById('homeRecordLatestBreed').textContent = String(rows2[0].canonical_breed);
+          document.getElementById('homeRecordLatest').hidden = false;
+        }
+      }
+    }catch(e2){ /* ビュー未作成の間は最新追加の行を出さないだけ */ }
   }catch(e){ /* 読めない時は記録欄を出さないだけ */ }
 }
 function pinRefreshDraftButton(){
