@@ -361,7 +361,7 @@ label.confirm input{margin-top:4px;width:20px;height:20px;flex:none}
       <div class="entry-card home-tile">
         <h2>お客様キー</h2>
         <p class="note">更新・追加、2匹目以降の登録ができます。</p>
-        <button type="button" class="v2-primary" id="homeKeyOpenBtn" aria-expanded="false" aria-controls="homeKeyPanel">キーで進む</button>
+        <button type="button" class="v2-primary" id="homeKeyOpenBtn">キーで進む</button>
       </div>
       <div class="entry-card home-tile">
         <h2>採寸カルテ</h2>
@@ -369,7 +369,22 @@ label.confirm input{margin-top:4px;width:20px;height:20px;flex:none}
         <button type="button" class="v2-primary" id="homeKarteBtn">カルテを見る</button>
       </div>
     </div>
-    <div id="homeKeyPanel" class="entry-card" hidden>
+    <div id="pinPendingGuardBox" class="entry-card" hidden>
+      <h2>前回の保存が確認できていません</h2>
+      <p class="note">前回、送信した内容がサーバーに保存できたかどうか確認できないまま終わっています。同じ内容でもう一度保存を試すか、未確認の状態を消して最初から始めるか選べます。</p>
+      <button type="button" class="v2-primary" id="pinPendingResumeBtn">途中の入力を再開して保存を再試行</button>
+      <button type="button" id="pinPendingDiscardBtn" style="margin-top:10px">未確認の状態を消して、はじめから始める</button>
+    </div>
+    <p class="status" id="v2HomeStatus" role="status"></p>
+    <div id="pinDraftStatus" role="status"></div>
+  </div>
+</section>
+
+<!-- お客様キー入力 -->
+<section class="page" id="keyPage">
+  <div class="wrap">
+    <button type="button" id="keyPageBackBtn">← 入口に戻る</button>
+    <div id="homeKeyPanel" class="entry-card" style="margin-top:14px">
       <h2 id="homeKeyPanelTitle">お客様キーで進む</h2>
         <div class="field"><label for="v2CustomerKey">お客様キー</label>
         <input id="v2CustomerKey" type="text" placeholder="16文字のお客様キー" maxlength="24" autocomplete="off" autocapitalize="characters" spellcheck="false"></div>
@@ -381,14 +396,6 @@ label.confirm input{margin-top:4px;width:20px;height:20px;flex:none}
           <p class="note">連絡先を登録していない方や、メールが見つからない方は、InstagramのDMまたはinfo@pinforme.jpへお問い合わせください。</p>
         </details>
     </div>
-    <div id="pinPendingGuardBox" class="entry-card" hidden>
-      <h2>前回の保存が確認できていません</h2>
-      <p class="note">前回、送信した内容がサーバーに保存できたかどうか確認できないまま終わっています。同じ内容でもう一度保存を試すか、未確認の状態を消して最初から始めるか選べます。</p>
-      <button type="button" class="v2-primary" id="pinPendingResumeBtn">途中の入力を再開して保存を再試行</button>
-      <button type="button" id="pinPendingDiscardBtn" style="margin-top:10px">未確認の状態を消して、はじめから始める</button>
-    </div>
-    <p class="status" id="v2HomeStatus" role="status"></p>
-    <div id="pinDraftStatus" role="status"></div>
   </div>
 </section>
 
@@ -3599,19 +3606,16 @@ function initNaviV4(){
   document.getElementById('homeKeyOpenBtn').addEventListener('click', ()=>{
     pinHomeIntent = 'menu';
     document.getElementById('homeKeyPanelTitle').textContent = 'お客様キーで進む';
-    const panel = document.getElementById('homeKeyPanel'), button = document.getElementById('homeKeyOpenBtn');
-    panel.hidden = !panel.hidden;
-    button.setAttribute('aria-expanded', String(!panel.hidden));
+    showPage('keyPage');
+    document.getElementById('v2CustomerKey').focus({preventScroll:true});
   });
   document.getElementById('homeKarteBtn').addEventListener('click', ()=>{
     pinHomeIntent = 'karte';
     document.getElementById('homeKeyPanelTitle').textContent = '採寸カルテを見る・保存する';
-    const panel = document.getElementById('homeKeyPanel'), button = document.getElementById('homeKeyOpenBtn');
-    panel.hidden = false;
-    button.setAttribute('aria-expanded', 'true');
-    panel.scrollIntoView({behavior:'smooth', block:'start'});
+    showPage('keyPage');
     document.getElementById('v2CustomerKey').focus({preventScroll:true});
   });
+  document.getElementById('keyPageBackBtn').addEventListener('click', ()=>{ pinHomeIntent = 'menu'; pinV2Home(); });
   document.getElementById('v2KeyNext').addEventListener('click', pinV2Unlock);
   document.getElementById('v2RecoverKey').addEventListener('click', pinformeOpenKeyRecovery);
   document.getElementById('v2CustomerKey').addEventListener('input', ()=>{ document.getElementById('v2KeyStatus').textContent = ''; });
