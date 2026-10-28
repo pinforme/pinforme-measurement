@@ -1741,6 +1741,7 @@ setPINFORMEKarte=function(d){
           if (sumDogs) sumDogs.textContent = "現在 " + dogs.length + "頭が登録されています";
           var sumBands = document.getElementById("sum-bands");
           if (sumBands) sumBands.textContent = "現在 " + BANDS.length + "サイズ（" + primaryBreed + "）";
+          applyRegistryCounts();
         }
 
         function renderChart() {
