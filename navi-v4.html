@@ -338,7 +338,7 @@ label.confirm input{margin-top:4px;width:20px;height:20px;flex:none}
         <p class="home-record-title">これまでの採寸記録</p>
         <p class="home-record-main"><span id="homeRecordTotal"></span><span class="unit">頭</span></p>
         <p class="home-record-note"><span id="homeRecordTopBreed"></span> <span id="homeRecordTopCount"></span>頭<span id="homeRecordRest"></span></p>
-        <p class="home-record-note" id="homeRecordLatest" hidden>新しい犬種：<span id="homeRecordLatestBreed"></span></p>
+        <p class="home-record-note" id="homeRecordLatest" hidden>新しい犬種：<span id="homeRecordLatestBreed"></span><span id="homeRecordBreedKinds"></span></p>
       </div>
     </div>
     <h1>採寸を始める</h1>
@@ -1745,6 +1745,7 @@ async function pinLoadHomeRecord(){
     document.getElementById('homeRecordTopBreed').textContent = String(top.canonical_breed || '');
     document.getElementById('homeRecordTopCount').textContent = String(topN);
     document.getElementById('homeRecordRest').textContent = rest > 0 ? ' ・ ほか' + rest + '頭' : '';
+    document.getElementById('homeRecordBreedKinds').textContent = ' ・ 全' + rows.length + '犬種';
     box.hidden = false;
     try{
       const res2 = await fetch(PINFORME_SUPABASE_BASE + '/rest/v1/site_latest_breed_public?select=canonical_breed', {headers: pinSupabaseHeaders(), signal: AbortSignal.timeout(10000)});
