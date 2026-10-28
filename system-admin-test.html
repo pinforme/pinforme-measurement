@@ -1595,9 +1595,10 @@ setPINFORMEKarte=function(d){
         var PUBLISHABLE_KEY = "sb_publishable_403lLhKUQ9X9N1RaxaDduA_9ZQEZ6na";
         var SAMPLE_RANGES = [[35, 38], [41, 44], [47, 50]]; // first OEM sample bands, keyed by chest range (band names drift as the mean moves)
         var CANDIDATE_MIN_DOGS = 5; // bands with at least this many dogs (and not sample bands) are development candidates
+        var SAMPLE_ACTIVE = true; // set to false when sample production is finished: the sample badges disappear everywhere
         function isSampleBand(b) { return !!b && SAMPLE_RANGES.some(function (r) { return Number(b.lo) === r[0] && Number(b.hi) === r[1]; }); }
         function bandBadge(b) {
-          if (isSampleBand(b)) return '<span class="tag-sample">サンプル対象</span>';
+          if (SAMPLE_ACTIVE && isSampleBand(b)) return '<span class="tag-sample">サンプル対象</span>';
           if (b && b.count >= CANDIDATE_MIN_DOGS) return '<span class="tag-candidate">開発候補</span>';
           return "";
         }
@@ -1735,7 +1736,7 @@ setPINFORMEKarte=function(d){
                 bandBadge(b) +
                 '<span class="tag-rank">' + rankOf[b.lo + "-" + b.hi] + "位</span>" +
                 "<span>胴まわり " + fmt(b.lo) + "〜" + fmt(b.hi) + "cm</span></div>" +
-              '<div class="track"><div class="bar' + (isSampleBand(b) ? " hot" : "") + '" style="width:' + pct + '%"></div></div>' +
+              '<div class="track"><div class="bar' + (SAMPLE_ACTIVE && isSampleBand(b) ? " hot" : "") + '" style="width:' + pct + '%"></div></div>' +
               '<div class="cnt">' + b.count + "<small>頭</small></div>";
             chart.appendChild(row);
           });
@@ -2723,9 +2724,10 @@ setPINFORMEKarte=function(d){
         var BAND_MIN_DOGS = 5; // same threshold as the public side
         var SAMPLE_RANGES = [[35, 38], [41, 44], [47, 50]]; // first OEM sample bands, keyed by chest range (band names drift as the mean moves)
         var CANDIDATE_MIN_DOGS = 5; // bands with at least this many dogs (and not sample bands) are development candidates
+        var SAMPLE_ACTIVE = true; // set to false when sample production is finished: the sample badges disappear everywhere
         function isSampleBand(b) { return !!b && SAMPLE_RANGES.some(function (r) { return Number(b.lo) === r[0] && Number(b.hi) === r[1]; }); }
         function bandBadge(b) {
-          if (isSampleBand(b)) return '<span class="tag-sample">サンプル対象</span>';
+          if (SAMPLE_ACTIVE && isSampleBand(b)) return '<span class="tag-sample">サンプル対象</span>';
           if (b && b.count >= CANDIDATE_MIN_DOGS) return '<span class="tag-candidate">開発候補</span>';
           return "";
         }
