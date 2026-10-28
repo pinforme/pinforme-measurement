@@ -1593,6 +1593,29 @@ setPINFORMEKarte=function(d){
         // Returns consented dogs only, latest record per dog, no personal info.
         var RPC_URL = "https://dsbvaoqgvtoeukigdjdj.supabase.co/rest/v1/rpc/pattern_measurements_export_v1";
         var PUBLISHABLE_KEY = "sb_publishable_403lLhKUQ9X9N1RaxaDduA_9ZQEZ6na";
+        var REGISTRY_URL = "https://dsbvaoqgvtoeukigdjdj.supabase.co/rest/v1/site_breed_counts_public?select=canonical_breed,dog_count";
+        // Headline counts use the registry basis (all registered dogs) — the same
+        // public aggregate the measurement navi shows. Size bands and recommended
+        // sizes still come from the measurement export below.
+        function applyRegistryCounts() {
+          fetch(REGISTRY_URL, { headers: { "apikey": PUBLISHABLE_KEY, "Authorization": "Bearer " + PUBLISHABLE_KEY } })
+            .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+            .then(function (rows) {
+              if (!rows || !rows.length) return;
+              var total = 0, primary = 0;
+              var key = String(primaryBreed || "").replace(/・/g, "");
+              rows.forEach(function (row) {
+                var c = Number(row.dog_count) || 0;
+                total += c;
+                if (String(row.canonical_breed || "").replace(/・/g, "") === key) primary = c;
+              });
+              if (!total) return;
+              document.getElementById("stat-total").textContent = total;
+              document.getElementById("stat-primary").textContent = primary;
+              document.getElementById("stat-other").textContent = total - primary;
+            })
+            .catch(function () { /* registry fetch failed: keep the numbers already shown */ });
+        }
         var SAMPLE_RANGES = [[35, 38], [41, 44], [47, 50]]; // first OEM sample bands, keyed by chest range (band names drift as the mean moves)
         var CANDIDATE_MIN_DOGS = 5; // bands with at least this many dogs (and not sample bands) are development candidates
         var SAMPLE_ACTIVE = true; // set to false when sample production is finished: the sample badges disappear everywhere
@@ -2234,7 +2257,7 @@ setPINFORMEKarte=function(d){
           var hh = ("0" + now.getHours()).slice(-2), mm = ("0" + now.getMinutes()).slice(-2);
           stamp.textContent = "採寸ナビと連携中 ・ " + jpDate(now.getFullYear() + "-" + (now.getMonth() + 1) + "-" + now.getDate()) + " " + hh + ":" + mm + " 取得";
           fetchNote.classList.remove("err");
-          fetchNote.textContent = "採寸ナビから最新データを取得しました（全" + dogs.length + "頭）。頭数・サイズ帯・推奨サイズは、このデータからその場で計算しています。";
+          fetchNote.textContent = "採寸ナビから最新データを取得しました。頭数は登録されている全頭、サイズ帯・推奨サイズは採寸データからその場で計算しています。";
 
           renderStats();
           renderChart();
@@ -3569,6 +3592,7 @@ setPINFORMEKarte=function(d){
           var tl = $("adm-tab-list"), tc = $("adm-tab-checker");
           if (tl) tl.classList.toggle("active", A.tab !== "checker");
           if (tc) tc.classList.toggle("active", A.tab === "checker");
+          applyRegistryCounts();
         }
         /* ---------- §16 re-measurement candidate list (stage A) ----------
            Opened from the home summary chip. Membership = remeasureDue on the
