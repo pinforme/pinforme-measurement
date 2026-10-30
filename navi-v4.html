@@ -523,6 +523,7 @@ label.confirm input{margin-top:4px;width:20px;height:20px;flex:none}
       <div id="pinCustomerMailStatus" class="status" role="status" aria-live="polite"></div>
       <button id="pinCustomerMailRetry" type="button" class="secondary" style="display:none;width:100%">メール送信を再試行</button>
       <div class="status" id="sendStatus" role="status"></div>
+      <p class="note" style="margin-top:10px">※分からないときは、InstagramのDMかメール（info@pinforme.jp）でご連絡ください。</p>
       <div class="key-box" id="pinformeRemeasureKeyBox">
         <div style="font-weight:800">お客様キー</div>
         <div class="note">飼い主様専用のキーです。再採寸・部分更新・わんちゃんの追加登録に使用します。コピーまたはスクリーンショットで保管してください。キーを知っている方は登録情報を開けますので、公開投稿には載せないでください。</div>
@@ -3130,8 +3131,8 @@ function collectKarteV2(){
 /* ================= 完了画面 ================= */
 function pinConfirmationCopy(saved){
   return saved
-    ? {title:'送信が完了しました', message:'採寸データは保存されました。確認したら、このページを閉じてください。', mark:'✓', button:'送信・保存済み ✓'}
-    : {title:'まだ送信は完了していません', message:'下の「この内容で送信する」を押してください。完了すると「送信が完了しました」と表示されます。', mark:'確認', button:'この内容で送信する'};
+    ? {title:'送信が完了しました', message:'ご協力ありがとうございました。データは無事に届いています。', mark:'✓', button:'送信・保存済み ✓'}
+    : {title:'まだ送信は完了していません', message:'下の「この内容で送信する」を押してください。完了すると「送信が完了しました」と表示されます。表示を確認したら、このページを閉じてください。', mark:'確認', button:'この内容で送信する'};
 }
 function pinV2RenderReview(){
   if(!PIN_V2) return;
