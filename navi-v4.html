@@ -3389,6 +3389,8 @@ async function sendToPinforme(options={}){
   if(!PIN_V2 || PINFORME_SUBMITTING || (PIN_V2.saved && !PIN_V2.pending)) return;
   /* テストモードでは保留中の送信内容を毎回組み直す（値の修正を反映するため） */
   if(PIN_TEST_MODE && PIN_V2.pending?.testMode){ delete PIN_V2.pending; pinV2Persist(); }
+  /* B28：送信エラーで止まった保留は、次回送信時に検証から組み直す（入力の修正を反映するため） */
+  if(PIN_V2.pending?.failed){ delete PIN_V2.pending; pinV2Persist(); }
   const button = document.getElementById('pinformeSubmitButton'), status = document.getElementById('sendStatus');
   if(!PIN_V2.pending){
     if(!pinValidateCustomerEmail() || !pinValidateMeasuredOn() || !(await pinValidateDogBasics('send'))) return;
@@ -3456,7 +3458,7 @@ async function sendToPinforme(options={}){
     const noPhotoBtnDone = document.getElementById('pinSaveNoPhotoButton');
     if(noPhotoBtnDone) noPhotoBtnDone.hidden = true;
   }catch(e){
-    if(e.http && e.http < 500){ delete PIN_V2.pending; pinV2Persist(); }
+    if(e.http && e.http < 500 && PIN_V2.pending && !PIN_V2.receipt){ PIN_V2.pending.failed = {http:e.http, message:String(e.message || '')}; pinV2Persist(); }
     if(e.pinKind === 'photo'){
       /* 写真起因の失敗は「未確認」に化かさず、原因と写真なし送信のボタンを出す（B22） */
       pinShowPhotoFailure(e, status, button);

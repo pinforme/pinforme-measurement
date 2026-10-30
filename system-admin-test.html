@@ -943,6 +943,13 @@
             <div class="adm-list" id="adm-due-list"><p class="adm-note">読み込み中…</p></div>
           </div>
 
+          <div class="adm-card adm-hidden" id="adm-nomeas">
+            <p class="adm-crumbs">管理画面 ＞ 管理用ホーム ＞ 採寸なし登録</p>
+            <div class="adm-view-head"><button type="button" class="adm-back" id="adm-nomeas-close">← 管理用ホームに戻る</button><h3>採寸なし登録</h3></div>
+            <p class="adm-note">登録はあるのに採寸データが1件も無い子を、登録の新しい順に並べています。送信が途中で止まった可能性があります。タップすると犬の詳細が開きます。お声がけは、管理者が文面を確認してから送ります（この画面から自動では送りません）。</p>
+            <div class="adm-list" id="adm-nomeas-list"><p class="adm-note">読み込み中…</p></div>
+          </div>
+
           <div class="adm-card adm-hidden" id="adm-detail"></div>
 
           <div class="adm-card adm-hidden" id="adm-owner"></div>
@@ -2852,6 +2859,7 @@ setPINFORMEKarte=function(d){
           var own = $("adm-owner"); if (own) own.classList.add("adm-hidden");
           var kar = $("adm-karte"); if (kar) kar.classList.add("adm-hidden");
           var dueC = $("adm-due"); if (dueC) dueC.classList.add("adm-hidden");
+          var nmC0 = $("adm-nomeas"); if (nmC0) nmC0.classList.add("adm-hidden");
           renderHome();
         }
         function hideAdminCards() {
@@ -2862,6 +2870,7 @@ setPINFORMEKarte=function(d){
           var own = $("adm-owner"); if (own) own.classList.add("adm-hidden");
           var kar = $("adm-karte"); if (kar) kar.classList.add("adm-hidden");
           var dueC = $("adm-due"); if (dueC) dueC.classList.add("adm-hidden");
+          var nmC = $("adm-nomeas"); if (nmC) nmC.classList.add("adm-hidden");
         }
         function dogCardHTML(d) {
           var l = latestOf(d.id);
@@ -3615,14 +3624,19 @@ setPINFORMEKarte=function(d){
             A.dogs.forEach(function (d) { breeds[normalizeBreed(rawBreedOf(d)) || "不明"] = true; });
             var due = 0;
             A.dogs.forEach(function (d) { if (remeasureDue(latestOf(d.id))) due++; });
+            var nomeas = 0;
+            A.dogs.forEach(function (d) { if (!latestOf(d.id)) nomeas++; });
             sum.innerHTML =
               '<span class="adm-chip">登録 <strong>' + A.dogs.length + '</strong> 頭</span>' +
               '<span class="adm-chip">犬種 <strong>' + Object.keys(breeds).length + '</strong> 種</span>' +
               '<span class="adm-chip">採寸履歴 <strong>' + A.measurements.length + '</strong> 件</span>' +
+              '<button type="button" class="adm-chip adm-chip-btn" id="adm-nomeas-chip">採寸なし登録 <strong>' + nomeas + '</strong> 頭<span class="adm-chip-arrow">›</span></button>' +
               '<button type="button" class="adm-chip adm-chip-btn" id="adm-due-chip">再採寸候補 <strong>' + due + '</strong> 頭<span class="adm-chip-arrow">›</span></button>';
           }
           var dueChip = $("adm-due-chip");
           if (dueChip) dueChip.addEventListener("click", openDueList);
+          var nmChip = $("adm-nomeas-chip");
+          if (nmChip) nmChip.addEventListener("click", openNomeasList);
           var tl = $("adm-tab-list"), tc = $("adm-tab-checker");
           if (tl) tl.classList.toggle("active", A.tab !== "checker");
           if (tc) tc.classList.toggle("active", A.tab === "checker");
@@ -3658,6 +3672,46 @@ setPINFORMEKarte=function(d){
           hideAdminCards();
           var card = $("adm-due"); if (!card) return;
           renderDueList();
+          card.classList.remove("adm-hidden");
+          card.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+        /* ---------- no-measurement registrations ----------
+           Dogs whose registration exists but that have no measurement rows
+           at all (latestOf is null). A submission that stopped after the
+           dog was registered (before the measurement save) lands here, so
+           the state is visible instead of silently inflating the registry
+           count. Membership rule is shared with the home chip count. */
+        function nomeasDogs() {
+          var out = [];
+          A.dogs.forEach(function (d) { if (!latestOf(d.id)) out.push(d); });
+          out.sort(function (a, b) { return Number(b.id) - Number(a.id); });
+          return out;
+        }
+        function renderNomeasList() {
+          var box = $("adm-nomeas-list"); if (!box) return;
+          var dogs = nomeasDogs();
+          if (!dogs.length) {
+            box.innerHTML = '<p class="adm-note">いまは採寸なし登録はいません。</p>';
+            return;
+          }
+          box.innerHTML = dogs.map(function (d) {
+            var reg = d.created_at ? " ・ 登録 " + esc(String(d.created_at).slice(0, 10)) : "";
+            return '<button type="button" class="adm-card-row" data-adm-nomeas-dog="' + esc(d.id) + '">' +
+              '<span class="adm-card-body">' +
+              '<span class="adm-card-main">' + esc(dogTitleOf(d)) + '</span>' +
+              '<span class="adm-card-sub">' + esc(normalizeBreed(rawBreedOf(d)) || "犬種未登録") + reg + '</span>' +
+              '<span class="adm-card-sub">採寸データなし</span>' +
+              '</span><span class="adm-card-arrow">›</span></button>';
+          }).join("");
+          box.querySelectorAll("[data-adm-nomeas-dog]").forEach(function (btn) {
+            btn.addEventListener("click", function () { openDog(btn.getAttribute("data-adm-nomeas-dog")); });
+          });
+        }
+        function openNomeasList() {
+          A.view = "nomeas"; A.activeDogId = null; A.activeOwnerId = null;
+          hideAdminCards();
+          var card = $("adm-nomeas"); if (!card) return;
+          renderNomeasList();
           card.classList.remove("adm-hidden");
           card.scrollIntoView({ behavior: "smooth", block: "start" });
         }
@@ -3756,6 +3810,12 @@ setPINFORMEKarte=function(d){
           });
           var dueClose = $("adm-due-close");
           if (dueClose) dueClose.addEventListener("click", function () {
+            A.view = "breeds"; A.activeDogId = null; A.activeOwnerId = null;
+            showList(); renderBreeds();
+            var h = $("adm-home"); if (h) h.scrollIntoView({ behavior: "smooth", block: "start" });
+          });
+          var nomeasClose = $("adm-nomeas-close");
+          if (nomeasClose) nomeasClose.addEventListener("click", function () {
             A.view = "breeds"; A.activeDogId = null; A.activeOwnerId = null;
             showList(); renderBreeds();
             var h = $("adm-home"); if (h) h.scrollIntoView({ behavior: "smooth", block: "start" });
