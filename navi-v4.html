@@ -3130,8 +3130,8 @@ function collectKarteV2(){
 /* ================= 完了画面 ================= */
 function pinConfirmationCopy(saved){
   return saved
-    ? {title:'送信が完了しました', message:'採寸協力ありがとうございました。採寸データを保存しました。', mark:'✓', button:'送信・保存済み ✓'}
-    : {title:'まだ送信は完了していません', message:'入力内容を確認して、下の「この内容で送信する」を押してください。', mark:'確認', button:'この内容で送信する'};
+    ? {title:'送信が完了しました', message:'採寸データは保存されました。確認したら、このページを閉じてください。', mark:'✓', button:'送信・保存済み ✓'}
+    : {title:'まだ送信は完了していません', message:'下の「この内容で送信する」を押してください。完了すると「送信が完了しました」と表示されます。', mark:'確認', button:'この内容で送信する'};
 }
 function pinV2RenderReview(){
   if(!PIN_V2) return;
