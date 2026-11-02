@@ -26,6 +26,10 @@
         --olive: #75804c;
         --olive-soft: #e9ecd9;
         --tan: #d9a05b;
+        --bar-base: #b3a488;
+        --bar-base-pup: #d8cdb4;
+        --bar-sample-pup: #e7a98d;
+        --bar-cand-pup: #bcc69d;
         --shadow: 0 1px 2px rgba(62, 45, 25, 0.06), 0 8px 24px rgba(62, 45, 25, 0.06);
         color-scheme: light;
       }
@@ -43,6 +47,10 @@
           --olive: #a9b47e;
           --olive-soft: #39402a;
           --tan: #d9a05b;
+          --bar-base: #9c8f73;
+          --bar-base-pup: #c6bba2;
+          --bar-sample-pup: #f0bfa4;
+          --bar-cand-pup: #cfdaae;
           --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.25);
           color-scheme: dark;
         }
@@ -255,11 +263,45 @@
       .track { background: var(--paper-2); border-radius: 8px; height: 30px; overflow: hidden; }
       .bar {
         height: 100%;
-        background: var(--tan);
+        background: var(--bar-base);
         border-radius: 8px;
         min-width: 6px;
+        position: relative;
+        overflow: hidden;
       }
       .bar.hot { background: var(--terra); }
+      .bar.cand { background: var(--olive); }
+      .bar .bar-pup {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        background: var(--bar-base-pup);
+      }
+      .bar.hot .bar-pup { background: var(--bar-sample-pup); }
+      .bar.cand .bar-pup { background: var(--bar-cand-pup); }
+      .chart-legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px 14px;
+        align-items: center;
+        margin-top: 12px;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--ink-soft);
+      }
+      .chart-legend .sw {
+        display: inline-block;
+        width: 22px;
+        height: 10px;
+        border-radius: 3px;
+        margin-right: 5px;
+        vertical-align: -1px;
+      }
+      .chart-legend .sw-sample { background: var(--terra); }
+      .chart-legend .sw-cand { background: var(--olive); }
+      .chart-legend .sw-base { background: var(--bar-base); }
+      .chart-legend .sw-pup { background: linear-gradient(to right, var(--bar-base) 55%, var(--bar-base-pup) 55%); }
       .chart-row .cnt { font-weight: 900; font-size: 16px; text-align: right; white-space: nowrap; }
       .chart-row .cnt small { font-size: 12px; color: var(--ink-soft); font-weight: 700; }
       .chart-row .cnt .cnt-sub { display: block; font-size: 10.5px; line-height: 1.45; color: var(--ink-soft); font-weight: 700; white-space: nowrap; }
@@ -668,6 +710,12 @@
         <p class="sec-lead" id="dist-lead">ミニチュア・ピンシャーの胴まわり分布です。サイズ名は、その帯にいる子たちの胴まわりの平均を四捨五入した数字になっています。</p>
         <div class="card">
           <div class="chart" id="chart"><p class="hint">読み込み中…</p></div>
+          <div class="chart-legend">
+            <span><span class="sw sw-sample"></span>サンプル対象</span>
+            <span><span class="sw sw-cand"></span>開発候補</span>
+            <span><span class="sw sw-base"></span>その他</span>
+            <span><span class="sw sw-pup"></span>バーの薄い部分＝パピー</span>
+          </div>
           <p class="chart-note" id="hp-range-note"></p>
           <p class="chart-note">「サンプル対象」は、1個飛ばしで選んだ3つの帯（胴まわり35〜38cm・41〜44cm・47〜50cm）。OEMへサンプル製作を依頼するサイズです。作るサイズが隣の帯を補う・カバーするわけではありません。各サイズが合わせるのは、自分の帯の子だけです。飛ばした帯は今回の製作対象には入りませんが、5頭以上集まった帯は「開発候補」として次の製作候補になり、頭数の少ない帯はオーダーメイドで対応します。順位は頭数の多い順です。試着モニターには各サイズの中心の子に加えて、帯の境目にいる子も入り、境目の位置そのものを検証します。</p>
         </div>
@@ -1890,12 +1938,21 @@ setPINFORMEKarte=function(d){
             row.className = "chart-row";
             var pct = maxCount ? Math.round((b.count / maxCount) * 100) : 0;
             var pk2 = b.lo + "-" + b.hi;
+            // Bar colour follows the same state as the badge (sample
+            // first, then candidate at CANDIDATE_MIN_DOGS+, else
+            // neutral). The pale tail of the bar is the puppy share of
+            // the band, so adults vs puppies read as lengths.
+            var barCls = SAMPLE_ACTIVE && isSampleBand(b) ? " hot"
+              : (b.count >= CANDIDATE_MIN_DOGS ? " cand" : "");
+            var pupN = puppyOf[pk2] || 0;
+            var pupPct = pupN && b.count ? Math.max(1, Math.round((pupN / b.count) * 100)) : 0;
             row.innerHTML =
               '<div class="sz">SIZE ' + b.name +
                 bandBadge(b) +
                 '<span class="tag-rank">' + rankOf[b.lo + "-" + b.hi] + "位</span>" +
                 "<span>胴まわり " + fmt(b.lo) + "〜" + fmt(b.hi) + "cm</span></div>" +
-              '<div class="track"><div class="bar' + (SAMPLE_ACTIVE && isSampleBand(b) ? " hot" : "") + '" style="width:' + pct + '%"></div></div>' +
+              '<div class="track"><div class="bar' + barCls + '" style="width:' + pct + '%">' +
+                (pupPct ? '<span class="bar-pup" style="width:' + pupPct + '%"></span>' : "") + "</div></div>" +
               '<div class="cnt">' + b.count + "<small>頭</small>" +
                 (puppyOf[pk2] ? '<span class="cnt-sub">うちパピー' + puppyOf[pk2] + "頭</span>" : "") + "</div>";
             chart.appendChild(row);
