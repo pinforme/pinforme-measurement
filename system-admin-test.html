@@ -30,6 +30,10 @@
         --bar-base-pup: #d8cdb4;
         --bar-sample-pup: #e7a98d;
         --bar-cand-pup: #bcc69d;
+        --blue: #2f6db3;
+        --blue-deep: #1e528a;
+        --blue-soft: #dcebf7;
+        --bar-sale-pup: #aacbeb;
         --shadow: 0 1px 2px rgba(62, 45, 25, 0.06), 0 8px 24px rgba(62, 45, 25, 0.06);
         color-scheme: light;
       }
@@ -51,6 +55,10 @@
           --bar-base-pup: #c6bba2;
           --bar-sample-pup: #f0bfa4;
           --bar-cand-pup: #cfdaae;
+          --blue: #7db3e8;
+          --blue-deep: #a9cdf2;
+          --blue-soft: #2b3f57;
+          --bar-sale-pup: #c3dcf5;
           --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.25);
           color-scheme: dark;
         }
@@ -271,6 +279,7 @@
       }
       .bar.hot { background: var(--terra); }
       .bar.cand { background: var(--olive); }
+      .bar.sale { background: var(--blue); }
       .bar .bar-pup {
         position: absolute;
         top: 0;
@@ -280,6 +289,7 @@
       }
       .bar.hot .bar-pup { background: var(--bar-sample-pup); }
       .bar.cand .bar-pup { background: var(--bar-cand-pup); }
+      .bar.sale .bar-pup { background: var(--bar-sale-pup); }
       .chart-legend {
         display: flex;
         flex-wrap: wrap;
@@ -298,6 +308,7 @@
         margin-right: 5px;
         vertical-align: -1px;
       }
+      .chart-legend .sw-sale { background: var(--blue); }
       .chart-legend .sw-sample { background: var(--terra); }
       .chart-legend .sw-cand { background: var(--olive); }
       .chart-legend .sw-base { background: var(--bar-base); }
@@ -331,6 +342,18 @@
         font-weight: 900;
         color: var(--terra-deep);
         background: var(--terra-soft);
+        border-radius: 999px;
+        padding: 1px 9px;
+        margin-left: 6px;
+        vertical-align: 2px;
+        font-family: "Zen Kaku Gothic New", sans-serif;
+      }
+      .tag-sale {
+        display: inline-block;
+        font-size: 11.5px;
+        font-weight: 900;
+        color: var(--blue-deep);
+        background: var(--blue-soft);
         border-radius: 999px;
         padding: 1px 9px;
         margin-left: 6px;
@@ -711,6 +734,7 @@
         <div class="card">
           <div class="chart" id="chart"><p class="hint">読み込み中…</p></div>
           <div class="chart-legend">
+            <span><span class="sw sw-sale"></span>販売中</span>
             <span><span class="sw sw-sample"></span>サンプル対象</span>
             <span><span class="sw sw-cand"></span>開発候補</span>
             <span><span class="sw sw-base"></span>その他</span>
@@ -1707,10 +1731,13 @@ setPINFORMEKarte=function(d){
             .catch(function () { /* registry fetch failed: keep the numbers already shown */ });
         }
         var SAMPLE_RANGES = [[35, 38], [41, 44], [47, 50]]; // first OEM sample bands, keyed by chest range (band names drift as the mean moves)
+        var ON_SALE_RANGES = []; // bands currently on sale, keyed by chest range like SAMPLE_RANGES. When a band goes on sale, add its range here (e.g. [[41, 44]]) and that band's badge and bar switch to 販売中, ahead of sample/candidate. Empty = nothing on sale yet.
         var CANDIDATE_MIN_DOGS = 5; // bands with at least this many dogs (and not sample bands) are development candidates
         var SAMPLE_ACTIVE = true; // set to false when sample production is finished: the sample badges disappear everywhere
         function isSampleBand(b) { return !!b && SAMPLE_RANGES.some(function (r) { return Number(b.lo) === r[0] && Number(b.hi) === r[1]; }); }
+        function isOnSaleBand(b) { return !!b && ON_SALE_RANGES.some(function (r) { return Number(b.lo) === r[0] && Number(b.hi) === r[1]; }); }
         function bandBadge(b) {
+          if (isOnSaleBand(b)) return '<span class="tag-sale">販売中</span>';
           if (SAMPLE_ACTIVE && isSampleBand(b)) return '<span class="tag-sample">サンプル対象</span>';
           if (b && b.count >= CANDIDATE_MIN_DOGS) return '<span class="tag-candidate">開発候補</span>';
           return "";
@@ -1938,11 +1965,13 @@ setPINFORMEKarte=function(d){
             row.className = "chart-row";
             var pct = maxCount ? Math.round((b.count / maxCount) * 100) : 0;
             var pk2 = b.lo + "-" + b.hi;
-            // Bar colour follows the same state as the badge (sample
-            // first, then candidate at CANDIDATE_MIN_DOGS+, else
-            // neutral). The pale tail of the bar is the puppy share of
-            // the band, so adults vs puppies read as lengths.
-            var barCls = SAMPLE_ACTIVE && isSampleBand(b) ? " hot"
+            // Bar colour follows the same state as the badge (on sale
+            // first, then sample, then candidate at
+            // CANDIDATE_MIN_DOGS+, else neutral). The pale tail of
+            // the bar is the puppy share of the band, so adults vs
+            // puppies read as lengths.
+            var barCls = isOnSaleBand(b) ? " sale"
+              : SAMPLE_ACTIVE && isSampleBand(b) ? " hot"
               : (b.count >= CANDIDATE_MIN_DOGS ? " cand" : "");
             var pupN = puppyOf[pk2] || 0;
             var pupPct = pupN && b.count ? Math.max(1, Math.round((pupN / b.count) * 100)) : 0;
@@ -3001,10 +3030,13 @@ setPINFORMEKarte=function(d){
         }
         var BAND_MIN_DOGS = 5; // same threshold as the public side
         var SAMPLE_RANGES = [[35, 38], [41, 44], [47, 50]]; // first OEM sample bands, keyed by chest range (band names drift as the mean moves)
+        var ON_SALE_RANGES = []; // bands currently on sale, keyed by chest range like SAMPLE_RANGES. When a band goes on sale, add its range here (e.g. [[41, 44]]) and that band's badge and bar switch to 販売中, ahead of sample/candidate. Empty = nothing on sale yet.
         var CANDIDATE_MIN_DOGS = 5; // bands with at least this many dogs (and not sample bands) are development candidates
         var SAMPLE_ACTIVE = true; // set to false when sample production is finished: the sample badges disappear everywhere
         function isSampleBand(b) { return !!b && SAMPLE_RANGES.some(function (r) { return Number(b.lo) === r[0] && Number(b.hi) === r[1]; }); }
+        function isOnSaleBand(b) { return !!b && ON_SALE_RANGES.some(function (r) { return Number(b.lo) === r[0] && Number(b.hi) === r[1]; }); }
         function bandBadge(b) {
+          if (isOnSaleBand(b)) return '<span class="tag-sale">販売中</span>';
           if (SAMPLE_ACTIVE && isSampleBand(b)) return '<span class="tag-sample">サンプル対象</span>';
           if (b && b.count >= CANDIDATE_MIN_DOGS) return '<span class="tag-candidate">開発候補</span>';
           return "";
