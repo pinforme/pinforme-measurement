@@ -1700,8 +1700,8 @@ document.addEventListener('click',function(event){
  document.addEventListener('pinforme:summary',event=>{
   const data=event.detail;
   graph.replaceChildren();
-  if(!data){total.textContent='—';note.textContent='集計を取得できませんでした。';meta.textContent='次の更新時に再確認します';return;}
-  total.textContent=data.total_dogs.toLocaleString('ja-JP');note.textContent='みなさまの採寸を、服づくりに活かしています。';
+  if(!data){note.textContent='集計を取得できませんでした。';meta.textContent='次の更新時に再確認します';return;}
+  note.textContent='みなさまの採寸を、服づくりに活かしています。';
   const max=Math.max(1,...data.bins.map(bin=>bin.dog_count));
   data.bins.forEach((bin,i)=>{
    if((i===0||i===7)&&bin.dog_count===0)return;
@@ -1712,6 +1712,10 @@ document.addEventListener('click',function(event){
    const value=document.createElement('span');value.textContent=String(bin.dog_count);row.append(label,track,value);graph.appendChild(row);
   });
   meta.textContent='取得 '+new Date(data.retrieved_at).toLocaleTimeString('ja-JP',{timeZone:'Asia/Tokyo',hour:'2-digit',minute:'2-digit'})+'｜1分ごとに更新';
+ });
+ document.addEventListener('pinforme:registry',event=>{
+  const count=event.detail&&event.detail.minpin;
+  if(Number.isSafeInteger(count)&&count>=0)total.textContent=count.toLocaleString('ja-JP');
  });
  show(0);reflect();
 })();
@@ -1877,6 +1881,7 @@ document.addEventListener('click',function(event){
       });
       regTotal.textContent = totalDogs.toLocaleString('ja-JP');
       if (regMinpin) regMinpin.textContent = minpinDogs.toLocaleString('ja-JP');
+      document.dispatchEvent(new CustomEvent('pinforme:registry',{detail:{total:totalDogs,minpin:minpinDogs}}));
       renderBreedTabs(breeds);
     } catch (error) { /* 登録頭数が取得できない場合は「—」のままにし、グラフの表示は止めない */ }
   }
