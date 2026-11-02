@@ -26,6 +26,14 @@
         --olive: #75804c;
         --olive-soft: #e9ecd9;
         --tan: #d9a05b;
+        --bar-base: #b3a488;
+        --bar-base-pup: #d8cdb4;
+        --bar-sample-pup: #e7a98d;
+        --bar-cand-pup: #bcc69d;
+        --blue: #2f6db3;
+        --blue-deep: #1e528a;
+        --blue-soft: #dcebf7;
+        --bar-sale-pup: #aacbeb;
         --shadow: 0 1px 2px rgba(62, 45, 25, 0.06), 0 8px 24px rgba(62, 45, 25, 0.06);
         color-scheme: light;
       }
@@ -43,6 +51,14 @@
           --olive: #a9b47e;
           --olive-soft: #39402a;
           --tan: #d9a05b;
+          --bar-base: #9c8f73;
+          --bar-base-pup: #c6bba2;
+          --bar-sample-pup: #f0bfa4;
+          --bar-cand-pup: #cfdaae;
+          --blue: #7db3e8;
+          --blue-deep: #a9cdf2;
+          --blue-soft: #2b3f57;
+          --bar-sale-pup: #c3dcf5;
           --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.25);
           color-scheme: dark;
         }
@@ -246,7 +262,7 @@
       .chart { display: flex; flex-direction: column; gap: 10px; }
       .chart-row {
         display: grid;
-        grid-template-columns: 148px 1fr 52px;
+        grid-template-columns: 148px 1fr 80px;
         align-items: center;
         gap: 12px;
       }
@@ -255,13 +271,51 @@
       .track { background: var(--paper-2); border-radius: 8px; height: 30px; overflow: hidden; }
       .bar {
         height: 100%;
-        background: var(--tan);
+        background: var(--bar-base);
         border-radius: 8px;
         min-width: 6px;
+        position: relative;
+        overflow: hidden;
       }
       .bar.hot { background: var(--terra); }
+      .bar.cand { background: var(--olive); }
+      .bar.sale { background: var(--blue); }
+      .bar .bar-pup {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        background: var(--bar-base-pup);
+      }
+      .bar.hot .bar-pup { background: var(--bar-sample-pup); }
+      .bar.cand .bar-pup { background: var(--bar-cand-pup); }
+      .bar.sale .bar-pup { background: var(--bar-sale-pup); }
+      .chart-legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px 14px;
+        align-items: center;
+        margin-top: 12px;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--ink-soft);
+      }
+      .chart-legend .sw {
+        display: inline-block;
+        width: 22px;
+        height: 10px;
+        border-radius: 3px;
+        margin-right: 5px;
+        vertical-align: -1px;
+      }
+      .chart-legend .sw-sale { background: var(--blue); }
+      .chart-legend .sw-sample { background: var(--terra); }
+      .chart-legend .sw-cand { background: var(--olive); }
+      .chart-legend .sw-base { background: var(--bar-base); }
+      .chart-legend .sw-pup { background: linear-gradient(to right, var(--bar-base) 55%, var(--bar-base-pup) 55%); }
       .chart-row .cnt { font-weight: 900; font-size: 16px; text-align: right; white-space: nowrap; }
       .chart-row .cnt small { font-size: 12px; color: var(--ink-soft); font-weight: 700; }
+      .chart-row .cnt .cnt-sub { display: block; font-size: 10.5px; line-height: 1.45; color: var(--ink-soft); font-weight: 700; white-space: nowrap; }
       .tag-candidate {
         display: inline-block;
         font-size: 11.5px;
@@ -288,6 +342,18 @@
         font-weight: 900;
         color: var(--terra-deep);
         background: var(--terra-soft);
+        border-radius: 999px;
+        padding: 1px 9px;
+        margin-left: 6px;
+        vertical-align: 2px;
+        font-family: "Zen Kaku Gothic New", sans-serif;
+      }
+      .tag-sale {
+        display: inline-block;
+        font-size: 11.5px;
+        font-weight: 900;
+        color: var(--blue-deep);
+        background: var(--blue-soft);
         border-radius: 999px;
         padding: 1px 9px;
         margin-left: 6px;
@@ -405,7 +471,7 @@
         .checker { grid-template-columns: 1fr; }
         .checker .out-pane { border-left: none; border-top: 1px solid var(--line); }
         .lookup-grid { grid-template-columns: 1fr; gap: 20px; }
-        .chart-row { grid-template-columns: 126px 1fr 42px; gap: 8px; }
+        .chart-row { grid-template-columns: 126px 1fr 76px; gap: 8px; }
         .chart-row .sz { font-size: 15px; }
         .tag-sample { margin-left: 0; }
         .step h3 { font-size: 16px; }
@@ -457,13 +523,13 @@
       .pat-grid select, .lookup-grid select { max-width: 100%; }
       .ease-row .input-row { min-width: 0; }
       .ease-row .input-row input { width: 100%; }
-      .chart-row { grid-template-columns: 148px minmax(0, 1fr) 52px; }
+      .chart-row { grid-template-columns: 148px minmax(0, 1fr) 80px; }
       .pat-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
       .pat-actions .dl-btn { margin-top: 0; }
       .dl-btn.ghost { background: transparent; color: var(--terra-deep); }
       @media (max-width: 560px) {
         .ease-row { grid-template-columns: 1fr; }
-        .chart-row { grid-template-columns: 118px minmax(0, 1fr) 40px; }
+        .chart-row { grid-template-columns: 118px minmax(0, 1fr) 76px; }
         .chart-row .sz { white-space: normal; }
       }
 
@@ -667,6 +733,14 @@
         <p class="sec-lead" id="dist-lead">ミニチュア・ピンシャーの胴まわり分布です。サイズ名は、その帯にいる子たちの胴まわりの平均を四捨五入した数字になっています。</p>
         <div class="card">
           <div class="chart" id="chart"><p class="hint">読み込み中…</p></div>
+          <div class="chart-legend">
+            <span><span class="sw sw-sale"></span>販売中</span>
+            <span><span class="sw sw-sample"></span>サンプル対象</span>
+            <span><span class="sw sw-cand"></span>開発候補</span>
+            <span><span class="sw sw-base"></span>その他</span>
+            <span><span class="sw sw-pup"></span>バーの薄い部分＝パピー</span>
+          </div>
+          <p class="chart-note" id="hp-range-note"></p>
           <p class="chart-note">「サンプル対象」は、1個飛ばしで選んだ3つの帯（胴まわり35〜38cm・41〜44cm・47〜50cm）。OEMへサンプル製作を依頼するサイズです。作るサイズが隣の帯を補う・カバーするわけではありません。各サイズが合わせるのは、自分の帯の子だけです。飛ばした帯は今回の製作対象には入りませんが、5頭以上集まった帯は「開発候補」として次の製作候補になり、頭数の少ない帯はオーダーメイドで対応します。順位は頭数の多い順です。試着モニターには各サイズの中心の子に加えて、帯の境目にいる子も入り、境目の位置そのものを検証します。</p>
         </div>
       </section>
@@ -689,18 +763,18 @@
       <!-- ============ 04 RULE ============ -->
       <section id="rule">
         <div class="sec-head"><span class="sec-no">04</span><h2>サイズ表記の決め方</h2></div>
-        <p class="sec-lead">サイズ帯は固定ではなく、実データから自動で組み立てられます。名前を先に決めてしまうと、データとずれた「名前だけのサイズ」ができてしまう——それを避けるための仕組みです。</p>
+        <p class="sec-lead">サイズ帯は、犬種ごとに決めた起点の固定した物差しの上に、実データから自動で組み立てられます。サイズ名を先に決めてしまうと、データとずれた「名前だけのサイズ」ができてしまう——それを避けるため、名前は帯ごとの実データの平均から付けます。</p>
         <div class="card">
           <div class="steps">
-            <div class="step"><div class="n">1</div><div><h3>最小値・最大値は実データから</h3><p>いまの最小は<span id="rule-min">—</span>cm、最大は<span id="rule-max">—</span>cm（取得した最新データから）。仮に胴まわり30cmの子が現れたら、その時点で最小値は30cmになります。</p></div></div>
-            <div class="step"><div class="n">2</div><div><h3>最小値から3cm刻みで帯を作る</h3><p>32〜35、35〜38、38〜41…という具合に範囲を切ります。最大値がちょうど境目に重なった場合は、最後の帯に含めます（50.0cmの子は47〜50の帯です）。</p></div></div>
+            <div class="step"><div class="n">1</div><div><h3>データの広がりは実データから</h3><p>いまの最小は<span id="rule-min">—</span>cm、最大は<span id="rule-max">—</span>cm（取得した最新データから）。ただし帯の区切りは、この最小値・最大値には連動しません（次のステップ）。</p></div></div>
+            <div class="step"><div class="n">2</div><div><h3>犬種ごとの起点・3cm刻みの固定グリッドで帯を作る</h3><p>起点は犬種ごとに持ちます。ミニチュア・ピンシャーは32cmが起点で、…29〜32、32〜35、35〜38、38〜41…という具合に、32cmを起点にした物差しで切ります。ホームページの公開グラフと同じ位相です。ほかの犬種は、その犬種で集計対象が10頭に届いた時点で、その時点のデータから起点を決めて固定します（それまでは暫定の起点で切ります）。起点は一度決めたら動かさず、範囲が広がる時は起点から3cm刻みで上下に足します。新しい子が端に入っても、既存の帯の境界は動きません。最大値がちょうど境目に重なった場合は、最後の帯に含めます。それ以外は、すべての帯を「以上〜未満」で切り、境目ちょうどの子は上の帯に入ります（ミニピンでは50.0cmの子は50〜53の帯、32.0cmの子は32〜35の帯です）。例外は作りません。帯の所属が、帯の平均・サイズ名・型紙・開発候補の判定の土台になるためです。</p></div></div>
             <div class="step"><div class="n">3</div><div><h3>サイズ名は帯の平均（四捨五入）</h3><p>32〜35の帯にいる子たちの平均が約34だから「SIZE 34」。47〜50の帯は平均48.9で「SIZE 49」になります。</p></div></div>
-            <div class="step"><div class="n">4</div><div><h3>データが増えれば、帯ごと組み替わる</h3><p>新しい子が端の範囲に入ると帯全体がずれ、名前も変わります。これは不具合ではなく、設計どおりの動きです。</p></div></div>
+            <div class="step"><div class="n">4</div><div><h3>帯は端に足され、名前は平均で動く</h3><p>新しい子が今の範囲の外に入ると、その側に新しい帯が足されます。既存の帯の境界は動きませんが、帯の中の顔ぶれが変われば平均が動き、サイズ名が変わることはあります。</p></div></div>
           </div>
           <div class="example">
             <h3>試算：胴まわり30cmの子が1頭増えたら</h3>
-            <p>最小値が30cmに動いて帯が組み替わり、サイズ名はこう変わります。</p>
-            <p class="flow"><s>34 ・ 37 ・ 39 ・ 42 ・ 45 ・ 49</s><span class="arr">→</span>31 ・ 35 ・ 38 ・ 40 ・ 43 ・ 45 ・ 49</p>
+            <p>30cmの子は29〜32の帯に入り、いちばん下に新しい帯が1つ足されます。ほかの帯の境界は動きません。</p>
+            <p class="flow">既存の帯（境界はそのまま）<span class="arr">＋</span>29〜32の帯が追加</p>
             <p style="margin:0">変わることを前提に、お客様には最初から「サイズ表記は成長に合わせて見直される」ことを伝えています。表記の変遷は、PINFORMEの成長記録として履歴に残していきます（現在の構成が「初版・26頭時点」）。</p>
           </div>
         </div>
@@ -1657,10 +1731,13 @@ setPINFORMEKarte=function(d){
             .catch(function () { /* registry fetch failed: keep the numbers already shown */ });
         }
         var SAMPLE_RANGES = [[35, 38], [41, 44], [47, 50]]; // first OEM sample bands, keyed by chest range (band names drift as the mean moves)
+        var ON_SALE_RANGES = []; // bands currently on sale, keyed by chest range like SAMPLE_RANGES. When a band goes on sale, add its range here (e.g. [[41, 44]]) and that band's badge and bar switch to 販売中, ahead of sample/candidate. Empty = nothing on sale yet.
         var CANDIDATE_MIN_DOGS = 5; // bands with at least this many dogs (and not sample bands) are development candidates
         var SAMPLE_ACTIVE = true; // set to false when sample production is finished: the sample badges disappear everywhere
         function isSampleBand(b) { return !!b && SAMPLE_RANGES.some(function (r) { return Number(b.lo) === r[0] && Number(b.hi) === r[1]; }); }
+        function isOnSaleBand(b) { return !!b && ON_SALE_RANGES.some(function (r) { return Number(b.lo) === r[0] && Number(b.hi) === r[1]; }); }
         function bandBadge(b) {
+          if (isOnSaleBand(b)) return '<span class="tag-sale">販売中</span>';
           if (SAMPLE_ACTIVE && isSampleBand(b)) return '<span class="tag-sample">サンプル対象</span>';
           if (b && b.count >= CANDIDATE_MIN_DOGS) return '<span class="tag-candidate">開発候補</span>';
           return "";
@@ -1695,16 +1772,69 @@ setPINFORMEKarte=function(d){
           if (y === 0) return m + "か月齢";
           return m === 0 ? y + "歳" : y + "歳" + m + "か月";
         }
+        // Homepage yardstick (user decision 2026-11-02): an adult is a dog
+        // aged 12+ months at its measurement date — the same definition as
+        // the public RPC site_breed_measurement_summary_v2. A dog with no
+        // birth date cannot be classified and counts as neither.
+        function ageMonthsAt(birth, on) {
+          if (!birth || !on) return null;
+          var b = new Date(String(birth).slice(0, 10) + "T00:00:00");
+          var d = new Date(String(on).slice(0, 10) + "T00:00:00");
+          if (isNaN(b.getTime()) || isNaN(d.getTime())) return null;
+          var months = (d.getFullYear() - b.getFullYear()) * 12 + (d.getMonth() - b.getMonth());
+          if (d.getDate() < b.getDate()) months -= 1;
+          return months;
+        }
+        function isAdultDog(d) { var m = ageMonthsAt(d.birth, d.date); return m !== null && m >= 12; }
+        function isPuppyDog(d) { var m = ageMonthsAt(d.birth, d.date); return m !== null && m < 12; }
 
-        // Bands: start at the data minimum, 3cm steps, lower bound inclusive;
-        // a value exactly on the top edge folds into the last band.
-        // Size name = rounded mean chest of the dogs inside the band.
-        function computeBands(values) {
+        // Band anchors (user decision 2026-11-02): the grid phase is
+        // per breed. Miniature Pinscher is fixed at 32cm — once set, an
+        // anchor never moves; the grid only widens in 3cm steps from
+        // it. Other breeds use a provisional anchor (floor of the
+        // breed's current minimum chest, whole cm) until their eligible
+        // count (consent + chest) reaches 10, when the anchor is set
+        // from the data at that point and fixed in BREED_ANCHORS below.
+        // Keys are compared with "・" and spaces stripped, so both
+        // breed-name spellings match.
+        var BREED_ANCHORS = { "ミニチュアピンシャー": 32 };
+        function anchorKeyOf(breed) { return String(breed || "").replace(/[・\s]/g, ""); }
+        function fixedAnchorOf(breed) {
+          var k = anchorKeyOf(breed);
+          return Object.prototype.hasOwnProperty.call(BREED_ANCHORS, k) ? BREED_ANCHORS[k] : null;
+        }
+        function breedAnchor(breed, values) {
+          var fixed = fixedAnchorOf(breed);
+          if (fixed !== null) return fixed;
+          var min = null;
+          (values || []).forEach(function (v) {
+            if (v === null || v === undefined || !isFinite(v)) return;
+            v = Number(v);
+            if (min === null || v < min) min = v;
+          });
+          return min === null ? 32 : Math.floor(min);
+        }
+        function anchorIsFixed(breed) { return fixedAnchorOf(breed) !== null; }
+
+        // Bands: fixed grid anchored at the breed's anchor, 3cm steps,
+        // lower bound inclusive — the same phase as the homepage public
+        // graph, so band edges never drift with the data minimum (user
+        // decision 2026-11-02). The grid extends up/down as far as the
+        // data reaches; a value exactly on the top edge of the highest
+        // occupied band folds into that band. Everywhere else the grid
+        // is a pure [lower, upper) cut with no exceptions: a value
+        // exactly on a boundary belongs to the band starting there
+        // (user decision 2026-11-02, later the same day: no exception
+        // anywhere, because band membership feeds band means, size
+        // names, patterns and the 5+ candidate threshold).
+        // Size name = rounded mean chest of the band.
+        function computeBands(values, anchor) {
           var vs = values.filter(function (v) { return v !== null && v !== undefined; })
                          .sort(function (a, b) { return a - b; });
           if (!vs.length) return [];
+          if (anchor === null || anchor === undefined) anchor = 32;
           var min = vs[0], max = vs[vs.length - 1];
-          var raw = [], lo = min;
+          var raw = [], lo = anchor + 3 * Math.floor((min - anchor) / 3);
           do { raw.push({ lo: lo, hi: lo + 3, members: [] }); lo += 3; } while (lo < max);
           vs.forEach(function (v) {
             for (var i = 0; i < raw.length; i++) {
@@ -1719,6 +1849,7 @@ setPINFORMEKarte=function(d){
             b.members.forEach(function (m) { sum += m; });
             out.push({ name: Math.round(sum / b.members.length), lo: b.lo, hi: b.hi, count: b.members.length });
           });
+          out.anchor = anchor;
           return out;
         }
         function bandFor(v, bands) {
@@ -1791,19 +1922,88 @@ setPINFORMEKarte=function(d){
           var ranked = BANDS.slice().sort(function (a, b) { return (b.count - a.count) || (a.lo - b.lo); });
           var rankOf = {};
           ranked.forEach(function (b, i) { rankOf[b.lo + "-" + b.hi] = i + 1; });
+          // Reference figures on the homepage yardstick. The bands now
+          // share the homepage grid (the breed's anchor, 3cm steps) and
+          // still include puppies. The note reports the out-of-frame tallies
+          // behind the public graph's widening rule (2026-11-02): a side
+          // widens only when it holds at least one adult AND more than
+          // 5 dogs counting adults + puppies together; a puppy-only
+          // side never widens. Adult = 12+ months at measurement.
+          var puppyOf = {};
+          var belowTotal = 0, belowAdults = 0, belowPuppies = 0;
+          var aboveTotal = 0, aboveAdults = 0, abovePuppies = 0;
+          // The frame is the displayed breed's core range: its anchor
+          // (coreLo) through anchor + 18 (coreHi). Out-of-frame counts
+          // follow the same pure-grid cut as the bands: below = chest
+          // < coreLo, above = chest >= coreHi (a dog exactly on coreHi
+          // is counted on the above side, in the band starting there).
+          var anchor = (BANDS && BANDS.anchor !== undefined) ? BANDS.anchor
+            : breedAnchor(primaryBreed, dogsOf(primaryBreed).map(function (d) { return d.chest; }));
+          var coreLo = anchor, coreHi = anchor + 18;
+          dogsOf(primaryBreed).forEach(function (d) {
+            if (d.chest === null || d.chest === undefined) return;
+            var puppy = isPuppyDog(d), adult = isAdultDog(d);
+            if (puppy) {
+              var pb = bandFor(d.chest, BANDS);
+              if (pb) { var pk = pb.lo + "-" + pb.hi; puppyOf[pk] = (puppyOf[pk] || 0) + 1; }
+            }
+            // Out-of-frame dogs are tallied as total / adult / puppy so
+            // the note can show all three; a dog with no birth date is
+            // in the total only (neither adult nor puppy), as before.
+            if (d.chest < coreLo) {
+              belowTotal += 1;
+              if (adult) belowAdults += 1;
+              else if (puppy) belowPuppies += 1;
+            } else if (d.chest >= coreHi) {
+              aboveTotal += 1;
+              if (adult) aboveAdults += 1;
+              else if (puppy) abovePuppies += 1;
+            }
+          });
           BANDS.forEach(function (b) {
             var row = document.createElement("div");
             row.className = "chart-row";
             var pct = maxCount ? Math.round((b.count / maxCount) * 100) : 0;
+            var pk2 = b.lo + "-" + b.hi;
+            // Bar colour follows the same state as the badge (on sale
+            // first, then sample, then candidate at
+            // CANDIDATE_MIN_DOGS+, else neutral). The pale tail of
+            // the bar is the puppy share of the band, so adults vs
+            // puppies read as lengths.
+            var barCls = isOnSaleBand(b) ? " sale"
+              : SAMPLE_ACTIVE && isSampleBand(b) ? " hot"
+              : (b.count >= CANDIDATE_MIN_DOGS ? " cand" : "");
+            var pupN = puppyOf[pk2] || 0;
+            var pupPct = pupN && b.count ? Math.max(1, Math.round((pupN / b.count) * 100)) : 0;
             row.innerHTML =
               '<div class="sz">SIZE ' + b.name +
                 bandBadge(b) +
                 '<span class="tag-rank">' + rankOf[b.lo + "-" + b.hi] + "位</span>" +
                 "<span>胴まわり " + fmt(b.lo) + "〜" + fmt(b.hi) + "cm</span></div>" +
-              '<div class="track"><div class="bar' + (SAMPLE_ACTIVE && isSampleBand(b) ? " hot" : "") + '" style="width:' + pct + '%"></div></div>' +
-              '<div class="cnt">' + b.count + "<small>頭</small></div>";
+              '<div class="track"><div class="bar' + barCls + '" style="width:' + pct + '%">' +
+                (pupPct ? '<span class="bar-pup" style="width:' + pupPct + '%"></span>' : "") + "</div></div>" +
+              '<div class="cnt">' + b.count + "<small>頭</small>" +
+                (puppyOf[pk2] ? '<span class="cnt-sub">うちパピー' + puppyOf[pk2] + "頭</span>" : "") + "</div>";
             chart.appendChild(row);
           });
+          var hpNote = document.getElementById("hp-range-note");
+          if (hpNote) {
+            // Widening rule (user decision 2026-11-02): a side widens
+            // only with at least one adult out of frame AND adults +
+            // puppies together exceeding 5 on that side. Dogs with no
+            // birth date count as neither, so the combined figure is
+            // adults + puppies, not the raw total.
+            var belowWide = belowAdults >= 1 && (belowAdults + belowPuppies) > 5;
+            var aboveWide = aboveAdults >= 1 && (aboveAdults + abovePuppies) > 5;
+            var wideState = belowWide && aboveWide ? "両側とも、区画を広げる条件に達しています。"
+              : belowWide ? coreLo + "cm未満の側が、区画を広げる条件に達しています。"
+              : aboveWide ? coreHi + "cm以上の側が、区画を広げる条件に達しています。"
+              : "どちらの側も、まだ区画を広げる条件には達していません。";
+            hpNote.innerHTML = "帯の切り方は" + primaryBreed + "の起点（" + anchor + "cm）から3cm刻みの固定グリッドです。帯の頭数にはパピーも含まれ、パピーがいる帯には「うちパピー」と添えています。" +
+              (anchorIsFixed(primaryBreed) ? "" : "この犬種の起点は暫定です（集計対象が10頭に届いた時点で、その時点のデータから固定します）。") +
+              "公開グラフの区画が広がるのは、範囲外に成犬がいて、成犬とパピーを合わせて5頭を超えた側です。パピーだけでは広がりません（成犬＝測定時点で12か月以上）。" +
+              "現在、" + primaryBreed + "の範囲外は、" + coreLo + "cm未満が <strong>" + belowTotal + "頭</strong>（成犬" + belowAdults + "頭・パピー" + belowPuppies + "頭）、" + coreHi + "cm以上が <strong>" + aboveTotal + "頭</strong>（成犬" + aboveAdults + "頭・パピー" + abovePuppies + "頭）で、" + wideState;
+          }
         }
 
         var BREED_TEXT = {
@@ -1936,10 +2136,10 @@ setPINFORMEKarte=function(d){
           if (!band) {
             resSize.textContent = "帯の範囲外";
             if (v < BANDS[0].lo) {
-              resBand.textContent = "現在の最小は " + fmt(BANDS[0].lo) + "cm です";
-              resNote.textContent = "この子より小さいデータはまだありません。こういう子が増えると、最小値が動いて帯全体が組み替わります。";
+              resBand.textContent = "現在の最小の帯は " + fmt(BANDS[0].lo) + "〜" + fmt(BANDS[0].hi) + "cm です";
+              resNote.textContent = "この子より小さいデータはまだありません。こういう子が増えると、いちばん下に新しい帯が足されていきます。";
             } else {
-              resBand.textContent = "現在の最大は " + fmt(BANDS[BANDS.length - 1].hi) + "cm です";
+              resBand.textContent = "現在の最大の帯は " + fmt(BANDS[BANDS.length - 1].lo) + "〜" + fmt(BANDS[BANDS.length - 1].hi) + "cm です";
               resNote.textContent = "この子より大きいデータはまだありません。データが増えれば、新しい帯が上に足されていきます。";
             }
             return;
@@ -2285,7 +2485,8 @@ setPINFORMEKarte=function(d){
           breedNames.forEach(function (br) {
             var list = dogsOf(br);
             if (list.length >= BAND_MIN_DOGS) {
-              bandsByBreed[br] = computeBands(list.map(function (d) { return d.chest; }));
+              var chestsBr = list.map(function (d) { return d.chest; });
+              bandsByBreed[br] = computeBands(chestsBr, breedAnchor(br, chestsBr));
             }
           });
           primaryBreed = null;
@@ -2756,20 +2957,61 @@ setPINFORMEKarte=function(d){
           });
           return out;
         }
+        /* Band anchors (user decision 2026-11-02): the grid phase is
+           per breed. Miniature Pinscher is fixed at 32cm — once set, an
+           anchor never moves; the grid only widens in 3cm steps from
+           it. Other breeds use a provisional anchor (floor of the
+           breed's current minimum chest, whole cm) until their eligible
+           count (consent + chest) reaches 10, when the anchor is set
+           from the data at that point and fixed in BREED_ANCHORS below.
+           Keys are compared with "・" and spaces stripped, so both
+           breed-name spellings match. */
+        var BREED_ANCHORS = { "ミニチュアピンシャー": 32 };
+        function anchorKeyOf(breed) { return String(breed || "").replace(/[・\s]/g, ""); }
+        function fixedAnchorOf(breed) {
+          var k = anchorKeyOf(breed);
+          return Object.prototype.hasOwnProperty.call(BREED_ANCHORS, k) ? BREED_ANCHORS[k] : null;
+        }
+        function breedAnchor(breed, values) {
+          var fixed = fixedAnchorOf(breed);
+          if (fixed !== null) return fixed;
+          var min = null;
+          (values || []).forEach(function (v) {
+            if (v === null || v === undefined || !isFinite(v)) return;
+            v = Number(v);
+            if (min === null || v < min) min = v;
+          });
+          return min === null ? 32 : Math.floor(min);
+        }
+        function anchorIsFixed(breed) { return fixedAnchorOf(breed) !== null; }
+
         /* Band rule: one canonical algorithm, shared with the public checker
-           (section 04): start at the data minimum, 3cm steps, lower bound
-           inclusive; a value exactly on the top edge folds into the last
-           band; size name = rounded mean chest of the band members.
-           (The previous index-based version created a phantom solo band
-           when the maximum sat exactly on a boundary — e.g. min 32 / max
-           50.0 produced a [50,53) band instead of folding into [47,50] —
-           so it was aligned to the public algorithm. See design memo.) */
-        function computeBands(values) {
+           (section 04): fixed grid anchored at the breed's anchor, 3cm
+           steps, lower bound inclusive — the same phase as the homepage
+           public graph, so band edges never drift with the data minimum;
+           a value exactly on the top edge of the highest occupied band
+           folds into that band. Everywhere else the cut is a pure
+           [lower, upper) grid with no exceptions: a value exactly on a
+           boundary belongs to the band starting there (user decision
+           2026-11-02, later the same day — an earlier core-range-edge
+           exception was removed the same day it was added, because band
+           membership feeds band means, size names, patterns and the
+           5+ candidate threshold);
+           size name = rounded mean chest of the band members.
+           (Until 2026-11-02 the grid started at the data minimum, so a new
+           smallest dog slid every band edge — e.g. min 31.5 produced
+           31.5–34.5, 34.5–37.5… The 2026-11-02 decisions first anchored the
+           grid at 32cm, then made the anchor per breed. The fold rule
+           stays: without it, a maximum sitting exactly on a boundary
+           — e.g. max 50.0 — would spawn a phantom solo [50,53) band
+           instead of folding into [47,50]. See design memo.) */
+        function computeBands(values, anchor) {
           var vs = values.filter(function (v) { return v !== null && v !== undefined && isFinite(v); })
             .map(Number).sort(function (a, b) { return a - b; });
           if (!vs.length) return [];
+          if (anchor === null || anchor === undefined) anchor = 32;
           var min = vs[0], max = vs[vs.length - 1];
-          var raw = [], lo = min;
+          var raw = [], lo = anchor + 3 * Math.floor((min - anchor) / 3);
           do { raw.push({ lo: lo, hi: lo + 3, members: [] }); lo += 3; } while (lo < max);
           vs.forEach(function (v) {
             for (var i = 0; i < raw.length; i++) {
@@ -2783,14 +3025,18 @@ setPINFORMEKarte=function(d){
             var sum = 0; b.members.forEach(function (m) { sum += m; });
             out.push({ lo: b.lo, hi: b.hi, name: Math.round(sum / b.members.length), count: b.members.length });
           });
+          out.anchor = anchor;
           return out;
         }
         var BAND_MIN_DOGS = 5; // same threshold as the public side
         var SAMPLE_RANGES = [[35, 38], [41, 44], [47, 50]]; // first OEM sample bands, keyed by chest range (band names drift as the mean moves)
+        var ON_SALE_RANGES = []; // bands currently on sale, keyed by chest range like SAMPLE_RANGES. When a band goes on sale, add its range here (e.g. [[41, 44]]) and that band's badge and bar switch to 販売中, ahead of sample/candidate. Empty = nothing on sale yet.
         var CANDIDATE_MIN_DOGS = 5; // bands with at least this many dogs (and not sample bands) are development candidates
         var SAMPLE_ACTIVE = true; // set to false when sample production is finished: the sample badges disappear everywhere
         function isSampleBand(b) { return !!b && SAMPLE_RANGES.some(function (r) { return Number(b.lo) === r[0] && Number(b.hi) === r[1]; }); }
+        function isOnSaleBand(b) { return !!b && ON_SALE_RANGES.some(function (r) { return Number(b.lo) === r[0] && Number(b.hi) === r[1]; }); }
         function bandBadge(b) {
+          if (isOnSaleBand(b)) return '<span class="tag-sale">販売中</span>';
           if (SAMPLE_ACTIVE && isSampleBand(b)) return '<span class="tag-sample">サンプル対象</span>';
           if (b && b.count >= CANDIDATE_MIN_DOGS) return '<span class="tag-candidate">開発候補</span>';
           return "";
@@ -2807,7 +3053,7 @@ setPINFORMEKarte=function(d){
         function bandsForBreed(breed) {
           var chests = latestChestsOfBreed(breed);
           if (chests.length < BAND_MIN_DOGS) return null;
-          return computeBands(chests);
+          return computeBands(chests, breedAnchor(breed, chests));
         }
         function bandForChest(c, bands) {
           for (var i = 0; i < bands.length; i++) {
@@ -3400,6 +3646,9 @@ setPINFORMEKarte=function(d){
               bandText = "胴まわり " + fmt(l.chest) + "cm → " + fmt(band.lo) + "〜" + fmt(band.hi) + "cm の帯（現在 " + band.count + "頭）";
               var ne = nearEdgeOf(Number(l.chest), band, bands);
               if (ne) warnText = "帯の境目（" + fmt(ne.edge) + "cm）に近い値です。試着モニターでは SIZE " + ne.other.name + " との両方試着の対象になります。";
+            }
+            if (!anchorIsFixed(formal)) {
+              noteText = "この犬種の起点（" + bands.anchor + "cm）は暫定です。集計対象が10頭に届いた時点で、その時点のデータから固定します。";
             }
           }
           if (!warnText && l && remeasureDue(l)) {
