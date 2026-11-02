@@ -262,6 +262,7 @@
       .bar.hot { background: var(--terra); }
       .chart-row .cnt { font-weight: 900; font-size: 16px; text-align: right; white-space: nowrap; }
       .chart-row .cnt small { font-size: 12px; color: var(--ink-soft); font-weight: 700; }
+      .chart-row .cnt .cnt-sub { display: block; font-size: 11px; color: var(--ink-soft); font-weight: 700; }
       .tag-candidate {
         display: inline-block;
         font-size: 11.5px;
@@ -667,6 +668,7 @@
         <p class="sec-lead" id="dist-lead">ミニチュア・ピンシャーの胴まわり分布です。サイズ名は、その帯にいる子たちの胴まわりの平均を四捨五入した数字になっています。</p>
         <div class="card">
           <div class="chart" id="chart"><p class="hint">読み込み中…</p></div>
+          <p class="chart-note" id="hp-range-note"></p>
           <p class="chart-note">「サンプル対象」は、1個飛ばしで選んだ3つの帯（胴まわり35〜38cm・41〜44cm・47〜50cm）。OEMへサンプル製作を依頼するサイズです。作るサイズが隣の帯を補う・カバーするわけではありません。各サイズが合わせるのは、自分の帯の子だけです。飛ばした帯は今回の製作対象には入りませんが、5頭以上集まった帯は「開発候補」として次の製作候補になり、頭数の少ない帯はオーダーメイドで対応します。順位は頭数の多い順です。試着モニターには各サイズの中心の子に加えて、帯の境目にいる子も入り、境目の位置そのものを検証します。</p>
         </div>
       </section>
@@ -1695,6 +1697,21 @@ setPINFORMEKarte=function(d){
           if (y === 0) return m + "か月齢";
           return m === 0 ? y + "歳" : y + "歳" + m + "か月";
         }
+        // Homepage yardstick (user decision 2026-11-02): an adult is a dog
+        // aged 12+ months at its measurement date — the same definition as
+        // the public RPC site_breed_measurement_summary_v2. A dog with no
+        // birth date cannot be classified and counts as neither.
+        function ageMonthsAt(birth, on) {
+          if (!birth || !on) return null;
+          var b = new Date(String(birth).slice(0, 10) + "T00:00:00");
+          var d = new Date(String(on).slice(0, 10) + "T00:00:00");
+          if (isNaN(b.getTime()) || isNaN(d.getTime())) return null;
+          var months = (d.getFullYear() - b.getFullYear()) * 12 + (d.getMonth() - b.getMonth());
+          if (d.getDate() < b.getDate()) months -= 1;
+          return months;
+        }
+        function isAdultDog(d) { var m = ageMonthsAt(d.birth, d.date); return m !== null && m >= 12; }
+        function isPuppyDog(d) { var m = ageMonthsAt(d.birth, d.date); return m !== null && m < 12; }
 
         // Bands: start at the data minimum, 3cm steps, lower bound inclusive;
         // a value exactly on the top edge folds into the last band.
@@ -1791,19 +1808,41 @@ setPINFORMEKarte=function(d){
           var ranked = BANDS.slice().sort(function (a, b) { return (b.count - a.count) || (a.lo - b.lo); });
           var rankOf = {};
           ranked.forEach(function (b, i) { rankOf[b.lo + "-" + b.hi] = i + 1; });
+          // Reference figures on the homepage yardstick (fixed 32–50cm
+          // frame, adult = 12+ months at measurement). Display only: the
+          // band computation above is unchanged and still includes puppies.
+          var puppyOf = {}, belowAdults = 0, aboveAdults = 0;
+          dogsOf(primaryBreed).forEach(function (d) {
+            if (d.chest === null || d.chest === undefined) return;
+            if (isPuppyDog(d)) {
+              var pb = bandFor(d.chest, BANDS);
+              if (pb) { var pk = pb.lo + "-" + pb.hi; puppyOf[pk] = (puppyOf[pk] || 0) + 1; }
+            } else if (isAdultDog(d)) {
+              if (d.chest < 32) belowAdults += 1;
+              else if (d.chest > 50) aboveAdults += 1;
+            }
+          });
           BANDS.forEach(function (b) {
             var row = document.createElement("div");
             row.className = "chart-row";
             var pct = maxCount ? Math.round((b.count / maxCount) * 100) : 0;
+            var pk2 = b.lo + "-" + b.hi;
             row.innerHTML =
               '<div class="sz">SIZE ' + b.name +
                 bandBadge(b) +
                 '<span class="tag-rank">' + rankOf[b.lo + "-" + b.hi] + "位</span>" +
                 "<span>胴まわり " + fmt(b.lo) + "〜" + fmt(b.hi) + "cm</span></div>" +
               '<div class="track"><div class="bar' + (SAMPLE_ACTIVE && isSampleBand(b) ? " hot" : "") + '" style="width:' + pct + '%"></div></div>' +
-              '<div class="cnt">' + b.count + "<small>頭</small></div>";
+              '<div class="cnt">' + b.count + "<small>頭</small>" +
+                (puppyOf[pk2] ? '<span class="cnt-sub">うちパピー' + puppyOf[pk2] + "頭</span>" : "") + "</div>";
             chart.appendChild(row);
           });
+          var hpNote = document.getElementById("hp-range-note");
+          if (hpNote) {
+            hpNote.innerHTML = "ホームページの公開グラフと同じ物差し（固定区画32〜50cm／成犬は測定時点で12か月以上）では、" +
+              primaryBreed + "の範囲外の成犬は、32cm未満が <strong>" + belowAdults + "頭</strong>、50cm超が <strong>" + aboveAdults + "頭</strong> です。" +
+              "片側で5頭を超えると、公開グラフはその側の区画を広げます。帯の頭数にはパピーも含まれ、パピーがいる帯には「うちパピー」と添えています。";
+          }
         }
 
         var BREED_TEXT = {
