@@ -695,7 +695,7 @@
         <div class="card">
           <div class="steps">
             <div class="step"><div class="n">1</div><div><h3>データの広がりは実データから</h3><p>いまの最小は<span id="rule-min">—</span>cm、最大は<span id="rule-max">—</span>cm（取得した最新データから）。ただし帯の区切りは、この最小値・最大値には連動しません（次のステップ）。</p></div></div>
-            <div class="step"><div class="n">2</div><div><h3>犬種ごとの起点・3cm刻みの固定グリッドで帯を作る</h3><p>起点は犬種ごとに持ちます。ミニチュア・ピンシャーは32cmが起点で、…29〜32、32〜35、35〜38、38〜41…という具合に、32cmを起点にした物差しで切ります。ホームページの公開グラフと同じ位相です。ほかの犬種は、その犬種で集計対象が10頭に届いた時点で、その時点のデータから起点を決めて固定します（それまでは暫定の起点で切ります）。起点は一度決めたら動かさず、範囲が広がる時は起点から3cm刻みで上下に足します。新しい子が端に入っても、既存の帯の境界は動きません。最大値がちょうど境目に重なった場合は、最後の帯に含めます。また、基準範囲の上限ちょうどの子は、その上限で終わる帯に入ります（ミニピンでは50.0cmの子は47〜50の帯です）。</p></div></div>
+            <div class="step"><div class="n">2</div><div><h3>犬種ごとの起点・3cm刻みの固定グリッドで帯を作る</h3><p>起点は犬種ごとに持ちます。ミニチュア・ピンシャーは32cmが起点で、…29〜32、32〜35、35〜38、38〜41…という具合に、32cmを起点にした物差しで切ります。ホームページの公開グラフと同じ位相です。ほかの犬種は、その犬種で集計対象が10頭に届いた時点で、その時点のデータから起点を決めて固定します（それまでは暫定の起点で切ります）。起点は一度決めたら動かさず、範囲が広がる時は起点から3cm刻みで上下に足します。新しい子が端に入っても、既存の帯の境界は動きません。最大値がちょうど境目に重なった場合は、最後の帯に含めます。それ以外は、すべての帯を「以上〜未満」で切り、境目ちょうどの子は上の帯に入ります（ミニピンでは50.0cmの子は50〜53の帯、32.0cmの子は32〜35の帯です）。例外は作りません。帯の所属が、帯の平均・サイズ名・型紙・開発候補の判定の土台になるためです。</p></div></div>
             <div class="step"><div class="n">3</div><div><h3>サイズ名は帯の平均（四捨五入）</h3><p>32〜35の帯にいる子たちの平均が約34だから「SIZE 34」。47〜50の帯は平均48.9で「SIZE 49」になります。</p></div></div>
             <div class="step"><div class="n">4</div><div><h3>帯は端に足され、名前は平均で動く</h3><p>新しい子が今の範囲の外に入ると、その側に新しい帯が足されます。既存の帯の境界は動きませんが、帯の中の顔ぶれが変われば平均が動き、サイズ名が変わることはあります。</p></div></div>
           </div>
@@ -1746,23 +1746,25 @@ setPINFORMEKarte=function(d){
         // graph, so band edges never drift with the data minimum (user
         // decision 2026-11-02). The grid extends up/down as far as the
         // data reaches; a value exactly on the top edge of the highest
-        // occupied band folds into that band, and a value exactly on
-        // the breed's core-range upper edge (anchor + 18) belongs to
-        // the band ending there — the homepage's "47以上50以下"
-        // convention. Size name = rounded mean chest of the band.
+        // occupied band folds into that band. Everywhere else the grid
+        // is a pure [lower, upper) cut with no exceptions: a value
+        // exactly on a boundary belongs to the band starting there
+        // (user decision 2026-11-02, later the same day: no exception
+        // anywhere, because band membership feeds band means, size
+        // names, patterns and the 5+ candidate threshold).
+        // Size name = rounded mean chest of the band.
         function computeBands(values, anchor) {
           var vs = values.filter(function (v) { return v !== null && v !== undefined; })
                          .sort(function (a, b) { return a - b; });
           if (!vs.length) return [];
           if (anchor === null || anchor === undefined) anchor = 32;
-          var coreHi = anchor + 18;
           var min = vs[0], max = vs[vs.length - 1];
           var raw = [], lo = anchor + 3 * Math.floor((min - anchor) / 3);
           do { raw.push({ lo: lo, hi: lo + 3, members: [] }); lo += 3; } while (lo < max);
           vs.forEach(function (v) {
             for (var i = 0; i < raw.length; i++) {
               var b = raw[i], isLast = i === raw.length - 1;
-              if (v >= b.lo && (v < b.hi || (isLast && v <= b.hi) || (Math.abs(v - coreHi) < 1e-9 && b.hi === coreHi))) { b.members.push(v); break; }
+              if (v >= b.lo && (v < b.hi || (isLast && v <= b.hi))) { b.members.push(v); break; }
             }
           });
           var out = [];
@@ -1773,13 +1775,12 @@ setPINFORMEKarte=function(d){
             out.push({ name: Math.round(sum / b.members.length), lo: b.lo, hi: b.hi, count: b.members.length });
           });
           out.anchor = anchor;
-          out.coreHi = coreHi;
           return out;
         }
         function bandFor(v, bands) {
           for (var i = 0; i < bands.length; i++) {
             var b = bands[i], isLast = i === bands.length - 1;
-            if (v >= b.lo && (v < b.hi || (isLast && v <= b.hi) || (bands.coreHi !== undefined && Math.abs(v - bands.coreHi) < 1e-9 && b.hi === bands.coreHi))) return b;
+            if (v >= b.lo && (v < b.hi || (isLast && v <= b.hi))) return b;
           }
           return null;
         }
@@ -1858,8 +1859,9 @@ setPINFORMEKarte=function(d){
           var aboveTotal = 0, aboveAdults = 0, abovePuppies = 0;
           // The frame is the displayed breed's core range: its anchor
           // (coreLo) through anchor + 18 (coreHi). Out-of-frame counts
-          // stay strict: below = chest < coreLo, above = chest > coreHi
-          // (a dog exactly on coreHi is inside the frame).
+          // follow the same pure-grid cut as the bands: below = chest
+          // < coreLo, above = chest >= coreHi (a dog exactly on coreHi
+          // is counted on the above side, in the band starting there).
           var anchor = (BANDS && BANDS.anchor !== undefined) ? BANDS.anchor
             : breedAnchor(primaryBreed, dogsOf(primaryBreed).map(function (d) { return d.chest; }));
           var coreLo = anchor, coreHi = anchor + 18;
@@ -1877,7 +1879,7 @@ setPINFORMEKarte=function(d){
               belowTotal += 1;
               if (adult) belowAdults += 1;
               else if (puppy) belowPuppies += 1;
-            } else if (d.chest > coreHi) {
+            } else if (d.chest >= coreHi) {
               aboveTotal += 1;
               if (adult) aboveAdults += 1;
               else if (puppy) abovePuppies += 1;
@@ -1909,12 +1911,12 @@ setPINFORMEKarte=function(d){
             var aboveWide = aboveAdults >= 1 && (aboveAdults + abovePuppies) > 5;
             var wideState = belowWide && aboveWide ? "両側とも、区画を広げる条件に達しています。"
               : belowWide ? coreLo + "cm未満の側が、区画を広げる条件に達しています。"
-              : aboveWide ? coreHi + "cm超の側が、区画を広げる条件に達しています。"
+              : aboveWide ? coreHi + "cm以上の側が、区画を広げる条件に達しています。"
               : "どちらの側も、まだ区画を広げる条件には達していません。";
             hpNote.innerHTML = "帯の切り方は" + primaryBreed + "の起点（" + anchor + "cm）から3cm刻みの固定グリッドです。帯の頭数にはパピーも含まれ、パピーがいる帯には「うちパピー」と添えています。" +
               (anchorIsFixed(primaryBreed) ? "" : "この犬種の起点は暫定です（集計対象が10頭に届いた時点で、その時点のデータから固定します）。") +
               "公開グラフの区画が広がるのは、範囲外に成犬がいて、成犬とパピーを合わせて5頭を超えた側です。パピーだけでは広がりません（成犬＝測定時点で12か月以上）。" +
-              "現在、" + primaryBreed + "の範囲外は、" + coreLo + "cm未満が <strong>" + belowTotal + "頭</strong>（成犬" + belowAdults + "頭・パピー" + belowPuppies + "頭）、" + coreHi + "cm超が <strong>" + aboveTotal + "頭</strong>（成犬" + aboveAdults + "頭・パピー" + abovePuppies + "頭）で、" + wideState;
+              "現在、" + primaryBreed + "の範囲外は、" + coreLo + "cm未満が <strong>" + belowTotal + "頭</strong>（成犬" + belowAdults + "頭・パピー" + belowPuppies + "頭）、" + coreHi + "cm以上が <strong>" + aboveTotal + "頭</strong>（成犬" + aboveAdults + "頭・パピー" + abovePuppies + "頭）で、" + wideState;
           }
         }
 
@@ -2902,9 +2904,13 @@ setPINFORMEKarte=function(d){
            steps, lower bound inclusive — the same phase as the homepage
            public graph, so band edges never drift with the data minimum;
            a value exactly on the top edge of the highest occupied band
-           folds into that band, and a value exactly on the breed's
-           core-range upper edge (anchor + 18) belongs to the band ending
-           there — the homepage's "47以上50以下" convention;
+           folds into that band. Everywhere else the cut is a pure
+           [lower, upper) grid with no exceptions: a value exactly on a
+           boundary belongs to the band starting there (user decision
+           2026-11-02, later the same day — an earlier core-range-edge
+           exception was removed the same day it was added, because band
+           membership feeds band means, size names, patterns and the
+           5+ candidate threshold);
            size name = rounded mean chest of the band members.
            (Until 2026-11-02 the grid started at the data minimum, so a new
            smallest dog slid every band edge — e.g. min 31.5 produced
@@ -2918,14 +2924,13 @@ setPINFORMEKarte=function(d){
             .map(Number).sort(function (a, b) { return a - b; });
           if (!vs.length) return [];
           if (anchor === null || anchor === undefined) anchor = 32;
-          var coreHi = anchor + 18;
           var min = vs[0], max = vs[vs.length - 1];
           var raw = [], lo = anchor + 3 * Math.floor((min - anchor) / 3);
           do { raw.push({ lo: lo, hi: lo + 3, members: [] }); lo += 3; } while (lo < max);
           vs.forEach(function (v) {
             for (var i = 0; i < raw.length; i++) {
               var b = raw[i], isLast = i === raw.length - 1;
-              if (v >= b.lo && (v < b.hi || (isLast && v <= b.hi) || (Math.abs(v - coreHi) < 1e-9 && b.hi === coreHi))) { b.members.push(v); break; }
+              if (v >= b.lo && (v < b.hi || (isLast && v <= b.hi))) { b.members.push(v); break; }
             }
           });
           var out = [];
@@ -2935,7 +2940,6 @@ setPINFORMEKarte=function(d){
             out.push({ lo: b.lo, hi: b.hi, name: Math.round(sum / b.members.length), count: b.members.length });
           });
           out.anchor = anchor;
-          out.coreHi = coreHi;
           return out;
         }
         var BAND_MIN_DOGS = 5; // same threshold as the public side
@@ -2964,7 +2968,7 @@ setPINFORMEKarte=function(d){
         }
         function bandForChest(c, bands) {
           for (var i = 0; i < bands.length; i++) {
-            if (c >= bands[i].lo && (c < bands[i].hi || i === bands.length - 1 || (bands.coreHi !== undefined && Math.abs(c - bands.coreHi) < 1e-9 && bands[i].hi === bands.coreHi))) return bands[i];
+            if (c >= bands[i].lo && (c < bands[i].hi || i === bands.length - 1)) return bands[i];
           }
           return null;
         }
