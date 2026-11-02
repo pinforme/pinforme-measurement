@@ -343,7 +343,7 @@ label.confirm input{margin-top:4px;width:20px;height:20px;flex:none}
     </div>
     <h1>採寸を始める</h1>
     <p>まずは必須5項目から。追加10項目は任意です。</p>
-    <p class="note">入力は自動で保存されます。途中で閉じても、この端末の同じブラウザで開けば、続きから測れます（Instagramのアプリ内ブラウザとSafariでは保存先が別になります）。</p>
+    <p class="note">自動保存されます。途中で閉じても、続きから測れます。<br>※同じ端末・同じブラウザで開いたときだけ有効です。</p>
     <div id="pinInAppBrowserNote" class="entry-card" hidden>
       <h2>アプリ内ブラウザで開いています</h2>
       <p class="note">Instagramの中で開いたままだと、写真の送信などでエラーになることがあります。右上の「…」を押して「ブラウザで開く」を選び、いつものブラウザ（Safari・Chrome）で開き直すのがおすすめです。このまま続けることもできます。</p>
@@ -356,7 +356,7 @@ label.confirm input{margin-top:4px;width:20px;height:20px;flex:none}
       </div>
       <div id="pinResumeDraftBox" class="entry-card home-tile tile-off">
         <h2>途中の入力を再開</h2>
-        <p class="note">自動保存された下書きから、この端末の同じブラウザで続けられます。</p>
+        <p class="note">自動保存された下書きから続けられます。</p>
         <button type="button" class="v2-primary" id="resumeDraftBtn" disabled>再開する</button>
       </div>
       <div class="entry-card home-tile">
@@ -414,7 +414,7 @@ label.confirm input{margin-top:4px;width:20px;height:20px;flex:none}
   <div class="wrap">
     <button type="button" id="startBackBtn">← 入口に戻る</button>
     <div class="brand"><div class="paw">🐾</div><div class="word">PINFORME</div><div class="sub">採寸ナビ</div></div>
-    <p>愛犬の情報を入力して、PINFORMEの採寸を始めましょう。<br>採寸は愛犬がリラックスした状態で行ってください。<br>入力は自動で保存されます。途中で閉じても、この端末の同じブラウザで開けば、続きから入力できます。</p>
+    <p>愛犬の情報を入力して、PINFORMEの採寸を始めましょう。<br>採寸は愛犬がリラックスした状態で行ってください。<br>自動保存されます。途中で閉じても、続きから入力できます。<br><span class="note">※同じ端末・同じブラウザで開いたときだけ有効です。</span></p>
     <div class="privacy-box">
       <label class="confirm" style="margin:0;border:0;background:transparent;padding:0"><input type="checkbox" id="pinAnonymousMode"><span><strong>個人情報を入力せずに採寸へ協力する</strong></span></label>
       <p style="font-size:13px;line-height:1.7">飼い主様の名前・メールアドレス・電話番号は不要です。わんちゃんの名前と写真も省略できます。お客様キーで次回の再採寸や別のわんちゃんの追加につなげられます。</p>
@@ -488,7 +488,7 @@ label.confirm input{margin-top:4px;width:20px;height:20px;flex:none}
       <label class="confirm"><input type="checkbox" id="photoPromoConsent"><span>ご提供いただいた写真を、PINFORMEのSNS・Webサイト・販促物等で使用することに同意します。<span class="note">任意</span></span></label>
       <div class="note">※ 写真の登録と販促利用への同意は別です。同意いただかなくても採寸・カルテ保存には影響ありません。</div>
     </div>
-    <p class="note">ここまでの入力は自動で保存されています。途中で閉じても、この端末の同じブラウザで開けば、続きから測れます。</p>
+    <p class="note">ここまでの入力は自動保存されています。途中で閉じても、続きから測れます。<br>※同じ端末・同じブラウザで開いたときだけ有効です。</p>
     <div class="nav-row"><button type="button" class="secondary" id="backStartBtn">← 戻る</button><button type="button" class="primary grow" id="startMeasureBtn">次へ ›</button></div>
   </div>
 </section>
@@ -2507,7 +2507,7 @@ function showOptionalChoice(){
     <div class="brand"><div class="word" style="font-size:22px">PINFORME</div></div>
     <h1>必須5項目の入力ができました！</h1>
     <p>ご協力ありがとうございます。<strong>この5項目だけで採寸協力として送信できます。</strong></p>
-    <p class="note">入力は自動で保存されています。今日はここで閉じても、この端末の同じブラウザで開けば、続きから進められます。</p>
+    <p class="note">自動保存されています。今日はここで閉じても、続きから進められます。<br>※同じ端末・同じブラウザで開いたときだけ有効です。</p>
     <button type="button" class="v2-primary" id="v2FiveReview">5項目で確認・送信へ進む</button>
     <div class="card-box"><h2 style="margin-top:0">追加10項目は任意です</h2>
     <p class="note">半袖・長袖など、今後の服づくりに役立てたいと考えています。余裕があればご協力ください。測りにくい部位は空欄で進められます。</p></div>
