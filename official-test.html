@@ -1724,7 +1724,7 @@ document.addEventListener('click',function(event){
 <script>
 (() => {
   'use strict';
-  const endpoint = 'https://dsbvaoqgvtoeukigdjdj.supabase.co/rest/v1/rpc/site_breed_measurement_summary_v1';
+  const endpoint = 'https://dsbvaoqgvtoeukigdjdj.supabase.co/rest/v1/rpc/site_breed_measurement_summary_v2';
   const registryEndpoint = 'https://dsbvaoqgvtoeukigdjdj.supabase.co/rest/v1/site_breed_counts_public?select=canonical_breed,dog_count';
   const apiKey = 'sb_publishable_403lLhKUQ9X9N1RaxaDduA_9ZQEZ6na';
   const definitions = [
@@ -1733,10 +1733,21 @@ document.addEventListener('click',function(event){
     [41,44,true,false,'41以上44未満'],[44,47,true,false,'44以上47未満'],
     [47,50,true,true,'47以上50以下'],[50,null,false,false,'50超']
   ];
+  const fineDefinitions = [
+    [null,26,false,false,'26未満'],[26,29,true,false,'26以上29未満'],
+    [29,32,true,false,'29以上32未満'],[32,35,true,false,'32以上35未満'],
+    [35,38,true,false,'35以上38未満'],[38,41,true,false,'38以上41未満'],
+    [41,44,true,false,'41以上44未満'],[44,47,true,false,'44以上47未満'],
+    [47,50,true,true,'47以上50以下'],[50,53,false,false,'50超53未満'],
+    [53,56,true,true,'53以上56以下'],[56,null,false,false,'56超']
+  ];
   function validate(data, breed) {
-    if (!data || data.schema_version !== 1 || data.canonical_breed !== breed
+    if (!data || data.schema_version !== 2 || data.canonical_breed !== breed
       || !Number.isSafeInteger(data.total_dogs) || data.total_dogs < 0
       || !Array.isArray(data.bins) || data.bins.length !== definitions.length
+      || !Array.isArray(data.fine_bins) || data.fine_bins.length !== fineDefinitions.length
+      || !Number.isSafeInteger(data.below_core_adults) || data.below_core_adults < 0
+      || !Number.isSafeInteger(data.above_core_adults) || data.above_core_adults < 0
       || typeof data.retrieved_at !== 'string' || !Number.isFinite(Date.parse(data.retrieved_at))) throw Error('invalid summary');
     let sum = 0;
     data.bins.forEach((bin,i) => {
@@ -1747,6 +1758,19 @@ document.addEventListener('click',function(event){
       sum += bin.dog_count;
     });
     if (sum !== data.total_dogs || !Number.isSafeInteger(sum)) throw Error('invalid total');
+    if (data.below_core_adults > data.bins[0].dog_count
+      || data.above_core_adults > data.bins[definitions.length - 1].dog_count) throw Error('invalid adults');
+    let fineSum = 0;
+    data.fine_bins.forEach((bin,i) => {
+      const d = fineDefinitions[i];
+      if (!bin || bin.lower_cm !== d[0] || bin.upper_cm !== d[1]
+        || bin.lower_inclusive !== d[2] || bin.upper_inclusive !== d[3]
+        || !Number.isSafeInteger(bin.dog_count) || bin.dog_count < 0) throw Error('invalid fine bin');
+      fineSum += bin.dog_count;
+    });
+    if (fineSum !== data.total_dogs || !Number.isSafeInteger(fineSum)) throw Error('invalid fine total');
+    if (data.fine_bins[0].dog_count + data.fine_bins[1].dog_count + data.fine_bins[2].dog_count !== data.bins[0].dog_count
+      || data.fine_bins[9].dog_count + data.fine_bins[10].dog_count + data.fine_bins[11].dog_count !== data.bins[definitions.length - 1].dog_count) throw Error('invalid fine edges');
     return data;
   }
   const rows = document.getElementById('summaryRows');
@@ -1776,20 +1800,46 @@ document.addEventListener('click',function(event){
     if (data.bins.some(bin => bin.dog_count >= PARTIAL_MIN_DOGS)) return 'partial';
     return 'collecting';
   }
+  const WIDEN_MIN_ADULTS = 5;
+  function fullSegments(data) {
+    const segments = [];
+    if (data.below_core_adults > WIDEN_MIN_ADULTS) {
+      [0,1,2].forEach(j => segments.push({label: fineDefinitions[j][4], count: data.fine_bins[j].dog_count, edge: true}));
+    } else {
+      segments.push({label: definitions[0][4], count: data.bins[0].dog_count, edge: true});
+    }
+    for (let i = 1; i <= 6; i++) segments.push({label: definitions[i][4], count: data.bins[i].dog_count, edge: false});
+    if (data.above_core_adults > WIDEN_MIN_ADULTS) {
+      [9,10,11].forEach(j => segments.push({label: fineDefinitions[j][4], count: data.fine_bins[j].dog_count, edge: true}));
+    } else {
+      segments.push({label: definitions[definitions.length - 1][4], count: data.bins[definitions.length - 1].dog_count, edge: true});
+    }
+    /* 0頭の端区画は、分布の最も外側にあるものだけを隠す（内側に挟まれた0頭は残す） */
+    let first = 0;
+    while (first < segments.length && segments[first].edge && segments[first].count === 0) first++;
+    let last = segments.length - 1;
+    while (last > first && segments[last].edge && segments[last].count === 0) last--;
+    return segments.slice(first,last + 1);
+  }
   function renderRows(data, mode) {
     const max = Math.max(1,...data.bins.map(bin => bin.dog_count));
     const fragment = document.createDocumentFragment();
-    data.bins.forEach((bin,i) => {
-      if (mode === 'full') {
-        if ((i === 0 || i === 7) && bin.dog_count === 0) return;
-      } else if (bin.dog_count < PARTIAL_MIN_DOGS) return;
+    const appendRow = (labelText,count) => {
       const row = document.createElement('div'); row.className = 'dist-row';
-      const label = document.createElement('span'); label.textContent = definitions[i][4];
+      const label = document.createElement('span'); label.textContent = labelText;
       const track = document.createElement('div'); track.className = 'dist-track'; track.setAttribute('aria-hidden','true');
-      const bar = document.createElement('div'); bar.className = 'dist-bar'; bar.style.width = (bin.dog_count / max * 100) + '%';
-      const value = document.createElement('span'); value.className = 'dist-count'; value.textContent = bin.dog_count.toLocaleString('ja-JP') + '頭';
+      const bar = document.createElement('div'); bar.className = 'dist-bar'; bar.style.width = (count / max * 100) + '%';
+      const value = document.createElement('span'); value.className = 'dist-count'; value.textContent = count.toLocaleString('ja-JP') + '頭';
       track.appendChild(bar); row.append(label,track,value); fragment.appendChild(row);
-    });
+    };
+    if (mode === 'full') {
+      fullSegments(data).forEach(seg => appendRow(seg.label,seg.count));
+    } else {
+      data.bins.forEach((bin,i) => {
+        if (bin.dog_count < PARTIAL_MIN_DOGS) return;
+        appendRow(definitions[i][4],bin.dog_count);
+      });
+    }
     rows.replaceChildren(fragment);
   }
   function renderPanel() {
