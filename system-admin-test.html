@@ -246,7 +246,7 @@
       .chart { display: flex; flex-direction: column; gap: 10px; }
       .chart-row {
         display: grid;
-        grid-template-columns: 148px 1fr 52px;
+        grid-template-columns: 148px 1fr 80px;
         align-items: center;
         gap: 12px;
       }
@@ -262,7 +262,7 @@
       .bar.hot { background: var(--terra); }
       .chart-row .cnt { font-weight: 900; font-size: 16px; text-align: right; white-space: nowrap; }
       .chart-row .cnt small { font-size: 12px; color: var(--ink-soft); font-weight: 700; }
-      .chart-row .cnt .cnt-sub { display: block; font-size: 10.5px; line-height: 1.45; color: var(--ink-soft); font-weight: 700; white-space: normal; overflow-wrap: anywhere; }
+      .chart-row .cnt .cnt-sub { display: block; font-size: 10.5px; line-height: 1.45; color: var(--ink-soft); font-weight: 700; white-space: nowrap; }
       .tag-candidate {
         display: inline-block;
         font-size: 11.5px;
@@ -406,7 +406,7 @@
         .checker { grid-template-columns: 1fr; }
         .checker .out-pane { border-left: none; border-top: 1px solid var(--line); }
         .lookup-grid { grid-template-columns: 1fr; gap: 20px; }
-        .chart-row { grid-template-columns: 126px 1fr 42px; gap: 8px; }
+        .chart-row { grid-template-columns: 126px 1fr 76px; gap: 8px; }
         .chart-row .sz { font-size: 15px; }
         .tag-sample { margin-left: 0; }
         .step h3 { font-size: 16px; }
@@ -458,13 +458,13 @@
       .pat-grid select, .lookup-grid select { max-width: 100%; }
       .ease-row .input-row { min-width: 0; }
       .ease-row .input-row input { width: 100%; }
-      .chart-row { grid-template-columns: 148px minmax(0, 1fr) 52px; }
+      .chart-row { grid-template-columns: 148px minmax(0, 1fr) 80px; }
       .pat-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
       .pat-actions .dl-btn { margin-top: 0; }
       .dl-btn.ghost { background: transparent; color: var(--terra-deep); }
       @media (max-width: 560px) {
         .ease-row { grid-template-columns: 1fr; }
-        .chart-row { grid-template-columns: 118px minmax(0, 1fr) 40px; }
+        .chart-row { grid-template-columns: 118px minmax(0, 1fr) 76px; }
         .chart-row .sz { white-space: normal; }
       }
 
