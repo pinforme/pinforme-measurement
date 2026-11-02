@@ -1800,16 +1800,24 @@ document.addEventListener('click',function(event){
     if (data.bins.some(bin => bin.dog_count >= PARTIAL_MIN_DOGS)) return 'partial';
     return 'collecting';
   }
-  const WIDEN_MIN_ADULTS = 5;
+  /* 範囲外の区画を細分して広げる条件（ユーザー決定 2026-11-02）:
+     その側の合計（成犬＋パピー）が5頭を超え、かつ成犬が1頭以上いること。
+     パピーだけの側は、頭数によらず広げない。 */
+  const WIDEN_MIN_TOTAL = 5;
+  function shouldWiden(total, adults) {
+    return total > WIDEN_MIN_TOTAL && adults >= 1;
+  }
   function fullSegments(data) {
     const segments = [];
-    if (data.below_core_adults > WIDEN_MIN_ADULTS) {
+    const belowTotal = data.fine_bins[0].dog_count + data.fine_bins[1].dog_count + data.fine_bins[2].dog_count;
+    const aboveTotal = data.fine_bins[9].dog_count + data.fine_bins[10].dog_count + data.fine_bins[11].dog_count;
+    if (shouldWiden(belowTotal, data.below_core_adults)) {
       [0,1,2].forEach(j => segments.push({label: fineDefinitions[j][4], count: data.fine_bins[j].dog_count, edge: true}));
     } else {
       segments.push({label: definitions[0][4], count: data.bins[0].dog_count, edge: true});
     }
     for (let i = 1; i <= 6; i++) segments.push({label: definitions[i][4], count: data.bins[i].dog_count, edge: false});
-    if (data.above_core_adults > WIDEN_MIN_ADULTS) {
+    if (shouldWiden(aboveTotal, data.above_core_adults)) {
       [9,10,11].forEach(j => segments.push({label: fineDefinitions[j][4], count: data.fine_bins[j].dog_count, edge: true}));
     } else {
       segments.push({label: definitions[definitions.length - 1][4], count: data.bins[definitions.length - 1].dog_count, edge: true});
