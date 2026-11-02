@@ -1273,7 +1273,7 @@ footer{padding:34px 0 46px;border-top:1px solid #ececec;font-size:12px;color:#77
 <p id="summaryStatus" class="results-note" role="status" aria-live="polite">最新の集計を読み込んでいます…</p><p id="summaryTime" class="results-date"></p><button id="summaryRetry" class="btn secondary" type="button" hidden>集計を再読み込み</button>
 <noscript><p class="results-note">集計を見るにはJavaScriptを有効にしてください。</p></noscript>
 <p class="results-note">グラフは、データ利用に同意があり、胴まわりが登録されている<span id="summaryNoteBreed">ミニチュアピンシャー</span>を、1頭につき最新の保存データ1件で集計しています。再採寸は同じ子の更新として扱います。画面を開いたときと、表示中は1分ごとに最新の集計を取得します。</p>
-<p class="results-note">各区分は下限を含み、上限を含みません。47〜50cmの区分は50cmを含みます。32cm未満・50cm超の子がいる場合は別の区分で表示します。販売する服のサイズや対応範囲は、サンプルの試着などを通じて検討します。</p>
+<p class="results-note">各区分は下限を含み、上限を含みません。32cm未満・50cm以上の子がいる場合は別の区分で表示します。販売する服のサイズや対応範囲は、サンプルの試着などを通じて検討します。</p>
 </div>
 <div id="breedPanelOther" class="breed-collecting" role="tabpanel" hidden><p class="breed-collecting-title"><span id="collectingBreed">この犬種</span>は、まだデータ収集中です</p><p>現在、<span id="collectingCount">—</span>頭が登録されています。集計の対象になるデータが10頭以上集まったら、この犬種の胴まわりの集計もここでご紹介します。</p></div>
 <p class="results-message">あなたの愛犬の体型も、知りたいです。</p><p class="lead">集まった採寸から首・胴・ウエスト・着丈・前身頃のバランスを比較し、サイズや型紙を検討しています。より多くの体型を知るため、引き続き採寸へのご協力をお願いします。</p>
@@ -1706,7 +1706,7 @@ document.addEventListener('click',function(event){
   data.bins.forEach((bin,i)=>{
    if((i===0||i===7)&&bin.dog_count===0)return;
    const row=document.createElement('div');row.className='teaser-mini-row';
-   const label=document.createElement('span');label.textContent=i===0?'32未満':i===7?'50超':bin.lower_cm+'–'+bin.upper_cm;
+   const label=document.createElement('span');label.textContent=i===0?'32未満':i===7?'50以上':bin.lower_cm+'–'+bin.upper_cm;
    const track=document.createElement('div');track.className='teaser-mini-track';track.setAttribute('aria-hidden','true');
    const bar=document.createElement('div');bar.className='teaser-mini-bar';bar.style.width=(bin.dog_count/max*100)+'%';track.appendChild(bar);
    const value=document.createElement('span');value.textContent=String(bin.dog_count);row.append(label,track,value);graph.appendChild(row);
@@ -1724,25 +1724,25 @@ document.addEventListener('click',function(event){
 <script>
 (() => {
   'use strict';
-  const endpoint = 'https://dsbvaoqgvtoeukigdjdj.supabase.co/rest/v1/rpc/site_breed_measurement_summary_v2';
+  const endpoint = 'https://dsbvaoqgvtoeukigdjdj.supabase.co/rest/v1/rpc/site_breed_measurement_summary_v3';
   const registryEndpoint = 'https://dsbvaoqgvtoeukigdjdj.supabase.co/rest/v1/site_breed_counts_public?select=canonical_breed,dog_count';
   const apiKey = 'sb_publishable_403lLhKUQ9X9N1RaxaDduA_9ZQEZ6na';
   const definitions = [
     [null,32,false,false,'32未満'],[32,35,true,false,'32以上35未満'],
     [35,38,true,false,'35以上38未満'],[38,41,true,false,'38以上41未満'],
     [41,44,true,false,'41以上44未満'],[44,47,true,false,'44以上47未満'],
-    [47,50,true,true,'47以上50以下'],[50,null,false,false,'50超']
+    [47,50,true,false,'47以上50未満'],[50,null,true,false,'50以上']
   ];
   const fineDefinitions = [
     [null,26,false,false,'26未満'],[26,29,true,false,'26以上29未満'],
     [29,32,true,false,'29以上32未満'],[32,35,true,false,'32以上35未満'],
     [35,38,true,false,'35以上38未満'],[38,41,true,false,'38以上41未満'],
     [41,44,true,false,'41以上44未満'],[44,47,true,false,'44以上47未満'],
-    [47,50,true,true,'47以上50以下'],[50,53,false,false,'50超53未満'],
-    [53,56,true,true,'53以上56以下'],[56,null,false,false,'56超']
+    [47,50,true,false,'47以上50未満'],[50,53,true,false,'50以上53未満'],
+    [53,56,true,false,'53以上56未満'],[56,null,true,false,'56以上']
   ];
   function validate(data, breed) {
-    if (!data || data.schema_version !== 2 || data.canonical_breed !== breed
+    if (!data || data.schema_version !== 3 || data.canonical_breed !== breed
       || !Number.isSafeInteger(data.total_dogs) || data.total_dogs < 0
       || !Array.isArray(data.bins) || data.bins.length !== definitions.length
       || !Array.isArray(data.fine_bins) || data.fine_bins.length !== fineDefinitions.length
