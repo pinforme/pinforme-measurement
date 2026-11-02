@@ -691,18 +691,18 @@
       <!-- ============ 04 RULE ============ -->
       <section id="rule">
         <div class="sec-head"><span class="sec-no">04</span><h2>サイズ表記の決め方</h2></div>
-        <p class="sec-lead">サイズ帯は固定ではなく、実データから自動で組み立てられます。名前を先に決めてしまうと、データとずれた「名前だけのサイズ」ができてしまう——それを避けるための仕組みです。</p>
+        <p class="sec-lead">サイズ帯は、32cm起点の固定した物差しの上に、実データから自動で組み立てられます。サイズ名を先に決めてしまうと、データとずれた「名前だけのサイズ」ができてしまう——それを避けるため、名前は帯ごとの実データの平均から付けます。</p>
         <div class="card">
           <div class="steps">
-            <div class="step"><div class="n">1</div><div><h3>最小値・最大値は実データから</h3><p>いまの最小は<span id="rule-min">—</span>cm、最大は<span id="rule-max">—</span>cm（取得した最新データから）。仮に胴まわり30cmの子が現れたら、その時点で最小値は30cmになります。</p></div></div>
-            <div class="step"><div class="n">2</div><div><h3>最小値から3cm刻みで帯を作る</h3><p>32〜35、35〜38、38〜41…という具合に範囲を切ります。最大値がちょうど境目に重なった場合は、最後の帯に含めます（50.0cmの子は47〜50の帯です）。</p></div></div>
+            <div class="step"><div class="n">1</div><div><h3>データの広がりは実データから</h3><p>いまの最小は<span id="rule-min">—</span>cm、最大は<span id="rule-max">—</span>cm（取得した最新データから）。ただし帯の区切りは、この最小値・最大値には連動しません（次のステップ）。</p></div></div>
+            <div class="step"><div class="n">2</div><div><h3>32cm起点・3cm刻みの固定グリッドで帯を作る</h3><p>…29〜32、32〜35、35〜38、38〜41…という具合に、32cmを起点にした物差しで切ります。ホームページの公開グラフと同じ位相です。新しい子が端に入っても、既存の帯の境界は動きません。最大値がちょうど境目に重なった場合は、最後の帯に含めます（50.0cmの子は47〜50の帯です）。</p></div></div>
             <div class="step"><div class="n">3</div><div><h3>サイズ名は帯の平均（四捨五入）</h3><p>32〜35の帯にいる子たちの平均が約34だから「SIZE 34」。47〜50の帯は平均48.9で「SIZE 49」になります。</p></div></div>
-            <div class="step"><div class="n">4</div><div><h3>データが増えれば、帯ごと組み替わる</h3><p>新しい子が端の範囲に入ると帯全体がずれ、名前も変わります。これは不具合ではなく、設計どおりの動きです。</p></div></div>
+            <div class="step"><div class="n">4</div><div><h3>帯は端に足され、名前は平均で動く</h3><p>新しい子が今の範囲の外に入ると、その側に新しい帯が足されます。既存の帯の境界は動きませんが、帯の中の顔ぶれが変われば平均が動き、サイズ名が変わることはあります。</p></div></div>
           </div>
           <div class="example">
             <h3>試算：胴まわり30cmの子が1頭増えたら</h3>
-            <p>最小値が30cmに動いて帯が組み替わり、サイズ名はこう変わります。</p>
-            <p class="flow"><s>34 ・ 37 ・ 39 ・ 42 ・ 45 ・ 49</s><span class="arr">→</span>31 ・ 35 ・ 38 ・ 40 ・ 43 ・ 45 ・ 49</p>
+            <p>30cmの子は29〜32の帯に入り、いちばん下に新しい帯が1つ足されます。ほかの帯の境界は動きません。</p>
+            <p class="flow">既存の帯（境界はそのまま）<span class="arr">＋</span>29〜32の帯が追加</p>
             <p style="margin:0">変わることを前提に、お客様には最初から「サイズ表記は成長に合わせて見直される」ことを伝えています。表記の変遷は、PINFORMEの成長記録として履歴に残していきます（現在の構成が「初版・26頭時点」）。</p>
           </div>
         </div>
@@ -1713,15 +1713,19 @@ setPINFORMEKarte=function(d){
         function isAdultDog(d) { var m = ageMonthsAt(d.birth, d.date); return m !== null && m >= 12; }
         function isPuppyDog(d) { var m = ageMonthsAt(d.birth, d.date); return m !== null && m < 12; }
 
-        // Bands: start at the data minimum, 3cm steps, lower bound inclusive;
-        // a value exactly on the top edge folds into the last band.
+        // Bands: fixed grid anchored at 32cm, 3cm steps, lower bound
+        // inclusive — the same phase as the homepage public graph, so
+        // band edges never drift with the data minimum (user decision
+        // 2026-11-02). The grid extends up/down as far as the data
+        // reaches; a value exactly on the top edge of the highest
+        // occupied band folds into that band.
         // Size name = rounded mean chest of the dogs inside the band.
         function computeBands(values) {
           var vs = values.filter(function (v) { return v !== null && v !== undefined; })
                          .sort(function (a, b) { return a - b; });
           if (!vs.length) return [];
           var min = vs[0], max = vs[vs.length - 1];
-          var raw = [], lo = min;
+          var raw = [], lo = 32 + 3 * Math.floor((min - 32) / 3);
           do { raw.push({ lo: lo, hi: lo + 3, members: [] }); lo += 3; } while (lo < max);
           vs.forEach(function (v) {
             for (var i = 0; i < raw.length; i++) {
@@ -1808,9 +1812,13 @@ setPINFORMEKarte=function(d){
           var ranked = BANDS.slice().sort(function (a, b) { return (b.count - a.count) || (a.lo - b.lo); });
           var rankOf = {};
           ranked.forEach(function (b, i) { rankOf[b.lo + "-" + b.hi] = i + 1; });
-          // Reference figures on the homepage yardstick (fixed 32–50cm
-          // frame, adult = 12+ months at measurement). Display only: the
-          // band computation above is unchanged and still includes puppies.
+          // Reference figures on the homepage yardstick. The bands now
+          // share the homepage grid (32cm anchor, 3cm steps) and still
+          // include puppies. The note reports the out-of-frame tallies
+          // behind the public graph's widening rule (2026-11-02): a side
+          // widens only when it holds at least one adult AND more than
+          // 5 dogs counting adults + puppies together; a puppy-only
+          // side never widens. Adult = 12+ months at measurement.
           var puppyOf = {};
           var belowTotal = 0, belowAdults = 0, belowPuppies = 0;
           var aboveTotal = 0, aboveAdults = 0, abovePuppies = 0;
@@ -1851,9 +1859,20 @@ setPINFORMEKarte=function(d){
           });
           var hpNote = document.getElementById("hp-range-note");
           if (hpNote) {
-            hpNote.innerHTML = "ホームページの公開グラフと同じ物差し（固定区画32〜50cm）では、" +
-              primaryBreed + "の範囲外は、32cm未満が <strong>" + belowTotal + "頭</strong>（成犬" + belowAdults + "頭・パピー" + belowPuppies + "頭）、50cm超が <strong>" + aboveTotal + "頭</strong>（成犬" + aboveAdults + "頭・パピー" + abovePuppies + "頭）です。" +
-              "区画を広げる判定に数えるのは成犬だけです（成犬＝測定時点で12か月以上）。帯の頭数にはパピーも含まれ、パピーがいる帯には「うちパピー」と添えています。";
+            // Widening rule (user decision 2026-11-02): a side widens
+            // only with at least one adult out of frame AND adults +
+            // puppies together exceeding 5 on that side. Dogs with no
+            // birth date count as neither, so the combined figure is
+            // adults + puppies, not the raw total.
+            var belowWide = belowAdults >= 1 && (belowAdults + belowPuppies) > 5;
+            var aboveWide = aboveAdults >= 1 && (aboveAdults + abovePuppies) > 5;
+            var wideState = belowWide && aboveWide ? "両側とも、区画を広げる条件に達しています。"
+              : belowWide ? "32cm未満の側が、区画を広げる条件に達しています。"
+              : aboveWide ? "50cm超の側が、区画を広げる条件に達しています。"
+              : "どちらの側も、まだ区画を広げる条件には達していません。";
+            hpNote.innerHTML = "帯の切り方はホームページの公開グラフと同じ物差し（32cm起点・3cm刻み）です。帯の頭数にはパピーも含まれ、パピーがいる帯には「うちパピー」と添えています。" +
+              "公開グラフの区画が広がるのは、範囲外に成犬がいて、成犬とパピーを合わせて5頭を超えた側です。パピーだけでは広がりません（成犬＝測定時点で12か月以上）。" +
+              "現在、" + primaryBreed + "の範囲外は、32cm未満が <strong>" + belowTotal + "頭</strong>（成犬" + belowAdults + "頭・パピー" + belowPuppies + "頭）、50cm超が <strong>" + aboveTotal + "頭</strong>（成犬" + aboveAdults + "頭・パピー" + abovePuppies + "頭）で、" + wideState;
           }
         }
 
@@ -1987,10 +2006,10 @@ setPINFORMEKarte=function(d){
           if (!band) {
             resSize.textContent = "帯の範囲外";
             if (v < BANDS[0].lo) {
-              resBand.textContent = "現在の最小は " + fmt(BANDS[0].lo) + "cm です";
-              resNote.textContent = "この子より小さいデータはまだありません。こういう子が増えると、最小値が動いて帯全体が組み替わります。";
+              resBand.textContent = "現在の最小の帯は " + fmt(BANDS[0].lo) + "〜" + fmt(BANDS[0].hi) + "cm です";
+              resNote.textContent = "この子より小さいデータはまだありません。こういう子が増えると、いちばん下に新しい帯が足されていきます。";
             } else {
-              resBand.textContent = "現在の最大は " + fmt(BANDS[BANDS.length - 1].hi) + "cm です";
+              resBand.textContent = "現在の最大の帯は " + fmt(BANDS[BANDS.length - 1].lo) + "〜" + fmt(BANDS[BANDS.length - 1].hi) + "cm です";
               resNote.textContent = "この子より大きいデータはまだありません。データが増えれば、新しい帯が上に足されていきます。";
             }
             return;
@@ -2808,19 +2827,24 @@ setPINFORMEKarte=function(d){
           return out;
         }
         /* Band rule: one canonical algorithm, shared with the public checker
-           (section 04): start at the data minimum, 3cm steps, lower bound
-           inclusive; a value exactly on the top edge folds into the last
-           band; size name = rounded mean chest of the band members.
-           (The previous index-based version created a phantom solo band
-           when the maximum sat exactly on a boundary — e.g. min 32 / max
-           50.0 produced a [50,53) band instead of folding into [47,50] —
-           so it was aligned to the public algorithm. See design memo.) */
+           (section 04): fixed grid anchored at 32cm, 3cm steps, lower bound
+           inclusive — the same phase as the homepage public graph, so band
+           edges never drift with the data minimum; a value exactly on the
+           top edge of the highest occupied band folds into that band;
+           size name = rounded mean chest of the band members.
+           (Until 2026-11-02 the grid started at the data minimum, so a new
+           smallest dog slid every band edge — e.g. min 31.5 produced
+           31.5–34.5, 34.5–37.5… The 2026-11-02 decision anchors the grid
+           at 32cm on the homepage and this admin screen alike. The fold
+           rule stays: without it, a maximum sitting exactly on a boundary
+           — e.g. max 50.0 — would spawn a phantom solo [50,53) band
+           instead of folding into [47,50]. See design memo.) */
         function computeBands(values) {
           var vs = values.filter(function (v) { return v !== null && v !== undefined && isFinite(v); })
             .map(Number).sort(function (a, b) { return a - b; });
           if (!vs.length) return [];
           var min = vs[0], max = vs[vs.length - 1];
-          var raw = [], lo = min;
+          var raw = [], lo = 32 + 3 * Math.floor((min - 32) / 3);
           do { raw.push({ lo: lo, hi: lo + 3, members: [] }); lo += 3; } while (lo < max);
           vs.forEach(function (v) {
             for (var i = 0; i < raw.length; i++) {
