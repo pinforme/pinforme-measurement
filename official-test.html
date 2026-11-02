@@ -1075,6 +1075,12 @@ footer{padding:34px 0 46px;border-top:1px solid #ececec;font-size:12px;color:#77
 .results-number{font-size:44px;font-weight:900;line-height:1.1}
 .results-number small{font-size:16px;font-weight:600}
 .results-date{font-size:12px;color:#777}
+.breed-tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+.breed-tab{font:inherit;font-size:14px;line-height:1.4;padding:8px 16px;border-radius:99px;background:#fff;border:1px solid #ddd;color:var(--ink);cursor:pointer}
+.breed-tab[aria-selected="true"]{background:#111;border-color:#111;color:#fff;font-weight:700}
+.breed-collecting{padding:4px 0 8px}
+.breed-collecting-title{font-size:17px;font-weight:800;margin:0 0 12px}
+.breed-collecting p{line-height:1.9}
 .distribution{margin:0}
 .distribution figcaption{font-size:17px;font-weight:800;margin-bottom:18px}
 .dist-row{display:grid;grid-template-columns:130px minmax(0,1fr) 36px;align-items:center;gap:12px;margin:15px 0;font-size:13px}
@@ -1261,11 +1267,15 @@ footer{padding:34px 0 46px;border-top:1px solid #ececec;font-size:12px;color:#77
 <section class="results-section" id="results" aria-labelledby="resultsTitle"><div class="wrap">
 <div class="section-head"><div class="eyebrow">みなさまから届いた採寸データ</div><h2 class="section-title" id="resultsTitle">集まった体型の違いを、<br>服の形を考える手がかりに。</h2><p class="lead">採寸へのご協力ありがとうございます。集計したデータの一部をご紹介します。</p></div>
 <div class="results-panel"><div class="results-intro"><div><div class="results-number"><span id="registryCount">—</span><small>頭分のデータが集まっています</small></div><p class="results-date">登録してくれた全頭数｜うちミニチュアピンシャーは<span id="registryMinpinCount">—</span>頭</p></div><p class="lead">胴まわりを3cm幅で分けて比較しています。</p></div>
-<figure class="distribution"><figcaption>胴まわりごとの頭数（cm）</figcaption><div id="summaryRows"></div></figure>
+<div class="breed-tabs" id="breedTabs" role="tablist" aria-label="犬種を選ぶ"><button class="breed-tab" type="button" role="tab" aria-selected="true" data-breed="ミニチュアピンシャー">ミニチュアピンシャー</button></div>
+<div id="breedPanelMinpin" role="tabpanel">
+<figure class="distribution" id="summaryFigure"><figcaption>胴まわりごとの頭数（cm）</figcaption><div id="summaryRows"></div></figure>
 <p id="summaryStatus" class="results-note" role="status" aria-live="polite">最新の集計を読み込んでいます…</p><p id="summaryTime" class="results-date"></p><button id="summaryRetry" class="btn secondary" type="button" hidden>集計を再読み込み</button>
 <noscript><p class="results-note">集計を見るにはJavaScriptを有効にしてください。</p></noscript>
-<p class="results-note">グラフは、データ利用に同意があり、胴まわりが登録されているミニチュアピンシャーを、1頭につき最新の保存データ1件で集計しています。再採寸は同じ子の更新として扱います。画面を開いたときと、表示中は1分ごとに最新の集計を取得します。</p>
+<p class="results-note">グラフは、データ利用に同意があり、胴まわりが登録されている<span id="summaryNoteBreed">ミニチュアピンシャー</span>を、1頭につき最新の保存データ1件で集計しています。再採寸は同じ子の更新として扱います。画面を開いたときと、表示中は1分ごとに最新の集計を取得します。</p>
 <p class="results-note">各区分は下限を含み、上限を含みません。47〜50cmの区分は50cmを含みます。32cm未満・50cm超の子がいる場合は別の区分で表示します。販売する服のサイズや対応範囲は、サンプルの試着などを通じて検討します。</p>
+</div>
+<div id="breedPanelOther" class="breed-collecting" role="tabpanel" hidden><p class="breed-collecting-title"><span id="collectingBreed">この犬種</span>は、まだデータ収集中です</p><p>現在、<span id="collectingCount">—</span>頭が登録されています。集計の対象になるデータが10頭以上集まったら、この犬種の胴まわりの集計もここでご紹介します。</p></div>
 <p class="results-message">あなたの愛犬の体型も、知りたいです。</p><p class="lead">集まった採寸から首・胴・ウエスト・着丈・前身頃のバランスを比較し、サイズや型紙を検討しています。より多くの体型を知るため、引き続き採寸へのご協力をお願いします。</p>
 <div class="cta-row" style="margin-top:24px"><a class="btn primary" href="./index.html" data-measurement-cta="results">うちの子の採寸に協力する</a></div></div></div></section>
 
@@ -1710,7 +1720,8 @@ document.addEventListener('click',function(event){
 <script>
 (() => {
   'use strict';
-  const endpoint = 'https://dsbvaoqgvtoeukigdjdj.supabase.co/rest/v1/rpc/site_minipin_measurement_summary_v1';
+  const endpoint = 'https://dsbvaoqgvtoeukigdjdj.supabase.co/rest/v1/rpc/site_breed_measurement_summary_v1';
+  const registryEndpoint = 'https://dsbvaoqgvtoeukigdjdj.supabase.co/rest/v1/site_breed_counts_public?select=canonical_breed,dog_count';
   const apiKey = 'sb_publishable_403lLhKUQ9X9N1RaxaDduA_9ZQEZ6na';
   const definitions = [
     [null,32,false,false,'32未満'],[32,35,true,false,'32以上35未満'],
@@ -1718,8 +1729,8 @@ document.addEventListener('click',function(event){
     [41,44,true,false,'41以上44未満'],[44,47,true,false,'44以上47未満'],
     [47,50,true,true,'47以上50以下'],[50,null,false,false,'50超']
   ];
-  function validate(data) {
-    if (!data || data.schema_version !== 1 || data.canonical_breed !== 'ミニチュアピンシャー'
+  function validate(data, breed) {
+    if (!data || data.schema_version !== 1 || data.canonical_breed !== breed
       || !Number.isSafeInteger(data.total_dogs) || data.total_dogs < 0
       || !Array.isArray(data.bins) || data.bins.length !== definitions.length
       || typeof data.retrieved_at !== 'string' || !Number.isFinite(Date.parse(data.retrieved_at))) throw Error('invalid summary');
@@ -1735,15 +1746,123 @@ document.addEventListener('click',function(event){
     return data;
   }
   const rows = document.getElementById('summaryRows');
+  const figure = document.getElementById('summaryFigure');
+  const GRAPH_MIN_DOGS = 10;
+  const PARTIAL_MIN_DOGS = 5;
   const status = document.getElementById('summaryStatus');
   const time = document.getElementById('summaryTime');
   const retry = document.getElementById('summaryRetry');
   const regTotal = document.getElementById('registryCount');
   const regMinpin = document.getElementById('registryMinpinCount');
+  const tabsBox = document.getElementById('breedTabs');
+  const panelMinpin = document.getElementById('breedPanelMinpin');
+  const panelOther = document.getElementById('breedPanelOther');
+  const collectingBreed = document.getElementById('collectingBreed');
+  const collectingCount = document.getElementById('collectingCount');
+  const noteBreed = document.getElementById('summaryNoteBreed');
+  const MINPIN_BREED = 'ミニチュアピンシャー';
+  let breedCounts = new Map();
+  let breedSignature = '';
+  let selectedBreed = MINPIN_BREED;
+  const summaryCache = new Map();
+  const summaryErrors = new Set();
+  const inflight = new Set();
+  function modeOf(data) {
+    if (data.total_dogs >= GRAPH_MIN_DOGS) return 'full';
+    if (data.bins.some(bin => bin.dog_count >= PARTIAL_MIN_DOGS)) return 'partial';
+    return 'collecting';
+  }
+  function renderRows(data, mode) {
+    const max = Math.max(1,...data.bins.map(bin => bin.dog_count));
+    const fragment = document.createDocumentFragment();
+    data.bins.forEach((bin,i) => {
+      if (mode === 'full') {
+        if ((i === 0 || i === 7) && bin.dog_count === 0) return;
+      } else if (bin.dog_count < PARTIAL_MIN_DOGS) return;
+      const row = document.createElement('div'); row.className = 'dist-row';
+      const label = document.createElement('span'); label.textContent = definitions[i][4];
+      const track = document.createElement('div'); track.className = 'dist-track'; track.setAttribute('aria-hidden','true');
+      const bar = document.createElement('div'); bar.className = 'dist-bar'; bar.style.width = (bin.dog_count / max * 100) + '%';
+      const value = document.createElement('span'); value.className = 'dist-count'; value.textContent = bin.dog_count.toLocaleString('ja-JP') + '頭';
+      track.appendChild(bar); row.append(label,track,value); fragment.appendChild(row);
+    });
+    rows.replaceChildren(fragment);
+  }
+  function renderPanel() {
+    const breed = selectedBreed;
+    if (collectingBreed) collectingBreed.textContent = breed;
+    if (collectingCount) {
+      const n = breedCounts.get(breed);
+      collectingCount.textContent = Number.isSafeInteger(n) ? n.toLocaleString('ja-JP') : '—';
+    }
+    const data = summaryCache.get(breed);
+    if (!data) {
+      /* 未取得（読み込み中／エラー）の間はグラフ側パネルで状態を示す */
+      if (panelMinpin) panelMinpin.hidden = false;
+      if (panelOther) panelOther.hidden = true;
+      if (figure) figure.hidden = true;
+      if (panelMinpin) panelMinpin.querySelectorAll('.results-note').forEach(note => { if (note !== status) note.hidden = true; });
+      if (noteBreed) noteBreed.textContent = breed;
+      rows.replaceChildren();
+      time.textContent = '';
+      if (!summaryErrors.has(breed)) status.textContent = '最新の集計を確認しています…';
+      return;
+    }
+    const mode = modeOf(data);
+    if (mode === 'collecting' && breed !== MINPIN_BREED) {
+      if (panelMinpin) panelMinpin.hidden = true;
+      if (panelOther) panelOther.hidden = false;
+      return;
+    }
+    if (panelMinpin) panelMinpin.hidden = false;
+    if (panelOther) panelOther.hidden = true;
+    if (noteBreed) noteBreed.textContent = breed;
+    const showGraph = mode !== 'collecting';
+    if (figure) figure.hidden = !showGraph;
+    if (panelMinpin) panelMinpin.querySelectorAll('.results-note').forEach(note => { if (note !== status) note.hidden = !showGraph; });
+    if (showGraph) renderRows(data, mode); else rows.replaceChildren();
+    if (mode === 'full') status.textContent = '採寸ナビに届いたデータから自動集計しています。';
+    else if (mode === 'partial') status.textContent = '集計対象は' + data.total_dogs.toLocaleString('ja-JP') + '頭です。' + PARTIAL_MIN_DOGS + '頭以上集まった区分を、先行で公開しています。';
+    else status.textContent = '集計対象は' + data.total_dogs.toLocaleString('ja-JP') + '頭です。' + GRAPH_MIN_DOGS + '頭以上集まったら、ここで集計をご紹介します。';
+    time.textContent = '取得日時：' + new Date(data.retrieved_at).toLocaleString('ja-JP',{timeZone:'Asia/Tokyo'}) + '（日本時間）';
+    retry.hidden = true;
+  }
+  function renderBreedTabs(breeds) {
+    if (!tabsBox) return;
+    const list = breeds.slice().sort((a,b) => {
+      if (a.canonical_breed === MINPIN_BREED) return -1;
+      if (b.canonical_breed === MINPIN_BREED) return 1;
+      return Number(b.dog_count) - Number(a.dog_count);
+    });
+    breedCounts = new Map(list.map(row => [row.canonical_breed, Number(row.dog_count)]));
+    if (!breedCounts.has(selectedBreed)) selectedBreed = MINPIN_BREED;
+    const signature = list.map(row => row.canonical_breed + ':' + row.dog_count).join('|');
+    if (signature !== breedSignature) {
+      breedSignature = signature;
+      const fragment = document.createDocumentFragment();
+      list.forEach(row => {
+        const btn = document.createElement('button');
+        btn.type = 'button'; btn.className = 'breed-tab'; btn.setAttribute('role','tab');
+        btn.dataset.breed = row.canonical_breed;
+        btn.textContent = row.canonical_breed;
+        btn.setAttribute('aria-selected', row.canonical_breed === selectedBreed ? 'true' : 'false');
+        btn.addEventListener('click', () => {
+          if (selectedBreed === row.canonical_breed) { fetchBreed(selectedBreed); return; }
+          selectedBreed = row.canonical_breed;
+          tabsBox.querySelectorAll('.breed-tab').forEach(b => b.setAttribute('aria-selected', b.dataset.breed === selectedBreed ? 'true' : 'false'));
+          renderPanel();
+          fetchBreed(selectedBreed);
+        });
+        fragment.appendChild(btn);
+      });
+      tabsBox.replaceChildren(fragment);
+    }
+    renderPanel();
+  }
   async function refreshRegistry() {
     if (!regTotal || document.visibilityState === 'hidden') return;
     try {
-      const response = await fetch('https://dsbvaoqgvtoeukigdjdj.supabase.co/rest/v1/site_breed_counts_public?select=canonical_breed,dog_count', {
+      const response = await fetch(registryEndpoint, {
         headers: { apikey: apiKey }, cache: 'no-store'
       });
       if (!response.ok) throw Error('registry unavailable');
@@ -1758,55 +1877,58 @@ document.addEventListener('click',function(event){
       });
       regTotal.textContent = totalDogs.toLocaleString('ja-JP');
       if (regMinpin) regMinpin.textContent = minpinDogs.toLocaleString('ja-JP');
+      renderBreedTabs(breeds);
     } catch (error) { /* 登録頭数が取得できない場合は「—」のままにし、グラフの表示は止めない */ }
   }
   if (!rows || !status || !time || !retry) return;
-  let busy = false;
-  async function refresh() {
-    if (busy || document.visibilityState === 'hidden') return;
-    busy = true; retry.disabled = true;
-    status.textContent = '最新の集計を確認しています…';
+  async function fetchBreed(breed) {
+    if (inflight.has(breed)) return;
+    inflight.add(breed);
+    if (breed === selectedBreed) {
+      retry.disabled = true;
+      if (!summaryCache.has(breed) && !summaryErrors.has(breed)) status.textContent = '最新の集計を確認しています…';
+    }
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(),12000);
     try {
       const response = await fetch(endpoint,{
         method:'POST',headers:{apikey:apiKey,'Content-Type':'application/json'},
-        body:'{}',cache:'no-store',signal:controller.signal
+        body:JSON.stringify({p_breed:breed}),cache:'no-store',signal:controller.signal
       });
       if (!response.ok) throw Error('summary unavailable');
-      const data = validate(await response.json());
-      const max = Math.max(1,...data.bins.map(bin => bin.dog_count));
-      const fragment = document.createDocumentFragment();
-      data.bins.forEach((bin,i) => {
-        if ((i === 0 || i === 7) && bin.dog_count === 0) return;
-        const row = document.createElement('div'); row.className = 'dist-row';
-        const label = document.createElement('span'); label.textContent = definitions[i][4];
-        const track = document.createElement('div'); track.className = 'dist-track'; track.setAttribute('aria-hidden','true');
-        const bar = document.createElement('div'); bar.className = 'dist-bar'; bar.style.width = (bin.dog_count / max * 100) + '%';
-        const value = document.createElement('span'); value.className = 'dist-count'; value.textContent = bin.dog_count.toLocaleString('ja-JP') + '頭';
-        track.appendChild(bar); row.append(label,track,value); fragment.appendChild(row);
-      });
-      rows.replaceChildren(fragment);
-      document.dispatchEvent(new CustomEvent('pinforme:summary',{detail:data}));
-      status.textContent = data.total_dogs ? '採寸ナビに届いたデータから自動集計しています。' : '対象の採寸データはまだありません。';
-      time.textContent = '取得日時：' + new Date(data.retrieved_at).toLocaleString('ja-JP',{timeZone:'Asia/Tokyo'}) + '（日本時間）';
-      retry.hidden = true;
+      const data = validate(await response.json(), breed);
+      summaryCache.set(breed, data);
+      summaryErrors.delete(breed);
+      if (breed === MINPIN_BREED) document.dispatchEvent(new CustomEvent('pinforme:summary',{detail:data}));
+      if (breed === selectedBreed) renderPanel();
     } catch(error) {
-      rows.replaceChildren(); time.textContent = '';
-      document.dispatchEvent(new CustomEvent('pinforme:summary',{detail:null}));
-      status.textContent = '集計データを取得できませんでした。時間をおいてもう一度お試しください。';
-      retry.hidden = false;
+      summaryErrors.add(breed);
+      if (breed === MINPIN_BREED) document.dispatchEvent(new CustomEvent('pinforme:summary',{detail:null}));
+      if (breed === selectedBreed && !summaryCache.has(breed)) {
+        if (panelMinpin) panelMinpin.hidden = false;
+        if (panelOther) panelOther.hidden = true;
+        if (figure) figure.hidden = true;
+        rows.replaceChildren(); time.textContent = '';
+        status.textContent = '集計データを取得できませんでした。時間をおいてもう一度お試しください。';
+        retry.hidden = false;
+      } else if (breed === selectedBreed) {
+        renderPanel();
+      }
     } finally {
-      clearTimeout(timer); busy = false; retry.disabled = false;
+      clearTimeout(timer); inflight.delete(breed);
+      if (breed === selectedBreed) retry.disabled = false;
     }
   }
-  retry.addEventListener('click',refresh);
-  document.addEventListener('visibilitychange',() => {if(document.visibilityState === 'visible'){ refresh(); refreshRegistry(); }});
-  setInterval(() => {if(document.visibilityState === 'visible'){ refresh(); refreshRegistry(); }},60000);
-  refresh();
+  function refreshSummaries() {
+    fetchBreed(selectedBreed);
+    if (selectedBreed !== MINPIN_BREED) fetchBreed(MINPIN_BREED);
+  }
+  retry.addEventListener('click',() => fetchBreed(selectedBreed));
+  document.addEventListener('visibilitychange',() => {if(document.visibilityState === 'visible'){ refreshSummaries(); refreshRegistry(); }});
+  setInterval(() => {if(document.visibilityState === 'visible'){ refreshSummaries(); refreshRegistry(); }},60000);
+  refreshSummaries();
   refreshRegistry();
 })();
-
 </script>
 <script>
 (()=>{
