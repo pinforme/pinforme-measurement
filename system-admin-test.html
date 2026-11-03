@@ -3270,6 +3270,63 @@ setPINFORMEKarte=function(d){
           });
         }
 
+        function orderBaseFor(hist, purchasedAt) {
+          if (!purchasedAt) return null;
+          var best = null;
+          hist.forEach(function (r) {
+            var md = measuredDate(r);
+            if (md && md <= purchasedAt && (!best || md > measuredDate(best))) best = r;
+          });
+          return best;
+        }
+        function daysBetween(a, b) {
+          var da = new Date(a), db = new Date(b);
+          if (isNaN(da.getTime()) || isNaN(db.getTime())) return null;
+          return Math.round((db - da) / 86400000);
+        }
+        async function loadOrderLinks(d, hist) {
+          var boxEl = $("adm-orders-box"); if (!boxEl) return;
+          var tok = token();
+          if (!tok) { boxEl.innerHTML = '<p class="adm-note">購入履歴の表示には管理者ログインが必要です。</p>'; return; }
+          try {
+            var rows = await rpc("admin_order_links_by_dog", { p_dog_id: Number(d.id) }, tok);
+            if (!Array.isArray(rows) || !rows.length) {
+              boxEl.innerHTML = '<p class="adm-note">紐付け済みの購入履歴はまだありません。</p>';
+              return;
+            }
+            var trs = rows.map(function (o) {
+              var base = orderBaseFor(hist, o.purchased_at);
+              var gap = base ? daysBetween(measuredDate(base), o.purchased_at) : null;
+              return "<tr><td>" + esc(o.purchased_at || "—") + "</td><td>" + esc(o.item_name || "—") + "</td><td>" + esc(o.size_label || "—") + "</td><td>" + esc(o.channel || "—") + "</td><td>" + (base ? esc(measuredDate(base)) : "採寸なし") + "</td><td>" + (gap === null ? "—" : (gap + "日")) + "</td></tr>";
+            }).join("");
+            boxEl.innerHTML = '<div style="overflow-x:auto"><table class="adm-table"><thead><tr><th>購入日</th><th>商品</th><th>サイズ</th><th>経路</th><th>購入時点の最新採寸日</th><th>間隔</th></tr></thead><tbody>' + trs + "</tbody></table></div>";
+          } catch (e) {
+            boxEl.innerHTML = '<p class="adm-note">購入履歴を読み込めませんでした（' + esc(e.message || e) + "）。</p>";
+          }
+        }
+        async function saveOrderLink(d, hist) {
+          var st = $("adm-ord-status"); if (!st) return;
+          var orderId = ($("adm-ord-id").value || "").trim();
+          if (!orderId) { st.textContent = "注文番号を入力してください。"; return; }
+          var body = {
+            p_order_id: orderId,
+            p_channel: $("adm-ord-channel").value || "base",
+            p_purchased_at: $("adm-ord-date").value || null,
+            p_item_name: ($("adm-ord-item").value || "").trim() || null,
+            p_size_label: ($("adm-ord-size").value || "").trim() || null,
+            p_dog_id: Number(d.id),
+            p_linked_via: "manual",
+            p_note: ($("adm-ord-note").value || "").trim() || null
+          };
+          st.textContent = "登録中です…";
+          try {
+            await rpc("admin_order_link_upsert", body, token());
+            st.textContent = "紐付けを登録しました。";
+            loadOrderLinks(d, hist);
+          } catch (e) {
+            st.textContent = "登録できませんでした（" + (e.message || e) + "）。";
+          }
+        }
         function openDog(dogId) {
           var d = dogById(dogId); if (!d) return;
           A.activeDogId = d.id;
@@ -3331,6 +3388,19 @@ setPINFORMEKarte=function(d){
             '<p class="adm-note">最新記録のカルテを、採寸ナビと同じ様式で表示します。お客様から「カルテが欲しい」と言われた時の確認・受け渡し用です。各履歴の「カルテ」ボタンでは、その記録時点のカルテも表示できます。カルテ画面の「カルテを保存（PDF）」からPDFで保存して渡せます。</p>' +
             '<button type="button" class="adm-btn" id="adm-karte-latest">カルテを見る（最新記録）</button>' +
 
+            '<h4 class="adm-sec-head">購入履歴（紐付け済み）</h4>' +
+            '<div id="adm-orders-box"><p class="adm-note">読み込み中です。</p></div>' +
+            '<details class="adm-more"><summary>購入を紐付ける（手作業）</summary>' +
+            '<p class="adm-note">飼い主さんから任意でお客様キーや注文番号を教えてもらえた時だけ登録します。購入の条件にはしません。</p>' +
+            '<p><label>注文番号<br /><input class="adm-input" id="adm-ord-id" type="text" maxlength="100" /></label></p>' +
+            '<p><label>購入日<br /><input class="adm-input" id="adm-ord-date" type="date" /></label></p>' +
+            '<p><label>商品名<br /><input class="adm-input" id="adm-ord-item" type="text" maxlength="200" /></label></p>' +
+            '<p><label>サイズ<br /><input class="adm-input" id="adm-ord-size" type="text" maxlength="50" /></label></p>' +
+            '<p><label>販売経路<br /><select class="adm-input" id="adm-ord-channel"><option value="base">BASE</option><option value="own-site">独自サイト</option><option value="in-person">対面</option><option value="other">その他</option></select></label></p>' +
+            '<p><label>メモ<br /><input class="adm-input" id="adm-ord-note" type="text" maxlength="200" /></label></p>' +
+            '<button type="button" class="adm-btn" id="adm-ord-save">この内容で紐付ける</button>' +
+            '<p class="adm-status" id="adm-ord-status" role="status"></p></details>' +
+
             '<div class="adm-danger-zone"><h3 style="margin-top:0">この子を削除（犬ごと削除）</h3>' +
             "<p class='adm-note'>対象は " + esc(dogTitleOf(d)) + "（dog_id " + esc(d.id) + "）の犬情報と採寸履歴 " + hist.length + " 件です。削除後は元に戻せません。<br />" +
             "写真は Storage（" + PHOTO_BUCKET + "）から先に削除し、失敗した場合はDBの削除を行いません。</p>" +
@@ -3349,6 +3419,9 @@ setPINFORMEKarte=function(d){
             showList(); renderBreeds();
             var c = $("adm-list-card"); if (c) c.scrollIntoView({ behavior: "smooth", block: "start" });
           });
+          loadOrderLinks(d, hist);
+          var ordSave = $("adm-ord-save");
+          if (ordSave) ordSave.addEventListener("click", function () { saveOrderLink(d, hist); });
           var sel = $("adm-breed-select"), inp = $("adm-breed-input");
           sel.addEventListener("change", function () { if (sel.value !== "__custom__") inp.value = sel.value; inp.focus(); });
           $("adm-breed-save").addEventListener("click", saveBreed);
