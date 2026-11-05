@@ -288,12 +288,12 @@
         if (withLabels && renderText) {
           for (const key of Object.keys(ELBL)) {
             const [txt, dx, dy] = ELBL[key]; const m = mid(p.seg[key]);
-            const ti = await renderText(txt, Math.max(3.2, 1.35 * s), '#222222', false);
+            const ti = await renderText(txt, Math.max(2.6, 0.62 * s), '#222222', false);
             if (ti) page.drawImage(ti.img, { x: X(oxMm + (m[0] + dx) * s), y: Y(oyMm + (m[1] + dy) * s + ti.hMm), width: ti.wMm * K, height: ti.hMm * K });
           }
           const b = bounds(p.outline);
           const label = i === 0 ? '後身頃' : '前身頃';
-          const ti = await renderText(label, Math.max(4, 1.65 * s), '#20507e', true);
+          const ti = await renderText(label, Math.max(3.2, 0.95 * s), '#20507e', true);
           if (ti) page.drawImage(ti.img, { x: X(oxMm + (b[0] + b[2]) / 2 * s - ti.wMm / 2), y: Y(oyMm + (b[1] + b[3]) / 2 * s + ti.hMm / 2), width: ti.wMm * K, height: ti.hMm * K });
         }
       }
