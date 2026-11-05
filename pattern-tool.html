@@ -312,9 +312,10 @@
     // never slices a thin sliver off a piece when a small shift avoids it.
     let cMinX = 1e9, cMinY = 1e9;
     for (const p of result.pieces) { const b = bounds(p.cut); cMinX = Math.min(cMinX, b[0] * 10); cMinY = Math.min(cMinY, b[1] * 10); }
-    const originsX = [cMinX];
+    // start 5mm before the content edge so pattern lines never sit on the frame line
+    const originsX = [Math.max(0, cMinX - 5)];
     while (originsX[originsX.length - 1] + WIN_W < W) originsX.push(originsX[originsX.length - 1] + STEP_X);
-    const originsY = [cMinY];
+    const originsY = [Math.max(0, cMinY - 5)];
     while (originsY[originsY.length - 1] + WIN_H < H) originsY.push(originsY[originsY.length - 1] + STEP_Y);
     const cols = originsX.length, rows = originsY.length;
 
