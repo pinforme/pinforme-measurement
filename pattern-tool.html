@@ -308,8 +308,15 @@
 
     const info = result.info;
     const W = result.sheetW * 10, H = result.sheetH * 10;
-    const cols = W > WIN_W ? 1 + Math.ceil((W - WIN_W) / STEP_X) : 1;
-    const rows = H > WIN_H ? 1 + Math.ceil((H - WIN_H) / STEP_Y) : 1;
+    // Tile windows start at the content edge (not the sheet corner), so a seam
+    // never slices a thin sliver off a piece when a small shift avoids it.
+    let cMinX = 1e9, cMinY = 1e9;
+    for (const p of result.pieces) { const b = bounds(p.cut); cMinX = Math.min(cMinX, b[0] * 10); cMinY = Math.min(cMinY, b[1] * 10); }
+    const originsX = [cMinX];
+    while (originsX[originsX.length - 1] + WIN_W < W) originsX.push(originsX[originsX.length - 1] + STEP_X);
+    const originsY = [cMinY];
+    while (originsY[originsY.length - 1] + WIN_H < H) originsY.push(originsY[originsY.length - 1] + STEP_Y);
+    const cols = originsX.length, rows = originsY.length;
 
     // ---------- overview ----------
     {
@@ -340,7 +347,7 @@
     for (let ri = 0; ri < rows; ri++) {
       for (let ci = 0; ci < cols; ci++) {
         const page = doc.addPage([PW, PH]);
-        const ox = OFF - ci * STEP_X, oy = OFF - ri * STEP_Y;
+        const ox = OFF - originsX[ci], oy = OFF - originsY[ri];
         // clip to window
         page.pushOperators(P.pushGraphicsState(),
           P.rectangle(X(OFF), Y(OFF + WIN_H), WIN_W * K, WIN_H * K), P.clip(), P.endPath());
