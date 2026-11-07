@@ -3252,7 +3252,7 @@ function pinKarteNoticeRender(){
   const now = new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Tokyo'})).getTime();
   const T = s => new Date(s).getTime();
   let title = '', body = '';
-  if(Number.isFinite(chest) && chest >= 35 && chest < 38){
+  if(Number.isFinite(chest) && chest >= 34 && chest < 38){ /* 確認用：ぴんちゃん(34.3/34.8)も対象に含める */
     if(now >= T('2026-11-07T00:00:00') && now < T('2026-11-13T20:00:00')){
       title = 'PINFORMEからの先行お知らせ';
       body = '採寸にご協力いただいている方へ、先行してお知らせします。11月13日（金）20:00から、タンクトップの試着モニターの募集を始めます。対象は、胴まわり35〜38cmのミニチュアピンシャーの子です。応募の方法は、13日20:00の投稿でご案内します。';
