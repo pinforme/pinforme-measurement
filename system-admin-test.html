@@ -2767,7 +2767,7 @@ setPINFORMEKarte=function(d){
         var A = {
           dogs: [], measurements: [], verified: false,
           activeDogId: null, activeOwnerId: null, busy: false,
-          view: "breeds", activeBreed: null, query: "", checkQuery: "", checkDogId: null, tab: "list", pubOpen: false, keyQuery: "", keyState: null
+          view: "breeds", activeBreed: null, query: "", checkQuery: "", checkDogId: null, tab: "list", pubOpen: false, keyQuery: "", keyState: null, idQuery: { name: "", birth: "", weight: "", chest: "" }, idState: null
         };
 
         function $(id) { return document.getElementById(id); }
@@ -3200,6 +3200,91 @@ setPINFORMEKarte=function(d){
           }
           renderBreeds();
         }
+        /* ---------- identity search (monitor application verification) ----------
+           Finds a registered dog from what the owner told us: name, birth date,
+           weight, chest. All fields optional; filled fields are ANDed. Runs
+           entirely on the already-fetched A.dogs (read-only, no new RPC).
+           Weight/chest allow a small tolerance for rounding in what the owner
+           remembers (+/-0.3kg / +/-0.5cm). Birth date is an exact match. */
+        function idDogCardHTML(d) {
+          var l = latestOf(d.id);
+          var formal = normalizeBreed(rawBreedOf(d));
+          var rec = recommendedSize(d);
+          var bandText = rec ? ("SIZE " + rec.name + "\uFF08\u80F4 " + fmt(rec.lo) + "\u301C" + fmt(rec.hi) + "cm\uFF09")
+            : (l && l.chest !== null && l.chest !== undefined ? "\u5E2F\u306E\u7BC4\u56F2\u5916" : "\u63A1\u5BF8\u306A\u3057");
+          var birth = d.birth_date || (l && l.birth_date) || "";
+          return '<button type="button" class="adm-card-row" data-adm-dog="' + esc(d.id) + '">' +
+            '<span class="adm-card-body">' +
+            '<span class="adm-card-main">' + esc(dogTitleOf(d)) + "</span>" +
+            '<span class="adm-card-sub">' + esc(formal || "\u72AC\u7A2E\u672A\u767B\u9332") + " \u30FB " + esc(d.sex || (l && l.sex) || "\u6027\u5225\u4E0D\u660E") + " \u30FB \u751F\u5E74\u6708\u65E5 " + esc(birth ? String(birth).slice(0, 10) : "\u4E0D\u660E") + "</span>" +
+            '<span class="adm-card-sub">\u80F4\u307E\u308F\u308A ' + fmt(l && l.chest, "cm") + "\uFF08" + bandText + "\uFF09 \u30FB \u4F53\u91CD " + fmt(l && l.weight, "kg") + " \u30FB \u6700\u7D42\u63A1\u5BF8 " + esc(l ? measuredDate(l) : "\u8A18\u9332\u306A\u3057") + "</span>" +
+            '</span><span class="adm-card-arrow">\u203A</span></button>';
+        }
+        function identitySearchHTML() {
+          var q = A.idQuery || { name: "", birth: "", weight: "", chest: "" };
+          var st = A.idState, out = "";
+          out += '<div style="border-top:1px solid #e3e0ea;margin:14px 0 10px"></div>' +
+            '<p class="adm-note" style="margin:0 0 6px"><strong>\u672C\u4EBA\u78BA\u8A8D\u3067\u63A2\u3059</strong>\uFF08\u30E2\u30CB\u30BF\u30FC\u5FDC\u52DF\u30FB\u30AD\u30FC\u518D\u767A\u884C\u306A\u3069\uFF09</p>' +
+            '<p class="adm-note" style="margin:0 0 8px">\u98FC\u3044\u4E3B\u3055\u3093\u304B\u3089\u805E\u3044\u305F\u60C5\u5831\u3067\u63A2\u3057\u307E\u3059\u3002\u5206\u304B\u308B\u9805\u76EE\u3060\u3051\u5165\u529B\u3057\u3066\u304F\u3060\u3055\u3044\u3002\u4F53\u91CD\u306F\u00B10.3kg\u3001\u80F4\u307E\u308F\u308A\u306F\u00B10.5cm\u307E\u3067\u4E00\u81F4\u3068\u307F\u306A\u3057\u307E\u3059\u3002</p>' +
+            '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 8px">' +
+            '<input class="adm-input inline" id="adm-id-name" type="text" autocomplete="off" placeholder="\u308F\u3093\u3061\u3083\u3093\u306E\u540D\u524D" value="' + esc(q.name || "") + '" />' +
+            '<input class="adm-input inline" id="adm-id-birth" type="date" value="' + esc(q.birth || "") + '" />' +
+            '<input class="adm-input inline" id="adm-id-weight" type="number" inputmode="decimal" step="0.1" min="0" placeholder="\u4F53\u91CD\uFF08kg\uFF09" value="' + esc(q.weight || "") + '" />' +
+            '<input class="adm-input inline" id="adm-id-chest" type="number" inputmode="decimal" step="0.1" min="0" placeholder="\u80F4\u307E\u308F\u308A\uFF08cm\uFF09" value="' + esc(q.chest || "") + '" />' +
+            "</div>" +
+            '<div style="display:flex;gap:8px;margin:0 0 10px">' +
+            '<button type="button" class="adm-btn" id="adm-id-btn">\u3053\u306E\u6761\u4EF6\u3067\u63A2\u3059</button>' +
+            '<button type="button" class="adm-btn light" id="adm-id-clear">\u6761\u4EF6\u3092\u30AF\u30EA\u30A2</button></div>';
+          if (!st) return out;
+          if (st.status === "empty") {
+            out += '<p class="adm-note">\u6761\u4EF6\u30921\u3064\u4EE5\u4E0A\u5165\u529B\u3057\u3066\u304F\u3060\u3055\u3044\u3002</p>';
+          } else if (st.status === "done") {
+            out += '<p class="adm-note" style="margin:0 0 10px">\u672C\u4EBA\u78BA\u8A8D\u306E\u691C\u7D22\u7D50\u679C\uFF1A' + st.dogs.length + "\u982D</p>" +
+              (st.dogs.length
+                ? '<div class="adm-list">' + st.dogs.map(idDogCardHTML).join("") + "</div>"
+                : '<p class="adm-note">\u4E00\u81F4\u3059\u308B\u5B50\u306F\u3044\u307E\u305B\u3093\u3067\u3057\u305F\u3002\u805E\u3044\u305F\u6570\u5B57\u304C\u6982\u6570\u3067\u306A\u3044\u304B\u3001\u6761\u4EF6\u3092\u6E1B\u3089\u3057\u3066\u8A66\u3057\u3066\u304F\u3060\u3055\u3044\u3002</p>');
+          }
+          return out;
+        }
+        function attachIdentitySearch() {
+          var fields = { name: $("adm-id-name"), birth: $("adm-id-birth"), weight: $("adm-id-weight"), chest: $("adm-id-chest") };
+          if (!fields.name) return;
+          Object.keys(fields).forEach(function (k) {
+            var el = fields[k]; if (!el) return;
+            el.addEventListener("input", function () { A.idQuery[k] = el.value; });
+            el.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); runIdentitySearch(); } });
+          });
+          var btn = $("adm-id-btn"); if (btn) btn.addEventListener("click", runIdentitySearch);
+          var clr = $("adm-id-clear"); if (clr) clr.addEventListener("click", function () {
+            A.idQuery = { name: "", birth: "", weight: "", chest: "" }; A.idState = null; renderBreeds();
+          });
+        }
+        function runIdentitySearch() {
+          var q = A.idQuery || {};
+          var name = String(q.name || "").trim();
+          var birth = String(q.birth || "").trim();
+          var wRaw = String(q.weight || "").trim(), cRaw = String(q.chest || "").trim();
+          var w = wRaw === "" ? null : Number(wRaw), c = cRaw === "" ? null : Number(cRaw);
+          if (!name && !birth && w === null && c === null) { A.idState = { status: "empty" }; renderBreeds(); return; }
+          var nq = normalizeForSearch(name);
+          var dogs = A.dogs.filter(function (d) {
+            var l = latestOf(d.id);
+            if (nq) { var n = normalizeForSearch(dogNameOf(d)); if (!n || n.indexOf(nq) < 0) return false; }
+            if (birth) {
+              var b = String(d.birth_date || (l && l.birth_date) || "").slice(0, 10);
+              if (b !== birth) return false;
+            }
+            if (w !== null && isFinite(w)) {
+              if (!l || l.weight === null || l.weight === undefined || Math.abs(Number(l.weight) - w) > 0.3) return false;
+            }
+            if (c !== null && isFinite(c)) {
+              if (!l || l.chest === null || l.chest === undefined || Math.abs(Number(l.chest) - c) > 0.5) return false;
+            }
+            return true;
+          }).slice().sort(function (x, y) { return Number(x.id) - Number(y.id); });
+          A.idState = { status: "done", dogs: dogs };
+          renderBreeds();
+        }
         function renderBreeds() {
           var box = $("adm-breeds"); if (!box) return;
           if (!A.dogs.length) { box.innerHTML = '<p class="adm-note">登録されている犬がいません。</p>'; return; }
@@ -3244,7 +3329,7 @@ setPINFORMEKarte=function(d){
               '<p class="adm-crumbs">管理画面 ＞ 犬種</p>' +
               '<div class="adm-view-head"><h3>犬種 → 犬の一覧</h3></div>' +
               '<p class="adm-note" style="margin:0 0 10px">犬種を選ぶと、その犬種の犬の一覧が出ます。名前・IDでも探せます。</p>' +
-              searchBoxHTML() + keySearchHTML() +
+              searchBoxHTML() + keySearchHTML() + identitySearchHTML() +
               '<div class="adm-list">' + g.order.map(function (bname) {
                 var dogsOfBreed = g.groups[bname];
                 var dueCount = dogsOfBreed.filter(function (d) { return remeasureDue(latestOf(d.id)); }).length;
@@ -3255,6 +3340,7 @@ setPINFORMEKarte=function(d){
               }).join("") + "</div>";
             attachSearch();
             attachKeySearch();
+            attachIdentitySearch();
             box.querySelectorAll("[data-adm-dog]").forEach(function (btn) {
               btn.addEventListener("click", function () { openDog(btn.getAttribute("data-adm-dog")); });
             });
