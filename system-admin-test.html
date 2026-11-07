@@ -2767,7 +2767,7 @@ setPINFORMEKarte=function(d){
         var A = {
           dogs: [], measurements: [], verified: false,
           activeDogId: null, activeOwnerId: null, busy: false,
-          view: "breeds", activeBreed: null, query: "", checkQuery: "", checkDogId: null, tab: "list", pubOpen: false, keyQuery: "", keyState: null, idQuery: { name: "", birth: "", weight: "", chest: "" }, idState: null
+          view: "breeds", activeBreed: null, query: "", checkQuery: "", checkDogId: null, tab: "list", pubOpen: false, keyQuery: "", keyState: null, idQuery: { name: "", birth: "", weight: "", chest: "" }, idState: null, ocrState: null, ocrValues: null, ocrCompareId: null
         };
 
         function $(id) { return document.getElementById(id); }
@@ -3285,6 +3285,371 @@ setPINFORMEKarte=function(d){
           A.idState = { status: "done", dogs: dogs };
           renderBreeds();
         }
+        /* ---------- karte photo OCR (draft-fill + comparison) ----------
+           The owner sends a photo of their karte by DM. The admin pastes it
+           here; OCR (Tesseract.js, jpn+eng, loaded from CDN on first use)
+           extracts name / birth / weight / chest (+ neck, back, front,
+           waist when readable) and draft-fills the identity search fields
+           above. Nothing is auto-confirmed: the admin must eyeball and fix
+           the values before searching. Read-only; no DB access, no writes. */
+        var KARTE_OCR_CDN = "https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js";
+        var KARTE_OCR_WORKER = "https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/worker.min.js";
+        var KARTE_OCR_CORE = "https://cdn.jsdelivr.net/npm/tesseract.js-core@5/tesseract-core-simd.wasm.js";
+        var OCR_FIELD_DEFS = [
+          ["name", "名前", "text"], ["birth", "生年月日", "date"],
+          ["weight", "体重（kg）", "number"], ["chest", "胴まわり（cm）", "number"],
+          ["neck", "首まわり（cm）", "number"], ["back", "着丈（cm）", "number"],
+          ["front", "前身頃（cm）", "number"], ["waist", "ウエスト（cm）", "number"]
+        ];
+        var karteOcrLibPromise = null;
+        var admOcrPasteBound = false;
+        function loadKarteOcrLib() {
+          if (window.Tesseract) return Promise.resolve(window.Tesseract);
+          if (karteOcrLibPromise) return karteOcrLibPromise;
+          karteOcrLibPromise = new Promise(function (resolve, reject) {
+            var s = document.createElement("script");
+            s.src = KARTE_OCR_CDN; s.async = true;
+            var to = setTimeout(function () { reject(new Error("ライブラリの読み込みがタイムアウトしました")); }, 30000);
+            s.onload = function () { clearTimeout(to); if (window.Tesseract) resolve(window.Tesseract); else reject(new Error("Tesseract が見つかりません")); };
+            s.onerror = function () { clearTimeout(to); reject(new Error("ライブラリを読み込めませんでした（通信環境をご確認ください）")); };
+            document.head.appendChild(s);
+          });
+          return karteOcrLibPromise;
+        }
+        function setOcrStatus(msg) { var el = $("adm-ocr-status"); if (el) el.textContent = msg; }
+        function runKarteOcr(blob) {
+          if (!blob) return;
+          A.ocrState = { status: "running", message: "読み取り中…（初回はライブラリと日本語データの取得で少し時間がかかります）" };
+          renderBreeds();
+          loadKarteOcrLib().then(function (T) {
+            return T.createWorker("jpn+eng", 1, {
+              workerPath: KARTE_OCR_WORKER, corePath: KARTE_OCR_CORE,
+              logger: function (m) {
+                if (m && m.status === "recognizing text") setOcrStatus("読み取り中… " + Math.round((m.progress || 0) * 100) + "%");
+              }
+            }).then(function (worker) {
+              return worker.recognize(blob, {}, { blocks: true }).then(function (res) {
+                return worker.terminate().then(function () { return res.data; });
+              });
+            });
+          }).then(function (data) {
+            var v = parseKarteOcr(data);
+            A.ocrValues = v;
+            ["name", "birth", "weight", "chest"].forEach(function (k) { if (v[k]) A.idQuery[k] = v[k]; });
+            A.ocrState = { status: "done", message: "読み取りました。下の「読み取り結果」を確認・修正してから探してください。" };
+            renderBreeds();
+          }).catch(function (err) {
+            A.ocrState = { status: "error", message: "読み取りに失敗しました：" + (err && err.message ? err.message : String(err)) + "　手入力でお願いします。" };
+            renderBreeds();
+          });
+        }
+        /* --- OCR result parsing (word boxes; line fallback when no boxes) --- */
+        function ocrCleanText(s) { return String(s || "").normalize("NFKC"); }
+        function ocrFirstNumber(s) {
+          var m = String(s || "").match(/(\d{1,3})[.．](\d{1,2})/);
+          if (m) return m[1] + "." + m[2];
+          var m2 = String(s || "").match(/(\d{1,3})/);
+          return m2 ? m2[1] : "";
+        }
+        function karteOcrWords(data) {
+          if (!data) return [];
+          if (data.words && data.words.length) return data.words;
+          var out = [];
+          (data.blocks || []).forEach(function (b) {
+            (b.paragraphs || []).forEach(function (p) {
+              (p.lines || []).forEach(function (ln) { (ln.words || []).forEach(function (w) { out.push(w); }); });
+            });
+          });
+          if (out.length) return out;
+          if (data.text) {
+            return String(data.text).split(/\n/).map(function (line, i) {
+              return { text: line, bbox: { x0: 0, y0: i * 100, x1: 100, y1: i * 100 + 50 } };
+            }).filter(function (w) { return w.text.trim(); });
+          }
+          return [];
+        }
+        function karteOcrLines(words) {
+          var ws = words.slice().sort(function (a, b) { return (a.bbox.y0 + a.bbox.y1) - (b.bbox.y0 + b.bbox.y1); });
+          var lines = [];
+          ws.forEach(function (w) {
+            var cy = (w.bbox.y0 + w.bbox.y1) / 2, h = Math.max(1, w.bbox.y1 - w.bbox.y0);
+            var found = null;
+            for (var i = lines.length - 1; i >= 0; i--) {
+              if (Math.abs(lines[i].cy - cy) <= Math.max(h, lines[i].h) * 0.7) { found = lines[i]; break; }
+            }
+            if (!found) { found = { cy: cy, h: h, words: [] }; lines.push(found); }
+            found.words.push(w);
+          });
+          lines.forEach(function (L) {
+            L.words.sort(function (a, b) { return a.bbox.x0 - b.bbox.x0; });
+            L.text = L.words.map(function (w) { return ocrCleanText(w.text); }).join(" ");
+            L.flat = L.text.replace(/\s+/g, "");
+          });
+          return lines;
+        }
+        function parseKarteOcr(data) {
+          var v = { name: "", birth: "", weight: "", chest: "", neck: "", back: "", front: "", waist: "" };
+          var words = karteOcrWords(data).map(function (w) {
+            return { text: ocrCleanText(w.text), bbox: w.bbox };
+          }).filter(function (w) { return w.text; });
+          var lines = karteOcrLines(words);
+          lines.forEach(function (L) {
+            if (!v.birth && L.flat.indexOf("生年月日") >= 0) {
+              var dm = L.flat.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
+              if (dm) v.birth = dm[1] + "-" + ("0" + dm[2]).slice(-2) + "-" + ("0" + dm[3]).slice(-2);
+            }
+            if (!v.weight && L.flat.indexOf("体重") >= 0) {
+              var wm = L.text.match(/(\d{1,2})[.．](\d{1,2})/);
+              if (wm) v.weight = wm[1] + "." + wm[2];
+            }
+            if (!v.name && L.flat.indexOf("わんちゃん") >= 0 && L.flat.indexOf("名前") >= 0) {
+              var cand = L.words.filter(function (w) {
+                return !/^[わんちゃんのお名前様飼い主]+$/.test(w.text.replace(/\s+/g, ""));
+              }).sort(function (a, b) { return a.bbox.x0 - b.bbox.x0; });
+              if (cand.length) {
+                var nm = cand[0].text.trim(), endX = cand[0].bbox.x1;
+                for (var ci = 1; ci < cand.length; ci++) {
+                  if (cand[ci].bbox.x0 - endX <= L.h * 1.5) { nm += cand[ci].text.trim(); endX = cand[ci].bbox.x1; }
+                  else break;
+                }
+                v.name = nm.replace(/^(わんちゃんの)?お?名前[:：]?\s*/, "");
+              }
+            }
+          });
+          /* Measurement cells: labels may be split into single-char words, so
+             detect them as spans of consecutive words within one line whose
+             joined text contains the label. Main labels are larger/bolder
+             than the small sub-labels, so per field prefer the tallest span. */
+          var LABELS = [["chest", "胴まわり"], ["neck", "首まわり"], ["waist", "ウエスト"], ["back", "着丈"], ["front", "前身頃"]];
+          var spans = {};
+          lines.forEach(function (L, lineIdx) {
+            var cleaned = L.words.map(function (w) { return w.text.replace(/\s+/g, "").replace(/ウェ/g, "ウエ"); });
+            for (var i = 0; i < L.words.length; i++) {
+              var acc = "";
+              for (var j = i; j < Math.min(L.words.length, i + 8); j++) {
+                acc += cleaned[j];
+                for (var li = 0; li < LABELS.length; li++) {
+                  var key = LABELS[li][0], label = LABELS[li][1];
+                  var pos = acc.indexOf(label);
+                  if (pos < 0) continue;
+                  /* span = only the words overlapping the label's own chars */
+                  var endPos = pos + label.length, run = 0, parts = [];
+                  for (var k = i; k <= j; k++) {
+                    var s0 = run, s1 = run + cleaned[k].length; run = s1;
+                    if (s1 > pos && s0 < endPos) parts.push(L.words[k]);
+                  }
+                  if (!parts.length) continue;
+                  var dedupe = key + "@" + lineIdx + "@" + L.words.indexOf(parts[0]);
+                  if (spans[dedupe]) continue;
+                  spans[dedupe] = {
+                    key: key,
+                    x0: Math.min.apply(null, parts.map(function (w) { return w.bbox.x0; })),
+                    x1: Math.max.apply(null, parts.map(function (w) { return w.bbox.x1; })),
+                    y0: Math.min.apply(null, parts.map(function (w) { return w.bbox.y0; })),
+                    y1: Math.max.apply(null, parts.map(function (w) { return w.bbox.y1; }))
+                  };
+                }
+              }
+            }
+          });
+          var nums = words.filter(function (w) { return /^\d{1,3}[.．]\d/.test(w.text.replace(/\s+/g, "")); });
+          var chosen = {};
+          LABELS.forEach(function (pair) {
+            var key = pair[0];
+            var list = Object.keys(spans).map(function (k) { return spans[k]; }).filter(function (s) { return s.key === key; });
+            if (!list.length) return;
+            list.sort(function (a, b) {
+              var ha = a.y1 - a.y0, hb = b.y1 - b.y0;
+              if (hb !== ha) return hb - ha;
+              if (a.y0 !== b.y0) return a.y0 - b.y0;
+              return a.x0 - b.x0;
+            });
+            var lab = list[0], lh = Math.max(1, lab.y1 - lab.y0);
+            var lx = (lab.x0 + lab.x1) / 2, ly = (lab.y0 + lab.y1) / 2;
+            var best = null, bestScore = Infinity;
+            nums.forEach(function (w) {
+              var cx = (w.bbox.x0 + w.bbox.x1) / 2, cy = (w.bbox.y0 + w.bbox.y1) / 2;
+              var dy = cy - ly; if (dy < lh * 0.3 || dy > lh * 9) return;
+              var dx = Math.abs(cx - lx); if (dx > lh * 14) return;
+              var score = dy + dx * 0.6;
+              if (score < bestScore) { bestScore = score; best = w; }
+            });
+            if (best) { chosen[key] = best; if (!v[key]) v[key] = ocrFirstNumber(best.text); }
+          });
+          /* Positional fallback: the karte grid layout is fixed (row1 =
+             neck/chest/waist, row2 col1 = back, col2 = front). If a label
+             was misread beyond recognition, infer back/front from the grid
+             position of the value tokens, anchored on the chest value. */
+          if ((!v.back || !v.front) && chosen.chest) {
+            try {
+              var unit = Math.max(1, chosen.chest.bbox.y1 - chosen.chest.bbox.y0);
+              var row1cy = (chosen.chest.bbox.y0 + chosen.chest.bbox.y1) / 2;
+              var row1 = nums.filter(function (w) {
+                return Math.abs((w.bbox.y0 + w.bbox.y1) / 2 - row1cy) <= unit * 2.5;
+              }).sort(function (a, b) { return a.bbox.x0 - b.bbox.x0; });
+              if (row1.length >= 3) {
+                var centers = row1.slice(0, 3).map(function (w) { return (w.bbox.x0 + w.bbox.x1) / 2; });
+                var pitch = centers[1] - centers[0];
+                var gridRight = centers[2] + pitch * 0.75;
+                var below = nums.filter(function (w) {
+                  var cx = (w.bbox.x0 + w.bbox.x1) / 2, cy = (w.bbox.y0 + w.bbox.y1) / 2;
+                  return cx <= gridRight && cy > row1cy + unit * 4;
+                }).sort(function (a, b) { return a.bbox.y0 - b.bbox.y0; });
+                if (below.length) {
+                  var row2cy = (below[0].bbox.y0 + below[0].bbox.y1) / 2;
+                  below.filter(function (w) {
+                    return Math.abs((w.bbox.y0 + w.bbox.y1) / 2 - row2cy) <= unit * 2.5;
+                  }).forEach(function (w) {
+                    var cx = (w.bbox.x0 + w.bbox.x1) / 2, ci = 0, bd = Infinity;
+                    centers.forEach(function (c, ix) { var d = Math.abs(cx - c); if (d < bd) { bd = d; ci = ix; } });
+                    if (ci === 0 && !v.back) v.back = ocrFirstNumber(w.text);
+                    if (ci === 1 && !v.front) v.front = ocrFirstNumber(w.text);
+                  });
+                }
+              }
+            } catch (e) { /* fallback is best-effort only */ }
+          }
+          return v;
+        }
+        /* --- OCR panel rendering --- */
+        function karteOcrHTML() {
+          var st = A.ocrState, v = A.ocrValues, out = "";
+          out += '<div style="border-top:1px solid #e3e0ea;margin:14px 0 10px"></div>' +
+            '<p class="adm-note" style="margin:0 0 6px"><strong>カルテ写真から読み取る</strong>（届いたカルテ写真との照合）</p>' +
+            '<p class="adm-note" style="margin:0 0 8px">DMで届いたカルテの写真を貼り付けると、名前・生年月日・体重・胴まわりなどを読み取り、上の検索条件に下書き入力します。<strong>読み取りは目安です。必ず目で確認・修正してから探してください。</strong></p>' +
+            '<div id="adm-ocr-zone" tabindex="0" style="border:2px dashed #b9b3c9;border-radius:10px;padding:16px 12px;text-align:center;color:#6a6580;background:#faf9fc;cursor:pointer">カルテ写真をここに貼り付け（Ctrl+V）／ドラッグ＆ドロップ<br/>またはタップして画像を選ぶ</div>' +
+            '<input type="file" id="adm-ocr-file" accept="image/*" style="display:none" />' +
+            '<p class="adm-note" id="adm-ocr-status" style="margin:8px 0 0">' + esc(st ? (st.message || "") : "") + "</p>";
+          if (v) out += ocrValuesHTML(v) + ocrCompareHTML(v);
+          return out;
+        }
+        function ocrValuesHTML(v) {
+          var out = '<p class="adm-note" style="margin:12px 0 6px"><strong>読み取り結果（下書き）</strong>：直したい所は書き直せます。</p>' +
+            '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 8px">';
+          OCR_FIELD_DEFS.forEach(function (fd) {
+            out += '<label class="adm-note" style="margin:0">' + fd[1] +
+              '<input class="adm-input inline" id="adm-ocr-f-' + fd[0] + '" type="' + fd[2] + '"' +
+              (fd[2] === "number" ? ' inputmode="decimal" step="0.1" min="0"' : ' autocomplete="off"') +
+              ' value="' + esc(v[fd[0]] || "") + '" style="margin-top:4px" /></label>';
+          });
+          out += "</div>" +
+            '<div style="display:flex;gap:8px;margin:0 0 10px">' +
+            '<button type="button" class="adm-btn" id="adm-ocr-apply">検索条件に反映して探す</button>' +
+            '<button type="button" class="adm-btn light" id="adm-ocr-clear">読み取り結果を消す</button></div>';
+          return out;
+        }
+        function ocrJudgeNum(ocrRaw, regRaw, tol) {
+          var a = (ocrRaw === "" || ocrRaw === null || ocrRaw === undefined) ? null : Number(ocrRaw);
+          var b = (regRaw === "" || regRaw === null || regRaw === undefined) ? null : Number(regRaw);
+          if (a === null || b === null || !isFinite(a) || !isFinite(b)) return { mark: "−", diff: "—" };
+          var d = Math.round((a - b) * 10) / 10;
+          return { mark: Math.abs(d) <= tol ? "○" : "×", diff: (d > 0 ? "+" : "") + d.toString() };
+        }
+        function ocrCompareHTML(v) {
+          var cands = (A.idState && A.idState.status === "done" && A.idState.dogs.length)
+            ? A.idState.dogs
+            : (A.dogs || []).slice().sort(function (x, y) { return Number(x.id) - Number(y.id); });
+          var out = '<p class="adm-note" style="margin:12px 0 6px"><strong>登録データと比べる</strong>：比べる子を選んでください。</p>';
+          if (!cands.length) return out + '<p class="adm-note">比べられる子がいません。</p>';
+          out += '<select class="adm-input inline" id="adm-ocr-dog" style="margin:0 0 10px"><option value="">― 選んでください ―</option>' +
+            cands.map(function (d) {
+              var l = latestOf(d.id);
+              return '<option value="' + esc(d.id) + '"' + (String(A.ocrCompareId) === String(d.id) ? " selected" : "") + ">" +
+                esc(dogTitleOf(d)) + "（胴 " + fmt(l && l.chest, "cm") + "・体重 " + fmt(l && l.weight, "kg") + "）</option>";
+            }).join("") + "</select>";
+          var sel = null;
+          cands.forEach(function (d) { if (String(d.id) === String(A.ocrCompareId)) sel = d; });
+          if (!sel) return out;
+          var l = latestOf(sel.id);
+          var regBirth = String(sel.birth_date || (l && l.birth_date) || "").slice(0, 10);
+          var nameN = normalizeForSearch(dogNameOf(sel)), ocrN = normalizeForSearch(v.name || "");
+          var nameMark = (!ocrN || !nameN) ? "−" : ((nameN === ocrN || nameN.indexOf(ocrN) >= 0 || ocrN.indexOf(nameN) >= 0) ? "○" : "×");
+          var birthMark = (!v.birth || !regBirth) ? "−" : (String(v.birth).slice(0, 10) === regBirth ? "○" : "×");
+          function row(label, ocrDisp, regDisp, mark, diff) {
+            var color = mark === "○" ? "#1d7a3a" : (mark === "×" ? "#c0272d" : "#8a8698");
+            return "<tr><td>" + esc(label) + "</td><td>" + esc(ocrDisp) + "</td><td>" + esc(regDisp) + "</td><td>" +
+              esc(diff) + '</td><td style="color:' + color + ';font-weight:700">' + mark + "</td></tr>";
+          }
+          function numRow(label, ocrRaw, regRaw, unit, tol) {
+            var j = ocrJudgeNum(ocrRaw, regRaw, tol);
+            return row(label, (ocrRaw === "" || ocrRaw === null || ocrRaw === undefined) ? "—" : ocrRaw + unit,
+              (regRaw === "" || regRaw === null || regRaw === undefined) ? "—" : fmt(regRaw) + unit, j.mark, j.diff);
+          }
+          out += '<div style="overflow-x:auto"><table style="border-collapse:collapse;width:100%;font-size:14px">' +
+            "<thead><tr>" + ["項目", "カルテの読み取り", "登録データ", "差", "判定"].map(function (h) {
+              return '<th style="text-align:left;border-bottom:2px solid #e3e0ea;padding:6px 8px">' + h + "</th>";
+            }).join("") + "</tr></thead><tbody>" +
+            row("名前", v.name || "—", dogNameOf(sel) || "—", nameMark, "—") +
+            row("生年月日", v.birth || "—", regBirth || "—", birthMark, "—") +
+            numRow("体重（kg）", v.weight, l && l.weight, "kg", 0.3) +
+            numRow("胴まわり（cm）", v.chest, l && l.chest, "cm", 0.5) +
+            numRow("首まわり（cm）", v.neck, l && l.neck, "cm", 0.5) +
+            numRow("着丈（cm）", v.back, l && l.back_length, "cm", 0.5) +
+            numRow("前身頃（cm）", v.front, l && l.front_length, "cm", 0.5) +
+            numRow("ウエスト（cm）", v.waist, l && l.waist, "cm", 0.5) +
+            "</tbody></table></div>" +
+            '<p class="adm-note" style="margin:8px 0 0">判定の許容差：体重 ±0.3kg、その他 ±0.5cm。× があっても、写真の読み取り違いの可能性があります。飼い主さんへの確認前に、人の目でも見比べてください。</p>';
+          return out;
+        }
+        function ocrImageFromClipboard(e) {
+          var cd = e.clipboardData; if (!cd) return null;
+          var items = cd.items || [];
+          for (var i = 0; i < items.length; i++) {
+            if (items[i].type && items[i].type.indexOf("image/") === 0) { var f = items[i].getAsFile(); if (f) return f; }
+          }
+          return (cd.files && cd.files[0]) ? cd.files[0] : null;
+        }
+        function attachKarteOcr() {
+          var zone = $("adm-ocr-zone"), file = $("adm-ocr-file");
+          if (zone && file) {
+            zone.addEventListener("click", function () { file.click(); });
+            zone.addEventListener("dragover", function (e) { e.preventDefault(); });
+            zone.addEventListener("drop", function (e) {
+              e.preventDefault();
+              var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+              if (f) runKarteOcr(f);
+            });
+            zone.addEventListener("paste", function (e) {
+              var f = ocrImageFromClipboard(e);
+              if (f) { e.preventDefault(); runKarteOcr(f); }
+            });
+            file.addEventListener("change", function () { if (file.files && file.files[0]) runKarteOcr(file.files[0]); });
+          }
+          if (!admOcrPasteBound) {
+            admOcrPasteBound = true;
+            document.addEventListener("paste", function (e) {
+              if (!$("adm-ocr-zone")) return;
+              var t = e.target;
+              if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
+              var f = ocrImageFromClipboard(e);
+              if (f) runKarteOcr(f);
+            });
+          }
+          OCR_FIELD_DEFS.forEach(function (fd) {
+            var el = $("adm-ocr-f-" + fd[0]); if (!el) return;
+            el.addEventListener("input", function () {
+              if (!A.ocrValues) A.ocrValues = {};
+              A.ocrValues[fd[0]] = el.value;
+              if (["name", "birth", "weight", "chest"].indexOf(fd[0]) >= 0) {
+                A.idQuery[fd[0]] = el.value;
+                var si = $("adm-id-" + fd[0]); if (si) si.value = el.value;
+              }
+            });
+          });
+          var apply = $("adm-ocr-apply");
+          if (apply) apply.addEventListener("click", function () {
+            ["name", "birth", "weight", "chest"].forEach(function (k) { A.idQuery[k] = (A.ocrValues && A.ocrValues[k]) || ""; });
+            runIdentitySearch();
+          });
+          var clear = $("adm-ocr-clear");
+          if (clear) clear.addEventListener("click", function () {
+            A.ocrValues = null; A.ocrState = null; A.ocrCompareId = null; renderBreeds();
+          });
+          var sel = $("adm-ocr-dog");
+          if (sel) sel.addEventListener("change", function () {
+            A.ocrCompareId = sel.value ? Number(sel.value) : null; renderBreeds();
+          });
+        }
         function renderBreeds() {
           var box = $("adm-breeds"); if (!box) return;
           if (!A.dogs.length) { box.innerHTML = '<p class="adm-note">登録されている犬がいません。</p>'; return; }
@@ -3329,7 +3694,7 @@ setPINFORMEKarte=function(d){
               '<p class="adm-crumbs">管理画面 ＞ 犬種</p>' +
               '<div class="adm-view-head"><h3>犬種 → 犬の一覧</h3></div>' +
               '<p class="adm-note" style="margin:0 0 10px">犬種を選ぶと、その犬種の犬の一覧が出ます。名前・IDでも探せます。</p>' +
-              searchBoxHTML() + keySearchHTML() + identitySearchHTML() +
+              searchBoxHTML() + keySearchHTML() + identitySearchHTML() + karteOcrHTML() +
               '<div class="adm-list">' + g.order.map(function (bname) {
                 var dogsOfBreed = g.groups[bname];
                 var dueCount = dogsOfBreed.filter(function (d) { return remeasureDue(latestOf(d.id)); }).length;
@@ -3341,6 +3706,7 @@ setPINFORMEKarte=function(d){
             attachSearch();
             attachKeySearch();
             attachIdentitySearch();
+            attachKarteOcr();
             box.querySelectorAll("[data-adm-dog]").forEach(function (btn) {
               btn.addEventListener("click", function () { openDog(btn.getAttribute("data-adm-dog")); });
             });
