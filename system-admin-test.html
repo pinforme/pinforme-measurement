@@ -3345,6 +3345,14 @@ setPINFORMEKarte=function(d){
         ];
         var KARTE_PDFJS_CDN = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
         var KARTE_PDFJS_WORKER = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+        /* iOS Safari's print-to-PDF (the karte save button route) embeds
+           Adobe-Japan1 CID fonts. PDF.js cannot decode them without the
+           external CMap files: every Japanese glyph then silently
+           vanishes from BOTH text extraction and raster rendering (only
+           digits/Latin survive), which made real karte PDFs read as
+           almost blank. cdnjs does not host the cmaps dir (403), so use
+           the jsDelivr copy of the same pdfjs-dist version. */
+        var KARTE_PDFJS_CMAPS = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/cmaps/";
         var karteOcrLibPromise = null;
         var admOcrPasteBound = false;
         function loadKarteOcrLib() {
@@ -3383,20 +3391,23 @@ setPINFORMEKarte=function(d){
         function isKartePdf(blob) {
           return !!blob && (blob.type === "application/pdf" || /\.pdf$/i.test(blob.name || ""));
         }
+        function kartePdfDocOptions(buf) {
+          return { data: new Uint8Array(buf), cMapUrl: KARTE_PDFJS_CMAPS, cMapPacked: true };
+        }
         /* Rasterize page 1 of a PDF karte at a resolution high enough for
            OCR (target ~3000px wide), white background, as a PNG blob. */
-        function kartePdfFirstPageBlob(blob) {
+        function kartePdfFirstPageBlob(blob, targetW) {
           var pdfjsLib = null;
           return loadKartePdfLib().then(function (lib) {
             pdfjsLib = lib;
             return blob.arrayBuffer();
           }).then(function (buf) {
-            return pdfjsLib.getDocument({ data: new Uint8Array(buf) }).promise;
+            return pdfjsLib.getDocument(kartePdfDocOptions(buf)).promise;
           }).then(function (doc) {
             return doc.getPage(1);
           }).then(function (page) {
             var base = page.getViewport({ scale: 1 });
-            var scale = Math.max(1.5, Math.min(4, 3000 / Math.max(1, base.width)));
+            var scale = Math.max(1.5, Math.min(4, (targetW || 3000) / Math.max(1, base.width)));
             var vp = page.getViewport({ scale: scale });
             var cv = document.createElement("canvas");
             cv.width = Math.floor(vp.width); cv.height = Math.floor(vp.height);
@@ -3412,17 +3423,22 @@ setPINFORMEKarte=function(d){
         }
         /* Prepare the OCR input: PDFs are rasterized; small photos are
            upscaled (target ~3000px wide, max x3) because Tesseract reads
-           small screenshots poorly (values garble, decimal points drop). */
-        function kartePrepareImageBlob(blob) {
-          if (isKartePdf(blob)) return kartePdfFirstPageBlob(blob);
+           small screenshots poorly (values garble, decimal points drop).
+           Resolves { blob, scale } so the caller knows which size was
+           used (scale 0 = PDF raster) and can retry at another size. */
+        function kartePrepareImageBlob(blob, opts) {
+          opts = opts || {};
+          if (isKartePdf(blob)) {
+            return kartePdfFirstPageBlob(blob, opts.pdfTargetW).then(function (b) { return { blob: b, scale: 0 }; });
+          }
           return new Promise(function (resolve) {
             var url;
-            try { url = URL.createObjectURL(blob); } catch (e) { resolve(blob); return; }
+            try { url = URL.createObjectURL(blob); } catch (e) { resolve({ blob: blob, scale: 1 }); return; }
             var img = new Image();
             img.onload = function () {
               var w = img.naturalWidth || img.width || 0, h = img.naturalHeight || img.height || 0;
-              var scale = w ? Math.max(1, Math.min(3, Math.round(3000 / w))) : 1;
-              if (scale <= 1 || !w || !h) { URL.revokeObjectURL(url); resolve(blob); return; }
+              var scale = opts.forceScale ? opts.forceScale : (w ? Math.max(1, Math.min(3, Math.round(3000 / w))) : 1);
+              if (scale <= 1 || !w || !h) { URL.revokeObjectURL(url); resolve({ blob: blob, scale: 1 }); return; }
               try {
                 var cv = document.createElement("canvas");
                 cv.width = Math.round(w * scale); cv.height = Math.round(h * scale);
@@ -3430,40 +3446,129 @@ setPINFORMEKarte=function(d){
                 cx.fillStyle = "#ffffff"; cx.fillRect(0, 0, cv.width, cv.height);
                 cx.drawImage(img, 0, 0, cv.width, cv.height);
                 URL.revokeObjectURL(url);
-                if (cv.toBlob) cv.toBlob(function (b) { resolve(b || blob); }, "image/png");
-                else resolve(blob);
-              } catch (e) { URL.revokeObjectURL(url); resolve(blob); }
+                if (cv.toBlob) cv.toBlob(function (b) { resolve({ blob: b || blob, scale: scale }); }, "image/png");
+                else resolve({ blob: blob, scale: scale });
+              } catch (e) { URL.revokeObjectURL(url); resolve({ blob: blob, scale: 1 }); }
             };
-            img.onerror = function () { URL.revokeObjectURL(url); resolve(blob); };
+            img.onerror = function () { URL.revokeObjectURL(url); resolve({ blob: blob, scale: 1 }); };
             img.src = url;
           });
         }
         function setOcrStatus(msg) { var el = $("adm-ocr-status"); if (el) el.textContent = msg; }
+        function ocrFilledCount(v) {
+          if (!v) return 0;
+          var n = 0;
+          OCR_FIELD_DEFS.forEach(function (fd) { if (v[fd[0]]) n++; });
+          return n;
+        }
+        /* Text layer first for PDFs: a karte PDF saved from the navi (or
+           printed to PDF from the carte page) carries an exact text
+           layer. Converting its items to word boxes and running the same
+           parser gives exact values with no OCR at all. Bboxes are in
+           PDF points (top-left origin), which is all the parser needs
+           (it only uses relative geometry). Returns null when the PDF
+           has no usable text layer. */
+        function kartePdfTextWords(blob) {
+          var pdfjsLib = null;
+          return loadKartePdfLib().then(function (lib) {
+            pdfjsLib = lib;
+            return blob.arrayBuffer();
+          }).then(function (buf) {
+            return pdfjsLib.getDocument(kartePdfDocOptions(buf)).promise;
+          }).then(function (doc) {
+            return doc.getPage(1);
+          }).then(function (page) {
+            var base = page.getViewport({ scale: 1 });
+            return page.getTextContent().then(function (tc) {
+              var words = [];
+              (tc.items || []).forEach(function (it) {
+                var s = String(it.str || "");
+                if (!s.replace(/\s+/g, "")) return;
+                var e = it.transform[4], f = it.transform[5];
+                var h = it.height || Math.abs(it.transform[3]) || 8;
+                var w = it.width || 0;
+                words.push({ text: s, bbox: { x0: e, y0: base.height - f - h, x1: e + Math.max(w, h * 0.5), y1: base.height - f + h * 0.35 } });
+              });
+              return words.length ? words : null;
+            });
+          }).catch(function () { return null; });
+        }
+        function karteOcrRecognize(T, imgBlob) {
+          return T.createWorker("jpn+eng", 1, {
+            workerPath: KARTE_OCR_WORKER, corePath: KARTE_OCR_CORE,
+            logger: function (m) {
+              if (m && m.status === "recognizing text") setOcrStatus("読み取り中… " + Math.round((m.progress || 0) * 100) + "%");
+            }
+          }).then(function (worker) {
+            return worker.recognize(imgBlob, {}, { blocks: true }).then(function (res) {
+              return worker.terminate().then(function () { return res.data; });
+            }, function (err) {
+              return worker.terminate().then(function () { throw err; });
+            });
+          });
+        }
+        function runKarteOcrAttempt(T, blob, prepOpts) {
+          return kartePrepareImageBlob(blob, prepOpts).then(function (prep) {
+            return karteOcrRecognize(T, prep.blob).then(function (data) {
+              return { v: parseKarteOcr(data), wordCount: karteOcrWords(data).length, scale: prep.scale };
+            });
+          });
+        }
         function runKarteOcr(blob) {
           if (!blob) return;
           var pdf = isKartePdf(blob);
           A.ocrState = { status: "running", message: "読み取り中…（初回はライブラリと日本語データの取得で少し時間がかかります）" };
           renderBreeds();
-          loadKarteOcrLib().then(function (T) {
-            setOcrStatus(pdf ? "PDFの1ページ目を画像に変換しています…" : "画像を準備しています…");
-            return kartePrepareImageBlob(blob).then(function (imgBlob) {
-              return T.createWorker("jpn+eng", 1, {
-                workerPath: KARTE_OCR_WORKER, corePath: KARTE_OCR_CORE,
-                logger: function (m) {
-                  if (m && m.status === "recognizing text") setOcrStatus("読み取り中… " + Math.round((m.progress || 0) * 100) + "%");
-                }
-              }).then(function (worker) {
-                return worker.recognize(imgBlob, {}, { blocks: true }).then(function (res) {
-                  return worker.terminate().then(function () { return res.data; });
-                });
-              });
-            });
-          }).then(function (data) {
-            var v = parseKarteOcr(data);
+          var finish = function (v, message) {
             A.ocrValues = v;
             ["name", "birth", "weight", "chest"].forEach(function (k) { if (v[k]) A.idQuery[k] = v[k]; });
-            A.ocrState = { status: "done", message: "読み取りました。下の「読み取り結果」を確認・修正してから探してください。" };
+            A.ocrState = { status: "done", message: message };
             renderBreeds();
+          };
+          var ocrPath = function (T) {
+            setOcrStatus(pdf ? "PDFの1ページ目を画像に変換しています…" : "画像を準備しています…");
+            return runKarteOcrAttempt(T, blob, {}).then(function (r1) {
+              /* Almost nothing recognized: recognition itself likely
+                 failed (degraded or oversized image for the worker)
+                 rather than the karte being unreadable. Retry once at
+                 a different size and keep the better result. */
+              if (ocrFilledCount(r1.v) > 0 && r1.wordCount >= 15) return r1;
+              var retryOpts;
+              if (pdf) retryOpts = { pdfTargetW: 2000 };
+              else if (r1.scale && r1.scale > 1) retryOpts = { forceScale: 1 };
+              else retryOpts = { forceScale: 2 };
+              setOcrStatus("読み取り結果が少なかったため、サイズを変えてもう一度読み取ります…");
+              return runKarteOcrAttempt(T, blob, retryOpts).then(function (r2) {
+                return ocrFilledCount(r2.v) > ocrFilledCount(r1.v) ? r2 : r1;
+              }).catch(function () { return r1; });
+            }).then(function (r) {
+              if (ocrFilledCount(r.v) === 0) {
+                A.ocrValues = r.v;
+                A.ocrState = { status: "error", message: "文字を読み取れませんでした。" + (pdf
+                  ? "このPDFからは読み取れませんでした。カルテの写真でもお試しください。"
+                  : "写真が小さい・暗い・圧縮が強いと読み取りにくくなります。もう少し大きく明るい写真か、カルテのPDFでお試しください。") };
+                renderBreeds();
+                return;
+              }
+              finish(r.v, "読み取りました。下の「読み取り結果」を確認・修正してから探してください。");
+            });
+          };
+          loadKarteOcrLib().then(function (T) {
+            if (!pdf) return ocrPath(T);
+            setOcrStatus("PDFの文字データを読み取っています…");
+            return kartePdfTextWords(blob).then(function (words) {
+              if (words && words.length) {
+                var v = parseKarteOcr({ words: words });
+                if (v.name || ocrFilledCount(v) >= 4) {
+                  finish(v, "PDFの文字データから読み取りました（文字データはOCRより正確です）。下の「読み取り結果」を確認してから探してください。");
+                  return "text-done";
+                }
+              }
+              return null;
+            }).then(function (mark) {
+              if (mark === "text-done") return null;
+              return ocrPath(T);
+            });
           }).catch(function (err) {
             A.ocrState = { status: "error", message: "読み取りに失敗しました：" + (err && err.message ? err.message : String(err)) + "　手入力でお願いします。" };
             renderBreeds();
@@ -3837,7 +3942,7 @@ setPINFORMEKarte=function(d){
           var st = A.ocrState, v = A.ocrValues, out = "";
           out += '<div style="border-top:1px solid #e3e0ea;margin:14px 0 10px"></div>' +
             '<p class="adm-note" style="margin:0 0 6px"><strong>カルテ写真から読み取る</strong>（届いたカルテ写真との照合）</p>' +
-            '<p class="adm-note" style="margin:0 0 8px">DMで届いたカルテの写真またはPDFを貼り付けると、名前・生年月日・体重・胴まわりなどを読み取り、上の検索条件に下書き入力します（PDFは1ページ目を読み取ります）。<strong>読み取りは目安です。必ず目で確認・修正してから探してください。</strong></p>' +
+            '<p class="adm-note" style="margin:0 0 8px">DMで届いたカルテの写真またはPDFを貼り付けると、名前・生年月日・体重・胴まわりなどを読み取り、上の検索条件に下書き入力します（PDFは1ページ目を読み取ります。文字データのあるPDFはそちらを優先します）。<strong>読み取りは目安です。必ず目で確認・修正してから探してください。</strong></p>' +
             '<div id="adm-ocr-zone" tabindex="0" style="border:2px dashed #b9b3c9;border-radius:10px;padding:16px 12px;text-align:center;color:#6a6580;background:#faf9fc;cursor:pointer">カルテの写真またはPDFをここに貼り付け（Ctrl+V）／ドラッグ＆ドロップ<br/>またはタップしてファイルを選ぶ</div>' +
             '<input type="file" id="adm-ocr-file" accept="image/*,application/pdf,.pdf" style="display:none" />' +
             '<p class="adm-note" id="adm-ocr-status" style="margin:8px 0 0">' + esc(st ? (st.message || "") : "") + "</p>";
