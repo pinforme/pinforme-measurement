@@ -562,6 +562,15 @@
       .adm-btn.danger { background: #b3261e; border-color: #b3261e; }
       .adm-btn.block { display: block; width: 100%; min-height: 52px; font-size: 16px; }
       .adm-btn:disabled { opacity: .45; cursor: not-allowed; }
+      /* two-column field grids (identity search / OCR draft values):
+         minmax(0,…) + min-width:0 keep cells from forcing overflow, and
+         on narrow phones the grid collapses to a single column. */
+      .adm-fields2 > * { min-width: 0; }
+      .adm-fields2 .adm-input { width: 100%; }
+      @media (max-width: 480px) {
+        .adm-fields2 { grid-template-columns: minmax(0, 1fr) !important; }
+        .adm-input.inline { max-width: 100%; }
+      }
       .adm-hidden { display: none !important; }
       /* view navigation: breadcrumb + big heading + back button */
       .adm-crumbs { font-size: 12.5px; color: #6b6b6b; margin: 0 0 6px; }
@@ -3226,13 +3235,13 @@ setPINFORMEKarte=function(d){
           out += '<div style="border-top:1px solid #e3e0ea;margin:14px 0 10px"></div>' +
             '<p class="adm-note" style="margin:0 0 6px"><strong>\u672C\u4EBA\u78BA\u8A8D\u3067\u63A2\u3059</strong>\uFF08\u30E2\u30CB\u30BF\u30FC\u5FDC\u52DF\u30FB\u30AD\u30FC\u518D\u767A\u884C\u306A\u3069\uFF09</p>' +
             '<p class="adm-note" style="margin:0 0 8px">\u98FC\u3044\u4E3B\u3055\u3093\u304B\u3089\u805E\u3044\u305F\u60C5\u5831\u3067\u63A2\u3057\u307E\u3059\u3002\u5206\u304B\u308B\u9805\u76EE\u3060\u3051\u5165\u529B\u3057\u3066\u304F\u3060\u3055\u3044\u3002\u4F53\u91CD\u306F\u00B10.3kg\u3001\u80F4\u307E\u308F\u308A\u306F\u00B10.5cm\u307E\u3067\u4E00\u81F4\u3068\u307F\u306A\u3057\u307E\u3059\u3002</p>' +
-            '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 8px">' +
+            '<div class="adm-fields2" style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;margin:0 0 8px">' +
             '<input class="adm-input inline" id="adm-id-name" type="text" autocomplete="off" placeholder="\u308F\u3093\u3061\u3083\u3093\u306E\u540D\u524D" value="' + esc(q.name || "") + '" />' +
             '<input class="adm-input inline" id="adm-id-birth" type="date" value="' + esc(q.birth || "") + '" />' +
             '<input class="adm-input inline" id="adm-id-weight" type="number" inputmode="decimal" step="0.1" min="0" placeholder="\u4F53\u91CD\uFF08kg\uFF09" value="' + esc(q.weight || "") + '" />' +
             '<input class="adm-input inline" id="adm-id-chest" type="number" inputmode="decimal" step="0.1" min="0" placeholder="\u80F4\u307E\u308F\u308A\uFF08cm\uFF09" value="' + esc(q.chest || "") + '" />' +
             "</div>" +
-            '<div style="display:flex;gap:8px;margin:0 0 10px">' +
+            '<div style="display:flex;flex-wrap:wrap;gap:8px;margin:0 0 10px">' +
             '<button type="button" class="adm-btn" id="adm-id-btn">\u3053\u306E\u6761\u4EF6\u3067\u63A2\u3059</button>' +
             '<button type="button" class="adm-btn light" id="adm-id-clear">\u6761\u4EF6\u3092\u30AF\u30EA\u30A2</button></div>';
           if (!st) return out;
@@ -3453,7 +3462,9 @@ setPINFORMEKarte=function(d){
             }
           });
           var nums = words.filter(function (w) { return /^\d{1,3}[.．]\d/.test(w.text.replace(/\s+/g, "")); });
-          var chosen = {};
+          /* Pick each label's best span first (tallest span = the main
+             label, per the note above). */
+          var labelSpans = {};
           LABELS.forEach(function (pair) {
             var key = pair[0];
             var list = Object.keys(spans).map(function (k) { return spans[k]; }).filter(function (s) { return s.key === key; });
@@ -3464,17 +3475,32 @@ setPINFORMEKarte=function(d){
               if (a.y0 !== b.y0) return a.y0 - b.y0;
               return a.x0 - b.x0;
             });
-            var lab = list[0], lh = Math.max(1, lab.y1 - lab.y0);
+            labelSpans[key] = list[0];
+          });
+          /* Assign numbers to labels exclusively: collect every
+             (label, number) pair that passes the geometry filter, take
+             the globally closest pairs first, and never assign the same
+             number word to two fields. Previously each label picked its
+             own nearest number independently, so when a value token was
+             misread/missing (e.g. chest), the field silently copied a
+             neighbour's value (neck) instead of staying empty. */
+          var candPairs = [];
+          Object.keys(labelSpans).forEach(function (key) {
+            var lab = labelSpans[key], lh = Math.max(1, lab.y1 - lab.y0);
             var lx = (lab.x0 + lab.x1) / 2, ly = (lab.y0 + lab.y1) / 2;
-            var best = null, bestScore = Infinity;
-            nums.forEach(function (w) {
+            nums.forEach(function (w, wi) {
               var cx = (w.bbox.x0 + w.bbox.x1) / 2, cy = (w.bbox.y0 + w.bbox.y1) / 2;
               var dy = cy - ly; if (dy < lh * 0.3 || dy > lh * 9) return;
               var dx = Math.abs(cx - lx); if (dx > lh * 14) return;
-              var score = dy + dx * 0.6;
-              if (score < bestScore) { bestScore = score; best = w; }
+              candPairs.push({ key: key, wi: wi, score: dy + dx * 0.6 });
             });
-            if (best) { chosen[key] = best; if (!v[key]) v[key] = ocrFirstNumber(best.text); }
+          });
+          candPairs.sort(function (a, b) { return a.score - b.score; });
+          var chosen = {}, usedNums = {};
+          candPairs.forEach(function (p) {
+            if (chosen[p.key] || usedNums[p.wi]) return;
+            chosen[p.key] = nums[p.wi]; usedNums[p.wi] = true;
+            if (!v[p.key]) v[p.key] = ocrFirstNumber(nums[p.wi].text);
           });
           /* Positional fallback: the karte grid layout is fixed (row1 =
              neck/chest/waist, row2 col1 = back, col2 = front). If a label
@@ -3511,6 +3537,33 @@ setPINFORMEKarte=function(d){
           }
           return v;
         }
+        /* Duplicate-value guard: identical numbers in two or more fields
+           almost always mean a mis-assignment, so warn above the draft
+           values and ask for a visual check against the original karte. */
+        var OCR_DUP_FIELDS = [["weight", "体重"], ["chest", "胴まわり"], ["neck", "首まわり"], ["back", "着丈"], ["front", "前身頃"], ["waist", "ウエスト"]];
+        function ocrDupGroups(v) {
+          var byVal = {};
+          OCR_DUP_FIELDS.forEach(function (fd) {
+            var raw = v ? v[fd[0]] : "";
+            if (raw === "" || raw === null || raw === undefined) return;
+            var n = Number(raw);
+            if (!isFinite(n)) return;
+            var k = String(n);
+            (byVal[k] = byVal[k] || []).push(fd[1]);
+          });
+          return Object.keys(byVal).filter(function (k) { return byVal[k].length >= 2; })
+            .map(function (k) { return { value: k, labels: byVal[k] }; });
+        }
+        function ocrDupWarnHTML(v) {
+          var g = ocrDupGroups(v);
+          if (!g.length) return "";
+          var detail = g.map(function (x) { return x.labels.join(" と ") + " がどちらも " + x.value; }).join("／");
+          return '<p style="margin:0 0 8px;padding:9px 11px;background:#fdf0ec;border:1px solid #e0a49a;border-radius:9px;color:#8f2a20;font-size:13px;line-height:1.6"><strong>注意：</strong>同じ値が複数の項目に入っています。元のカルテと見比べてください。（' + esc(detail) + '）</p>';
+        }
+        function refreshOcrDupWarn() {
+          var el = $("adm-ocr-dupwarn");
+          if (el) el.innerHTML = ocrDupWarnHTML(A.ocrValues || {});
+        }
         /* --- OCR panel rendering --- */
         function karteOcrHTML() {
           var st = A.ocrState, v = A.ocrValues, out = "";
@@ -3525,7 +3578,8 @@ setPINFORMEKarte=function(d){
         }
         function ocrValuesHTML(v) {
           var out = '<p class="adm-note" style="margin:12px 0 6px"><strong>読み取り結果（下書き）</strong>：直したい所は書き直せます。</p>' +
-            '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 8px">';
+            '<div id="adm-ocr-dupwarn">' + ocrDupWarnHTML(v) + '</div>' +
+            '<div class="adm-fields2" style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;margin:0 0 8px">';
           OCR_FIELD_DEFS.forEach(function (fd) {
             out += '<label class="adm-note" style="margin:0">' + fd[1] +
               '<input class="adm-input inline" id="adm-ocr-f-' + fd[0] + '" type="' + fd[2] + '"' +
@@ -3533,7 +3587,7 @@ setPINFORMEKarte=function(d){
               ' value="' + esc(v[fd[0]] || "") + '" style="margin-top:4px" /></label>';
           });
           out += "</div>" +
-            '<div style="display:flex;gap:8px;margin:0 0 10px">' +
+            '<div style="display:flex;flex-wrap:wrap;gap:8px;margin:0 0 10px">' +
             '<button type="button" class="adm-btn" id="adm-ocr-apply">検索条件に反映して探す</button>' +
             '<button type="button" class="adm-btn light" id="adm-ocr-clear">読み取り結果を消す</button></div>';
           return out;
@@ -3630,6 +3684,7 @@ setPINFORMEKarte=function(d){
             el.addEventListener("input", function () {
               if (!A.ocrValues) A.ocrValues = {};
               A.ocrValues[fd[0]] = el.value;
+              refreshOcrDupWarn();
               if (["name", "birth", "weight", "chest"].indexOf(fd[0]) >= 0) {
                 A.idQuery[fd[0]] = el.value;
                 var si = $("adm-id-" + fd[0]); if (si) si.value = el.value;
