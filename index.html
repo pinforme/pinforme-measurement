@@ -8,7 +8,7 @@
 
 <script id="pinforme-latest-version-guard">
 (function(){
-  const PINFORME_BUILD_ID="20261103-navi-v4-b29";
+  const PINFORME_BUILD_ID="20261108-navi-v4-b30";
 
   function forceFresh(reason){
     try{
@@ -577,6 +577,10 @@ label.confirm input{margin-top:4px;width:20px;height:20px;flex:none}
 
 <!-- カルテ -->
 <section class="page" id="kartePage">
+  <div id="karteNotice" hidden style="margin:12px 12px 0;padding:14px 16px;border:2px solid #111;border-radius:10px;background:#fff">
+    <p id="karteNoticeTitle" style="margin:0 0 6px;font-weight:700;font-size:15px"></p>
+    <p id="karteNoticeBody" style="margin:0;font-size:13px;line-height:1.8"></p>
+  </div>
   <div class="karte-frame-wrap">
     <iframe id="finalKarteFrame" class="karte-frame" title="PINFORME 採寸カルテ" srcdoc="&lt;!doctype html&gt;&lt;html lang=&quot;ja&quot;&gt;&lt;head&gt;&lt;script id=&quot;pinforme-test-isolation&quot;&gt;
 (function(){
@@ -3227,11 +3231,39 @@ function resizeFinalKarteFrame(){
     if(view) view.style.overflow = "hidden";
   }catch(e){ console.error(e); }
 }
+/* ================= カルテお知らせ（対象帯のみ・期間限定） =================
+   最新の胴まわりが35〜38cmの子にだけ、表示期間中カルテ上部にお知らせを出す。
+   期間外・対象外・値が取れない場合は必ず非表示。 */
+function pinKarteNoticeRender(){
+  const box = document.getElementById('karteNotice');
+  if(!box) return;
+  const chest = Number(PIN_V2?.baseline?.values?.chest ?? PIN_V2?.savedRecord?.values?.chest);
+  const now = new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Tokyo'})).getTime();
+  const T = s => new Date(s).getTime();
+  let title = '', body = '';
+  if(Number.isFinite(chest) && chest >= 35 && chest < 38){
+    if(now >= T('2026-11-10T00:00:00') && now < T('2026-11-13T20:00:00')){
+      title = 'PINFORMEからの先行お知らせ';
+      body = '採寸にご協力いただいている方へ、先行してお知らせします。11月13日（金）20:00から、タンクトップの試着モニターの募集を始めます。対象は、胴まわり35〜38cmのミニチュアピンシャーの子です。応募の方法は、13日20:00の投稿でご案内します。';
+    } else if(now >= T('2026-11-13T20:00:00') && now < T('2026-11-20T20:00:00')){
+      title = '試着モニターを募集しています（11月20日（金）20:00まで）';
+      body = '胴まわり35〜38cmのミニチュアピンシャーの子を対象に、タンクトップの試着モニターを募集しています。応募は、Instagram（@pinforme.jp）のDMから、お客様キーを添えてご連絡ください。';
+    }
+  }
+  if(title){
+    document.getElementById('karteNoticeTitle').textContent = title;
+    document.getElementById('karteNoticeBody').textContent = body;
+    box.hidden = false;
+  } else {
+    box.hidden = true;
+  }
+}
 function openKartePage(){
   if(!pinRequireSavedKarte()) return;
   hideAll();
   document.getElementById("kartePage").classList.add('active');
   syncProgressChrome();
+  pinKarteNoticeRender();
   try{ localStorage.setItem("PINFORME_CURRENT_VIEW", "kartePage"); }catch(e){}
   const data = collectKarteV2();
   data.date = data.measuredOn || "測定日未入力";
