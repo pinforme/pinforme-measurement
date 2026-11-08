@@ -3392,6 +3392,12 @@ async function pinSendAnonymousAdminNotification(context){
    送信成功直後にだけ開く。外側タップでは閉じず、「カルテを保存する」か「閉じる」を押して閉じる。 */
 function pinShowKarteSaveModal(){
   const modal = document.getElementById('pinKarteSaveModal'); if(!modal) return;
+  /* モーダルが開くのは送信完了後だけなので、背後の完了画面も完了表示にそろえる */
+  const ft = document.getElementById('finishTitle'); if(ft) ft.textContent = '送信が完了しました';
+  const fm = document.getElementById('finishMessage'); if(fm) fm.textContent = 'ご協力ありがとうございました。データは無事に届いています。';
+  const fk = document.getElementById('finishMark'); if(fk) fk.textContent = '✓';
+  const sb = document.getElementById('pinformeSubmitButton'); if(sb){ sb.textContent = '送信・保存済み ✓'; sb.disabled = true; }
+  const pc = document.getElementById('pinformePostSaveChoice'); if(pc) pc.style.display = 'block';
   const key = document.getElementById('pinformeRemeasureKeyValue')?.textContent?.trim() || '';
   const kv = document.getElementById('pinKarteSaveKeyValue'); if(kv) kv.textContent = key;
   const guide = document.getElementById('pinKarteSaveGuide');
