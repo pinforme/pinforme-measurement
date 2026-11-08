@@ -1242,6 +1242,21 @@ setPINFORMEKarte=function(d){
   </div>
 </div>
 
+<!-- 送信完了カルテ保存モーダル -->
+<div class="modal" id="pinKarteSaveModal" aria-hidden="true">
+  <div class="modal-card">
+    <h2 style="margin-top:0">送信が完了しました！</h2>
+    <p class="note">ご協力ありがとうございました。カルテは今その場で保存できます。保存しておくと、サイズの確認や再採寸のときに便利です。</p>
+    <div style="font-weight:800;margin-top:12px">お客様キー</div>
+    <div class="note">カルテを開く時に使うキーです。コピーかスクリーンショットで保管してください。</div>
+    <div id="pinKarteSaveKeyValue" class="key-value"></div>
+    <button type="button" id="pinKarteSaveCopyKey" style="width:100%">お客様キーをコピー</button>
+    <button type="button" class="primary" id="pinKarteSavePdfBtn" style="width:100%;margin-top:14px">カルテを保存する（PDF）</button>
+    <p class="note" id="pinKarteSaveGuide" style="margin-top:8px"></p>
+    <button type="button" class="secondary" id="pinKarteSaveClose" style="width:100%;margin-top:10px">閉じる</button>
+  </div>
+</div>
+
 <!-- 保存未確認ガードモーダル（B27） -->
 <div class="modal" id="pinPendingGuardModal" aria-hidden="true">
   <div class="modal-card">
@@ -3373,6 +3388,43 @@ async function pinSendAnonymousAdminNotification(context){
     if(status) status.textContent += PIN_TEST_MODE ? "（テストモードのため管理者通知も送信していません）" : " 採寸データは保存済みですが、PINFORMEへの通知メールを確認できませんでした。データの再送は不要です。";
   }
 }
+/* ================= 送信完了カルテ保存モーダル =================
+   送信成功直後にだけ開く。外側タップでは閉じず、「カルテを保存する」か「閉じる」を押して閉じる。 */
+function pinShowKarteSaveModal(){
+  const modal = document.getElementById('pinKarteSaveModal'); if(!modal) return;
+  const key = document.getElementById('pinformeRemeasureKeyValue')?.textContent?.trim() || '';
+  const kv = document.getElementById('pinKarteSaveKeyValue'); if(kv) kv.textContent = key;
+  const guide = document.getElementById('pinKarteSaveGuide');
+  if(guide){
+    const ua = navigator.userAgent || '';
+    if(/iPhone|iPad|iPod/.test(ua)) guide.textContent = 'iPhoneの方：ボタンを押すとカルテが開いて印刷画面になります。プレビューを2本指で広げる（または右上の共有アイコン）→「ファイルに保存」で保存できます。';
+    else if(/Android/.test(ua)) guide.textContent = 'Androidの方：ボタンを押すとカルテが開いて印刷画面になります。送信先で「PDFに保存」を選んでください。';
+    else guide.textContent = 'ボタンを押すとカルテが開いて印刷画面になります。送信先で「PDFに保存」を選んでください。';
+  }
+  modal.classList.add('open'); modal.setAttribute('aria-hidden', 'false');
+}
+function pinCloseKarteSaveModal(){
+  const modal = document.getElementById('pinKarteSaveModal'); if(!modal) return;
+  modal.classList.remove('open'); modal.setAttribute('aria-hidden', 'true');
+}
+function pinKarteSavePdfStart(){
+  pinCloseKarteSaveModal();
+  openKartePage();
+  const frame = document.getElementById('finalKarteFrame');
+  let tries = 0;
+  const timer = setInterval(() => {
+    tries++;
+    let ready = false;
+    try{ ready = !!(frame && frame.contentDocument && frame.contentDocument.getElementById('sheet')); }catch(e){}
+    if(ready){ clearInterval(timer); printFinalKarte(); }
+    else if(tries >= 16){ clearInterval(timer); }
+  }, 250);
+}
+{
+  const b1 = document.getElementById('pinKarteSaveClose'); if(b1) b1.addEventListener('click', pinCloseKarteSaveModal);
+  const b2 = document.getElementById('pinKarteSavePdfBtn'); if(b2) b2.addEventListener('click', pinKarteSavePdfStart);
+  const b3 = document.getElementById('pinKarteSaveCopyKey'); if(b3) b3.addEventListener('click', () => { if(typeof pinformeCopyRemeasureKey === 'function') pinformeCopyRemeasureKey(); });
+}
 function pinRefreshDMChoice(){
   const issue = document.getElementById('pinKarteIssue'); if(issue) issue.hidden = !PINFORME_SUBMITTED;
   const box = document.getElementById('pinDMChoice'); if(!box) return;
@@ -3424,6 +3476,7 @@ async function pinV2FinishSaved(pending, receipt){
   }
   pinRefreshDMChoice();
   document.getElementById('pinformePostSaveChoice').style.display = 'block';
+  pinShowKarteSaveModal();
   savePINFORMEState();
 }
 async function sendToPinforme(options={}){
@@ -3763,7 +3816,7 @@ document.addEventListener('DOMContentLoaded', initNaviV4);
 </script>
 
 <script>
-/* ===== 確認用デモ（このコピーだけ）: ?issue_demo=1 で送信完了直後の状態を再現する ===== */
+/* ===== 確認用デモ（このコピーだけ）: ?issue_demo=1 で送信完了直後の状態（保存モーダル表示）を再現する ===== */
 window.addEventListener('load', () => {
   if(new URLSearchParams(location.search).get('issue_demo') !== '1') return;
   setTimeout(() => {
@@ -3777,7 +3830,7 @@ window.addEventListener('load', () => {
       if(typeof pinRefreshDMChoice === 'function') pinRefreshDMChoice();
       const dm = document.getElementById('pinDMChoice');
       if(dm){ dm.hidden = false; const l = document.getElementById('pinDMDogLabel'); if(l) l.textContent = '対象：ココル'; }
-      document.getElementById('pinformeRemeasureKeyBox')?.scrollIntoView({block:'start'});
+      if(typeof pinShowKarteSaveModal === 'function') pinShowKarteSaveModal();
     }catch(e){ console.warn('issue demo hook', e); }
   }, 500);
 });
