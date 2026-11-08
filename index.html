@@ -8,7 +8,7 @@
 
 <script id="pinforme-latest-version-guard">
 (function(){
-  const PINFORME_BUILD_ID="20261108-navi-v4-b30";
+  const PINFORME_BUILD_ID="20261108-navi-v4-b31";
 
   function forceFresh(reason){
     try{
@@ -561,13 +561,17 @@ label.confirm input{margin-top:4px;width:20px;height:20px;flex:none}
         <div class="note">飼い主様専用のキーです。再採寸・部分更新・わんちゃんの追加登録に使用します。コピーまたはスクリーンショットで保管してください。キーを知っている方は登録情報を開けますので、公開投稿には載せないでください。</div>
         <div id="pinformeRemeasureKeyValue" class="key-value"></div>
         <button type="button" id="copyKeyBtn" style="width:100%">お客様キーをコピー</button>
+        <div id="pinKarteIssue" hidden style="margin-top:14px">
+          <strong>採寸カルテの発行</strong>
+          <p class="note">送信が完了すると、その場でカルテを発行できます。発行したカルテはPDFで保存できます。このお客様キーで、後からいつでも開けます。</p>
+          <button type="button" id="dmKarteBtn" class="primary" style="width:100%;margin-top:8px">カルテを発行する（見る・PDF保存）</button>
+        </div>
         <div id="pinDMChoice" hidden style="margin-top:14px">
-          <strong>カルテをDMで受け取りたい方へ</strong>
-          <p class="note">お客様キーと、対象のわんちゃんの名前（名前未入力の場合は下の管理用の呼び名）をPINFORMEへDMしてください。確認後、手動でカルテをお送りします。Instagramが開いても、自動送信はされません。</p>
+          <strong>DMでのお届けもできます（任意）</strong>
+          <p class="note">上のボタンからその場で発行もできます。DMでのお届けを希望する場合は、お客様キーと、対象のわんちゃんの名前（名前未入力の場合は下の管理用の呼び名）をPINFORMEへDMしてください。確認後にお送りします。Instagramが開いても、自動送信はされません。</p>
           <div id="pinDMDogLabel" class="note"></div>
           <button type="button" id="copyDMBtn" style="width:100%;margin-top:8px">DM用の文章をコピー</button>
           <a href="https://ig.me/m/pinforme.jp" target="_blank" rel="noopener noreferrer" style="display:block;margin-top:10px">PINFORMEのDMを開く</a>
-          <button type="button" id="dmKarteBtn" style="width:100%;margin-top:10px">カルテを見る・PDF保存</button>
           <p class="note">連絡先を登録しない場合、キー紛失時は本人確認による再発行ができない場合があります。</p>
         </div>
       </div>
@@ -1258,6 +1262,21 @@ setPINFORMEKarte=function(d){
     <p class="status" id="pinformeKeyRecoveryStatus" role="status"></p>
     <button type="button" class="primary" id="pinformeKeyRecoverySubmit" style="width:100%">新しいキーを送信する</button>
     <button type="button" class="secondary" id="pinformeKeyRecoveryClose" style="width:100%;margin-top:10px">閉じる</button>
+  </div>
+</div>
+
+<!-- 送信完了カルテ保存モーダル -->
+<div class="modal" id="pinKarteSaveModal" aria-hidden="true">
+  <div class="modal-card">
+    <h2 style="margin-top:0">送信が完了しました！</h2>
+    <p class="note">ご協力ありがとうございました。カルテは今その場で保存できます。保存しておくと、サイズの確認や再採寸のときに便利です。</p>
+    <div style="font-weight:800;margin-top:12px">お客様キー</div>
+    <div class="note">カルテを開く時に使うキーです。コピーかスクリーンショットで保管してください。</div>
+    <div id="pinKarteSaveKeyValue" class="key-value"></div>
+    <button type="button" id="pinKarteSaveCopyKey" style="width:100%">お客様キーをコピー</button>
+    <button type="button" class="primary" id="pinKarteSavePdfBtn" style="width:100%;margin-top:14px">カルテを保存する（PDF）</button>
+    <p class="note" id="pinKarteSaveGuide" style="margin-top:8px"></p>
+    <button type="button" class="secondary" id="pinKarteSaveClose" style="width:100%;margin-top:10px">閉じる</button>
   </div>
 </div>
 
@@ -3356,7 +3375,52 @@ async function pinSendAnonymousAdminNotification(context){
     if(status) status.textContent += " 採寸データは保存済みですが、PINFORMEへの通知メールを確認できませんでした。データの再送は不要です。";
   }
 }
+/* ================= 送信完了カルテ保存モーダル =================
+   送信成功直後にだけ開く。外側タップでは閉じず、「カルテを保存する」か「閉じる」を押して閉じる。 */
+function pinShowKarteSaveModal(){
+  const modal = document.getElementById('pinKarteSaveModal'); if(!modal) return;
+  /* モーダルが開くのは送信完了後だけなので、背後の完了画面も完了表示にそろえる */
+  const ft = document.getElementById('finishTitle'); if(ft) ft.textContent = '送信が完了しました';
+  const fm = document.getElementById('finishMessage'); if(fm) fm.textContent = 'ご協力ありがとうございました。データは無事に届いています。';
+  const fk = document.getElementById('finishMark'); if(fk) fk.textContent = '✓';
+  const sb = document.getElementById('pinformeSubmitButton'); if(sb){ sb.textContent = '送信・保存済み ✓'; sb.disabled = true; }
+  const pc = document.getElementById('pinformePostSaveChoice'); if(pc) pc.style.display = 'block';
+  const key = document.getElementById('pinformeRemeasureKeyValue')?.textContent?.trim() || '';
+  const kv = document.getElementById('pinKarteSaveKeyValue'); if(kv) kv.textContent = key;
+  const guide = document.getElementById('pinKarteSaveGuide');
+  if(guide){
+    const ua = navigator.userAgent || '';
+    if(/iPhone|iPad|iPod/.test(ua)) guide.textContent = 'iPhoneの方：ボタンを押すとカルテが開いて印刷画面になります。プレビューを2本指で広げる（または右上の共有アイコン）→「ファイルに保存」で保存できます。';
+    else if(/Android/.test(ua)) guide.textContent = 'Androidの方：ボタンを押すとカルテが開いて印刷画面になります。送信先で「PDFに保存」を選んでください。';
+    else guide.textContent = 'ボタンを押すとカルテが開いて印刷画面になります。送信先で「PDFに保存」を選んでください。';
+  }
+  modal.classList.add('open'); modal.setAttribute('aria-hidden', 'false');
+}
+function pinCloseKarteSaveModal(){
+  const modal = document.getElementById('pinKarteSaveModal'); if(!modal) return;
+  modal.classList.remove('open'); modal.setAttribute('aria-hidden', 'true');
+}
+function pinKarteSavePdfStart(){
+  pinCloseKarteSaveModal();
+  openKartePage();
+  const frame = document.getElementById('finalKarteFrame');
+  let tries = 0;
+  const timer = setInterval(() => {
+    tries++;
+    let ready = false;
+    try{ ready = !!(frame && frame.contentDocument && frame.contentDocument.getElementById('sheet')); }catch(e){}
+    if(ready){ clearInterval(timer); printFinalKarte(); }
+    else if(tries >= 16){ clearInterval(timer); }
+  }, 250);
+}
+{
+  const b1 = document.getElementById('pinKarteSaveClose'); if(b1) b1.addEventListener('click', pinCloseKarteSaveModal);
+  const b2 = document.getElementById('pinKarteSavePdfBtn'); if(b2) b2.addEventListener('click', pinKarteSavePdfStart);
+  const b3 = document.getElementById('pinKarteSaveCopyKey'); if(b3) b3.addEventListener('click', () => { if(typeof pinformeCopyRemeasureKey === 'function') pinformeCopyRemeasureKey(); });
+}
 function pinRefreshDMChoice(){
+  const issue = document.getElementById('pinKarteIssue');
+  if(issue) issue.hidden = !PINFORME_SUBMITTED;
   const box = document.getElementById('pinDMChoice'); if(!box) return;
   box.hidden = !pinAnonymousActive() || !PINFORME_SUBMITTED;
   if(!box.hidden){ const l = document.getElementById('pinDMDogLabel'); if(l) l.textContent = '対象：' + pinAnonymousDogLabel(); }
@@ -3406,6 +3470,7 @@ async function pinV2FinishSaved(pending, receipt){
   }
   pinRefreshDMChoice();
   document.getElementById('pinformePostSaveChoice').style.display = 'block';
+  pinShowKarteSaveModal();
   savePINFORMEState();
 }
 async function sendToPinforme(options={}){
