@@ -531,13 +531,17 @@ label.confirm input{margin-top:4px;width:20px;height:20px;flex:none}
         <div class="note">飼い主様専用のキーです。再採寸・部分更新・わんちゃんの追加登録に使用します。コピーまたはスクリーンショットで保管してください。キーを知っている方は登録情報を開けますので、公開投稿には載せないでください。</div>
         <div id="pinformeRemeasureKeyValue" class="key-value"></div>
         <button type="button" id="copyKeyBtn" style="width:100%">お客様キーをコピー</button>
+        <div id="pinKarteIssue" hidden style="margin-top:14px">
+          <strong>採寸カルテの発行</strong>
+          <p class="note">送信が完了すると、その場でカルテを発行できます。発行したカルテはPDFで保存できます。このお客様キーで、後からいつでも開けます。</p>
+          <button type="button" class="primary" id="dmKarteBtn" style="width:100%;margin-top:8px">カルテを発行する（見る・PDF保存）</button>
+        </div>
         <div id="pinDMChoice" hidden style="margin-top:14px">
-          <strong>カルテをDMで受け取りたい方へ</strong>
-          <p class="note">お客様キーと、対象のわんちゃんの名前（名前未入力の場合は下の管理用の呼び名）をPINFORMEへDMしてください。確認後、手動でカルテをお送りします。Instagramが開いても、自動送信はされません。</p>
+          <strong>DMでのお届けもできます（任意）</strong>
+          <p class="note">上のボタンからその場で発行もできます。DMでのお届けを希望する場合は、お客様キーと、対象のわんちゃんの名前（名前未入力の場合は下の管理用の呼び名）をPINFORMEへDMしてください。確認後にお送りします。Instagramが開いても、自動送信はされません。</p>
           <div id="pinDMDogLabel" class="note"></div>
           <button type="button" id="copyDMBtn" style="width:100%;margin-top:8px">DM用の文章をコピー</button>
           <a href="https://ig.me/m/pinforme.jp" target="_blank" rel="noopener noreferrer" style="display:block;margin-top:10px">PINFORMEのDMを開く</a>
-          <button type="button" id="dmKarteBtn" style="width:100%;margin-top:10px">カルテを見る・PDF保存</button>
           <p class="note">連絡先を登録しない場合、キー紛失時は本人確認による再発行ができない場合があります。</p>
         </div>
       </div>
@@ -3370,6 +3374,7 @@ async function pinSendAnonymousAdminNotification(context){
   }
 }
 function pinRefreshDMChoice(){
+  const issue = document.getElementById('pinKarteIssue'); if(issue) issue.hidden = !PINFORME_SUBMITTED;
   const box = document.getElementById('pinDMChoice'); if(!box) return;
   box.hidden = !pinAnonymousActive() || !PINFORME_SUBMITTED;
   if(!box.hidden){ const l = document.getElementById('pinDMDogLabel'); if(l) l.textContent = '対象：' + pinAnonymousDogLabel(); }
