@@ -1221,11 +1221,14 @@ setPINFORMEKarte=function(d){
   <div class="karte-actions">
     <button type="button" class="secondary" id="karteBackBtn">← 戻る</button>
     <button type="button" class="primary grow" id="kartePrintBtn" style="flex:1">カルテをPDF保存・印刷</button>
+    <button type="button" class="secondary grow" id="karteImageBtn" style="flex:1">カルテを写真で保存</button>
   </div>
   <div style="padding:0 12px 14px;font-size:13px;line-height:1.8;color:#444">
     <p style="margin:0 0 4px;font-weight:700">PDFの保存方法</p>
     <p style="margin:0">・iPhone：上のボタンを押す → 印刷画面でプレビューを2本指で広げる（または右上の共有アイコンを押す）→「ファイルに保存」を選ぶ</p>
     <p style="margin:0">・Android・パソコン：上のボタンを押す → 印刷画面の送信先で「PDFに保存」を選ぶ</p>
+    <p style="margin:8px 0 4px;font-weight:700">写真の保存方法</p>
+    <p style="margin:0">・「カルテを写真で保存」を押すと、カルテの写真が作られます。iPhoneは「共有して保存する」→「画像を保存」で写真フォルダへ、その他の端末はダウンロードで保存できます</p>
   </div>
 </section>
 
@@ -1242,6 +1245,18 @@ setPINFORMEKarte=function(d){
   </div>
 </div>
 
+<!-- カルテ写真保存モーダル -->
+<div class="modal" id="pinKarteImageModal" aria-hidden="true">
+  <div class="modal-card">
+    <h2 style="margin-top:0">カルテの写真</h2>
+    <p class="note" id="pinKarteImageNote">写真フォルダに保存できます。</p>
+    <img id="pinKarteImagePreview" alt="採寸カルテ" style="width:100%;height:auto;display:block;border:1px solid #ddd;margin-top:10px">
+    <button type="button" class="primary" id="pinKarteImageShareBtn" style="width:100%;margin-top:12px">共有して保存する</button>
+    <a id="pinKarteImageDownload" download="pinforme-karte.png" style="display:block;width:100%;margin-top:10px;padding:12px;box-sizing:border-box;text-align:center;border:1px solid #111;border-radius:10px;background:#fff;color:#111;text-decoration:none;font-size:15px">ダウンロードする（パソコン・Android向け）</a>
+    <button type="button" class="secondary" id="pinKarteImageClose" style="width:100%;margin-top:10px">閉じる</button>
+  </div>
+</div>
+
 <!-- 送信完了カルテ保存モーダル -->
 <div class="modal" id="pinKarteSaveModal" aria-hidden="true">
   <div class="modal-card">
@@ -1251,7 +1266,8 @@ setPINFORMEKarte=function(d){
     <div class="note">カルテを開く時に使うキーです。コピーかスクリーンショットで保管してください。</div>
     <div id="pinKarteSaveKeyValue" class="key-value"></div>
     <button type="button" id="pinKarteSaveCopyKey" style="width:100%">お客様キーをコピー</button>
-    <button type="button" class="primary" id="pinKarteSavePdfBtn" style="width:100%;margin-top:14px">カルテを保存する（PDF）</button>
+    <button type="button" class="primary" id="pinKarteSaveImageBtn" style="width:100%;margin-top:14px">カルテを保存する（写真）</button>
+    <button type="button" class="secondary" id="pinKarteSavePdfBtn" style="width:100%;margin-top:10px">カルテを保存する（PDF）</button>
     <p class="note" id="pinKarteSaveGuide" style="margin-top:8px"></p>
     <button type="button" class="secondary" id="pinKarteSaveClose" style="width:100%;margin-top:10px">閉じる</button>
   </div>
@@ -3403,9 +3419,9 @@ function pinShowKarteSaveModal(){
   const guide = document.getElementById('pinKarteSaveGuide');
   if(guide){
     const ua = navigator.userAgent || '';
-    if(/iPhone|iPad|iPod/.test(ua)) guide.textContent = 'iPhoneの方：ボタンを押すとカルテが開いて印刷画面になります。プレビューを2本指で広げる（または右上の共有アイコン）→「ファイルに保存」で保存できます。';
-    else if(/Android/.test(ua)) guide.textContent = 'Androidの方：ボタンを押すとカルテが開いて印刷画面になります。送信先で「PDFに保存」を選んでください。';
-    else guide.textContent = 'ボタンを押すとカルテが開いて印刷画面になります。送信先で「PDFに保存」を選んでください。';
+    if(/iPhone|iPad|iPod/.test(ua)) guide.textContent = 'iPhoneの方：「写真」は次の画面で「共有して保存する」→「画像を保存」で写真フォルダに入ります。「PDF」は印刷画面から保存します。';
+    else if(/Android/.test(ua)) guide.textContent = '「写真」はダウンロードで保存できます。「PDF」は印刷画面の送信先で「PDFに保存」を選んでください。';
+    else guide.textContent = '「写真」はダウンロード、「PDF」は印刷画面の送信先で「PDFに保存」を選んで保存できます。';
   }
   modal.classList.add('open'); modal.setAttribute('aria-hidden', 'false');
 }
@@ -3431,6 +3447,253 @@ function pinKarteSavePdfStart(){
   const b2 = document.getElementById('pinKarteSavePdfBtn'); if(b2) b2.addEventListener('click', pinKarteSavePdfStart);
   const b3 = document.getElementById('pinKarteSaveCopyKey'); if(b3) b3.addEventListener('click', () => { if(typeof pinformeCopyRemeasureKey === 'function') pinformeCopyRemeasureKey(); });
 }
+
+/* ================= カルテ写真（PNG）保存 =================
+   実物のカルテと同じデータ（collectKarteV2）からCanvasへ直接描く。
+   採寸モデル図は、カルテ画面（iframe）で実際に表示されている画像をそのまま使う
+   （犬種・見た目で切り替わる現在のモデル図と必ず一致させるため）。 */
+const PIN_KI_ITEMS = [{lab:"① 首まわり",where:"首の付け根"},{lab:"② 胴まわり",where:"胸が一番張っているところ"},{lab:"③ ウエスト",where:"胴体で一番細いところ"},{lab:"④ 着丈",where:"首の付け根 → 尻尾の付け根"},{lab:"⑤ 前身頃",where:"首の付け根からみぞおちまで"},{lab:"⑥ 前脚の太さ",where:"前脚の太いところ／前脚の細いところ"},{lab:"⑦ 後脚の太さ",where:"後脚の太いところ／後脚の細いところ"},{lab:"⑧ 前脚の長さ",where:"脇から関節ごとに地面まで ⑧-1・⑧-2・⑧-3"},{lab:"⑨ 後脚の長さ",where:"⑦-1のラインから関節ごとに地面まで ⑨-1・⑨-2・⑨-3"},{lab:"⑩ 首の長さ（ネック）",where:"首の付け根から後頭部に入る手前まで"},{lab:"⑪ 首の長さ（スヌーズ）",where:"首から頭までの長さ"},{lab:"⑫ 頭まわり",where:"頭の一番太いところ"},{lab:"⑬ 前脚の間",where:"左右の前脚の間"},{lab:"⑭ 首の真ん中",where:"首の中でも一番細い部分"},{lab:"⑮ 尻尾の太さ",where:"付け根の一番太い部分"}];
+const PIN_KI_POINTS = [["❶ 採寸は最低3回は測る事","犬は動きますので一度の採寸では確かな数字ではありません。"],["❷ 測る際の立たせている場所","柔らかいソファーやクッションやベットなどの上では体が歪み正しい採寸ができません。だからと言ってフローリングで脚が滑りやすい状態も問題ですのでフローリングの上に滑り止め防止に薄手のブランケットやバスタオルなどを敷いて採寸してください。"],["❸ 測る際の愛犬の体調","寝起きではないですか？寝ていた直後は体が縮こまってる可能性もありますし、すぐ伏せをしてしまったりします。怖がっていたりしていませんか？ついつい暴れない様に高い所で測ろうとしてしまいたくなりますが、体も強張り正確な数字とは言えません。寒くて震えてませんか？これもまた体も強張り正確な数字とは言えません。疲れていていませんか？怪我や普段しない様な事をするかも知れません。コンディションが悪いと採寸は嫌がりますので避けましょう。"],["❹ 測る際の体勢","採寸時の犬の体勢をしっかり確認しましょう。４つの脚で立って、まっすぐ前を見ている状態にします。何かを覗き込んでいるように首をのばしたりへっぴり腰になったり、お座りしたり、伏せしたりしていない状態を作りましょう。伏せをした状態やお座りした状態ではそれぞれ数字が変わり正しい採寸ができません。リラックスした自然な体勢がベストです。"],["❺ 独自の体型を理解する","お尻にかけてカーブが強い、胸板が厚く前脚の間の感覚がとても広いなど特徴的な体系の場合は意識を持って採寸をしましょう。"],["❻ 呼吸を感じる","呼吸と共に1.0cmから1.5cmは採寸じのサイズに変化が出ます。興奮状態ですと特に呼吸が大きくなるので採寸に誤差が生じます。できる限り落ち着いて状態で採寸することがベストですが大抵の犬はメジャーを少し怖がり呼吸が大きくなります。ですので呼吸を感じながら数字を読みます。"]];
+const PIN_KI_FIELDS = [['neck'],['chest'],['waist'],['back_length'],['front_length'],['front_leg_girth_up','front_leg_girth_low'],['hind_leg_girth_up','hind_leg_girth_low'],['front_leg_length_1','front_leg_length_2','front_leg_length_3'],['hind_leg_length_1','hind_leg_length_2','hind_leg_length_3'],['neck_length'],['snood_length'],['head_girth'],['front_leg_spacing'],['mid_neck'],['tail_girth']];
+const PIN_KI_NAMES = ['首まわり','胴まわり','ウエスト','着丈','前身頃','前脚の太さ','後脚の太さ','前脚の長さ','後脚の長さ','首の長さ（ネック）','首の長さ（スヌード）','頭周り','前脚の幅','首の真ん中','尻尾の太さ'];
+const PIN_KI_FONT = '"Hiragino Kaku Gothic ProN","Hiragino Sans","Noto Sans CJK JP",sans-serif';
+function pinKarteImgFmtDate(v){ if(!v) return '—'; const m = String(v).match(/^(\d{4})-(\d{1,2})-(\d{1,2})/); if(m) return m[1]+'年'+Number(m[2])+'月'+Number(m[3])+'日'; return String(v); }
+function pinKarteImgHistory(entry){
+  const fields = PIN_KI_FIELDS, names = PIN_KI_NAMES, updates = entry.updates || [];
+  const indices = [...new Set(updates.map(u=>fields.findIndex(fs=>fs.includes(u.field))))].filter(i=>i>=0);
+  const changes = updates.filter(u=>u.before!=null && u.before!==u.after);
+  const unchanged = updates.filter(u=>u.before!=null && u.before===u.after);
+  const summary = indices.length>5 ? entry.kind+'：'+indices.length+'項目' : indices.slice(0,3).map(i=>names[i]).join('、') + (indices.length>3 ? ' ほか'+(indices.length-3)+'項目' : '');
+  const added = updates.some(u=>u.mark==='＋'), remeasured = updates.some(u=>u.mark==='↻');
+  const first = entry.kind==='初回登録' || entry.kind==='初回採寸';
+  const manualAdd = updates.some(u=>u.mark==='＋' && (entry.manualItems||[]).includes(fields.findIndex(fs=>fs.includes(u.field))));
+  const label = first ? '初版（初回採寸）' : entry.kind==='部分更新' ? '部分更新' : entry.kind==='未採寸項目の追加' ? '未採寸項目の追加' : added&&remeasured ? '項目追加・再採寸' : added ? (manualAdd?'項目追加（任意選択）':'項目追加（服に必要）') : remeasured ? '再採寸' : '体型確認';
+  const purposes = {research:'商品開発への採寸協力',tank:'タンクトップ',undecided:'まだ決めていない',short:'半袖',long:'長袖',turtle:'タートルネック',romper:'ロンパース'};
+  let body;
+  if(first) body = '初版（初回採寸）：' + (entry.purposeLabel || purposes[entry.product] || '目的未記録') + '／' + indices.length + '項目測定' + (entry.hasUnmeasured || entry.selectedCount > indices.length ? '（未測定あり）' : '');
+  else body = indices.length ? label + '：' + summary : '体型確認：変化なし';
+  if(unchanged.length && unchanged.length === updates.length) body += '（数値変更なし）';
+  const notes = [];
+  if(changes.length) notes.push(changes.slice(0,2).map(u=>names[fields.findIndex(fs=>fs.includes(u.field))] + ': ' + u.before + '→' + u.after + 'cm').join('、') + (changes.length>2 ? ' ほか'+(changes.length-2)+'箇所' : ''));
+  if(unchanged.length && unchanged.length !== updates.length){ const un = [...new Set(unchanged.map(u=>names[fields.findIndex(fs=>fs.includes(u.field))]))]; notes.push('再採寸（数値変更なし）：' + un.slice(0,2).join('、') + (un.length>2 ? ' ほか'+(un.length-2)+'項目' : '')); }
+  return {rev:'△'+entry.revision, date:entry.date || '', body:body, notes:notes};
+}
+function pinKarteImgWrap(c, text, maxW){ const lines = []; let line = ''; for(const ch of String(text)){ if(c.measureText(line+ch).width > maxW && line){ lines.push(line); line = ch; } else line += ch; } if(line) lines.push(line); return lines; }
+function pinKarteImgLoad(src){ return new Promise(res=>{ if(!src) return res(null); const im = new Image(); im.onload = ()=>res(im); im.onerror = ()=>res(null); im.src = src; }); }
+async function pinRenderKarteImage(diagramSrc){
+  const data = collectKarteV2();
+  const preview = document.getElementById('photoPreview');
+  const photoSrc = PINFORME_DOG_PHOTO_DATA || ((preview && preview.getAttribute('src') || '').startsWith('data:image/') ? preview.getAttribute('src') : '');
+  const photo = await pinKarteImgLoad(photoSrc);
+  const diagram = await pinKarteImgLoad(diagramSrc);
+  const S = 2, X = v=>v*S;
+  /* ポイントと履歴の高さを先に測る */
+  const meas = document.createElement('canvas').getContext('2d');
+  const tx = 550, tw = 540;
+  let yy = 330;
+  const pointLines = PIN_KI_POINTS.map(pt=>{ meas.font = '400 '+X(6.6)+'px '+PIN_KI_FONT; return pinKarteImgWrap(meas, pt[1], X(tw-16)); });
+  PIN_KI_POINTS.forEach((pt,i)=>{ yy += 12 + pointLines[i].length*8.25 + 5; });
+  const hist = ((data.v2 && data.v2.history) || []).slice(0,3).map(pinKarteImgHistory);
+  const histLines = hist.map(h=>{ meas.font = '400 '+X(10)+'px '+PIN_KI_FONT; const b = pinKarteImgWrap(meas, h.body, X(432)); meas.font = '400 '+X(9)+'px '+PIN_KI_FONT; const n = h.notes.map(t=>pinKarteImgWrap(meas, t, X(432))); return {b:b, n:n}; });
+  let histH = 0;
+  if(data.v2){ histH = 24 + 6; histLines.forEach(hl=>{ histH += 4 + hl.b.length*13 + hl.n.reduce((a,l)=>a+l.length*12, 0) + 8; }); }
+  const histTop = yy + 14;
+  const H = Math.max(794, data.v2 ? histTop + histH + 16 : 794);
+  const cv = document.createElement('canvas'); cv.width = 1123*S; cv.height = H*S;
+  const c = cv.getContext('2d');
+  c.fillStyle = '#ffffff'; c.fillRect(0, 0, cv.width, cv.height);
+  c.fillStyle = '#222'; c.strokeStyle = '#999'; c.lineWidth = 1*S;
+  try{ c.letterSpacing = (4*S)+'px'; }catch(e){}
+  c.font = '800 '+X(29)+'px '+PIN_KI_FONT;
+  c.fillText('PINFORME', X(30), X(56));
+  try{ c.letterSpacing = (3*S)+'px'; }catch(e){}
+  c.font = '400 '+X(8)+'px '+PIN_KI_FONT;
+  c.fillText('DOG WEAR MEASUREMENT KARTE', X(30), X(70));
+  try{ c.letterSpacing = '0px'; }catch(e){}
+  c.font = '700 '+X(14)+'px '+PIN_KI_FONT;
+  c.fillText(data.breed || '犬種', X(30), X(100));
+  if(data.v2){
+    c.strokeStyle = '#bbb'; c.beginPath(); c.moveTo(X(30), X(112)); c.lineTo(X(515), X(112)); c.stroke();
+    c.fillStyle = '#222'; c.font = '400 '+X(10)+'px '+PIN_KI_FONT;
+    c.fillText('初版の採寸目的（△0）：'+data.v2.initialPurpose, X(30), X(130));
+    c.fillText('現在の登録：'+data.v2.registeredCount+'／15項目（今回測定：'+data.v2.measuredCount+'項目）', X(30), X(147));
+  }
+  c.fillStyle = '#222'; c.font = '800 '+X(13)+'px '+PIN_KI_FONT;
+  c.fillText('測定箇所', X(30), X(172));
+  const bx = 30, by = 180, bw = 485, bh = 175;
+  c.strokeStyle = '#bbb'; c.strokeRect(X(bx), X(by), X(bw), X(bh));
+  if(diagram){
+    const pad = 10, iw2 = bw-pad*2, ih2 = bh-pad*2;
+    const dsc = Math.min(iw2/diagram.width, ih2/diagram.height);
+    c.drawImage(diagram, X(bx+pad) + (X(iw2) - diagram.width*dsc*S)/2, X(by+pad) + (X(ih2) - diagram.height*dsc*S)/2, diagram.width*dsc*S, diagram.height*dsc*S);
+  }
+  const ix = 550, iy = 52, iw = 540, ih = 218;
+  c.strokeStyle = '#999'; c.strokeRect(X(ix), X(iy), X(iw), X(ih));
+  c.fillStyle = '#222'; c.font = '800 '+X(12)+'px '+PIN_KI_FONT;
+  c.fillText('基本情報', X(ix+8), X(iy+20));
+  c.strokeStyle = '#aaa'; c.beginPath(); c.moveTo(X(ix), X(iy+27)); c.lineTo(X(ix+iw), X(iy+27)); c.stroke();
+  const pw = 190, ph = 191, px = ix+iw-pw, py = iy+27;
+  if(photo){
+    c.save(); c.beginPath(); c.rect(X(px), X(py), X(pw), X(ph)); c.clip();
+    const psc = Math.max(pw/photo.width, ph/photo.height);
+    c.drawImage(photo, X(px) + (X(pw) - photo.width*psc*S)/2, X(py) + (X(ph) - photo.height*psc*S)/2, photo.width*psc*S, photo.height*psc*S);
+    c.restore();
+  } else {
+    c.fillStyle = '#888'; c.font = '400 '+X(9)+'px '+PIN_KI_FONT;
+    c.fillText('写真', X(px+6), X(py+14));
+  }
+  c.strokeStyle = '#bbb'; c.strokeRect(X(px), X(py), X(pw), X(ph));
+  const infoFields = [
+    ['今回の記録日', pinKarteImgFmtDate((data.v2 && data.v2.recordDate) || data.measuredOn)],
+    ['飼い主様お名前', data.owner || '—'],
+    ['わんちゃんのお名前', data.dog || '—'],
+    ['性　別', data.sex || '—'],
+    ['生年月日', pinKarteImgFmtDate(data.birthday)],
+    ['体　重', (data.weight !== '' && data.weight != null) ? String(data.weight)+' kg' : '— kg']
+  ];
+  const rowsY = iy + 27, rowH = 191/6;
+  infoFields.forEach((f,i)=>{
+    const y = rowsY + i*rowH;
+    if(i > 0){ c.strokeStyle = '#bbb'; c.beginPath(); c.moveTo(X(ix), X(y)); c.lineTo(X(px), X(y)); c.stroke(); }
+    c.fillStyle = '#555'; c.font = '400 '+X(9)+'px '+PIN_KI_FONT;
+    c.fillText(f[0], X(ix+10), X(y + rowH/2 + 3));
+    c.fillStyle = '#222'; c.font = '700 '+X(11)+'px '+PIN_KI_FONT;
+    c.fillText(f[1], X(ix+145), X(y + rowH/2 + 4));
+  });
+  c.fillStyle = '#222'; c.font = '800 '+X(16)+'px '+PIN_KI_FONT;
+  c.fillText('採寸前に大切な6つのポイント', X(tx+8), X(307));
+  c.strokeStyle = '#aaa'; c.beginPath(); c.moveTo(X(tx), X(316)); c.lineTo(X(tx+tw), X(316)); c.stroke();
+  yy = 330;
+  PIN_KI_POINTS.forEach((pt,i)=>{
+    c.fillStyle = '#222'; c.font = '700 '+X(9)+'px '+PIN_KI_FONT;
+    c.fillText(pt[0], X(tx+8), X(yy + 9)); yy += 12;
+    c.font = '400 '+X(6.6)+'px '+PIN_KI_FONT; c.fillStyle = '#333';
+    pointLines[i].forEach(ln=>{ c.fillText(ln, X(tx+8), X(yy + 7)); yy += 8.25; });
+    yy += 5;
+  });
+  c.strokeStyle = '#aaa'; c.beginPath(); c.moveTo(X(tx), X(yy + 2)); c.lineTo(X(tx+tw), X(yy + 2)); c.stroke();
+  if(data.v2){
+    const hx = 550, hy = histTop, hw = 540;
+    c.strokeStyle = '#999'; c.strokeRect(X(hx), X(hy), X(hw), X(histH));
+    c.fillStyle = '#222'; c.font = '800 '+X(11)+'px '+PIN_KI_FONT;
+    c.fillText('更新履歴（直近3回）', X(hx+8), X(hy+18));
+    c.strokeStyle = '#aaa'; c.beginPath(); c.moveTo(X(hx), X(hy+24)); c.lineTo(X(hx+hw), X(hy+24)); c.stroke();
+    let ey = hy + 24;
+    hist.forEach((h,i)=>{
+      ey += 4;
+      c.fillStyle = '#222'; c.font = '700 '+X(10)+'px '+PIN_KI_FONT;
+      c.fillText(h.rev, X(hx+8), X(ey + 10));
+      c.font = '400 '+X(10)+'px '+PIN_KI_FONT;
+      c.fillText(h.date, X(hx+8), X(ey + 24));
+      c.font = '400 '+X(10)+'px '+PIN_KI_FONT;
+      histLines[i].b.forEach(ln=>{ ey += 13; c.fillText(ln, X(hx+100), X(ey)); });
+      c.fillStyle = '#555'; c.font = '400 '+X(9)+'px '+PIN_KI_FONT;
+      histLines[i].n.forEach(lines=>lines.forEach(ln=>{ ey += 12; c.fillText(ln, X(hx+100), X(ey)); }));
+      ey += 8;
+    });
+  }
+  c.fillStyle = '#222'; c.font = '800 '+X(15)+'px '+PIN_KI_FONT;
+  c.fillText('採寸結果（3回の平均値）', X(30), X(368));
+  c.font = '400 '+X(9)+'px '+PIN_KI_FONT; c.fillStyle = '#555';
+  c.fillText('△ 改定番号 ／ ＋ 追加 ／ ↻ 再採寸（直近3回）', X(215), X(368));
+  const gx = 30, gy = 380, cw = 485/3, chh = 76;
+  D_CELLS: {
+    const cellsData = PIN_KI_ITEMS.map((def,i)=>{
+      const item = (data.measurements || [])[i] || {groups:[]};
+      const vals = PIN_FIELD_GROUPS[i].map((f,j)=>{
+        const g = (item.groups || [])[j] || {};
+        const has = g.average !== '' && g.average != null;
+        const marks = (g.revisions || []).map(r=>'△'+r.revision+' '+r.mark).join(' ');
+        return {text: has ? String(g.average)+' cm' : '未測定', date: g.measuredOn || '', marks: marks, has: has};
+      });
+      return {lab: def.lab, where: def.where, vals: vals};
+    });
+    cellsData.forEach((cell,i)=>{
+      const col = i % 3, row = Math.floor(i/3);
+      const x = gx + col*cw, y = gy + row*chh;
+      c.strokeStyle = '#999'; c.strokeRect(X(x), X(y), X(cw), X(chh));
+      c.fillStyle = '#222'; c.font = '700 '+X(9)+'px '+PIN_KI_FONT;
+      c.fillText(cell.lab, X(x+8), X(y+16));
+      c.fillStyle = '#555'; c.font = '400 '+X(6.2)+'px '+PIN_KI_FONT;
+      pinKarteImgWrap(c, cell.where, X(cw-16)).slice(0,2).forEach((ln,li)=> c.fillText(ln, X(x+8), X(y+28 + li*8)));
+      const vw = (cw - 12) / cell.vals.length;
+      cell.vals.forEach((v,vi)=>{
+        const vx = x + 6 + vi*vw;
+        c.fillStyle = v.has ? '#222' : '#999'; c.font = '700 '+X(10)+'px '+PIN_KI_FONT;
+        c.textAlign = 'center';
+        c.fillText(v.text + (v.marks ? ' '+v.marks : ''), X(vx + vw/2), X(y+56));
+        c.textAlign = 'left';
+        c.strokeStyle = '#aaa'; c.beginPath(); c.moveTo(X(vx+2), X(y+62)); c.lineTo(X(vx+vw-2), X(y+62)); c.stroke();
+        if(v.date){ c.fillStyle = '#888'; c.font = '400 '+X(6.5)+'px '+PIN_KI_FONT; c.textAlign = 'right'; c.fillText(v.date, X(vx+vw-2), X(y+72)); c.textAlign = 'left'; }
+      });
+    });
+  }
+  return cv;
+}
+let pinKarteImageUrl = '';
+function pinOpenKarteImageModal(url){
+  pinKarteImageUrl = url;
+  const modal = document.getElementById('pinKarteImageModal'); if(!modal) return;
+  const img = document.getElementById('pinKarteImagePreview'); if(img) img.src = url;
+  const dl = document.getElementById('pinKarteImageDownload'); if(dl) dl.href = url;
+  let can = false;
+  try{ can = !!(navigator.canShare && navigator.canShare({files:[new File(['x'], 'pinforme-karte.png', {type:'image/png'})]})); }catch(e){}
+  const share = document.getElementById('pinKarteImageShareBtn'); if(share) share.style.display = can ? '' : 'none';
+  const note = document.getElementById('pinKarteImageNote');
+  if(note){ const ua = navigator.userAgent || ''; note.textContent = /iPhone|iPad|iPod/.test(ua) ? '「共有して保存する」→「画像を保存」で写真フォルダに保存できます。共有が使えない時は、この画像を長押ししても保存できます。' : 'ダウンロードボタンで保存できます。'; }
+  modal.classList.add('open'); modal.setAttribute('aria-hidden', 'false');
+}
+function pinCloseKarteImageModal(){
+  const modal = document.getElementById('pinKarteImageModal'); if(!modal) return;
+  modal.classList.remove('open'); modal.setAttribute('aria-hidden', 'true');
+}
+async function pinShareKarteImage(){
+  if(!pinKarteImageUrl) return;
+  try{
+    const blob = await (await fetch(pinKarteImageUrl)).blob();
+    const file = new File([blob], 'pinforme-karte.png', {type:'image/png'});
+    if(navigator.canShare && navigator.canShare({files:[file]})) await navigator.share({files:[file]});
+  }catch(e){}
+}
+function pinMakeKarteImage(){
+  openKartePage();
+  const frame = document.getElementById('finalKarteFrame');
+  let tries = 0;
+  const timer = setInterval(async () => {
+    tries++;
+    let diagramSrc = '';
+    try{
+      const doc = frame && frame.contentDocument;
+      const img = doc && doc.querySelector('.blank-dog-image');
+      const breedEl = doc && doc.getElementById('breed');
+      if(img && breedEl && breedEl.textContent && breedEl.textContent !== '犬種'){
+        const src = img.currentSrc || img.src || '';
+        if(src.startsWith('data:image/') && img.complete && img.naturalWidth > 0) diagramSrc = src;
+      }
+    }catch(e){}
+    if(diagramSrc){
+      clearInterval(timer);
+      try{
+        const cv = await pinRenderKarteImage(diagramSrc);
+        if(cv.toBlob){
+          cv.toBlob(blob=>{ if(blob) pinOpenKarteImageModal(URL.createObjectURL(blob)); else pinOpenKarteImageModal(cv.toDataURL('image/png')); }, 'image/png');
+        } else pinOpenKarteImageModal(cv.toDataURL('image/png'));
+      }catch(e){ console.error(e); alert('カルテの写真を作れませんでした。もう一度お試しください。'); }
+    }
+    else if(tries >= 24){ clearInterval(timer); alert('カルテの写真を作れませんでした。カルテ画面が表示されたら、もう一度お試しください。'); }
+  }, 250);
+}
+function pinKarteSaveImageStart(){
+  pinCloseKarteSaveModal();
+  pinMakeKarteImage();
+}
+{
+  const i1 = document.getElementById('pinKarteSaveImageBtn'); if(i1) i1.addEventListener('click', pinKarteSaveImageStart);
+  const i2 = document.getElementById('karteImageBtn'); if(i2) i2.addEventListener('click', pinMakeKarteImage);
+  const i3 = document.getElementById('pinKarteImageClose'); if(i3) i3.addEventListener('click', pinCloseKarteImageModal);
+  const i4 = document.getElementById('pinKarteImageShareBtn'); if(i4) i4.addEventListener('click', pinShareKarteImage);
+}
+
 function pinRefreshDMChoice(){
   const issue = document.getElementById('pinKarteIssue'); if(issue) issue.hidden = !PINFORME_SUBMITTED;
   const box = document.getElementById('pinDMChoice'); if(!box) return;
