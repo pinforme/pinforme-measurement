@@ -33,3 +33,4 @@ self.addEventListener('fetch', function(e){
     });
   }));
 });
+// redeploy trigger
