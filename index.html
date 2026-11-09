@@ -8,7 +8,7 @@
 
 <script id="pinforme-latest-version-guard">
 (function(){
-  const PINFORME_BUILD_ID="20261108-navi-v4-b32";
+  const PINFORME_BUILD_ID="20261110-navi-v4-b33";
 
   function forceFresh(reason){
     try{
@@ -46,6 +46,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>PINFORME 採寸ナビ 完全版</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#111111">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="採寸ナビ">
 <style>
 :root{--progH:0px;--v4h:100svh;--ink:#1c1c1e;--brand:#333;--accent:#3a3a3c;--bg:#f4f4f5;--card:#fff;--line:#d8d8dc;--err:#c0392b;--ok:#333}
 *{box-sizing:border-box}
@@ -4052,6 +4057,186 @@ function initNaviV4(){
 }
 document.addEventListener('DOMContentLoaded', initNaviV4);
 
+</script>
+<script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>
+<script>
+/* PWA: saved-key support + push (production) */
+(function(){
+  var KEY='PINFORME_REMEASURE_ACCESS_KEY_V1';
+  var autoInFlight=false;
+  function savedKey(){ try{ return (localStorage.getItem(KEY)||'').trim(); }catch(e){ return ''; } }
+
+  var VAPID_PUB='BPq1zDtjMB-aaf65f0BRYd4-zSpTkLOtxOQ8jr9W6NawAK9Kp86fWgsK_XM68vCd_ybqHt3quNEjWNPdiSeyGz4';
+  var SB_URL='https://dsbvaoqgvtoeukigdjdj.supabase.co';
+  var SB_KEY='sb_publishable_403lLhKUQ9X9N1RaxaDduA_9ZQEZ6na';
+  function sbHeaders(){ return {'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'}; }
+  function normKey(k){ var raw=String(k||'').toUpperCase().replace(/[^A-Z0-9]/g,''); var m=raw.match(/.{1,4}/g); return m ? m.join('-') : ''; }
+  function b64ToUint8(s){ var pad='='.repeat((4-s.length%4)%4); var b=atob((s+pad).replace(/-/g,'+').replace(/_/g,'/')); var a=new Uint8Array(b.length); for(var i=0;i<b.length;i++) a[i]=b.charCodeAt(i); return a; }
+  function pushStatus(t){ var el=document.getElementById('pinPushStatus'); if(el) el.textContent=t; }
+  async function enablePush(){
+    var key=savedKey(); if(!key){ pushStatus('先に「カルテを見る」から、お客様キーを保存してください。'); return; }
+    if(!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)){ pushStatus('この開き方では通知が使えません。ホーム画面のアプリから開いてください。'); return; }
+    try{
+      pushStatus('許可を確認しています…');
+      var perm=await Notification.requestPermission();
+      if(perm!=='granted'){ pushStatus('通知が許可されませんでした。'); return; }
+      var reg=await navigator.serviceWorker.ready;
+      var sub=await reg.pushManager.getSubscription();
+      if(!sub){ sub=await reg.pushManager.subscribe({userVisibleOnly:true, applicationServerKey:b64ToUint8(VAPID_PUB)}); }
+      var j=sub.toJSON();
+      var res=await fetch(SB_URL+'/rest/v1/rpc/register_push_subscription',{method:'POST',headers:sbHeaders(),body:JSON.stringify({p_key:normKey(key),p_endpoint:j.endpoint,p_p256dh:j.keys.p256dh,p_auth:j.keys.auth,p_user_agent:navigator.userAgent})});
+      if(!res.ok){ pushStatus('登録に失敗しました（'+res.status+'）'); return; }
+      pushStatus('登録できました。お知らせがある時に、この端末へ通知します。');
+    }catch(e){ pushStatus('登録できませんでした: '+((e && e.message) || e)); }
+  }
+  async function disablePush(){
+    var key=savedKey();
+    try{
+      pushStatus('通知を止めています…');
+      if(!('serviceWorker' in navigator) || !('PushManager' in window)){ pushStatus('この開き方では操作できません。'); return; }
+      var reg=await navigator.serviceWorker.ready;
+      var sub=await reg.pushManager.getSubscription();
+      if(sub){
+        var ep=sub.endpoint;
+        if(key){ try{ await fetch(SB_URL+'/rest/v1/rpc/unregister_push_subscription',{method:'POST',headers:sbHeaders(),body:JSON.stringify({p_key:normKey(key),p_endpoint:ep})}); }catch(e){} }
+        await sub.unsubscribe();
+      }
+      pushStatus('通知を止めました。');
+    }catch(e){ pushStatus('止められませんでした: '+((e && e.message) || e)); }
+  }
+  async function reflectPushState(){
+    try{
+      if(!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+      var reg=await navigator.serviceWorker.ready;
+      var sub=await reg.pushManager.getSubscription();
+      if(sub) pushStatus('この端末で受け取る設定になっています');
+    }catch(e){}
+  }
+  function refresh(){
+    var k=savedKey();
+    var inp=document.getElementById('v2CustomerKey');
+    if(k && inp && !inp.value){ inp.value=k; }
+  }
+  function clearKey(){
+    if(!confirm('この端末に保存されたお客様キーを消しますか？\n（カルテの端末内キャッシュも消えます。サーバーの記録は消えません）')) return;
+    try{ localStorage.removeItem(KEY); localStorage.removeItem('PINFORME_LAST_KARTE'); }catch(e){}
+    var inp=document.getElementById('v2CustomerKey'); if(inp) inp.value='';
+    alert('この端末のお客様キーを消しました。');
+  }
+  function statusError(){
+    var st=document.getElementById('v2KeyStatus');
+    var t=st?st.textContent:'';
+    return t && t.indexOf('確認しています')===-1 && (t.indexOf('確認してください')>=0 || t.indexOf('確認できません')>=0 || t.indexOf('16文字')>=0);
+  }
+
+  function isStandalone(){ try{ return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true; }catch(e){ return false; } }
+  function reroutePdf(){
+    if(!isStandalone()) return;
+    [['kartePrintBtn','karteImageBtn'],['pinKarteSavePdfBtn','pinKarteSaveImageBtn']].forEach(function(pr){
+      var pdf=document.getElementById(pr[0]), img=document.getElementById(pr[1]);
+      if(pdf && img && !pdf.dataset.pinRerouted){
+        pdf.dataset.pinRerouted='1';
+        pdf.textContent='カルテを保存する（写真・共有）';
+        pdf.addEventListener('click', function(ev){ ev.stopPropagation(); ev.preventDefault(); img.click(); }, true);
+      }
+    });
+  }
+  function watchUnlock(key){
+    var tries=0;
+    var timer=setInterval(function(){
+      tries++;
+      if(document.getElementById('v2OwnerChoices')){
+        clearInterval(timer);
+        try{ localStorage.setItem(KEY, key); }catch(e){}
+        refresh();
+        return;
+      }
+      if(statusError()){ clearInterval(timer); return; }
+      if(tries>40) clearInterval(timer);
+    }, 400);
+  }
+  function showKeyPage(intent){
+    var title=document.getElementById('homeKeyPanelTitle');
+    if(title) title.textContent = intent==='karte' ? '採寸カルテを見る・保存する' : 'お客様キーで進む';
+    try{ showPage('keyPage'); }catch(e){}
+    refresh();
+    var inp=document.getElementById('v2CustomerKey');
+    if(inp) inp.focus({preventScroll:true});
+  }
+  function watchAuto(intent){
+    var tries=0;
+    var timer=setInterval(function(){
+      tries++;
+      if(document.getElementById('v2OwnerChoices')){
+        clearInterval(timer); autoInFlight=false; return;
+      }
+      if(statusError()){
+        clearInterval(timer); autoInFlight=false; showKeyPage(intent); return;
+      }
+      if(tries>50){ clearInterval(timer); autoInFlight=false; showKeyPage(intent); }
+    }, 400);
+  }
+  function autoUnlock(key, intent){
+    autoInFlight=true;
+    try{
+      pinHomeIntent = intent;
+      var inp=document.getElementById('v2CustomerKey');
+      if(inp) inp.value=key;
+      pinV2Unlock();
+      watchAuto(intent);
+    }catch(e){
+      autoInFlight=false;
+      showKeyPage(intent);
+    }
+  }
+  function build(){
+    var grid=document.querySelector('.home-grid');
+    if(grid && !document.getElementById('pinClearKeyHomeRow')){
+      var row=document.createElement('p');
+      row.id='pinClearKeyHomeRow'; row.className='note'; row.style.textAlign='center';
+      row.innerHTML='<a href="#" id="pinClearKeyHomeLink">この端末のお客様キーを消す（共用端末や、端末を手放す時に）</a>';
+      grid.after(row);
+      document.getElementById('pinClearKeyHomeLink').addEventListener('click', function(ev){ ev.preventDefault(); clearKey(); });
+    }
+    var grid2=document.querySelector('.home-grid');
+    if(grid2 && !document.getElementById('pinPushCard')){
+      var card=document.createElement('div');
+      card.id='pinPushCard'; card.className='entry-card';
+      card.innerHTML='<h2>お知らせ通知</h2><p class="note">先行案内や販売のお知らせなどを、この端末へ通知します。ホーム画面のアプリから設定してください。いつでも止められます。</p><button type="button" class="v2-primary" id="pinPushEnableBtn">通知を受け取る</button><button type="button" class="v2-primary" id="pinPushDisableBtn" style="margin-top:8px">通知をやめる</button><p class="note" id="pinPushStatus"></p>';
+      grid2.after(card);
+      document.getElementById('pinPushEnableBtn').addEventListener('click', enablePush);
+      document.getElementById('pinPushDisableBtn').addEventListener('click', disablePush);
+      reflectPushState();
+    }
+    var inp=document.getElementById('v2CustomerKey');
+    if(inp && !document.getElementById('pinClearKeyNote')){
+      var note=document.createElement('p');
+      note.id='pinClearKeyNote'; note.className='note';
+      note.innerHTML='<a href="#" id="pinClearKeyLink">この端末のキーを消す（共用端末や、端末を手放す時に）</a>';
+      inp.after(note);
+      document.getElementById('pinClearKeyLink').addEventListener('click', function(ev){ ev.preventDefault(); clearKey(); });
+    }
+    document.addEventListener('click', function(ev){
+      var t = ev.target && ev.target.closest ? ev.target.closest('#homeKeyOpenBtn,#homeKarteBtn') : null;
+      if(!t) return;
+      var k=savedKey(); if(!k) return;
+      ev.stopPropagation(); ev.preventDefault();
+      if(autoInFlight) return;
+      autoUnlock(k, t.id==='homeKarteBtn' ? 'karte' : 'menu');
+    }, true);
+    var nextBtn=document.getElementById('v2KeyNext');
+    if(nextBtn) nextBtn.addEventListener('click', function(){
+      var el=document.getElementById('v2CustomerKey');
+      var v=el?el.value.trim():'';
+      if(!v) return;
+      try{ if(window.pinformeNormalizeRemeasureKey) v=pinformeNormalizeRemeasureKey(v); }catch(e){}
+      if(v) watchUnlock(v);
+    });
+    reroutePdf();
+    refresh();
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', build); else build();
+})();
 </script>
 </body>
 </html>
