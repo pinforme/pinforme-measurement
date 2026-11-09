@@ -3363,8 +3363,7 @@ html,body{margin:0!important;padding:0!important;width:297mm!important;height:19
 .view{position:relative!important;width:297mm!important;height:190mm!important;margin:0!important;padding:0!important;overflow:hidden!important;background:#fff!important}
 .sheet{position:absolute!important;left:calc((297mm - 1055.62px)/2)!important;top:0!important;width:1123px!important;height:794px!important;min-width:1123px!important;min-height:794px!important;margin:0!important;padding:24px 30px!important;transform:scale(.94)!important;transform-origin:top left!important;box-shadow:none!important;background:#fff!important;overflow:hidden!important}
 @media print{html,body{width:297mm!important;height:190mm!important;min-height:0!important;margin:0!important;padding:0!important;overflow:hidden!important}.view{position:relative!important;width:297mm!important;height:190mm!important;margin:0!important;padding:0!important;overflow:hidden!important}.sheet{position:absolute!important;left:calc((297mm - 1055.62px)/2)!important;top:0!important;width:1123px!important;height:794px!important;min-width:1123px!important;min-height:794px!important;margin:0!important;transform:scale(.94)!important;transform-origin:top left!important;overflow:hidden!important;page-break-inside:avoid!important;break-inside:avoid-page!important}}
-</style></head><body><div class="view">${cloned.outerHTML}</div><script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw-test.js').catch(function(){});});}</script>
-</body></html>`);
+</style></head><body><div class="view">${cloned.outerHTML}</div></body></html>`);
     printWin.document.close();
     const waitImages = ()=>Promise.all(Array.from(printWin.document.images).map(img=>{
       if(img.complete) return Promise.resolve();
@@ -4090,5 +4089,6 @@ function initNaviV4(){
 document.addEventListener('DOMContentLoaded', initNaviV4);
 
 </script>
+<script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw-test.js').catch(function(){});});}</script>
 </body>
 </html>
