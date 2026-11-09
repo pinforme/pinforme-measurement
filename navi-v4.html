@@ -4091,7 +4091,7 @@ document.addEventListener('DOMContentLoaded', initNaviV4);
 </script>
 <script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw-test.js').catch(function(){});});}</script>
 <script>
-/* PWA-TEST: saved-key support v7 (direct unlock, clear with stated reason, standalone save reroute, push test) */
+/* PWA-TEST: saved-key support v7.1 (direct unlock, clear with stated reason, standalone save reroute, push test) */
 (function(){
   var KEY='PINFORME_REMEASURE_ACCESS_KEY_V1';
   var autoInFlight=false;
@@ -4131,15 +4131,6 @@ document.addEventListener('DOMContentLoaded', initNaviV4);
   }
   function refresh(){
     var k=savedKey();
-
-    if(grid && !document.getElementById('pinPushCard')){
-      var card=document.createElement('div');
-      card.id='pinPushCard'; card.className='entry-card';
-      card.innerHTML='<h2>お知らせ通知（テスト）</h2><p class="note">ホーム画面のアプリから「通知を受け取る」を押すと、この端末でお知らせを受け取れます。</p><button type="button" class="v2-primary" id="pinPushEnableBtn">通知を受け取る</button><button type="button" class="v2-primary" id="pinPushSendBtn" style="margin-top:8px">自分にテスト通知を送る</button><p class="note" id="pinPushStatus"></p>';
-      grid.after(card);
-      document.getElementById('pinPushEnableBtn').addEventListener('click', enablePush);
-      document.getElementById('pinPushSendBtn').addEventListener('click', sendTestPush);
-    }
     var inp=document.getElementById('v2CustomerKey');
     if(k && inp && !inp.value){ inp.value=k; }
   }
@@ -4223,6 +4214,15 @@ document.addEventListener('DOMContentLoaded', initNaviV4);
       row.innerHTML='<a href="#" id="pinClearKeyHomeLink">この端末のお客様キーを消す（共用端末や、端末を手放す時に）</a>';
       grid.after(row);
       document.getElementById('pinClearKeyHomeLink').addEventListener('click', function(ev){ ev.preventDefault(); clearKey(); });
+    }
+    var grid2=document.querySelector('.home-grid');
+    if(grid2 && !document.getElementById('pinPushCard')){
+      var card=document.createElement('div');
+      card.id='pinPushCard'; card.className='entry-card';
+      card.innerHTML='<h2>お知らせ通知（テスト）</h2><p class="note">ホーム画面のアプリから「通知を受け取る」を押すと、この端末でお知らせを受け取れます。</p><button type="button" class="v2-primary" id="pinPushEnableBtn">通知を受け取る</button><button type="button" class="v2-primary" id="pinPushSendBtn" style="margin-top:8px">自分にテスト通知を送る</button><p class="note" id="pinPushStatus"></p>';
+      grid2.after(card);
+      document.getElementById('pinPushEnableBtn').addEventListener('click', enablePush);
+      document.getElementById('pinPushSendBtn').addEventListener('click', sendTestPush);
     }
     var inp=document.getElementById('v2CustomerKey');
     if(inp && !document.getElementById('pinClearKeyNote')){
