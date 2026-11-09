@@ -321,6 +321,12 @@ label.confirm input{margin-top:4px;width:20px;height:20px;flex:none}
 .modal .modal-card{background:#fff;max-width:520px;margin:8vh auto;padding:20px 16px;border-radius:16px;max-height:84vh;overflow-y:auto}
 #pinDraftStatus{display:none;background:#eeeef0;border:1px solid #c9c9ce;border-radius:10px;padding:10px;font-size:13px;margin:10px 0}
 </style>
+<link rel="manifest" href="manifest-test.webmanifest">
+<meta name="theme-color" content="#111111">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="採寸ナビ">
 </head>
 <body>
 <div id="testBadge" role="button" tabindex="0">確認用テストモード（送信されません）</div>
@@ -3357,7 +3363,8 @@ html,body{margin:0!important;padding:0!important;width:297mm!important;height:19
 .view{position:relative!important;width:297mm!important;height:190mm!important;margin:0!important;padding:0!important;overflow:hidden!important;background:#fff!important}
 .sheet{position:absolute!important;left:calc((297mm - 1055.62px)/2)!important;top:0!important;width:1123px!important;height:794px!important;min-width:1123px!important;min-height:794px!important;margin:0!important;padding:24px 30px!important;transform:scale(.94)!important;transform-origin:top left!important;box-shadow:none!important;background:#fff!important;overflow:hidden!important}
 @media print{html,body{width:297mm!important;height:190mm!important;min-height:0!important;margin:0!important;padding:0!important;overflow:hidden!important}.view{position:relative!important;width:297mm!important;height:190mm!important;margin:0!important;padding:0!important;overflow:hidden!important}.sheet{position:absolute!important;left:calc((297mm - 1055.62px)/2)!important;top:0!important;width:1123px!important;height:794px!important;min-width:1123px!important;min-height:794px!important;margin:0!important;transform:scale(.94)!important;transform-origin:top left!important;overflow:hidden!important;page-break-inside:avoid!important;break-inside:avoid-page!important}}
-</style></head><body><div class="view">${cloned.outerHTML}</div></body></html>`);
+</style></head><body><div class="view">${cloned.outerHTML}</div><script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw-test.js').catch(function(){});});}</script>
+</body></html>`);
     printWin.document.close();
     const waitImages = ()=>Promise.all(Array.from(printWin.document.images).map(img=>{
       if(img.complete) return Promise.resolve();
