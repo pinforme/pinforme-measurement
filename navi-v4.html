@@ -4090,5 +4090,49 @@ document.addEventListener('DOMContentLoaded', initNaviV4);
 
 </script>
 <script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw-test.js').catch(function(){});});}</script>
+<script>
+/* PWA-TEST: saved-key support (prefill + clear) */
+(function(){
+  var KEY='PINFORME_REMEASURE_ACCESS_KEY_V1';
+  function savedKey(){ try{ return (localStorage.getItem(KEY)||'').trim(); }catch(e){ return ''; } }
+  function refresh(){
+    var k=savedKey();
+    var inp=document.getElementById('v2CustomerKey');
+    if(k && inp && !inp.value){ inp.value=k; }
+    var n=document.getElementById('pinSavedKeyNote'); if(n) n.style.display=k?'':'none';
+    var h=document.getElementById('pinSavedKeyHome'); if(h) h.style.display=k?'':'none';
+  }
+  function clearKey(){
+    if(!confirm('この端末に保存されたお客様キーを消しますか？\n（カルテの端末内キャッシュも消えます。サーバーの記録は消えません）')) return;
+    try{ localStorage.removeItem(KEY); localStorage.removeItem('PINFORME_LAST_KARTE'); }catch(e){}
+    var inp=document.getElementById('v2CustomerKey'); if(inp) inp.value='';
+    refresh(); alert('この端末のお客様キーを消しました。');
+  }
+  function build(){
+    var grid=document.querySelector('.home-grid');
+    if(grid && !document.getElementById('pinSavedKeyHome')){
+      var box=document.createElement('div');
+      box.id='pinSavedKeyHome'; box.className='entry-card'; box.style.display='none';
+      box.innerHTML='<h2>保存済みのお客様キー</h2><p class="note">この端末に、お客様キーが保存されています。「キーで進む」「カルテを見る」では、キーが入力済みになっています。</p><button type="button" class="v2-primary" id="pinClearKeyHome">この端末のキーを消す</button>';
+      grid.after(box);
+      document.getElementById('pinClearKeyHome').addEventListener('click', clearKey);
+    }
+    var inp=document.getElementById('v2CustomerKey');
+    if(inp && !document.getElementById('pinSavedKeyNote')){
+      var note=document.createElement('p');
+      note.id='pinSavedKeyNote'; note.className='note'; note.style.display='none';
+      note.innerHTML='この端末に保存済みのお客様キーが入力されています。別のキーを使う場合は、書き換えてください。<br><a href="#" id="pinClearKeyLink">この端末のキーを消す</a>';
+      inp.after(note);
+      document.getElementById('pinClearKeyLink').addEventListener('click', function(ev){ ev.preventDefault(); clearKey(); });
+    }
+    ['homeKeyOpenBtn','homeKarteBtn'].forEach(function(id){
+      var b=document.getElementById(id);
+      if(b) b.addEventListener('click', function(){ setTimeout(refresh, 0); });
+    });
+    refresh();
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', build); else build();
+})();
+</script>
 </body>
 </html>
