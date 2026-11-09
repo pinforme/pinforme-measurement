@@ -4091,7 +4091,7 @@ document.addEventListener('DOMContentLoaded', initNaviV4);
 </script>
 <script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw-test.js').catch(function(){});});}</script>
 <script>
-/* PWA-TEST: saved-key support (prefill + clear) */
+/* PWA-TEST: saved-key support v2 (prefill + persist on successful unlock + clear) */
 (function(){
   var KEY='PINFORME_REMEASURE_ACCESS_KEY_V1';
   function savedKey(){ try{ return (localStorage.getItem(KEY)||'').trim(); }catch(e){ return ''; } }
@@ -4107,6 +4107,22 @@ document.addEventListener('DOMContentLoaded', initNaviV4);
     try{ localStorage.removeItem(KEY); localStorage.removeItem('PINFORME_LAST_KARTE'); }catch(e){}
     var inp=document.getElementById('v2CustomerKey'); if(inp) inp.value='';
     refresh(); alert('この端末のお客様キーを消しました。');
+  }
+  function watchUnlock(key){
+    var tries=0;
+    var timer=setInterval(function(){
+      tries++;
+      if(document.getElementById('v2OwnerChoices')){
+        clearInterval(timer);
+        try{ localStorage.setItem(KEY, key); }catch(e){}
+        refresh();
+        return;
+      }
+      var st=document.getElementById('v2KeyStatus');
+      var t=st?st.textContent:'';
+      if(t && t.indexOf('確認しています')===-1 && (t.indexOf('確認してください')>=0 || t.indexOf('確認できません')>=0 || t.indexOf('16文字')>=0)){ clearInterval(timer); return; }
+      if(tries>40) clearInterval(timer);
+    }, 400);
   }
   function build(){
     var grid=document.querySelector('.home-grid');
@@ -4128,6 +4144,14 @@ document.addEventListener('DOMContentLoaded', initNaviV4);
     ['homeKeyOpenBtn','homeKarteBtn'].forEach(function(id){
       var b=document.getElementById(id);
       if(b) b.addEventListener('click', function(){ setTimeout(refresh, 0); });
+    });
+    var next=document.getElementById('v2KeyNext');
+    if(next) next.addEventListener('click', function(){
+      var el=document.getElementById('v2CustomerKey');
+      var v=el?el.value.trim():'';
+      if(!v) return;
+      try{ if(window.pinformeNormalizeRemeasureKey) v=pinformeNormalizeRemeasureKey(v); }catch(e){}
+      if(v) watchUnlock(v);
     });
     refresh();
   }
