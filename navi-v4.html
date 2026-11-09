@@ -4091,13 +4091,55 @@ document.addEventListener('DOMContentLoaded', initNaviV4);
 </script>
 <script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw-test.js').catch(function(){});});}</script>
 <script>
-/* PWA-TEST: saved-key support v6 (direct unlock, clear with stated reason, standalone save reroute) */
+/* PWA-TEST: saved-key support v7 (direct unlock, clear with stated reason, standalone save reroute, push test) */
 (function(){
   var KEY='PINFORME_REMEASURE_ACCESS_KEY_V1';
   var autoInFlight=false;
   function savedKey(){ try{ return (localStorage.getItem(KEY)||'').trim(); }catch(e){ return ''; } }
+
+  var VAPID_PUB='BApCUJ5r4Kgbbh8Vpc871wAYxoxipnWIx5y9_OUIz0TYBWAawyjU4pxuIZkw8Zqpm-N2t4mvK5jXMhFAPuUuSe0';
+  var SB_URL='https://dsbvaoqgvtoeukigdjdj.supabase.co';
+  var SB_KEY='sb_publishable_403lLhKUQ9X9N1RaxaDduA_9ZQEZ6na';
+  function sbHeaders(){ return {'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'}; }
+  function b64ToUint8(s){ var pad='='.repeat((4-s.length%4)%4); var b=atob((s+pad).replace(/-/g,'+').replace(/_/g,'/')); var a=new Uint8Array(b.length); for(var i=0;i<b.length;i++) a[i]=b.charCodeAt(i); return a; }
+  function pushStatus(t){ var el=document.getElementById('pinPushStatus'); if(el) el.textContent=t; }
+  async function enablePush(){
+    var key=savedKey(); if(!key){ pushStatus('先に「カルテを見る」から、お客様キーを保存してください。'); return; }
+    if(!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)){ pushStatus('この開き方では通知が使えません。ホーム画面のアプリから開いてください。'); return; }
+    try{
+      pushStatus('許可を確認しています…');
+      var perm=await Notification.requestPermission();
+      if(perm!=='granted'){ pushStatus('通知が許可されませんでした。'); return; }
+      var reg=await navigator.serviceWorker.ready;
+      var sub=await reg.pushManager.getSubscription();
+      if(!sub){ sub=await reg.pushManager.subscribe({userVisibleOnly:true, applicationServerKey:b64ToUint8(VAPID_PUB)}); }
+      var j=sub.toJSON();
+      var res=await fetch(SB_URL+'/rest/v1/rpc/register_push_subscription',{method:'POST',headers:sbHeaders(),body:JSON.stringify({p_key:key,p_endpoint:j.endpoint,p_p256dh:j.keys.p256dh,p_auth:j.keys.auth,p_user_agent:navigator.userAgent})});
+      if(!res.ok){ pushStatus('登録に失敗しました（'+res.status+'）'); return; }
+      pushStatus('登録できました。「自分にテスト通知を送る」で届くか試せます。');
+    }catch(e){ pushStatus('登録できませんでした: '+((e && e.message) || e)); }
+  }
+  async function sendTestPush(){
+    var key=savedKey(); if(!key){ pushStatus('先にキーを保存してください。'); return; }
+    try{
+      pushStatus('送信しています…');
+      var res=await fetch(SB_URL+'/functions/v1/push-test',{method:'POST',headers:sbHeaders(),body:JSON.stringify({p_key:key,title:'PINFORME テスト通知',body:'届きました。プッシュ通知のテストです。'})});
+      var data={}; try{ data=await res.json(); }catch(e){}
+      if(res.ok && data.ok){ pushStatus('送信しました（'+data.sent+'件）。通知が届くか確認してください。'); }
+      else{ pushStatus('送信できませんでした: '+((data && data.error) || res.status)); }
+    }catch(e){ pushStatus('送信エラー: '+((e && e.message) || e)); }
+  }
   function refresh(){
     var k=savedKey();
+
+    if(grid && !document.getElementById('pinPushCard')){
+      var card=document.createElement('div');
+      card.id='pinPushCard'; card.className='entry-card';
+      card.innerHTML='<h2>お知らせ通知（テスト）</h2><p class="note">ホーム画面のアプリから「通知を受け取る」を押すと、この端末でお知らせを受け取れます。</p><button type="button" class="v2-primary" id="pinPushEnableBtn">通知を受け取る</button><button type="button" class="v2-primary" id="pinPushSendBtn" style="margin-top:8px">自分にテスト通知を送る</button><p class="note" id="pinPushStatus"></p>';
+      grid.after(card);
+      document.getElementById('pinPushEnableBtn').addEventListener('click', enablePush);
+      document.getElementById('pinPushSendBtn').addEventListener('click', sendTestPush);
+    }
     var inp=document.getElementById('v2CustomerKey');
     if(k && inp && !inp.value){ inp.value=k; }
   }

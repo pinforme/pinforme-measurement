@@ -1,4 +1,4 @@
-const CACHE = 'pinforme-navi-test-pwa-v2';
+const CACHE = 'pinforme-navi-test-pwa-v3';
 const ASSETS = ['icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'apple-touch-icon.png', 'manifest-test.webmanifest'];
 self.addEventListener('install', function(e){
   e.waitUntil(caches.open(CACHE).then(function(c){ return c.addAll(ASSETS); }).then(function(){ return self.skipWaiting(); }));
@@ -33,4 +33,26 @@ self.addEventListener('fetch', function(e){
     });
   }));
 });
-// redeploy trigger 2
+self.addEventListener('push', function(e){
+  var data = {};
+  try { data = e.data ? e.data.json() : {}; } catch (err) {}
+  var title = data.title || 'PINFORME';
+  var options = {
+    body: data.body || '',
+    icon: 'icon-192.png',
+    badge: 'icon-192.png',
+    data: { url: data.url || 'navi-v4.html' }
+  };
+  e.waitUntil(self.registration.showNotification(title, options));
+});
+self.addEventListener('notificationclick', function(e){
+  e.notification.close();
+  var target = (e.notification.data && e.notification.data.url) || 'navi-v4.html';
+  e.waitUntil(clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(list){
+    for (var i = 0; i < list.length; i++) {
+      var c = list[i];
+      if (c.url.indexOf('pinforme-measurement') !== -1 && 'focus' in c) return c.focus();
+    }
+    if (clients.openWindow) return clients.openWindow(target);
+  }));
+});
