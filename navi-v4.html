@@ -4091,7 +4091,7 @@ document.addEventListener('DOMContentLoaded', initNaviV4);
 </script>
 <script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw-test.js').catch(function(){});});}</script>
 <script>
-/* PWA-TEST: saved-key support v5 (direct unlock without key screen, clear with stated reason) */
+/* PWA-TEST: saved-key support v6 (direct unlock, clear with stated reason, standalone save reroute) */
 (function(){
   var KEY='PINFORME_REMEASURE_ACCESS_KEY_V1';
   var autoInFlight=false;
@@ -4111,6 +4111,19 @@ document.addEventListener('DOMContentLoaded', initNaviV4);
     var st=document.getElementById('v2KeyStatus');
     var t=st?st.textContent:'';
     return t && t.indexOf('確認しています')===-1 && (t.indexOf('確認してください')>=0 || t.indexOf('確認できません')>=0 || t.indexOf('16文字')>=0);
+  }
+
+  function isStandalone(){ try{ return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true; }catch(e){ return false; } }
+  function reroutePdf(){
+    if(!isStandalone()) return;
+    [['kartePrintBtn','karteImageBtn'],['pinKarteSavePdfBtn','pinKarteSaveImageBtn']].forEach(function(pr){
+      var pdf=document.getElementById(pr[0]), img=document.getElementById(pr[1]);
+      if(pdf && img && !pdf.dataset.pinRerouted){
+        pdf.dataset.pinRerouted='1';
+        pdf.textContent='カルテを保存する（写真・共有）';
+        pdf.addEventListener('click', function(ev){ ev.stopPropagation(); ev.preventDefault(); img.click(); }, true);
+      }
+    });
   }
   function watchUnlock(key){
     var tries=0;
@@ -4193,6 +4206,7 @@ document.addEventListener('DOMContentLoaded', initNaviV4);
       try{ if(window.pinformeNormalizeRemeasureKey) v=pinformeNormalizeRemeasureKey(v); }catch(e){}
       if(v) watchUnlock(v);
     });
+    reroutePdf();
     refresh();
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', build); else build();
