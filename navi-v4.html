@@ -4091,7 +4091,7 @@ document.addEventListener('DOMContentLoaded', initNaviV4);
 </script>
 <script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw-test.js').catch(function(){});});}</script>
 <script>
-/* PWA-TEST: saved-key support v2 (prefill + persist on successful unlock + clear) */
+/* PWA-TEST: saved-key support v3 (prefill + persist on successful unlock + clear) */
 (function(){
   var KEY='PINFORME_REMEASURE_ACCESS_KEY_V1';
   function savedKey(){ try{ return (localStorage.getItem(KEY)||'').trim(); }catch(e){ return ''; } }
@@ -4143,7 +4143,16 @@ document.addEventListener('DOMContentLoaded', initNaviV4);
     }
     ['homeKeyOpenBtn','homeKarteBtn'].forEach(function(id){
       var b=document.getElementById(id);
-      if(b) b.addEventListener('click', function(){ setTimeout(refresh, 0); });
+      if(b) b.addEventListener('click', function(){
+        setTimeout(function(){
+          refresh();
+          if(savedKey()){
+            var inp=document.getElementById('v2CustomerKey');
+            var next=document.getElementById('v2KeyNext');
+            if(inp && next && inp.value){ next.click(); }
+          }
+        }, 50);
+      });
     });
     var next=document.getElementById('v2KeyNext');
     if(next) next.addEventListener('click', function(){
