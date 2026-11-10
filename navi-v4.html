@@ -504,17 +504,17 @@ label.confirm input{margin-top:4px;width:20px;height:20px;flex:none}
   <div class="wrap">
     <div class="brand"><div class="paw">🐾</div><div class="word">PINFORME</div><div class="sub">採寸ナビ</div></div>
     <h1>お客様キーを発行しました</h1>
-    <p>ご登録ありがとうございます。採寸の前に、あなたの「お客様キー」をお渡しします。このキーで採寸カルテを見たり、次回の再採寸ができます。</p>
+    <p>採寸の前に、あなたのお客様キーをお渡しします。カルテの表示や再採寸に使います。</p>
     <div class="key-box show">
       <div style="font-weight:800">お客様キー</div>
-      <div class="note">この端末には自動で保存しました。念のため、コピーまたはスクリーンショットでも保管してください。キーを知っている方は登録情報を開けますので、公開投稿には載せないでください。</div>
+      <div class="note">この端末に保存しました。念のため、コピーかスクリーンショットでも保管を。キーは他の人に見せないでください。</div>
       <div id="pinEarlyKeyValue" class="key-value"></div>
       <button type="button" id="pinEarlyKeyCopyBtn" style="width:100%">お客様キーをコピー</button>
     </div>
     <div id="pinEarlyMailStatus" class="status" role="status" aria-live="polite"></div>
     <div id="pinEarlyPushArea" style="margin-top:16px"></div>
     <button type="button" class="primary" id="pinEarlyProceedBtn" style="width:100%;margin-top:16px">採寸に進む</button>
-    <p class="note" style="margin-top:10px">通知の設定は、後からでも最初の画面の「お知らせ通知」からできます。</p>
+    <p class="note" style="margin-top:10px">通知は後からでも設定できます。</p>
   </div>
 </section>
 
@@ -3809,17 +3809,17 @@ function pinEarlyRenderPushArea(){
     if(b) b.addEventListener('click', ()=>{ if(window.pinformePushEnable) window.pinformePushEnable(); else { const s = document.getElementById('pinEarlyPushStatus'); if(s) s.textContent = '最初の画面の「お知らせ通知」から設定できます。'; } });
     if(window.pinformePushState) window.pinformePushState().then(st=>{ const s = document.getElementById('pinEarlyPushStatus'); if(!s) return; if(st === 'subscribed') s.textContent = 'この端末では、すでに通知を受け取る設定ができています。'; else if(st === 'denied') s.textContent = '端末の設定で通知がオフになっています。設定アプリから許可すると受け取れます。'; });
   }else{
-    area.innerHTML = '<div class="entry-card"><h2>お知らせ通知を受け取るには（iPhone・約1分）</h2>'
-      + '<p class="note">カルテの更新などのお知らせは、ホーム画面のアプリから受け取れます。設定は今でなくても大丈夫です。</p>'
-      + '<ol style="font-size:13px;line-height:1.9;padding-left:20px;margin:8px 0">'
-      + '<li>画面の下の共有ボタン（四角に上向き矢印）を押す</li>'
+    area.innerHTML = '<div class="entry-card"><h2>通知を受け取るには（iPhone）</h2>'
+      + '<p class="note">お知らせは、ホーム画面のアプリから受け取れます。</p>'
+      + '<ol style="font-size:13px;line-height:1.7;padding-left:20px;margin:6px 0">'
+      + '<li>下の共有ボタンを押す</li>'
       + '<li>「ホーム画面に追加」を押す</li>'
       + '<li>右上の「追加」を押す</li>'
-      + '<li>この画面を閉じて、ホーム画面のPINFORMEアイコンから開く</li>'
-      + '<li>アプリで1回だけ上のキーを入れると、「通知を受け取る」を押せるようになります</li>'
+      + '<li>ホーム画面のアイコンから開く</li>'
+      + '<li>アプリで上のキーを入れ、「通知を受け取る」を押す</li>'
       + '</ol>'
-      + '<details style="margin-top:10px"><summary style="font-size:13.5px;font-weight:700;color:#2b2b2e;cursor:pointer;padding:6px 0">動画で見る（約8秒）</summary><video src="wizard-ios-v2.mp4" controls playsinline preload="none" style="width:100%;height:auto;display:block;border-radius:10px;margin-top:6px"></video></details>'
-      + '<p class="note">キーは上の欄に表示したままにしています。アプリを開いたら、コピーして貼り付けると簡単です。</p></div>';
+      + '<details style="margin-top:10px"><summary style="font-size:13.5px;font-weight:700;color:#2b2b2e;cursor:pointer;padding:6px 0">動画で見る（約7秒）</summary><video src="wizard-ios-v3.mp4" controls playsinline preload="none" style="width:100%;height:auto;display:block;border-radius:10px;margin-top:6px"></video></details>'
+      + '<p class="note">キーは上の欄に表示したままです。コピーして貼ると簡単です。</p></div>';
   }
 }
 function pinEarlyMailCompose(blocked){
