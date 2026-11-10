@@ -56,3 +56,5 @@ self.addEventListener('notificationclick', function(e){
     if (clients.openWindow) return clients.openWindow(target);
   }));
 });
+
+// redeploy trigger b34
