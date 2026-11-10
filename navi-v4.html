@@ -3827,6 +3827,13 @@ function pinEarlyRenderPushArea(){
   area.innerHTML='<button type="button" onclick="window.pinformePushEnable&&window.pinformePushEnable()" style="width:100%;padding:13px;border:0;border-radius:12px;background:#2b2b2e;color:#fff;font-size:15px;font-weight:700">\u901a\u77e5\u3092\u53d7\u3051\u53d6\u308b</button><div id="pinEarlyPushStatus" style="font-size:12.5px;color:#666;margin-top:8px"></div>';
  }
 }
+function pinEarlyMailCompose(blocked){
+  const el = document.getElementById('pinEarlyMailStatus'); if(!el) return;
+  if(PIN_TEST_MODE){ el.textContent = '確認用テストモードのため、登録とメール送信は行っていません（本来はここで登録し、お客様キーをお渡しします）。'; return; }
+  if(blocked){ el.textContent = '登録を完了できませんでした。採寸はこのまま進められます（送信時にあらためて登録します）。'; return; }
+  if(pinAnonymousActive()){ el.textContent = 'メールは送信しません。この画面のお客様キーを必ず保管してください。'; return; }
+  el.textContent = 'ご登録できました。お客様キーは、採寸データの保存完了時にもメールでお送りします。';
+}
 async function pinEarlyKeyIssue(first){
   if(!PIN_V2 || PIN_V2.baseline || PIN_V2.serverDogId || PIN_V2.earlyKeyShown) return false;
   PIN_V2.earlyKeyShown = true; pinV2Persist();
