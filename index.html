@@ -8,7 +8,7 @@
 
 <script id="pinforme-latest-version-guard">
 (function(){
-  const PINFORME_BUILD_ID="20261110-navi-v4-b37";
+  const PINFORME_BUILD_ID="20261110-navi-v4-b38";
 
   function forceFresh(reason){
     try{
@@ -4322,12 +4322,28 @@ document.addEventListener('DOMContentLoaded', initNaviV4);
     var visible=home.offsetParent!==null || getComputedStyle(home).display!=='none';
     btn.style.display=visible?'flex':'none';
   }
+  function syncAppBadge(c){
+    try{
+      if('setAppBadge' in navigator){
+        if(c>0) navigator.setAppBadge(c).catch(function(){});
+        else if('clearAppBadge' in navigator) navigator.clearAppBadge().catch(function(){});
+      }
+    }catch(e){}
+    try{
+      var req=indexedDB.open('pinforme-badge',1);
+      req.onupgradeneeded=function(){ req.result.createObjectStore('kv'); };
+      req.onsuccess=function(){
+        try{ req.result.transaction('kv','readwrite').objectStore('kv').put(c,'count'); }catch(e){}
+      };
+    }catch(e){}
+  }
   function updateBadge(){
     var b=document.getElementById('pinNoticeBadge');
     if(!b) return;
     var c=unreadCount();
     if(c>0){ b.textContent=String(c); b.style.display='block'; }
     else{ b.style.display='none'; }
+    syncAppBadge(c);
   }
 
   function buildPanel(){

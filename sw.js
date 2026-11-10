@@ -33,17 +33,56 @@ self.addEventListener('fetch', function(e){
     });
   }));
 });
+// App-icon badge counter, shared with the page (the page writes the true
+// unread count here whenever it reconciles; the worker increments on push).
+function badgeDb(){
+  return new Promise(function(resolve, reject){
+    var req = indexedDB.open('pinforme-badge', 1);
+    req.onupgradeneeded = function(){ req.result.createObjectStore('kv'); };
+    req.onsuccess = function(){ resolve(req.result); };
+    req.onerror = function(){ reject(req.error); };
+  });
+}
+function badgeGet(){
+  return badgeDb().then(function(db){
+    return new Promise(function(resolve){
+      var tx = db.transaction('kv', 'readonly').objectStore('kv').get('count');
+      tx.onsuccess = function(){ resolve(tx.result || 0); };
+      tx.onerror = function(){ resolve(0); };
+    });
+  }).catch(function(){ return 0; });
+}
+function badgeSet(n){
+  return badgeDb().then(function(db){
+    return new Promise(function(resolve){
+      var tx = db.transaction('kv', 'readwrite').objectStore('kv').put(n, 'count');
+      tx.onsuccess = function(){ resolve(); };
+      tx.onerror = function(){ resolve(); };
+    });
+  }).catch(function(){});
+}
+function applyBadge(n){
+  if (!('setAppBadge' in self.navigator)) return Promise.resolve();
+  var p = n > 0 ? self.navigator.setAppBadge(n) : self.navigator.clearAppBadge();
+  return Promise.resolve(p).catch(function(){});
+}
 self.addEventListener('push', function(e){
   var data = {};
   try { data = e.data ? e.data.json() : {}; } catch (err) {}
   var title = data.title || 'PINFORME';
+  // The notification shows the title only; the body is read inside the app.
   var options = {
-    body: data.body || '',
+    body: 'タップして内容を確認できます',
     icon: 'icon-192.png',
     badge: 'icon-192.png',
     data: { url: data.url || 'index.html' }
   };
-  e.waitUntil(self.registration.showNotification(title, options));
+  var shown = self.registration.showNotification(title, options);
+  var badged = badgeGet().then(function(n){
+    var next = n + 1;
+    return badgeSet(next).then(function(){ return applyBadge(next); });
+  });
+  e.waitUntil(Promise.all([shown, badged]));
 });
 self.addEventListener('notificationclick', function(e){
   e.notification.close();
@@ -56,11 +95,3 @@ self.addEventListener('notificationclick', function(e){
     if (clients.openWindow) return clients.openWindow(target);
   }));
 });
-
-// redeploy trigger b34
-
-// redeploy trigger b35
-
-// redeploy trigger b36
-
-// redeploy trigger b37
