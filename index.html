@@ -8,7 +8,7 @@
 
 <script id="pinforme-latest-version-guard">
 (function(){
-  const PINFORME_BUILD_ID="20261110-navi-v4-b38";
+  const PINFORME_BUILD_ID="20261110-navi-v4-b39";
 
   function forceFresh(reason){
     try{
@@ -4058,7 +4058,7 @@ function initNaviV4(){
 document.addEventListener('DOMContentLoaded', initNaviV4);
 
 </script>
-<script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>
+<script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(function(reg){try{reg.update();}catch(e){}}).catch(function(){});});}</script>
 <script>
 /* PWA: saved-key support + push (production) */
 (function(){
