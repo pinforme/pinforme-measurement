@@ -8,7 +8,7 @@
 
 <script id="pinforme-latest-version-guard">
 (function(){
-  const PINFORME_BUILD_ID="20261110-navi-v4-b39";
+  const PINFORME_BUILD_ID="20261111-navi-v4-b40";
 
   function forceFresh(reason){
     try{
@@ -385,9 +385,9 @@ label.confirm input{margin-top:4px;width:20px;height:20px;flex:none}
       <p class="note">Instagramの中で開いたままだと、写真の送信などでエラーになることがあります。右上の「…」を押して「ブラウザで開く」を選び、いつものブラウザ（Safari・Chrome）で開き直すのがおすすめです。このまま続けることもできます。</p>
     </div>
     <div class="home-grid">
-      <div class="entry-card home-tile">
+      <div class="entry-card home-tile" id="pinNewTile">
         <h2>初めての採寸</h2>
-        <p class="note">採寸データを登録し、カルテを作成します。</p>
+        <p class="note" id="homeNewDesc">採寸データを登録し、カルテを作成します。</p>
         <button type="button" class="v2-primary" id="homeNewBtn">採寸を始める</button>
       </div>
       <div id="pinResumeDraftBox" class="entry-card home-tile tile-off">
@@ -453,8 +453,8 @@ label.confirm input{margin-top:4px;width:20px;height:20px;flex:none}
     <p>愛犬の情報を入力して、PINFORMEの採寸を始めましょう。<br>採寸は愛犬がリラックスした状態で行ってください。</p>
     <div class="privacy-box">
       <label class="confirm" style="margin:0;border:0;background:transparent;padding:0"><input type="checkbox" id="pinAnonymousMode"><span><strong>個人情報を入力せずに採寸へ協力する</strong></span></label>
-      <p style="font-size:13px;line-height:1.7">飼い主様の名前・メールアドレス・電話番号は不要です。わんちゃんの名前と写真も省略できます。お客様キーで次回の再採寸や別のわんちゃんの追加につなげられます。</p>
-      <p id="pinAnonymousNote" hidden style="font-size:13px;line-height:1.7">メールは送信しません。保存完了画面のお客様キーを必ず保管してください。カルテはその場でPDF保存できます。DMでのお届けも希望できます（DMではInstagramアカウントが分かります）。</p>
+      <p style="font-size:13px;line-height:1.7">飼い主様の名前・メールアドレス・電話番号は不要です。わんちゃんの名前と写真も省略できます。お客様キーで次回の再採寸や別のわんちゃんの追加につなげられます。メールアドレスを登録すると、お客様キーをメールでもお送りします。登録しない場合、キーは保存完了画面だけのお渡しになり、なくした時の再発行はInstagramのDMでの本人確認が必要です。</p>
+      <p id="pinAnonymousNote" hidden style="font-size:13px;line-height:1.7">メールは送信しません。保存完了画面のお客様キーを必ず保管してください（スクリーンショットでの保存がおすすめです）。キーをなくした場合、再発行はInstagramのDMで本人確認をして行います。また、こちらからご連絡する手段もなくなります。カルテはその場でPDF保存できます。DMでのお届けも希望できます（DMではInstagramアカウントが分かります）。</p>
     </div>
     <div class="field"><label for="ownerName">ご主人様の名前 <span class="req">必須</span></label><input id="ownerName" type="text" autocomplete="name"></div>
     <div class="field"><label for="recoveryEmail">メールアドレス <span class="req">必須</span></label><input id="recoveryEmail" type="email" required autocomplete="email" placeholder="例）name@example.com">
@@ -525,6 +525,25 @@ label.confirm input{margin-top:4px;width:20px;height:20px;flex:none}
       <div class="note">※ 写真の登録と販促利用への同意は別です。同意いただかなくても採寸・カルテ保存には影響ありません。</div>
     </div>
     <div class="nav-row"><button type="button" class="secondary" id="backStartBtn">← 戻る</button><button type="button" class="primary grow" id="startMeasureBtn">次へ ›</button></div>
+  </div>
+</section>
+
+<!-- お客様キー先行発行（登録直後） -->
+<section class="page" id="pinKeyIssuePage">
+  <div class="wrap">
+    <div class="brand"><div class="paw">🐾</div><div class="word">PINFORME</div><div class="sub">採寸ナビ</div></div>
+    <h1>お客様キーを発行しました</h1>
+    <p>カルテの表示や再採寸、<br>2匹目以降の登録に使います。</p>
+    <div class="key-box show">
+      <div style="font-weight:800">お客様キー</div>
+      <div class="note">この端末に保存しました。念のため、<br>コピーかスクリーンショットでも保管を。<br>キーは他の人に見せないでください。</div>
+      <div id="pinEarlyKeyValue" class="key-value"></div>
+      <button type="button" id="pinEarlyKeyCopyBtn" style="width:100%">お客様キーをコピー</button>
+    </div>
+    <div id="pinEarlyMailStatus" class="status" role="status" aria-live="polite"></div>
+    <div id="pinEarlyPushArea" style="margin-top:16px"></div>
+    <button type="button" class="primary" id="pinEarlyProceedBtn" style="width:100%;margin-top:16px">採寸に進む</button>
+    <p class="note" style="margin-top:10px">通知は後からでも設定できます。</p>
   </div>
 </section>
 
@@ -1811,6 +1830,14 @@ function pinRefreshDraftButton(){
   box.classList.toggle('tile-off', !has);
   const btn = document.getElementById('resumeDraftBtn'); if(btn) btn.disabled = !has;
 }
+function pinRefreshNewButton(){
+  const box = document.getElementById('pinNewTile'); if(!box) return;
+  let key = ''; try{ key = pinformeNormalizeRemeasureKey(localStorage.getItem(PINFORME_OWNER_REMEASURE_KEY)||''); }catch(e){}
+  const linked = !!key;
+  box.classList.toggle('tile-off', linked);
+  const btn = document.getElementById('homeNewBtn'); if(btn) btn.disabled = linked;
+  const desc = document.getElementById('homeNewDesc'); if(desc) desc.textContent = linked ? 'この端末ではキーで登録済みです。' : '採寸データを登録し、カルテを作成します。';
+}
 const PIN_RESUME_VIEWS = ['startPage','dogInfoPage','finishPage','kartePage','pinV2Purpose','pinV2OwnerMenu','pinV2Change','pinV2OptionalChoice'];
 function pinDraftResumeView(state){
   for(const view of [state?.resumeView, state?.view]){
@@ -1860,7 +1887,7 @@ function savePINFORMEState(){
       pinDraftNotice("採寸値は一時保存しました。写真は保存できないため、再開時は写真を選び直してください。");
     }
   }
-  pinRefreshDraftButton();
+  pinRefreshDraftButton(); pinRefreshNewButton();
 }
 function restorePINFORMEState(continueDraft=false){
   try{ PINFORME_PHOTO_PROMO_CONSENT = localStorage.getItem("PINFORME_PHOTO_PROMO_CONSENT_V1")==="1"; }catch(e){}
@@ -2020,7 +2047,7 @@ function showPage(id){
 }
 function pinV2Page(id){ showPage(id); }
 function pinV2Home(){ renderHome(); showPage('homePage'); }
-function renderHome(){ pinRefreshDraftButton(); pinRefreshPendingGuard(); }
+function renderHome(){ pinRefreshDraftButton(); pinRefreshNewButton(); pinRefreshPendingGuard(); }
 
 /* ================= 進捗メーター（設計メモ §6.1） ================= */
 /* B12：服別セット（single:true）は「その服の必須」だけの単一グループで、全項目が必須になる。
@@ -2790,6 +2817,7 @@ async function startMeasurements(){
   pinV2Persist();
   const first = PIN_V2.selected[0];
   if(first === undefined){ showFinish(); return; }
+  if(await pinEarlyKeyIssue(first)) return;
   showStep(first);
 }
 
@@ -3741,6 +3769,74 @@ async function pinV2FinishSaved(pending, receipt){
   pinShowKarteSaveModal();
   savePINFORMEState();
 }
+/* ================= お客様キー先行発行（登録を採寸の前へ） =================
+   新規フローでは、採寸を始める時点で飼い主・犬を登録し、キーを先に渡す。
+   送信シーケンス側は ownerId / serverDogId があれば作成を飛ばす作りのため、
+   ここで作っておけば二重作成にはならない。失敗時は従来どおり送信時に作る。 */
+let pinEarlyFirstStep = null;
+let pinEarlyWired = false;
+async function pinEarlyRegister(){
+  const record = pinV2Snapshot();
+  const base = {owner_name:record.anonymous ? '匿名希望' : record.owner || null, dog_name:record.dogName || null,
+    breed:record.breed || null, sex:record.sex || null, birth_date:record.birthday || null, weight:record.weight};
+  if(!PIN_V2.ownerId){
+    PIN_V2.ownerId = await pinRpc('get_or_create_owner_id_with_key', {p_owner_code:PIN_V2.ownerCode, p_owner_name:base.owner_name, p_remeasure_key:PIN_V2.customerKey}); pinV2Persist();
+  }
+  if(!PIN_V2.serverDogId){
+    PIN_V2.serverDogId = await pinRpc('create_dog_and_link_owner_secure', {p_owner_id:PIN_V2.ownerId, p_remeasure_key:PIN_V2.customerKey, p_owner_name:base.owner_name, p_dog_name:base.dog_name, p_breed:base.breed, p_sex:base.sex, p_birth_date:base.birth_date, p_weight:base.weight, p_photo_path:null, p_dog_code:PIN_V2.dogCode}); pinV2Persist();
+  }
+  if(!record.anonymous && (record.recoveryEmail || record.recoveryPhone)){
+    await pinRpc('save_owner_recovery_contact', {p_owner_id:PIN_V2.ownerId, p_email:record.recoveryEmail || null, p_phone:record.recoveryPhone || null, p_remeasure_key:PIN_V2.customerKey});
+  }
+}
+function pinEarlyRenderPushArea(){
+  const area = document.getElementById('pinEarlyPushArea'); if(!area) return;
+  const standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent || '');
+  if(standalone || !isIOS){
+    area.innerHTML = '<div class="entry-card"><h2>お知らせ通知</h2><p class="note">カルテの更新や、採寸の送信が途中のときのお知らせを、この端末に届けられます。</p><button type="button" class="primary" id="pinEarlyPushBtn" style="width:100%">通知を受け取る</button><p class="note" id="pinEarlyPushStatus"></p></div>';
+    const b = document.getElementById('pinEarlyPushBtn');
+    if(b) b.addEventListener('click', ()=>{ if(window.pinformePushEnable) window.pinformePushEnable(); else { const s = document.getElementById('pinEarlyPushStatus'); if(s) s.textContent = '最初の画面の「お知らせ通知」から設定できます。'; } });
+    if(window.pinformePushState) window.pinformePushState().then(st=>{ const s = document.getElementById('pinEarlyPushStatus'); if(!s) return; if(st === 'subscribed') s.textContent = 'この端末では、すでに通知を受け取る設定ができています。'; else if(st === 'denied') s.textContent = '端末の設定で通知がオフになっています。設定アプリから許可すると受け取れます。'; });
+  }else{
+    area.innerHTML = '<div class="entry-card"><h2>通知を受け取るには（iPhone）</h2>'
+      + '<p class="note">お知らせは、ホーム画面のアプリから受け取れます。</p>'
+      + '<ol style="font-size:13px;line-height:1.7;padding-left:20px;margin:6px 0">'
+      + '<li>下の共有ボタンを押す</li>'
+      + '<li>「ホーム画面に追加」を押す</li>'
+      + '<li>右上の「追加」を押す</li>'
+      + '<li>ホーム画面のアイコンから開く</li>'
+      + '<li>アプリで上のキーを入れ、「通知を受け取る」を押す</li>'
+      + '</ol>'
+      + '<details style="margin-top:10px"><summary style="font-size:13.5px;font-weight:700;color:#2b2b2e;cursor:pointer;padding:6px 0">動画で見る（約7秒）</summary><video src="wizard-ios-v3.mp4" controls playsinline preload="none" style="width:100%;height:auto;display:block;border-radius:10px;margin-top:6px"></video></details>'
+      + '<p class="note">キーは上の欄に表示したままです。コピーして貼ると簡単です。</p></div>';
+  }
+}
+function pinEarlyMailCompose(){
+  const el = document.getElementById('pinEarlyMailStatus'); if(!el) return;
+  if(pinAnonymousActive()){ el.textContent = 'メールは送信しません。この画面のお客様キーを必ず保管してください。'; return; }
+  el.textContent = 'ご登録できました。お客様キーは、採寸データの保存完了時にもメールでお送りします。';
+}
+async function pinEarlyKeyIssue(first){
+  if(!PIN_V2 || PIN_V2.baseline || PIN_V2.serverDogId || PIN_V2.earlyKeyShown) return false;
+  PIN_V2.earlyKeyShown = true; pinV2Persist();
+  try{ await pinEarlyRegister(); }
+  catch(e){ PIN_V2.earlyKeyShown = false; pinV2Persist(); return false; }
+  pinEarlyFirstStep = first;
+  const val = document.getElementById('pinEarlyKeyValue');
+  if(val) val.textContent = pinformeNormalizeRemeasureKey(PIN_V2.customerKey);
+  pinEarlyMailCompose();
+  pinEarlyRenderPushArea();
+  if(!pinEarlyWired){
+    pinEarlyWired = true;
+    const copyBtn = document.getElementById('pinEarlyKeyCopyBtn');
+    if(copyBtn) copyBtn.addEventListener('click', async ()=>{ const k = document.getElementById('pinEarlyKeyValue')?.textContent?.trim() || ''; if(!k) return; try{ await navigator.clipboard.writeText(k); alert('お客様キーをコピーしました。'); }catch(e){ prompt('このお客様キーをコピーしてください。', k); } });
+    const goBtn = document.getElementById('pinEarlyProceedBtn');
+    if(goBtn) goBtn.addEventListener('click', ()=>{ if(pinEarlyFirstStep !== null && pinEarlyFirstStep !== undefined) showStep(pinEarlyFirstStep); });
+  }
+  showPage('pinKeyIssuePage');
+  return true;
+}
 async function sendToPinforme(options={}){
   if(!PIN_V2 || PINFORME_SUBMITTING || (PIN_V2.saved && !PIN_V2.pending)) return;
   if(PIN_V2.pending && PIN_V2.pending.failed && !PIN_V2.receipt){ delete PIN_V2.pending; }
@@ -4072,7 +4168,7 @@ document.addEventListener('DOMContentLoaded', initNaviV4);
   function sbHeaders(){ return {'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'}; }
   function normKey(k){ var raw=String(k||'').toUpperCase().replace(/[^A-Z0-9]/g,''); var m=raw.match(/.{1,4}/g); return m ? m.join('-') : ''; }
   function b64ToUint8(s){ var pad='='.repeat((4-s.length%4)%4); var b=atob((s+pad).replace(/-/g,'+').replace(/_/g,'/')); var a=new Uint8Array(b.length); for(var i=0;i<b.length;i++) a[i]=b.charCodeAt(i); return a; }
-  function pushStatus(t){ var el=document.getElementById('pinPushStatus'); if(el) el.textContent=t; }
+  function pushStatus(t){ ['pinPushStatus','pinEarlyPushStatus','pinPushResumeStatus'].forEach(function(id){ var el=document.getElementById(id); if(el) el.textContent=t; }); }
   async function enablePush(){
     var key=savedKey(); if(!key){ pushStatus('先に「カルテを見る」から、お客様キーを保存してください。'); return; }
     if(!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)){ pushStatus('この開き方では通知が使えません。ホーム画面のアプリから開いてください。'); return; }
@@ -4089,6 +4185,16 @@ document.addEventListener('DOMContentLoaded', initNaviV4);
       pushStatus('登録できました。お知らせがある時に、この端末へ通知します。'); setPushButtons(true);
     }catch(e){ pushStatus('登録できませんでした: '+((e && e.message) || e)); }
   }
+  window.pinformePushEnable = enablePush;
+  window.pinformePushState = async function(){
+    try{
+      if(!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) return 'unsupported';
+      if(Notification.permission === 'denied') return 'denied';
+      var reg = await navigator.serviceWorker.ready;
+      var sub = await reg.pushManager.getSubscription();
+      return sub ? 'subscribed' : 'unsubscribed';
+    }catch(e){ return 'unsupported'; }
+  };
   async function disablePush(){
     var key=savedKey();
     try{
