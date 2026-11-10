@@ -3809,9 +3809,9 @@ function pinEarlyRenderPushArea(){
     if(b) b.addEventListener('click', ()=>{ if(window.pinformePushEnable) window.pinformePushEnable(); else { const s = document.getElementById('pinEarlyPushStatus'); if(s) s.textContent = '最初の画面の「お知らせ通知」から設定できます。'; } });
     if(window.pinformePushState) window.pinformePushState().then(st=>{ const s = document.getElementById('pinEarlyPushStatus'); if(!s) return; if(st === 'subscribed') s.textContent = 'この端末では、すでに通知を受け取る設定ができています。'; else if(st === 'denied') s.textContent = '端末の設定で通知がオフになっています。設定アプリから許可すると受け取れます。'; });
   }else{
-  var IMG1='<img src="wizard-ios-1.jpg" alt="" style="width:100%;height:auto;display:block;border-radius:10px;margin-top:6px">';
-  var IMG2='<img src="wizard-ios-2.jpg" alt="" style="width:100%;height:auto;display:block;border-radius:10px;margin-top:6px">';
-  var IMG3='<img src="wizard-ios-3.jpg" alt="" style="width:100%;height:auto;display:block;border-radius:10px;margin-top:6px">';
+  var IMG1='<img src="wizard-ios-s1.jpg" alt="" style="width:100%;height:auto;display:block;border-radius:10px;margin-top:6px">';
+  var IMG2='<img src="wizard-ios-s2.jpg" alt="" style="width:100%;height:auto;display:block;border-radius:10px;margin-top:6px">';
+  var IMG3='<img src="wizard-ios-s3.jpg" alt="" style="width:100%;height:auto;display:block;border-radius:10px;margin-top:6px">';
     area.innerHTML = '<div class="entry-card"><h2>お知らせ通知を受け取るには（iPhone・約1分）</h2>'
       + '<p class="note">カルテの更新などのお知らせは、ホーム画面のアプリから受け取れます。設定は今でなくても大丈夫です。</p>'
       + '<ol style="font-size:13px;line-height:1.9;padding-left:20px;margin:8px 0">'
