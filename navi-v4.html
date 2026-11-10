@@ -3809,18 +3809,16 @@ function pinEarlyRenderPushArea(){
     if(b) b.addEventListener('click', ()=>{ if(window.pinformePushEnable) window.pinformePushEnable(); else { const s = document.getElementById('pinEarlyPushStatus'); if(s) s.textContent = '最初の画面の「お知らせ通知」から設定できます。'; } });
     if(window.pinformePushState) window.pinformePushState().then(st=>{ const s = document.getElementById('pinEarlyPushStatus'); if(!s) return; if(st === 'subscribed') s.textContent = 'この端末では、すでに通知を受け取る設定ができています。'; else if(st === 'denied') s.textContent = '端末の設定で通知がオフになっています。設定アプリから許可すると受け取れます。'; });
   }else{
-  var IMG1='<img src="wizard-ios-s1.jpg" alt="" style="width:100%;height:auto;display:block;border-radius:10px;margin-top:6px">';
-  var IMG2='<img src="wizard-ios-s2.jpg" alt="" style="width:100%;height:auto;display:block;border-radius:10px;margin-top:6px">';
-  var IMG3='<img src="wizard-ios-s3.jpg" alt="" style="width:100%;height:auto;display:block;border-radius:10px;margin-top:6px">';
     area.innerHTML = '<div class="entry-card"><h2>お知らせ通知を受け取るには（iPhone・約1分）</h2>'
       + '<p class="note">カルテの更新などのお知らせは、ホーム画面のアプリから受け取れます。設定は今でなくても大丈夫です。</p>'
       + '<ol style="font-size:13px;line-height:1.9;padding-left:20px;margin:8px 0">'
-      + '<li>画面の下の共有ボタン（四角に上向き矢印）を押す<br>' + IMG1 + '</li>'
-      + '<li>「ホーム画面に追加」を押す<br>' + IMG2 + '</li>'
-      + '<li>右上の「追加」を押す<br>' + IMG3 + '</li>'
+      + '<li>画面の下の共有ボタン（四角に上向き矢印）を押す</li>'
+      + '<li>「ホーム画面に追加」を押す</li>'
+      + '<li>右上の「追加」を押す</li>'
       + '<li>この画面を閉じて、ホーム画面のPINFORMEアイコンから開く</li>'
       + '<li>アプリで1回だけ上のキーを入れると、「通知を受け取る」を押せるようになります</li>'
       + '</ol>'
+      + '<details style="margin-top:10px"><summary style="font-size:13.5px;font-weight:700;color:#2b2b2e;cursor:pointer;padding:6px 0">動画で見る（約8秒）</summary><video src="wizard-ios.mp4" controls playsinline preload="none" style="width:100%;height:auto;display:block;border-radius:10px;margin-top:6px"></video></details>'
       + '<p class="note">キーは上の欄に表示したままにしています。アプリを開いたら、コピーして貼り付けると簡単です。</p></div>';
   }
 }
