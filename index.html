@@ -8,7 +8,7 @@
 
 <script id="pinforme-latest-version-guard">
 (function(){
-  const PINFORME_BUILD_ID="20261111-navi-v4-b40";
+  const PINFORME_BUILD_ID="20261111-navi-v4-b41";
 
   function forceFresh(reason){
     try{
@@ -1740,6 +1740,13 @@ function pinClearDogPhoto(){
   if(preview){ preview.removeAttribute("src"); preview.style.display = "none"; }
   const status = document.getElementById("pinPhotoStatus"); if(status) status.textContent = "";
 }
+function pinPhotoOwnerKey(){
+  let key = '';
+  try{ key = pinformeNormalizeRemeasureKey(PIN_V2.customerKey || ''); }catch(e){}
+  if(!key){ try{ key = pinformeNormalizeRemeasureKey(localStorage.getItem(PINFORME_OWNER_REMEASURE_KEY) || ''); }catch(e){} }
+  if(!key){ const inp = document.getElementById('v2CustomerKey'); if(inp && inp.value) key = pinformeNormalizeRemeasureKey(inp.value); }
+  return key;
+}
 async function pinLoadRegisteredDogPhoto(photoPath){
   if(!photoPath) return;
   const status = document.getElementById("pinPhotoStatus");
@@ -1747,7 +1754,13 @@ async function pinLoadRegisteredDogPhoto(photoPath){
   if(status) status.textContent = "登録済みの写真を読み込んでいます…";
   const stillCurrent = ()=>generation===PINFORME_PHOTO_GENERATION && context===pinPhotoContext();
   try{
-    const response = await fetch(`${PINFORME_SUPABASE_BASE}/storage/v1/object/authenticated/${PINFORME_PHOTO_BUCKET}/${encodeURI(photoPath)}`, {headers:{apikey:PINFORME_SUPABASE_KEY, Authorization:"Bearer "+PINFORME_SUPABASE_KEY}});
+    const ownerKey = pinPhotoOwnerKey();
+    if(!ownerKey) throw new Error("photo unavailable");
+    const grant = await fetch(`${PINFORME_SUPABASE_BASE}/functions/v1/dog-photo`, {method:'POST', headers:{apikey:PINFORME_SUPABASE_KEY, Authorization:"Bearer "+PINFORME_SUPABASE_KEY, 'Content-Type':'application/json'}, body:JSON.stringify({p_key:ownerKey, p_path:photoPath})});
+    if(!grant.ok) throw new Error("photo unavailable");
+    const grantJson = await grant.json().catch(()=>null);
+    if(!grantJson || !grantJson.url) throw new Error("photo unavailable");
+    const response = await fetch(grantJson.url);
     if(!response.ok) throw new Error("photo unavailable");
     const blob = await response.blob();
     if(!stillCurrent()) return;
