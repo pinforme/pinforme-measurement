@@ -355,10 +355,11 @@ label.confirm input{margin-top:4px;width:20px;height:20px;flex:none}
       <p class="note">Instagramの中で開いたままだと、写真の送信などでエラーになることがあります。右上の「…」を押して「ブラウザで開く」を選び、いつものブラウザ（Safari・Chrome）で開き直すのがおすすめです。このまま続けることもできます。</p>
     </div>
     <div class="home-grid">
-      <div class="entry-card home-tile">
+      <div class="entry-card home-tile" id="pinNewTile">
         <h2>初めての採寸</h2>
         <p class="note">採寸データを登録し、カルテを作成します。</p>
         <button type="button" class="v2-primary" id="homeNewBtn">採寸を始める</button>
+        <p class="note" id="homeNewLinkedNote" hidden style="margin-top:8px">この端末ではキーで登録済みです。「キーで進む」からお進みください。</p>
       </div>
       <div id="pinResumeDraftBox" class="entry-card home-tile tile-off">
         <h2>途中の入力を再開</h2>
@@ -504,10 +505,10 @@ label.confirm input{margin-top:4px;width:20px;height:20px;flex:none}
   <div class="wrap">
     <div class="brand"><div class="paw">🐾</div><div class="word">PINFORME</div><div class="sub">採寸ナビ</div></div>
     <h1>お客様キーを発行しました</h1>
-    <p>カルテの表示や再採寸、2匹目以降の登録に使います。</p>
+    <p>カルテの表示や再採寸、<br>2匹目以降の登録に使います。</p>
     <div class="key-box show">
       <div style="font-weight:800">お客様キー</div>
-      <div class="note">この端末に保存しました。念のため、コピーかスクリーンショットでも保管を。キーは他の人に見せないでください。</div>
+      <div class="note">この端末に保存しました。念のため、<br>コピーかスクリーンショットでも保管を。<br>キーは他の人に見せないでください。</div>
       <div id="pinEarlyKeyValue" class="key-value"></div>
       <button type="button" id="pinEarlyKeyCopyBtn" style="width:100%">お客様キーをコピー</button>
     </div>
@@ -1841,6 +1842,14 @@ function pinRefreshDraftButton(){
   box.classList.toggle('tile-off', !has);
   const btn = document.getElementById('resumeDraftBtn'); if(btn) btn.disabled = !has;
 }
+function pinRefreshNewButton(){
+  const box = document.getElementById('pinNewTile'); if(!box) return;
+  let key = ''; try{ key = pinformeNormalizeRemeasureKey(localStorage.getItem(PINFORME_OWNER_REMEASURE_KEY)||''); }catch(e){}
+  const linked = !!key;
+  box.classList.toggle('tile-off', linked);
+  const btn = document.getElementById('homeNewBtn'); if(btn) btn.disabled = linked;
+  const note = document.getElementById('homeNewLinkedNote'); if(note) note.hidden = !linked;
+}
 const PIN_RESUME_VIEWS = ['startPage','dogInfoPage','finishPage','kartePage','pinV2Purpose','pinV2OwnerMenu','pinV2Change','pinV2OptionalChoice'];
 function pinDraftResumeView(state){
   for(const view of [state?.resumeView, state?.view]){
@@ -1890,7 +1899,7 @@ function savePINFORMEState(){
       pinDraftNotice("採寸値は一時保存しました。写真は保存できないため、再開時は写真を選び直してください。");
     }
   }
-  pinRefreshDraftButton();
+  pinRefreshDraftButton(); pinRefreshNewButton();
 }
 function restorePINFORMEState(continueDraft=false){
   try{ PINFORME_PHOTO_PROMO_CONSENT = localStorage.getItem("PINFORME_PHOTO_PROMO_CONSENT_V1")==="1"; }catch(e){}
@@ -2050,7 +2059,7 @@ function showPage(id){
 }
 function pinV2Page(id){ showPage(id); }
 function pinV2Home(){ renderHome(); showPage('homePage'); }
-function renderHome(){ pinRefreshDraftButton(); pinRefreshPendingGuard(); }
+function renderHome(){ pinRefreshDraftButton(); pinRefreshNewButton(); pinRefreshPendingGuard(); }
 
 /* ================= 進捗メーター（設計メモ §6.1） ================= */
 /* B12：服別セット（single:true）は「その服の必須」だけの単一グループで、全項目が必須になる。
@@ -3824,7 +3833,7 @@ function pinEarlyRenderPushArea(){
 }
 function pinEarlyMailCompose(blocked){
   const el = document.getElementById('pinEarlyMailStatus'); if(!el) return;
-  if(PIN_TEST_MODE){ el.textContent = '確認用テストモードのため、登録とメール送信は行っていません（本来はここで登録し、お客様キーをお渡しします）。'; return; }
+  if(PIN_TEST_MODE){ el.innerHTML = '確認用テストモードのため、<br>登録とメール送信は行っていません（本来はここで登録し、お客様キーをお渡しします）。'; return; }
   if(blocked){ el.textContent = '登録を完了できませんでした。採寸はこのまま進められます（送信時にあらためて登録します）。'; return; }
   if(pinAnonymousActive()){ el.textContent = 'メールは送信しません。この画面のお客様キーを必ず保管してください。'; return; }
   el.textContent = 'ご登録できました。お客様キーは、採寸データの保存完了時にもメールでお送りします。';
