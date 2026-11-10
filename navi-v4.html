@@ -357,9 +357,8 @@ label.confirm input{margin-top:4px;width:20px;height:20px;flex:none}
     <div class="home-grid">
       <div class="entry-card home-tile" id="pinNewTile">
         <h2>初めての採寸</h2>
-        <p class="note">採寸データを登録し、カルテを作成します。</p>
+        <p class="note" id="homeNewDesc">採寸データを登録し、カルテを作成します。</p>
         <button type="button" class="v2-primary" id="homeNewBtn">採寸を始める</button>
-        <p class="note" id="homeNewLinkedNote" hidden style="margin-top:8px">この端末ではキーで登録済みです。「キーで進む」からお進みください。</p>
       </div>
       <div id="pinResumeDraftBox" class="entry-card home-tile tile-off">
         <h2>途中の入力を再開</h2>
@@ -1848,7 +1847,7 @@ function pinRefreshNewButton(){
   const linked = !!key;
   box.classList.toggle('tile-off', linked);
   const btn = document.getElementById('homeNewBtn'); if(btn) btn.disabled = linked;
-  const note = document.getElementById('homeNewLinkedNote'); if(note) note.hidden = !linked;
+  const desc = document.getElementById('homeNewDesc'); if(desc) desc.textContent = linked ? 'この端末ではキーで登録済みです。' : '採寸データを登録し、カルテを作成します。';
 }
 const PIN_RESUME_VIEWS = ['startPage','dogInfoPage','finishPage','kartePage','pinV2Purpose','pinV2OwnerMenu','pinV2Change','pinV2OptionalChoice'];
 function pinDraftResumeView(state){
