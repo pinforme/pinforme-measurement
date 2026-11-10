@@ -3518,7 +3518,9 @@ setPINFORMEKarte=function(d){
                 '<span class="adm-card-arrow">›</span></button>';
             }).join("") + "</div>" +
             '<p style="margin-top:14px"><button type="button" class="adm-btn" id="adm-owner-fetch">連絡先とキーを取得</button></p>' +
-            '<div class="adm-kv" id="adm-owner-info"></div>';
+            '<div class="adm-kv" id="adm-owner-info"></div>' +
+            '<p style="margin-top:14px"><button type="button" class="adm-btn light" id="adm-owner-reissue">お客様キーを再発行</button></p>' +
+            '<div id="adm-owner-newkey"></div>';
           box.classList.remove("adm-hidden");
           $("adm-owner-close").addEventListener("click", function () {
             box.classList.add("adm-hidden"); A.activeOwnerId = null;
@@ -3532,6 +3534,7 @@ setPINFORMEKarte=function(d){
             btn.addEventListener("click", function () { openDog(btn.getAttribute("data-adm-owner-dog")); });
           });
           $("adm-owner-fetch").addEventListener("click", fetchOwnerInfo);
+          $("adm-owner-reissue").addEventListener("click", reissueOwnerKey);
           box.scrollIntoView({ behavior: "smooth", block: "start" });
         }
 
@@ -3571,6 +3574,34 @@ setPINFORMEKarte=function(d){
             }
           }
           info.innerHTML = lines.map(function (l) { return "<div>" + esc(l) + "</div>"; }).join("");
+        }
+
+        async function reissueOwnerKey() {
+          var ownerId = A.activeOwnerId, tok = token();
+          if (!tok || !A.verified || !ownerId) return;
+          if (!confirm("新しいお客様キーを発行しますか？\n\n発行すると、現在のお客様キーはすぐに無効になります。\n同じ飼い主様に紐づくすべてのわんちゃんで新しいキーを使用します。")) return;
+          var box = $("adm-owner-newkey"); if (box) box.innerHTML = "<div>発行しています…</div>";
+          try {
+            var res = await rpc("admin_reissue_remeasure_key", { p_owner_id: Number(ownerId) }, tok);
+            var key = Array.isArray(res) ? res[0] : res;
+            if (key && typeof key === "object") key = key.admin_reissue_remeasure_key || key.key || Object.values(key)[0];
+            key = String(key || "").replace(/^\"|\"$/g, "");
+            if (!key) throw new Error("キーが返りませんでした");
+            if (box) box.innerHTML = '<div style="margin-top:6px;padding:12px;border:1.5px solid #333;border-radius:10px">' +
+              '<div style="font-weight:700;margin-bottom:6px">新しいお客様キー（この画面でだけ表示されます）</div>' +
+              '<div style="font-size:19px;font-weight:700;letter-spacing:1px;word-break:break-all" id="adm-newkey-value">' + esc(key) + '</div>' +
+              '<p style="margin:10px 0 0"><button type="button" class="adm-btn" id="adm-newkey-copy">キーをコピー</button></p>' +
+              '<p class="adm-note" style="margin:8px 0 0">前のキーは無効になりました。メール未登録の方には、このキーをDMなどで直接お渡しください。</p></div>';
+            var cp = $("adm-newkey-copy");
+            if (cp) cp.addEventListener("click", function () {
+              var v = $("adm-newkey-value"); if (!v) return;
+              if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(v.textContent).then(function () { cp.textContent = "コピーしました"; }, function () { cp.textContent = "コピーできませんでした"; });
+              }
+            });
+          } catch (e) {
+            if (box) box.innerHTML = "<div>再発行に失敗しました：" + esc((e && e.message) || String(e)) + "</div>";
+          }
         }
 
         /* ---------- dog checker (name-based twin of the public "01" checker) ----------
