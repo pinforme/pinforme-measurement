@@ -3135,16 +3135,11 @@ setPINFORMEKarte=function(d){
         }
         function attachSearch() {
           var inp = $("adm-search"); if (!inp) return;
+          if (inp.getAttribute("data-ime-safe") === "1") return;
+          inp.setAttribute("data-ime-safe", "1");
           inp.addEventListener("input", function () {
             A.query = inp.value;
-            var pos = null;
-            try { pos = inp.selectionStart; } catch (e) {}
             renderBreeds();
-            var again = $("adm-search");
-            if (again) {
-              again.focus();
-              if (pos !== null) { try { again.setSelectionRange(pos, pos); } catch (e) {} }
-            }
           });
         }
         function keySearchHTML() {
@@ -3200,6 +3195,18 @@ setPINFORMEKarte=function(d){
           renderBreeds();
         }
         function renderBreeds() {
+          var keep = document.getElementById("adm-search");
+          var hadFocus = !!(keep && document.activeElement === keep);
+          renderBreedsInner();
+          if (keep) {
+            var fresh = document.getElementById("adm-search");
+            if (fresh && fresh !== keep && fresh.parentNode) {
+              fresh.parentNode.replaceChild(keep, fresh);
+              if (!hadFocus) { keep.value = A.query || ""; }
+            }
+          }
+        }
+        function renderBreedsInner() {
           var box = $("adm-breeds"); if (!box) return;
           if (!A.dogs.length) { box.innerHTML = '<p class="adm-note">登録されている犬がいません。</p>'; return; }
           var g = breedGroups();
