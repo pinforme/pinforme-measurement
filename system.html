@@ -3195,6 +3195,881 @@ setPINFORMEKarte=function(d){
           }
           renderBreeds();
         }
+        /* ---------- identity search (monitor application verification) ----------
+           Finds a registered dog from what the owner told us: name, birth date,
+           weight, chest. All fields optional; filled fields are ANDed. Runs
+           entirely on the already-fetched A.dogs (read-only, no new RPC).
+           Weight/chest allow a small tolerance for rounding in what the owner
+           remembers (+/-0.3kg / +/-0.5cm). Birth date is an exact match. */
+        function idDogCardHTML(d) {
+          var l = latestOf(d.id);
+          var formal = normalizeBreed(rawBreedOf(d));
+          var rec = recommendedSize(d);
+          var bandText = rec ? ("SIZE " + rec.name + "\uFF08\u80F4 " + fmt(rec.lo) + "\u301C" + fmt(rec.hi) + "cm\uFF09")
+            : (l && l.chest !== null && l.chest !== undefined ? "\u5E2F\u306E\u7BC4\u56F2\u5916" : "\u63A1\u5BF8\u306A\u3057");
+          var birth = d.birth_date || (l && l.birth_date) || "";
+          return '<button type="button" class="adm-card-row" data-adm-dog="' + esc(d.id) + '">' +
+            '<span class="adm-card-body">' +
+            '<span class="adm-card-main">' + esc(dogTitleOf(d)) + "</span>" +
+            '<span class="adm-card-sub">' + esc(formal || "\u72AC\u7A2E\u672A\u767B\u9332") + " \u30FB " + esc(d.sex || (l && l.sex) || "\u6027\u5225\u4E0D\u660E") + " \u30FB \u751F\u5E74\u6708\u65E5 " + esc(birth ? String(birth).slice(0, 10) : "\u4E0D\u660E") + "</span>" +
+            '<span class="adm-card-sub">\u80F4\u307E\u308F\u308A ' + fmt(l && l.chest, "cm") + "\uFF08" + bandText + "\uFF09 \u30FB \u4F53\u91CD " + fmt(l && l.weight, "kg") + " \u30FB \u6700\u7D42\u63A1\u5BF8 " + esc(l ? measuredDate(l) : "\u8A18\u9332\u306A\u3057") + "</span>" +
+            '</span><span class="adm-card-arrow">\u203A</span></button>';
+        }
+        function identitySearchHTML() {
+          var q = A.idQuery || { name: "", birth: "", weight: "", chest: "" };
+          var st = A.idState, out = "";
+          out += '<div style="border-top:1px solid #e3e0ea;margin:14px 0 10px"></div>' +
+            '<p class="adm-note" style="margin:0 0 6px"><strong>\u672C\u4EBA\u78BA\u8A8D\u3067\u63A2\u3059</strong>\uFF08\u30E2\u30CB\u30BF\u30FC\u5FDC\u52DF\u30FB\u30AD\u30FC\u518D\u767A\u884C\u306A\u3069\uFF09</p>' +
+            '<p class="adm-note" style="margin:0 0 8px">\u98FC\u3044\u4E3B\u3055\u3093\u304B\u3089\u805E\u3044\u305F\u60C5\u5831\u3067\u63A2\u3057\u307E\u3059\u3002\u5206\u304B\u308B\u9805\u76EE\u3060\u3051\u5165\u529B\u3057\u3066\u304F\u3060\u3055\u3044\u3002\u4F53\u91CD\u306F\u00B10.3kg\u3001\u80F4\u307E\u308F\u308A\u306F\u00B10.5cm\u307E\u3067\u4E00\u81F4\u3068\u307F\u306A\u3057\u307E\u3059\u3002</p>' +
+            '<div class="adm-fields2" style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;margin:0 0 8px">' +
+            '<input class="adm-input inline" id="adm-id-name" type="text" autocomplete="off" placeholder="\u308F\u3093\u3061\u3083\u3093\u306E\u540D\u524D" value="' + esc(q.name || "") + '" />' +
+            '<input class="adm-input inline" id="adm-id-birth" type="date" value="' + esc(q.birth || "") + '" />' +
+            '<input class="adm-input inline" id="adm-id-weight" type="number" inputmode="decimal" step="0.1" min="0" placeholder="\u4F53\u91CD\uFF08kg\uFF09" value="' + esc(q.weight || "") + '" />' +
+            '<input class="adm-input inline" id="adm-id-chest" type="number" inputmode="decimal" step="0.1" min="0" placeholder="\u80F4\u307E\u308F\u308A\uFF08cm\uFF09" value="' + esc(q.chest || "") + '" />' +
+            "</div>" +
+            '<div style="display:flex;flex-wrap:wrap;gap:8px;margin:0 0 10px">' +
+            '<button type="button" class="adm-btn" id="adm-id-btn">\u3053\u306E\u6761\u4EF6\u3067\u63A2\u3059</button>' +
+            '<button type="button" class="adm-btn light" id="adm-id-clear">\u6761\u4EF6\u3092\u30AF\u30EA\u30A2</button></div>';
+          if (!st) return out;
+          if (st.status === "empty") {
+            out += '<p class="adm-note">\u6761\u4EF6\u30921\u3064\u4EE5\u4E0A\u5165\u529B\u3057\u3066\u304F\u3060\u3055\u3044\u3002</p>';
+          } else if (st.status === "done") {
+            out += '<p class="adm-note" style="margin:0 0 10px">\u672C\u4EBA\u78BA\u8A8D\u306E\u691C\u7D22\u7D50\u679C\uFF1A' + st.dogs.length + "\u982D</p>" +
+              (st.dogs.length
+                ? '<div class="adm-list">' + st.dogs.map(idDogCardHTML).join("") + "</div>"
+                : '<p class="adm-note">\u4E00\u81F4\u3059\u308B\u5B50\u306F\u3044\u307E\u305B\u3093\u3067\u3057\u305F\u3002\u805E\u3044\u305F\u6570\u5B57\u304C\u6982\u6570\u3067\u306A\u3044\u304B\u3001\u6761\u4EF6\u3092\u6E1B\u3089\u3057\u3066\u8A66\u3057\u3066\u304F\u3060\u3055\u3044\u3002</p>');
+          }
+          return out;
+        }
+        function attachIdentitySearch() {
+          var fields = { name: $("adm-id-name"), birth: $("adm-id-birth"), weight: $("adm-id-weight"), chest: $("adm-id-chest") };
+          if (!fields.name) return;
+          Object.keys(fields).forEach(function (k) {
+            var el = fields[k]; if (!el) return;
+            el.addEventListener("input", function () { A.idQuery[k] = el.value; });
+            el.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); runIdentitySearch(); } });
+          });
+          var btn = $("adm-id-btn"); if (btn) btn.addEventListener("click", runIdentitySearch);
+          var clr = $("adm-id-clear"); if (clr) clr.addEventListener("click", function () {
+            A.idQuery = { name: "", birth: "", weight: "", chest: "" }; A.idState = null; renderBreeds();
+          });
+        }
+        function runIdentitySearch() {
+          var q = A.idQuery || {};
+          var name = String(q.name || "").trim();
+          var birth = String(q.birth || "").trim();
+          var wRaw = String(q.weight || "").trim(), cRaw = String(q.chest || "").trim();
+          var w = wRaw === "" ? null : Number(wRaw), c = cRaw === "" ? null : Number(cRaw);
+          if (!name && !birth && w === null && c === null) { A.idState = { status: "empty" }; renderBreeds(); return; }
+          var nq = normalizeForSearch(name);
+          var dogs = A.dogs.filter(function (d) {
+            var l = latestOf(d.id);
+            if (nq) { var n = normalizeForSearch(dogNameOf(d)); if (!n || n.indexOf(nq) < 0) return false; }
+            if (birth) {
+              var b = String(d.birth_date || (l && l.birth_date) || "").slice(0, 10);
+              if (b !== birth) return false;
+            }
+            if (w !== null && isFinite(w)) {
+              if (!l || l.weight === null || l.weight === undefined || Math.abs(Number(l.weight) - w) > 0.3) return false;
+            }
+            if (c !== null && isFinite(c)) {
+              if (!l || l.chest === null || l.chest === undefined || Math.abs(Number(l.chest) - c) > 0.5) return false;
+            }
+            return true;
+          }).slice().sort(function (x, y) { return Number(x.id) - Number(y.id); });
+          A.idState = { status: "done", dogs: dogs };
+          renderBreeds();
+        }
+        /* ---------- karte photo OCR (draft-fill + comparison) ----------
+           The owner sends a photo of their karte by DM. The admin pastes it
+           here; OCR (Tesseract.js, jpn+eng, loaded from CDN on first use)
+           extracts name / birth / weight / chest (+ neck, back, front,
+           waist when readable) and draft-fills the identity search fields
+           above. Nothing is auto-confirmed: the admin must eyeball and fix
+           the values before searching. Read-only; no DB access, no writes. */
+        var KARTE_OCR_CDN = "https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js";
+        var KARTE_OCR_WORKER = "https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/worker.min.js";
+        var KARTE_OCR_CORE = "https://cdn.jsdelivr.net/npm/tesseract.js-core@5/tesseract-core-simd.wasm.js";
+        var OCR_FIELD_DEFS = [
+          ["name", "名前", "text"], ["birth", "生年月日", "date"],
+          ["weight", "体重（kg）", "number"], ["chest", "胴まわり（cm）", "number"],
+          ["neck", "首まわり（cm）", "number"], ["back", "着丈（cm）", "number"],
+          ["front", "前身頃（cm）", "number"], ["waist", "ウエスト（cm）", "number"]
+        ];
+        var OCR_FIELD_LABEL_JP = { name: "名前", birth: "生年月日", weight: "体重", chest: "胴まわり", neck: "首まわり", back: "着丈", front: "前身頃", waist: "ウエスト" };
+        /* Plausible ranges per field (dog measurements). An OCR candidate
+           outside its field's range is never assigned: the field stays
+           empty and the missed-field warning asks for a visual check.
+           (e.g. 前脚の太さ 9.2 must never land in 胴まわり.) */
+        var OCR_FIELD_RANGES = {
+          weight: [0.5, 40], chest: [20, 80], neck: [10, 50],
+          back: [10, 60], front: [8, 50], waist: [15, 70]
+        };
+        function ocrInRange(key, num) {
+          var r = OCR_FIELD_RANGES[key];
+          if (!r) return true;
+          return isFinite(num) && num >= r[0] && num <= r[1];
+        }
+        /* The karte measurement grid is a fixed 5x3 layout (items ①-⑮ in
+           a fixed order). Only neck/chest/waist/back/front are extracted;
+           the other labels serve as anchors so a field whose own label was
+           misread can still be located by its grid cell (row x column)
+           inferred from the neighbouring labels in the same row. */
+        var OCR_GRID_ROWS = [
+          ["neck", "chest", "waist"],
+          ["back", "front", "legf"],
+          ["legb", "legfl", "legbl"],
+          ["necklen", "necklen2", "headc"],
+          ["legsp", "neckmid", "tail"]
+        ];
+        var OCR_GRID_LABELS = [
+          ["neck", "首まわり"], ["chest", "胴まわり"], ["waist", "ウエスト"],
+          ["back", "着丈"], ["front", "前身頃"], ["legf", "前脚の太さ"],
+          ["legb", "後脚の太さ"], ["legfl", "前脚の長さ"], ["legbl", "後脚の長さ"],
+          ["necklen", "首の長さ"], ["necklen2", "首の長さ"], ["headc", "頭まわり"],
+          ["legsp", "前脚の間"], ["neckmid", "首の真ん中"], ["tail", "尻尾の太さ"]
+        ];
+        var KARTE_PDFJS_CDN = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+        var KARTE_PDFJS_WORKER = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+        /* iOS Safari's print-to-PDF (the karte save button route) embeds
+           Adobe-Japan1 CID fonts. PDF.js cannot decode them without the
+           external CMap files: every Japanese glyph then silently
+           vanishes from BOTH text extraction and raster rendering (only
+           digits/Latin survive), which made real karte PDFs read as
+           almost blank. cdnjs does not host the cmaps dir (403), so use
+           the jsDelivr copy of the same pdfjs-dist version. */
+        var KARTE_PDFJS_CMAPS = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/cmaps/";
+        var karteOcrLibPromise = null;
+        var admOcrPasteBound = false;
+        function loadKarteOcrLib() {
+          if (window.Tesseract) return Promise.resolve(window.Tesseract);
+          if (karteOcrLibPromise) return karteOcrLibPromise;
+          karteOcrLibPromise = new Promise(function (resolve, reject) {
+            var s = document.createElement("script");
+            s.src = KARTE_OCR_CDN; s.async = true;
+            var to = setTimeout(function () { reject(new Error("ライブラリの読み込みがタイムアウトしました")); }, 30000);
+            s.onload = function () { clearTimeout(to); if (window.Tesseract) resolve(window.Tesseract); else reject(new Error("Tesseract が見つかりません")); };
+            s.onerror = function () { clearTimeout(to); reject(new Error("ライブラリを読み込めませんでした（通信環境をご確認ください）")); };
+            document.head.appendChild(s);
+          });
+          return karteOcrLibPromise;
+        }
+        var kartePdfLibPromise = null;
+        function loadKartePdfLib() {
+          if (window.pdfjsLib) { try { window.pdfjsLib.GlobalWorkerOptions.workerSrc = KARTE_PDFJS_WORKER; } catch (e) {} return Promise.resolve(window.pdfjsLib); }
+          if (kartePdfLibPromise) return kartePdfLibPromise;
+          kartePdfLibPromise = new Promise(function (resolve, reject) {
+            var s = document.createElement("script");
+            s.src = KARTE_PDFJS_CDN; s.async = true;
+            var to = setTimeout(function () { reject(new Error("PDFライブラリの読み込みがタイムアウトしました")); }, 30000);
+            s.onload = function () {
+              clearTimeout(to);
+              if (window.pdfjsLib) {
+                try { window.pdfjsLib.GlobalWorkerOptions.workerSrc = KARTE_PDFJS_WORKER; } catch (e) {}
+                resolve(window.pdfjsLib);
+              } else reject(new Error("PDFライブラリが見つかりません"));
+            };
+            s.onerror = function () { clearTimeout(to); reject(new Error("PDFライブラリを読み込めませんでした（通信環境をご確認ください）")); };
+            document.head.appendChild(s);
+          });
+          return kartePdfLibPromise;
+        }
+        function isKartePdf(blob) {
+          return !!blob && (blob.type === "application/pdf" || /\.pdf$/i.test(blob.name || ""));
+        }
+        function kartePdfDocOptions(buf) {
+          return { data: new Uint8Array(buf), cMapUrl: KARTE_PDFJS_CMAPS, cMapPacked: true };
+        }
+        /* Rasterize page 1 of a PDF karte at a resolution high enough for
+           OCR (target ~3000px wide), white background, as a PNG blob. */
+        function kartePdfFirstPageBlob(blob, targetW) {
+          var pdfjsLib = null;
+          return loadKartePdfLib().then(function (lib) {
+            pdfjsLib = lib;
+            return blob.arrayBuffer();
+          }).then(function (buf) {
+            return pdfjsLib.getDocument(kartePdfDocOptions(buf)).promise;
+          }).then(function (doc) {
+            return doc.getPage(1);
+          }).then(function (page) {
+            var base = page.getViewport({ scale: 1 });
+            var scale = Math.max(1.5, Math.min(4, (targetW || 3000) / Math.max(1, base.width)));
+            var vp = page.getViewport({ scale: scale });
+            var cv = document.createElement("canvas");
+            cv.width = Math.floor(vp.width); cv.height = Math.floor(vp.height);
+            var cx = cv.getContext("2d");
+            cx.fillStyle = "#ffffff"; cx.fillRect(0, 0, cv.width, cv.height);
+            return page.render({ canvasContext: cx, viewport: vp }).promise.then(function () {
+              return new Promise(function (resolve, reject) {
+                if (cv.toBlob) cv.toBlob(function (b) { if (b) resolve(b); else reject(new Error("PDFの画像変換に失敗しました")); }, "image/png");
+                else reject(new Error("このブラウザではPDFを変換できません"));
+              });
+            });
+          });
+        }
+        /* Prepare the OCR input: PDFs are rasterized; small photos are
+           upscaled (target ~3000px wide, max x3) because Tesseract reads
+           small screenshots poorly (values garble, decimal points drop).
+           Resolves { blob, scale } so the caller knows which size was
+           used (scale 0 = PDF raster) and can retry at another size. */
+        function kartePrepareImageBlob(blob, opts) {
+          opts = opts || {};
+          if (isKartePdf(blob)) {
+            return kartePdfFirstPageBlob(blob, opts.pdfTargetW).then(function (b) { return { blob: b, scale: 0 }; });
+          }
+          return new Promise(function (resolve) {
+            var url;
+            try { url = URL.createObjectURL(blob); } catch (e) { resolve({ blob: blob, scale: 1 }); return; }
+            var img = new Image();
+            img.onload = function () {
+              var w = img.naturalWidth || img.width || 0, h = img.naturalHeight || img.height || 0;
+              var scale = opts.forceScale ? opts.forceScale : (w ? Math.max(1, Math.min(3, Math.round(3000 / w))) : 1);
+              if (scale <= 1 || !w || !h) { URL.revokeObjectURL(url); resolve({ blob: blob, scale: 1 }); return; }
+              try {
+                var cv = document.createElement("canvas");
+                cv.width = Math.round(w * scale); cv.height = Math.round(h * scale);
+                var cx = cv.getContext("2d");
+                cx.fillStyle = "#ffffff"; cx.fillRect(0, 0, cv.width, cv.height);
+                cx.drawImage(img, 0, 0, cv.width, cv.height);
+                URL.revokeObjectURL(url);
+                if (cv.toBlob) cv.toBlob(function (b) { resolve({ blob: b || blob, scale: scale }); }, "image/png");
+                else resolve({ blob: blob, scale: scale });
+              } catch (e) { URL.revokeObjectURL(url); resolve({ blob: blob, scale: 1 }); }
+            };
+            img.onerror = function () { URL.revokeObjectURL(url); resolve({ blob: blob, scale: 1 }); };
+            img.src = url;
+          });
+        }
+        function setOcrStatus(msg) { var el = $("adm-ocr-status"); if (el) el.textContent = msg; }
+        function ocrFilledCount(v) {
+          if (!v) return 0;
+          var n = 0;
+          OCR_FIELD_DEFS.forEach(function (fd) { if (v[fd[0]]) n++; });
+          return n;
+        }
+        /* Text layer first for PDFs: a karte PDF saved from the navi (or
+           printed to PDF from the carte page) carries an exact text
+           layer. Converting its items to word boxes and running the same
+           parser gives exact values with no OCR at all. Bboxes are in
+           PDF points (top-left origin), which is all the parser needs
+           (it only uses relative geometry). Returns null when the PDF
+           has no usable text layer. */
+        function kartePdfTextWords(blob) {
+          var pdfjsLib = null;
+          return loadKartePdfLib().then(function (lib) {
+            pdfjsLib = lib;
+            return blob.arrayBuffer();
+          }).then(function (buf) {
+            return pdfjsLib.getDocument(kartePdfDocOptions(buf)).promise;
+          }).then(function (doc) {
+            return doc.getPage(1);
+          }).then(function (page) {
+            var base = page.getViewport({ scale: 1 });
+            return page.getTextContent().then(function (tc) {
+              var words = [];
+              (tc.items || []).forEach(function (it) {
+                var s = String(it.str || "");
+                if (!s.replace(/\s+/g, "")) return;
+                var e = it.transform[4], f = it.transform[5];
+                var h = it.height || Math.abs(it.transform[3]) || 8;
+                var w = it.width || 0;
+                words.push({ text: s, bbox: { x0: e, y0: base.height - f - h, x1: e + Math.max(w, h * 0.5), y1: base.height - f + h * 0.35 } });
+              });
+              return words.length ? words : null;
+            });
+          }).catch(function () { return null; });
+        }
+        function karteOcrRecognize(T, imgBlob) {
+          return T.createWorker("jpn+eng", 1, {
+            workerPath: KARTE_OCR_WORKER, corePath: KARTE_OCR_CORE,
+            logger: function (m) {
+              if (m && m.status === "recognizing text") setOcrStatus("読み取り中… " + Math.round((m.progress || 0) * 100) + "%");
+            }
+          }).then(function (worker) {
+            return worker.recognize(imgBlob, {}, { blocks: true }).then(function (res) {
+              return worker.terminate().then(function () { return res.data; });
+            }, function (err) {
+              return worker.terminate().then(function () { throw err; });
+            });
+          });
+        }
+        function runKarteOcrAttempt(T, blob, prepOpts) {
+          return kartePrepareImageBlob(blob, prepOpts).then(function (prep) {
+            return karteOcrRecognize(T, prep.blob).then(function (data) {
+              return { v: parseKarteOcr(data), wordCount: karteOcrWords(data).length, scale: prep.scale };
+            });
+          });
+        }
+        function runKarteOcr(blob) {
+          if (!blob) return;
+          var pdf = isKartePdf(blob);
+          A.ocrState = { status: "running", message: "読み取り中…（初回はライブラリと日本語データの取得で少し時間がかかります）" };
+          renderBreeds();
+          var finish = function (v, message) {
+            A.ocrValues = v;
+            ["name", "birth", "weight", "chest"].forEach(function (k) { if (v[k]) A.idQuery[k] = v[k]; });
+            A.ocrState = { status: "done", message: message };
+            renderBreeds();
+          };
+          var ocrPath = function (T) {
+            setOcrStatus(pdf ? "PDFの1ページ目を画像に変換しています…" : "画像を準備しています…");
+            return runKarteOcrAttempt(T, blob, {}).then(function (r1) {
+              /* Almost nothing recognized: recognition itself likely
+                 failed (degraded or oversized image for the worker)
+                 rather than the karte being unreadable. Retry once at
+                 a different size and keep the better result. */
+              if (ocrFilledCount(r1.v) > 0 && r1.wordCount >= 15) return r1;
+              var retryOpts;
+              if (pdf) retryOpts = { pdfTargetW: 2000 };
+              else if (r1.scale && r1.scale > 1) retryOpts = { forceScale: 1 };
+              else retryOpts = { forceScale: 2 };
+              setOcrStatus("読み取り結果が少なかったため、サイズを変えてもう一度読み取ります…");
+              return runKarteOcrAttempt(T, blob, retryOpts).then(function (r2) {
+                return ocrFilledCount(r2.v) > ocrFilledCount(r1.v) ? r2 : r1;
+              }).catch(function () { return r1; });
+            }).then(function (r) {
+              if (ocrFilledCount(r.v) === 0) {
+                A.ocrValues = r.v;
+                A.ocrState = { status: "error", message: "文字を読み取れませんでした。" + (pdf
+                  ? "このPDFからは読み取れませんでした。カルテの写真でもお試しください。"
+                  : "写真が小さい・暗い・圧縮が強いと読み取りにくくなります。もう少し大きく明るい写真か、カルテのPDFでお試しください。") };
+                renderBreeds();
+                return;
+              }
+              finish(r.v, "読み取りました。下の「読み取り結果」を確認・修正してから探してください。");
+            });
+          };
+          loadKarteOcrLib().then(function (T) {
+            if (!pdf) return ocrPath(T);
+            setOcrStatus("PDFの文字データを読み取っています…");
+            return kartePdfTextWords(blob).then(function (words) {
+              if (words && words.length) {
+                var v = parseKarteOcr({ words: words });
+                if (v.name || ocrFilledCount(v) >= 4) {
+                  finish(v, "PDFの文字データから読み取りました（文字データはOCRより正確です）。下の「読み取り結果」を確認してから探してください。");
+                  return "text-done";
+                }
+              }
+              return null;
+            }).then(function (mark) {
+              if (mark === "text-done") return null;
+              return ocrPath(T);
+            });
+          }).catch(function (err) {
+            A.ocrState = { status: "error", message: "読み取りに失敗しました：" + (err && err.message ? err.message : String(err)) + "　手入力でお願いします。" };
+            renderBreeds();
+          });
+        }
+        /* --- OCR result parsing (word boxes; line fallback when no boxes) --- */
+        function ocrCleanText(s) { return String(s || "").normalize("NFKC"); }
+        function ocrFirstNumber(s) {
+          var m = String(s || "").match(/(\d{1,3})[.．](\d{1,2})/);
+          if (m) return m[1] + "." + m[2];
+          var m2 = String(s || "").match(/(\d{1,3})/);
+          return m2 ? m2[1] : "";
+        }
+        function karteOcrWords(data) {
+          if (!data) return [];
+          if (data.words && data.words.length) return data.words;
+          var out = [];
+          (data.blocks || []).forEach(function (b) {
+            (b.paragraphs || []).forEach(function (p) {
+              (p.lines || []).forEach(function (ln) { (ln.words || []).forEach(function (w) { out.push(w); }); });
+            });
+          });
+          if (out.length) return out;
+          if (data.text) {
+            return String(data.text).split(/\n/).map(function (line, i) {
+              return { text: line, bbox: { x0: 0, y0: i * 100, x1: 100, y1: i * 100 + 50 } };
+            }).filter(function (w) { return w.text.trim(); });
+          }
+          return [];
+        }
+        function karteOcrLines(words) {
+          var ws = words.slice().sort(function (a, b) { return (a.bbox.y0 + a.bbox.y1) - (b.bbox.y0 + b.bbox.y1); });
+          var lines = [];
+          ws.forEach(function (w) {
+            var cy = (w.bbox.y0 + w.bbox.y1) / 2, h = Math.max(1, w.bbox.y1 - w.bbox.y0);
+            var found = null;
+            for (var i = lines.length - 1; i >= 0; i--) {
+              if (Math.abs(lines[i].cy - cy) <= Math.max(h, lines[i].h) * 0.7) { found = lines[i]; break; }
+            }
+            if (!found) { found = { cy: cy, h: h, words: [] }; lines.push(found); }
+            found.words.push(w);
+          });
+          lines.forEach(function (L) {
+            L.words.sort(function (a, b) { return a.bbox.x0 - b.bbox.x0; });
+            L.text = L.words.map(function (w) { return ocrCleanText(w.text); }).join(" ");
+            L.flat = L.text.replace(/\s+/g, "");
+          });
+          return lines;
+        }
+        function parseKarteOcr(data) {
+          var v = { name: "", birth: "", weight: "", chest: "", neck: "", back: "", front: "", waist: "" };
+          var words = karteOcrWords(data).map(function (w) {
+            return { text: ocrCleanText(w.text), bbox: w.bbox };
+          }).filter(function (w) { return w.text; });
+          var lines = karteOcrLines(words);
+          lines.forEach(function (L) {
+            if (!v.birth && L.flat.indexOf("生年月日") >= 0) {
+              var dm = L.flat.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
+              if (dm) v.birth = dm[1] + "-" + ("0" + dm[2]).slice(-2) + "-" + ("0" + dm[3]).slice(-2);
+            }
+            if (!v.weight && L.flat.indexOf("体重") >= 0) {
+              var wm = L.text.match(/(\d{1,2})[.．](\d{1,2})/);
+              if (wm && ocrInRange("weight", parseFloat(wm[1] + "." + wm[2]))) v.weight = wm[1] + "." + wm[2];
+            }
+            if (!v.name && L.flat.indexOf("わんちゃん") >= 0 && L.flat.indexOf("名前") >= 0) {
+              var cand = L.words.filter(function (w) {
+                return !/^[わんちゃんのお名前様飼い主]+$/.test(w.text.replace(/\s+/g, ""));
+              }).sort(function (a, b) { return a.bbox.x0 - b.bbox.x0; });
+              if (cand.length) {
+                var nm = cand[0].text.trim(), endX = cand[0].bbox.x1;
+                for (var ci = 1; ci < cand.length; ci++) {
+                  if (cand[ci].bbox.x0 - endX <= L.h * 1.5) { nm += cand[ci].text.trim(); endX = cand[ci].bbox.x1; }
+                  else break;
+                }
+                v.name = nm.replace(/^(わんちゃんの)?お?名前[:：]?\s*/, "");
+              }
+            }
+          });
+          /* Weight fallback: if the 体重 label itself garbled beyond
+             recognition, a lone "X.X kg" token is still unambiguous on a
+             karte (the only kg value on the page). */
+          if (!v.weight) {
+            for (var li2 = 0; li2 < lines.length; li2++) {
+              var km = lines[li2].text.match(/(\d{1,2})[.．](\d{1,2})\s*kg/i);
+              if (km && ocrInRange("weight", parseFloat(km[1] + "." + km[2]))) { v.weight = km[1] + "." + km[2]; break; }
+            }
+          }
+          /* Measurement cells: labels may be split into single-char words, so
+             detect them as spans of consecutive words within one line whose
+             joined text contains the label. Main labels are larger/bolder
+             than the small sub-labels, so per field prefer the tallest span. */
+          var spans = {};
+          lines.forEach(function (L, lineIdx) {
+            var cleaned = L.words.map(function (w) { return w.text.replace(/\s+/g, "").replace(/ウェ/g, "ウエ"); });
+            for (var i = 0; i < L.words.length; i++) {
+              var acc = "";
+              for (var j = i; j < Math.min(L.words.length, i + 8); j++) {
+                acc += cleaned[j];
+                for (var li = 0; li < OCR_GRID_LABELS.length; li++) {
+                  var key = OCR_GRID_LABELS[li][0], label = OCR_GRID_LABELS[li][1];
+                  var pos = acc.indexOf(label);
+                  if (pos < 0) continue;
+                  /* span = only the words overlapping the label's own chars */
+                  var endPos = pos + label.length, run = 0, parts = [];
+                  for (var k = i; k <= j; k++) {
+                    var s0 = run, s1 = run + cleaned[k].length; run = s1;
+                    if (s1 > pos && s0 < endPos) parts.push(L.words[k]);
+                  }
+                  if (!parts.length) continue;
+                  var dedupe = key + "@" + lineIdx + "@" + L.words.indexOf(parts[0]);
+                  if (spans[dedupe]) continue;
+                  spans[dedupe] = {
+                    key: key,
+                    x0: Math.min.apply(null, parts.map(function (w) { return w.bbox.x0; })),
+                    x1: Math.max.apply(null, parts.map(function (w) { return w.bbox.x1; })),
+                    y0: Math.min.apply(null, parts.map(function (w) { return w.bbox.y0; })),
+                    y1: Math.max.apply(null, parts.map(function (w) { return w.bbox.y1; }))
+                  };
+                }
+              }
+            }
+          });
+          var nums = words.filter(function (w) { return /^\d{1,3}[.．]\d/.test(w.text.replace(/\s+/g, "")); });
+          var FIELD_KEYS = ["chest", "neck", "waist", "back", "front"];
+          /* Pick each field label's best span first (tallest span = the main
+             label). Used for fields whose grid cell cannot be determined. */
+          var labelSpans = {};
+          FIELD_KEYS.forEach(function (key) {
+            var list = Object.keys(spans).map(function (k) { return spans[k]; }).filter(function (s) { return s.key === key; });
+            if (!list.length) return;
+            list.sort(function (a, b) {
+              var ha = a.y1 - a.y0, hb = b.y1 - b.y0;
+              if (hb !== ha) return hb - ha;
+              if (a.y0 !== b.y0) return a.y0 - b.y0;
+              return a.x0 - b.x0;
+            });
+            labelSpans[key] = list[0];
+          });
+          /* --- Grid structure: cluster all label spans (fields + anchors)
+             into rows, map each row to the fixed 5x3 layout, and compute
+             every field's cell (column interval + row band). A field whose
+             own label was misread (e.g. 胴まわり) still gets its cell from
+             the neighbouring labels of the same row. --- */
+          function spanCx(s) { return (s.x0 + s.x1) / 2; }
+          function spanCy(s) { return (s.y0 + s.y1) / 2; }
+          var allSpans = Object.keys(spans).map(function (k) { return spans[k]; });
+          allSpans.sort(function (a, b) { return spanCy(a) - spanCy(b) || spanCx(a) - spanCx(b); });
+          var spanGroups = [];
+          allSpans.forEach(function (sp) {
+            var g = spanGroups[spanGroups.length - 1];
+            if (g && Math.abs(spanCy(sp) - (g.y0 + g.y1) / 2) <= Math.max(sp.y1 - sp.y0, g.y1 - g.y0, 1) * 0.8) {
+              g.spans.push(sp);
+              g.y0 = Math.min(g.y0, sp.y0); g.y1 = Math.max(g.y1, sp.y1);
+            } else spanGroups.push({ spans: [sp], y0: sp.y0, y1: sp.y1 });
+          });
+          /* Structural groups only: 2+ label spans, or a group holding a
+             field label. A lone anchor word inside the prose column must
+             not cut a row band. */
+          var structGroups = spanGroups.filter(function (g) {
+            return g.spans.length >= 2 || g.spans.some(function (sp) { return FIELD_KEYS.indexOf(sp.key) >= 0; });
+          });
+          var fieldCells = {};
+          structGroups.forEach(function (g, gi) {
+            var cand = null;
+            g.spans.forEach(function (sp) {
+              var rows = [];
+              OCR_GRID_ROWS.forEach(function (row, ri) { if (row.indexOf(sp.key) >= 0) rows.push(ri); });
+              cand = (cand === null) ? rows : cand.filter(function (r) { return rows.indexOf(r) >= 0; });
+            });
+            var rowIdx = (cand && cand.length) ? cand[0] : -1;
+            if (rowIdx < 0 && g.spans.length) {
+              var r0 = [];
+              OCR_GRID_ROWS.forEach(function (row, ri) { if (row.indexOf(g.spans[0].key) >= 0) r0.push(ri); });
+              rowIdx = r0.length ? r0[0] : -1;
+            }
+            if (rowIdx < 0) return;
+            var row = OCR_GRID_ROWS[rowIdx];
+            var centers = [null, null, null];
+            g.spans.forEach(function (sp) {
+              var c = row.indexOf(sp.key);
+              if (c >= 0 && centers[c] === null) centers[c] = spanCx(sp);
+            });
+            var known = [0, 1, 2].filter(function (c) { return centers[c] !== null; });
+            if (known.length < 2) return;
+            var firstK = known[0], lastK = known[known.length - 1];
+            var spacing = (centers[lastK] - centers[firstK]) / (lastK - firstK);
+            for (var c2 = 0; c2 < 3; c2++) {
+              if (centers[c2] !== null) continue;
+              var ref = known[0], bd = Infinity;
+              known.forEach(function (kc) { var d = Math.abs(kc - c2); if (d < bd) { bd = d; ref = kc; } });
+              centers[c2] = centers[ref] + (c2 - ref) * spacing;
+            }
+            var bandBottom = Infinity;
+            if (gi + 1 < structGroups.length) {
+              bandBottom = Math.min.apply(null, structGroups[gi + 1].spans.map(function (sp) { return sp.y0; }));
+            }
+            var lineCy = (g.y0 + g.y1) / 2, lh = Math.max(1, g.y1 - g.y0);
+            [0, 1, 2].forEach(function (col) {
+              var key = row[col];
+              if (FIELD_KEYS.indexOf(key) < 0 || fieldCells[key]) return;
+              fieldCells[key] = {
+                cx: centers[col],
+                x0: col === 0 ? -Infinity : (centers[col - 1] + centers[col]) / 2,
+                x1: col === 2 ? Infinity : (centers[col] + centers[col + 1]) / 2,
+                lineCy: lineCy, bandBottom: bandBottom, lh: lh
+              };
+            });
+          });
+          /* Assign numbers to fields exclusively: collect every
+             (field, number) pair that passes the filters, take the
+             globally closest pairs first, and never assign the same
+             number word to two fields. Filters: (1) the value must be in
+             the field's plausible range (OCR_FIELD_RANGES); (2) when the
+             field's grid cell is known, the number must sit inside that
+             cell — its column interval, below its label row and above
+             the next label row; (3) otherwise fall back to proximity to
+             the field's own label span. A field with no passing number
+             stays empty (and is flagged by the missed-field warning)
+             instead of silently copying a neighbour's value. */
+          var candPairs = [];
+          FIELD_KEYS.forEach(function (key) {
+            var cell = fieldCells[key] || null, lab = labelSpans[key] || null;
+            if (!cell && !lab) return;
+            var lh = cell ? cell.lh : Math.max(1, lab.y1 - lab.y0);
+            var lx = cell ? cell.cx : (lab.x0 + lab.x1) / 2;
+            var ly = cell ? cell.lineCy : (lab.y0 + lab.y1) / 2;
+            nums.forEach(function (w, wi) {
+              if (!ocrInRange(key, parseFloat(ocrFirstNumber(w.text)))) return;
+              var cx = (w.bbox.x0 + w.bbox.x1) / 2, cy = (w.bbox.y0 + w.bbox.y1) / 2;
+              var dy = cy - ly; if (dy < lh * 0.3 || dy > lh * 9) return;
+              if (cell) {
+                if (cx < cell.x0 || cx > cell.x1 || cy >= cell.bandBottom) return;
+              } else if (Math.abs(cx - lx) > lh * 14) return;
+              candPairs.push({ key: key, wi: wi, score: dy + Math.abs(cx - lx) * 0.6 });
+            });
+          });
+          candPairs.sort(function (a, b) { return a.score - b.score; });
+          var chosen = {}, usedNums = {};
+          candPairs.forEach(function (p) {
+            if (chosen[p.key] || usedNums[p.wi]) return;
+            chosen[p.key] = nums[p.wi]; usedNums[p.wi] = true;
+            if (!v[p.key]) v[p.key] = ocrFirstNumber(nums[p.wi].text);
+          });
+          /* Positional fallback: the karte grid layout is fixed (row1 =
+             neck/chest/waist, row2 col1 = back, col2 = front). If a label
+             was misread beyond recognition, infer back/front from the grid
+             position of the value tokens, anchored on the chest value. */
+          if ((!v.back || !v.front) && chosen.chest) {
+            try {
+              var unit = Math.max(1, chosen.chest.bbox.y1 - chosen.chest.bbox.y0);
+              var row1cy = (chosen.chest.bbox.y0 + chosen.chest.bbox.y1) / 2;
+              var row1 = nums.filter(function (w) {
+                return Math.abs((w.bbox.y0 + w.bbox.y1) / 2 - row1cy) <= unit * 2.5;
+              }).sort(function (a, b) { return a.bbox.x0 - b.bbox.x0; });
+              if (row1.length >= 3) {
+                var centers = row1.slice(0, 3).map(function (w) { return (w.bbox.x0 + w.bbox.x1) / 2; });
+                var pitch = centers[1] - centers[0];
+                var gridRight = centers[2] + pitch * 0.75;
+                var below = nums.filter(function (w) {
+                  var cx = (w.bbox.x0 + w.bbox.x1) / 2, cy = (w.bbox.y0 + w.bbox.y1) / 2;
+                  return cx <= gridRight && cy > row1cy + unit * 4;
+                }).sort(function (a, b) { return a.bbox.y0 - b.bbox.y0; });
+                if (below.length) {
+                  var row2cy = (below[0].bbox.y0 + below[0].bbox.y1) / 2;
+                  below.filter(function (w) {
+                    return Math.abs((w.bbox.y0 + w.bbox.y1) / 2 - row2cy) <= unit * 2.5;
+                  }).forEach(function (w) {
+                    var cx = (w.bbox.x0 + w.bbox.x1) / 2, ci = 0, bd = Infinity;
+                    centers.forEach(function (c, ix) { var d = Math.abs(cx - c); if (d < bd) { bd = d; ci = ix; } });
+                    if (ci === 0 && !v.back && ocrInRange("back", parseFloat(ocrFirstNumber(w.text)))) v.back = ocrFirstNumber(w.text);
+                    if (ci === 1 && !v.front && ocrInRange("front", parseFloat(ocrFirstNumber(w.text)))) v.front = ocrFirstNumber(w.text);
+                  });
+                }
+              }
+            } catch (e) { /* fallback is best-effort only */ }
+          }
+          /* Cross-row positional fallback: if a field is still empty
+             because its own row's labels were unreadable, borrow the
+             column boundaries from another row whose cells are known
+             (the grid columns are shared by all rows), anchor this
+             row's value line on a sibling field that did get a value,
+             and take an unused, in-range number from that line and
+             column. Fills only empty fields; never overwrites. */
+          try {
+            var donorRow = null;
+            [0, 1].forEach(function (ri) {
+              if (donorRow) return;
+              var ks = OCR_GRID_ROWS[ri].filter(function (k) { return FIELD_KEYS.indexOf(k) >= 0; });
+              var have = ks.filter(function (k) { return !!fieldCells[k]; });
+              if (have.length >= 2 && fieldCells[ks[0]] && fieldCells[ks[ks.length - 1]]) {
+                donorRow = { b1: fieldCells[ks[0]].x1, b2: fieldCells[ks[ks.length - 1]].x1 };
+              }
+            });
+            if (donorRow) {
+              [0, 1].forEach(function (ri) {
+                var rowKeys = OCR_GRID_ROWS[ri].filter(function (k) { return FIELD_KEYS.indexOf(k) >= 0; });
+                var anchor = null;
+                rowKeys.forEach(function (k) { if (!anchor && chosen[k]) anchor = chosen[k]; });
+                if (!anchor) return;
+                var acy = (anchor.bbox.y0 + anchor.bbox.y1) / 2;
+                var unit2 = Math.max(1, anchor.bbox.y1 - anchor.bbox.y0);
+                rowKeys.forEach(function (k, ci) {
+                  if (v[k]) return;
+                  var lo = ci === 0 ? -Infinity : (ci === 1 ? donorRow.b1 : donorRow.b2);
+                  var hi = ci === 0 ? donorRow.b1 : (ci === 1 ? donorRow.b2 : Infinity);
+                  var bestN = null, bestWi = -1, bestD = Infinity;
+                  nums.forEach(function (w, wi) {
+                    if (usedNums[wi]) return;
+                    var cx = (w.bbox.x0 + w.bbox.x1) / 2, cy = (w.bbox.y0 + w.bbox.y1) / 2;
+                    if (Math.abs(cy - acy) > unit2 * 2.5) return;
+                    if (cx < lo || cx > hi) return;
+                    if (!ocrInRange(k, parseFloat(ocrFirstNumber(w.text)))) return;
+                    var d = Math.abs(cy - acy);
+                    if (d < bestD) { bestD = d; bestN = w; bestWi = wi; }
+                  });
+                  if (bestN) { v[k] = ocrFirstNumber(bestN.text); usedNums[bestWi] = true; }
+                });
+              });
+            }
+          } catch (e) { /* fallback is best-effort only */ }
+          return v;
+        }
+        /* Duplicate-value guard: identical numbers in two or more fields
+           almost always mean a mis-assignment, so warn above the draft
+           values and ask for a visual check against the original karte. */
+        var OCR_DUP_FIELDS = [["weight", "体重"], ["chest", "胴まわり"], ["neck", "首まわり"], ["back", "着丈"], ["front", "前身頃"], ["waist", "ウエスト"]];
+        function ocrDupGroups(v) {
+          var byVal = {};
+          OCR_DUP_FIELDS.forEach(function (fd) {
+            var raw = v ? v[fd[0]] : "";
+            if (raw === "" || raw === null || raw === undefined) return;
+            var n = Number(raw);
+            if (!isFinite(n)) return;
+            var k = String(n);
+            (byVal[k] = byVal[k] || []).push(fd[1]);
+          });
+          return Object.keys(byVal).filter(function (k) { return byVal[k].length >= 2; })
+            .map(function (k) { return { value: k, labels: byVal[k] }; });
+        }
+        function ocrDupWarnHTML(v) {
+          var g = ocrDupGroups(v);
+          if (!g.length) return "";
+          var detail = g.map(function (x) { return x.labels.join(" と ") + " がどちらも " + x.value; }).join("／");
+          return '<p style="margin:0 0 8px;padding:9px 11px;background:#fdf0ec;border:1px solid #e0a49a;border-radius:9px;color:#8f2a20;font-size:13px;line-height:1.6"><strong>注意：</strong>同じ値が複数の項目に入っています。元のカルテと見比べてください。（' + esc(detail) + '）</p>';
+        }
+        function refreshOcrDupWarn() {
+          var el = $("adm-ocr-dupwarn");
+          if (el) el.innerHTML = ocrDupWarnHTML(A.ocrValues || {});
+        }
+        /* Missed-field guard: any of the 8 fields that stayed empty
+           (label unreadable, value out of range, …) is listed so the
+           admin compares against the original karte instead of
+           trusting a silently-filled wrong value. */
+        function ocrMissedFields(v) {
+          if (!v) return [];
+          return OCR_FIELD_DEFS.filter(function (fd) {
+            return v[fd[0]] === "" || v[fd[0]] === null || v[fd[0]] === undefined;
+          }).map(function (fd) { return OCR_FIELD_LABEL_JP[fd[0]] || fd[1]; });
+        }
+        function ocrMissedWarnHTML(v) {
+          var m = ocrMissedFields(v);
+          if (!m.length) return "";
+          return '<p style="margin:0 0 8px;padding:9px 11px;background:#fdf6e3;border:1px solid #d9c07a;border-radius:9px;color:#7a5c00;font-size:13px;line-height:1.6"><strong>注意：</strong>読み取れなかった項目があります（' + esc(m.join("・")) + '）。元のカルテと見比べてください。</p>';
+        }
+        function refreshOcrMissedWarn() {
+          var el = $("adm-ocr-misswarn");
+          if (el) el.innerHTML = ocrMissedWarnHTML(A.ocrValues || {});
+        }
+        /* --- OCR panel rendering --- */
+        function karteOcrHTML() {
+          var st = A.ocrState, v = A.ocrValues, out = "";
+          out += '<div style="border-top:1px solid #e3e0ea;margin:14px 0 10px"></div>' +
+            '<p class="adm-note" style="margin:0 0 6px"><strong>カルテ写真から読み取る</strong>（届いたカルテ写真との照合）</p>' +
+            '<p class="adm-note" style="margin:0 0 8px">DMで届いたカルテの写真またはPDFを貼り付けると、名前・生年月日・体重・胴まわりなどを読み取り、上の検索条件に下書き入力します（PDFは1ページ目を読み取ります。文字データのあるPDFはそちらを優先します）。<strong>読み取りは目安です。必ず目で確認・修正してから探してください。</strong></p>' +
+            '<div id="adm-ocr-zone" tabindex="0" style="border:2px dashed #b9b3c9;border-radius:10px;padding:16px 12px;text-align:center;color:#6a6580;background:#faf9fc;cursor:pointer">カルテの写真またはPDFをここに貼り付け（Ctrl+V）／ドラッグ＆ドロップ<br/>またはタップしてファイルを選ぶ</div>' +
+            '<input type="file" id="adm-ocr-file" accept="image/*,application/pdf,.pdf" style="display:none" />' +
+            '<p class="adm-note" id="adm-ocr-status" style="margin:8px 0 0">' + esc(st ? (st.message || "") : "") + "</p>";
+          if (v) out += ocrValuesHTML(v) + ocrCompareHTML(v);
+          return out;
+        }
+        function ocrValuesHTML(v) {
+          var out = '<p class="adm-note" style="margin:12px 0 6px"><strong>読み取り結果（下書き）</strong>：直したい所は書き直せます。</p>' +
+            '<div id="adm-ocr-dupwarn">' + ocrDupWarnHTML(v) + '</div>' +
+            '<div id="adm-ocr-misswarn">' + ocrMissedWarnHTML(v) + '</div>' +
+            '<div class="adm-fields2" style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;margin:0 0 8px">';
+          OCR_FIELD_DEFS.forEach(function (fd) {
+            out += '<label class="adm-note" style="margin:0">' + fd[1] +
+              '<input class="adm-input inline" id="adm-ocr-f-' + fd[0] + '" type="' + fd[2] + '"' +
+              (fd[2] === "number" ? ' inputmode="decimal" step="0.1" min="0"' : ' autocomplete="off"') +
+              ' value="' + esc(v[fd[0]] || "") + '" style="margin-top:4px" /></label>';
+          });
+          out += "</div>" +
+            '<div style="display:flex;flex-wrap:wrap;gap:8px;margin:0 0 10px">' +
+            '<button type="button" class="adm-btn" id="adm-ocr-apply">検索条件に反映して探す</button>' +
+            '<button type="button" class="adm-btn light" id="adm-ocr-clear">読み取り結果を消す</button></div>';
+          return out;
+        }
+        function ocrJudgeNum(ocrRaw, regRaw, tol) {
+          var a = (ocrRaw === "" || ocrRaw === null || ocrRaw === undefined) ? null : Number(ocrRaw);
+          var b = (regRaw === "" || regRaw === null || regRaw === undefined) ? null : Number(regRaw);
+          if (a === null || b === null || !isFinite(a) || !isFinite(b)) return { mark: "−", diff: "—" };
+          var d = Math.round((a - b) * 10) / 10;
+          return { mark: Math.abs(d) <= tol ? "○" : "×", diff: (d > 0 ? "+" : "") + d.toString() };
+        }
+        function ocrCompareHTML(v) {
+          var cands = (A.idState && A.idState.status === "done" && A.idState.dogs.length)
+            ? A.idState.dogs
+            : (A.dogs || []).slice().sort(function (x, y) { return Number(x.id) - Number(y.id); });
+          var out = '<p class="adm-note" style="margin:12px 0 6px"><strong>登録データと比べる</strong>：比べる子を選んでください。</p>';
+          if (!cands.length) return out + '<p class="adm-note">比べられる子がいません。</p>';
+          out += '<select class="adm-input inline" id="adm-ocr-dog" style="margin:0 0 10px"><option value="">― 選んでください ―</option>' +
+            cands.map(function (d) {
+              var l = latestOf(d.id);
+              return '<option value="' + esc(d.id) + '"' + (String(A.ocrCompareId) === String(d.id) ? " selected" : "") + ">" +
+                esc(dogTitleOf(d)) + "（胴 " + fmt(l && l.chest, "cm") + "・体重 " + fmt(l && l.weight, "kg") + "）</option>";
+            }).join("") + "</select>";
+          var sel = null;
+          cands.forEach(function (d) { if (String(d.id) === String(A.ocrCompareId)) sel = d; });
+          if (!sel) return out;
+          var l = latestOf(sel.id);
+          var regBirth = String(sel.birth_date || (l && l.birth_date) || "").slice(0, 10);
+          var nameN = normalizeForSearch(dogNameOf(sel)), ocrN = normalizeForSearch(v.name || "");
+          var nameMark = (!ocrN || !nameN) ? "−" : ((nameN === ocrN || nameN.indexOf(ocrN) >= 0 || ocrN.indexOf(nameN) >= 0) ? "○" : "×");
+          var birthMark = (!v.birth || !regBirth) ? "−" : (String(v.birth).slice(0, 10) === regBirth ? "○" : "×");
+          function row(label, ocrDisp, regDisp, mark, diff) {
+            var color = mark === "○" ? "#1d7a3a" : (mark === "×" ? "#c0272d" : "#8a8698");
+            return "<tr><td>" + esc(label) + "</td><td>" + esc(ocrDisp) + "</td><td>" + esc(regDisp) + "</td><td>" +
+              esc(diff) + '</td><td style="color:' + color + ';font-weight:700">' + mark + "</td></tr>";
+          }
+          function numRow(label, ocrRaw, regRaw, unit, tol) {
+            var j = ocrJudgeNum(ocrRaw, regRaw, tol);
+            return row(label, (ocrRaw === "" || ocrRaw === null || ocrRaw === undefined) ? "—" : ocrRaw + unit,
+              (regRaw === "" || regRaw === null || regRaw === undefined) ? "—" : fmt(regRaw) + unit, j.mark, j.diff);
+          }
+          out += '<div style="overflow-x:auto"><table style="border-collapse:collapse;width:100%;font-size:14px">' +
+            "<thead><tr>" + ["項目", "カルテの読み取り", "登録データ", "差", "判定"].map(function (h) {
+              return '<th style="text-align:left;border-bottom:2px solid #e3e0ea;padding:6px 8px">' + h + "</th>";
+            }).join("") + "</tr></thead><tbody>" +
+            row("名前", v.name || "—", dogNameOf(sel) || "—", nameMark, "—") +
+            row("生年月日", v.birth || "—", regBirth || "—", birthMark, "—") +
+            numRow("体重（kg）", v.weight, l && l.weight, "kg", 0.3) +
+            numRow("胴まわり（cm）", v.chest, l && l.chest, "cm", 0.5) +
+            numRow("首まわり（cm）", v.neck, l && l.neck, "cm", 0.5) +
+            numRow("着丈（cm）", v.back, l && l.back_length, "cm", 0.5) +
+            numRow("前身頃（cm）", v.front, l && l.front_length, "cm", 0.5) +
+            numRow("ウエスト（cm）", v.waist, l && l.waist, "cm", 0.5) +
+            "</tbody></table></div>" +
+            '<p class="adm-note" style="margin:8px 0 0">判定の許容差：体重 ±0.3kg、その他 ±0.5cm。× があっても、写真の読み取り違いの可能性があります。飼い主さんへの確認前に、人の目でも見比べてください。</p>';
+          return out;
+        }
+        function ocrFileFromClipboard(e) {
+          var cd = e.clipboardData; if (!cd) return null;
+          var items = cd.items || [];
+          for (var i = 0; i < items.length; i++) {
+            var t = items[i].type || "";
+            if (t.indexOf("image/") === 0 || t === "application/pdf") { var f = items[i].getAsFile(); if (f) return f; }
+          }
+          var f0 = (cd.files && cd.files[0]) ? cd.files[0] : null;
+          return (f0 && (isKartePdf(f0) || (f0.type || "").indexOf("image/") === 0)) ? f0 : null;
+        }
+        function attachKarteOcr() {
+          var zone = $("adm-ocr-zone"), file = $("adm-ocr-file");
+          if (zone && file) {
+            zone.addEventListener("click", function () { file.click(); });
+            zone.addEventListener("dragover", function (e) { e.preventDefault(); });
+            zone.addEventListener("drop", function (e) {
+              e.preventDefault();
+              var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+              if (f) runKarteOcr(f);
+            });
+            zone.addEventListener("paste", function (e) {
+              var f = ocrFileFromClipboard(e);
+              if (f) { e.preventDefault(); runKarteOcr(f); }
+            });
+            file.addEventListener("change", function () { if (file.files && file.files[0]) runKarteOcr(file.files[0]); });
+          }
+          if (!admOcrPasteBound) {
+            admOcrPasteBound = true;
+            document.addEventListener("paste", function (e) {
+              if (!$("adm-ocr-zone")) return;
+              var t = e.target;
+              if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
+              var f = ocrFileFromClipboard(e);
+              if (f) runKarteOcr(f);
+            });
+          }
+          OCR_FIELD_DEFS.forEach(function (fd) {
+            var el = $("adm-ocr-f-" + fd[0]); if (!el) return;
+            el.addEventListener("input", function () {
+              if (!A.ocrValues) A.ocrValues = {};
+              A.ocrValues[fd[0]] = el.value;
+              refreshOcrDupWarn();
+              refreshOcrMissedWarn();
+              if (["name", "birth", "weight", "chest"].indexOf(fd[0]) >= 0) {
+                A.idQuery[fd[0]] = el.value;
+                var si = $("adm-id-" + fd[0]); if (si) si.value = el.value;
+              }
+            });
+          });
+          var apply = $("adm-ocr-apply");
+          if (apply) apply.addEventListener("click", function () {
+            ["name", "birth", "weight", "chest"].forEach(function (k) { A.idQuery[k] = (A.ocrValues && A.ocrValues[k]) || ""; });
+            runIdentitySearch();
+          });
+          var clear = $("adm-ocr-clear");
+          if (clear) clear.addEventListener("click", function () {
+            A.ocrValues = null; A.ocrState = null; A.ocrCompareId = null; renderBreeds();
+          });
+          var sel = $("adm-ocr-dog");
+          if (sel) sel.addEventListener("change", function () {
+            A.ocrCompareId = sel.value ? Number(sel.value) : null; renderBreeds();
+          });
+        }
+
+
         function renderBreeds() {
           var box = $("adm-breeds"); if (!box) return;
           if (!A.dogs.length) { box.innerHTML = '<p class="adm-note">登録されている犬がいません。</p>'; return; }
