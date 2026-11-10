@@ -8,7 +8,7 @@
 
 <script id="pinforme-latest-version-guard">
 (function(){
-  const PINFORME_BUILD_ID="20261110-navi-v4-b34";
+  const PINFORME_BUILD_ID="20261110-navi-v4-b35";
 
   function forceFresh(reason){
     try{
@@ -4244,5 +4244,125 @@ document.addEventListener('DOMContentLoaded', initNaviV4);
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', build); else build();
 })();
 </script>
+<script>
+/* PINFORME notices inbox (production add-on): lists this customer's notices
+   (the same content the admin sends by push) inside the navi. Placed right
+   after the push settings card. Read state is kept on-device only. */
+(function(){
+  'use strict';
+  var SB_URL='https://dsbvaoqgvtoeukigdjdj.supabase.co';
+  var SB_KEY='sb_publishable_403lLhKUQ9X9N1RaxaDduA_9ZQEZ6na';
+  var KEY_STORE='PINFORME_REMEASURE_ACCESS_KEY_V1';
+  var SEEN_STORE='PINFORME_NOTICES_SEEN_V1';
+  var loaded=false, loading=false;
+
+  function normKey(k){
+    var t=String(k||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+    var parts=[];
+    for(var i=0;i<t.length;i+=4) parts.push(t.slice(i,i+4));
+    return parts.join('-');
+  }
+  function currentKey(){
+    try{
+      var saved=localStorage.getItem(KEY_STORE);
+      if(saved) return saved;
+    }catch(e){}
+    var inp=document.getElementById('v2CustomerKey');
+    if(inp && inp.value) return inp.value;
+    return '';
+  }
+  function esc(s){
+    return String(s==null?'':s).replace(/[&<>"']/g,function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+  function fmtDate(iso){
+    var d=new Date(iso);
+    if(isNaN(d.getTime())) return '';
+    return (d.getMonth()+1)+'月'+d.getDate()+'日';
+  }
+  function seenMax(){
+    var v=0;
+    try{ v=parseInt(localStorage.getItem(SEEN_STORE)||'0',10)||0; }catch(e){}
+    return v;
+  }
+  function setSeen(v){
+    try{ localStorage.setItem(SEEN_STORE,String(v)); }catch(e){}
+  }
+
+  async function load(){
+    if(loading) return;
+    var list=document.getElementById('pinNoticesList');
+    if(!list) return;
+    var key=currentKey();
+    if(!key){
+      list.innerHTML='<p class="note">お客様キーでカルテを開くと、あなた宛のお知らせがここに表示されます。</p>';
+      return;
+    }
+    loading=true;
+    try{
+      var res=await fetch(SB_URL+'/rest/v1/rpc/list_my_push_notices',{
+        method:'POST',
+        headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'},
+        body:JSON.stringify({p_key:normKey(key)})
+      });
+      if(!res.ok) throw new Error('http '+res.status);
+      var rows=await res.json();
+      loaded=true;
+      if(!rows || !rows.length){
+        list.innerHTML='<p class="note">まだお知らせはありません。</p>';
+        return;
+      }
+      var seen=seenMax(), maxId=seen, html='';
+      rows.forEach(function(n){
+        if(n.id>maxId) maxId=n.id;
+        var isNew=n.id>seen;
+        html+='<div style="border-top:1px solid #e5e5e5;padding:10px 0">'
+          +'<p class="note" style="margin:0 0 2px">'+esc(fmtDate(n.created_at))
+          +(isNew?' <span style="color:#b00;font-weight:700">NEW</span>':'')
+          +'</p>'
+          +'<p style="margin:0 0 2px;font-weight:700">'+esc(n.title)+'</p>'
+          +'<p style="margin:0;white-space:pre-wrap">'+esc(n.body)+'</p>';
+        var naviRoot='https://pinforme.github.io/pinforme-measurement';
+        if(n.url && n.url.indexOf(naviRoot)!==0){
+          html+='<p style="margin:4px 0 0"><a href="'+esc(n.url)+'">くわしくはこちら</a></p>';
+        }
+        html+='</div>';
+      });
+      list.innerHTML=html;
+      setSeen(maxId);
+    }catch(e){
+      list.innerHTML='<p class="note">お知らせを読み込めませんでした。</p>';
+    }finally{
+      loading=false;
+    }
+  }
+
+  function build(){
+    var anchor=document.getElementById('pinPushCard');
+    if(!anchor || document.getElementById('pinNoticesCard')) return false;
+    var card=document.createElement('div');
+    card.id='pinNoticesCard'; card.className='entry-card';
+    card.innerHTML='<h2>お知らせ</h2><div id="pinNoticesList"><p class="note">読み込んでいます…</p></div>';
+    anchor.after(card);
+    load();
+    return true;
+  }
+
+  var tries=0;
+  var timer=setInterval(function(){
+    tries++;
+    if(build() || tries>60) clearInterval(timer);
+  },500);
+
+  /* Retry loading once a key appears (e.g. right after unlock), and refresh
+     when the app comes back to the foreground (e.g. from a notification). */
+  setInterval(function(){ if(!loaded) load(); },4000);
+  document.addEventListener('visibilitychange',function(){
+    if(!document.hidden) load();
+  });
+})();
+</script>
+
 </body>
 </html>
