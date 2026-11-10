@@ -8,7 +8,7 @@
 
 <script id="pinforme-latest-version-guard">
 (function(){
-  const PINFORME_BUILD_ID="20261110-navi-v4-b36";
+  const PINFORME_BUILD_ID="20261110-navi-v4-b37";
 
   function forceFresh(reason){
     try{
@@ -4246,7 +4246,7 @@ document.addEventListener('DOMContentLoaded', initNaviV4);
 </script>
 <script>
 /* PINFORME notices inbox v2 (production add-on): a mail icon with an unread
-   badge at the top-left of the home screen (like a typical app). The panel
+   badge at the top-right of the home screen (like a typical app). The panel
    lists notice TITLES only; tapping one opens its body and marks it read.
    Read state is kept on-device only. */
 (function(){
@@ -4305,9 +4305,9 @@ document.addEventListener('DOMContentLoaded', initNaviV4);
     var btn=document.createElement('button');
     btn.type='button'; btn.id='pinNoticeBtn';
     btn.setAttribute('aria-label','お知らせ');
-    btn.style.cssText='position:fixed;top:calc(env(safe-area-inset-top, 0px) + 8px);left:10px;z-index:9000;background:rgba(255,255,255,.92);border:1px solid #ddd;border-radius:14px;padding:6px 10px 4px;display:flex;flex-direction:column;align-items:center;gap:0;box-shadow:0 1px 4px rgba(0,0,0,.12);cursor:pointer';
+    btn.style.cssText='position:fixed;top:calc(env(safe-area-inset-top, 0px) + 8px);right:10px;z-index:9000;background:rgba(255,255,255,.92);border:1px solid #ddd;border-radius:14px;padding:6px 10px 4px;display:flex;flex-direction:column;align-items:center;gap:0;box-shadow:0 1px 4px rgba(0,0,0,.12);cursor:pointer';
     btn.innerHTML='<span style="position:relative;display:block;line-height:0">'+MAIL_SVG
-      +'<span id="pinNoticeBadge" style="display:none;position:absolute;top:-7px;right:-11px;background:#d32f2f;color:#fff;font-size:11px;font-weight:700;min-width:18px;height:18px;line-height:18px;border-radius:9px;text-align:center;padding:0 4px"></span></span>'
+      +'<span id="pinNoticeBadge" style="display:none;position:absolute;top:-7px;left:-11px;background:#d32f2f;color:#fff;font-size:11px;font-weight:700;min-width:18px;height:18px;line-height:18px;border-radius:9px;text-align:center;padding:0 4px"></span></span>'
       +'<span style="font-size:10px;color:#222;line-height:1.2">お知らせ</span>';
     btn.addEventListener('click',openPanel);
     document.body.appendChild(btn);
