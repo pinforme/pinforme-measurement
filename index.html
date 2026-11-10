@@ -8,7 +8,7 @@
 
 <script id="pinforme-latest-version-guard">
 (function(){
-  const PINFORME_BUILD_ID="20261110-navi-v4-b33";
+  const PINFORME_BUILD_ID="20261110-navi-v4-b34";
 
   function forceFresh(reason){
     try{
@@ -4086,7 +4086,7 @@ document.addEventListener('DOMContentLoaded', initNaviV4);
       var j=sub.toJSON();
       var res=await fetch(SB_URL+'/rest/v1/rpc/register_push_subscription',{method:'POST',headers:sbHeaders(),body:JSON.stringify({p_key:normKey(key),p_endpoint:j.endpoint,p_p256dh:j.keys.p256dh,p_auth:j.keys.auth,p_user_agent:navigator.userAgent})});
       if(!res.ok){ pushStatus('登録に失敗しました（'+res.status+'）'); return; }
-      pushStatus('登録できました。お知らせがある時に、この端末へ通知します。');
+      pushStatus('登録できました。お知らせがある時に、この端末へ通知します。'); setPushButtons(true);
     }catch(e){ pushStatus('登録できませんでした: '+((e && e.message) || e)); }
   }
   async function disablePush(){
@@ -4101,14 +4101,20 @@ document.addEventListener('DOMContentLoaded', initNaviV4);
         if(key){ try{ await fetch(SB_URL+'/rest/v1/rpc/unregister_push_subscription',{method:'POST',headers:sbHeaders(),body:JSON.stringify({p_key:normKey(key),p_endpoint:ep})}); }catch(e){} }
         await sub.unsubscribe();
       }
-      pushStatus('通知を止めました。');
+      pushStatus('通知を止めました。'); setPushButtons(false);
     }catch(e){ pushStatus('止められませんでした: '+((e && e.message) || e)); }
+  }
+  function setPushButtons(subscribed){
+    var en=document.getElementById('pinPushEnableBtn'), dis=document.getElementById('pinPushDisableBtn');
+    if(en){ en.disabled=!!subscribed; en.style.opacity=subscribed?'0.45':''; }
+    if(dis){ dis.disabled=!subscribed; dis.style.opacity=subscribed?'':'0.45'; }
   }
   async function reflectPushState(){
     try{
       if(!('serviceWorker' in navigator) || !('PushManager' in window)) return;
       var reg=await navigator.serviceWorker.ready;
       var sub=await reg.pushManager.getSubscription();
+      setPushButtons(!!sub);
       if(sub) pushStatus('この端末で受け取る設定になっています');
     }catch(e){}
   }
