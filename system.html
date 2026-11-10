@@ -4095,5 +4095,121 @@ setPINFORMEKarte=function(d){
         else init();
       })();
     </script>
-  </body>
+  <script>
+/* PINFORME admin: push send panel (add-on). Shown only while an admin
+   session exists in sessionStorage; the server enforces admin rights on
+   every call, so this panel is a UI convenience, not the security gate. */
+(function(){
+  var SESSION_KEY='PINFORME_ADMIN_SESSION_V1';
+  var SB_URL='https://dsbvaoqgvtoeukigdjdj.supabase.co';
+  var SB_KEY='sb_publishable_403lLhKUQ9X9N1RaxaDduA_9ZQEZ6na';
+  var checkedCount=-1;
+
+  function token(){
+    try{
+      var s=JSON.parse(sessionStorage.getItem(SESSION_KEY)||'null');
+      return (s && s.access_token) ? s.access_token : '';
+    }catch(e){ return ''; }
+  }
+  function headers(tok){
+    return {'apikey':SB_KEY,'Authorization':'Bearer '+(tok||SB_KEY),'Content-Type':'application/json'};
+  }
+  function el(id){ return document.getElementById(id); }
+  function status(t){ var s=el('admPushStatus'); if(s) s.textContent=t; }
+
+  function formParams(){
+    var mode=el('admPushMode').value;
+    var p={ p_mode:mode, p_key:null, p_chest_min:null, p_chest_max:null };
+    if(mode==='key'){ p.p_key=(el('admPushKey').value||'').trim() || null; }
+    if(mode==='range'){
+      var mn=parseFloat(el('admPushMin').value), mx=parseFloat(el('admPushMax').value);
+      p.p_chest_min=isNaN(mn)?null:mn; p.p_chest_max=isNaN(mx)?null:mx;
+    }
+    return p;
+  }
+  function syncMode(){
+    var mode=el('admPushMode').value;
+    el('admPushKeyRow').style.display = mode==='key' ? '' : 'none';
+    el('admPushRangeRow').style.display = mode==='range' ? '' : 'none';
+    checkedCount=-1; status('');
+    el('admPushSendBtn').disabled=true;
+  }
+  async function checkCount(){
+    var tok=token(); if(!tok){ status('管理者としてログインしてください。'); return; }
+    var p=formParams();
+    if(p.p_mode==='key' && !p.p_key){ status('お客様キーを入力してください。'); return; }
+    if(p.p_mode==='range' && (p.p_chest_min===null || p.p_chest_max===null)){ status('胴まわりの範囲を入力してください。'); return; }
+    status('対象を確認しています…');
+    try{
+      var res=await fetch(SB_URL+'/rest/v1/rpc/admin_list_push_subscriptions',{method:'POST',headers:headers(tok),body:JSON.stringify(p)});
+      var data=await res.json().catch(function(){ return null; });
+      if(!res.ok){ status('確認できませんでした: '+((data && (data.message||data.error)) || res.status)); return; }
+      checkedCount=Array.isArray(data)?data.length:0;
+      status('対象は '+checkedCount+' 件（端末）です。');
+      el('admPushSendBtn').disabled = checkedCount===0;
+    }catch(e){ status('確認エラー: '+((e && e.message) || e)); }
+  }
+  async function sendPush(){
+    var tok=token(); if(!tok){ status('管理者としてログインしてください。'); return; }
+    var title=(el('admPushTitle').value||'').trim();
+    var body=(el('admPushBody').value||'').trim();
+    if(!title || !body){ status('タイトルと本文を入力してください。'); return; }
+    if(checkedCount<0){ status('先に「対象を確認する」を押してください。'); return; }
+    if(!confirm('対象 '+checkedCount+' 件（端末）に送信します。よろしいですか？')) return;
+    var p=formParams();
+    status('送信しています…');
+    el('admPushSendBtn').disabled=true;
+    try{
+      var res=await fetch(SB_URL+'/functions/v1/push-send',{method:'POST',headers:headers(tok),body:JSON.stringify({
+        mode:p.p_mode, p_key:p.p_key, chest_min:p.p_chest_min, chest_max:p.p_chest_max,
+        title:title, body:body, url:'https://pinforme.github.io/pinforme-measurement/'
+      })});
+      var data=await res.json().catch(function(){ return {}; });
+      if(res.ok && data.ok){
+        status('送信しました（対象'+(data.total||0)+'件／送信'+(data.sent||0)+'件'+(data.cleaned?'／無効な登録を'+(data.cleaned)+'件削除':'')+'）。');
+      }else{
+        status('送信できませんでした: '+((data && data.error) || res.status));
+        el('admPushSendBtn').disabled=false;
+      }
+    }catch(e){ status('送信エラー: '+((e && e.message) || e)); el('admPushSendBtn').disabled=false; }
+  }
+
+  function build(){
+    if(el('admPushCard')) return;
+    var home=el('adm-home'); if(!home) return;
+    var card=document.createElement('div');
+    card.className='adm-card'; card.id='admPushCard';
+    card.innerHTML=
+      '<h3>お知らせ通知を送る</h3>'+
+      '<p class="adm-note">採寸ナビで「通知を受け取る」を設定した端末へ送ります。送信前に必ず対象を確認してください。</p>'+
+      '<p><label>対象<br><select class="adm-input" id="admPushMode">'+
+      '<option value="all">全員</option>'+
+      '<option value="range">胴まわりの範囲</option>'+
+      '<option value="key">個別（お客様キー）</option>'+
+      '</select></label></p>'+
+      '<p id="admPushRangeRow" style="display:none"><label>胴まわり（cm）<br>'+
+      '<input class="adm-input" id="admPushMin" type="number" step="0.1" placeholder="以上（例 35）"> 〜 '+
+      '<input class="adm-input" id="admPushMax" type="number" step="0.1" placeholder="未満（例 38）"></label></p>'+
+      '<p id="admPushKeyRow" style="display:none"><label>お客様キー<br>'+
+      '<input class="adm-input" id="admPushKey" type="text" placeholder="XXXX-XXXX-XXXX-XXXX"></label></p>'+
+      '<p><label>タイトル<br><input class="adm-input" id="admPushTitle" type="text" placeholder="例：試着モニター募集のお知らせ"></label></p>'+
+      '<p><label>本文<br><textarea class="adm-input" id="admPushBody" rows="3" placeholder="例：SIZE37（胴まわり35〜38cm）の試着モニターを募集しています"></textarea></label></p>'+
+      '<p><button type="button" class="adm-btn" id="admPushCheckBtn">対象を確認する</button> '+
+      '<button type="button" class="adm-btn" id="admPushSendBtn" disabled>この内容で送信する</button></p>'+
+      '<p class="adm-note" id="admPushStatus"></p>';
+    home.insertBefore(card, home.firstChild);
+    el('admPushMode').addEventListener('change', syncMode);
+    el('admPushCheckBtn').addEventListener('click', checkCount);
+    el('admPushSendBtn').addEventListener('click', sendPush);
+  }
+  function remove(){
+    var c=el('admPushCard'); if(c) c.remove();
+  }
+  setInterval(function(){
+    if(token()) build(); else remove();
+  }, 1000);
+})();
+
+</script>
+</body>
 </html>
