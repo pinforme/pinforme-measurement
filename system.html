@@ -5033,18 +5033,20 @@ setPINFORMEKarte=function(d){
 
   function formParams(){
     var mode=el('admPushMode').value;
-    var p={ p_mode:mode, p_key:null, p_chest_min:null, p_chest_max:null };
+    var p={ p_mode:mode, p_key:null, p_chest_min:null, p_chest_max:null, p_breed:null };
     if(mode==='key'){ p.p_key=(el('admPushKey').value||'').trim() || null; }
     if(mode==='range'){
       var mn=parseFloat(el('admPushMin').value), mx=parseFloat(el('admPushMax').value);
       p.p_chest_min=isNaN(mn)?null:mn; p.p_chest_max=isNaN(mx)?null:mx;
     }
+    if(mode==='breed'){ p.p_breed=el('admPushBreed').value || null; }
     return p;
   }
   function syncMode(){
     var mode=el('admPushMode').value;
     el('admPushKeyRow').style.display = mode==='key' ? '' : 'none';
     el('admPushRangeRow').style.display = mode==='range' ? '' : 'none';
+    el('admPushBreedRow').style.display = mode==='breed' ? '' : 'none';
     checkedCount=-1; status('');
     el('admPushSendBtn').disabled=true;
   }
@@ -5075,7 +5077,7 @@ setPINFORMEKarte=function(d){
     el('admPushSendBtn').disabled=true;
     try{
       var res=await fetch(SB_URL+'/functions/v1/push-send',{method:'POST',headers:headers(tok),body:JSON.stringify({
-        mode:p.p_mode, p_key:p.p_key, chest_min:p.p_chest_min, chest_max:p.p_chest_max,
+        mode:p.p_mode, p_key:p.p_key, chest_min:p.p_chest_min, chest_max:p.p_chest_max, breed:p.p_breed,
         title:title, body:body, url:'https://pinforme.github.io/pinforme-measurement/'
       })});
       var data=await res.json().catch(function(){ return {}; });
@@ -5100,10 +5102,17 @@ setPINFORMEKarte=function(d){
       '<option value="all">全員</option>'+
       '<option value="range">胴まわりの範囲</option>'+
       '<option value="key">個別（お客様キー）</option>'+
+      '<option value="breed">犬種</option>'+
       '</select></label></p>'+
       '<p id="admPushRangeRow" style="display:none"><label>胴まわり（cm）<br>'+
       '<input class="adm-input" id="admPushMin" type="number" step="0.1" placeholder="以上（例 35）"> 〜 '+
       '<input class="adm-input" id="admPushMax" type="number" step="0.1" placeholder="未満（例 38）"></label></p>'+
+      '<p id="admPushBreedRow" style="display:none"><label>犬種（この犬種の子がいる飼い主さんだけに届きます）<br>'+
+      '<select class="adm-input" id="admPushBreed">'+
+      '<option value="ミニチュアピンシャー">ミニチュアピンシャー</option>'+
+      '<option value="イタリアングレーハウンド">イタリアングレーハウンド</option>'+
+      '<option value="ダックスフンド">ダックスフンド</option>'+
+      '</select></label></p>'+
       '<p id="admPushKeyRow" style="display:none"><label>お客様キー<br>'+
       '<input class="adm-input" id="admPushKey" type="text" placeholder="XXXX-XXXX-XXXX-XXXX"></label></p>'+
       '<p><label>タイトル<br><input class="adm-input" id="admPushTitle" type="text" placeholder="例：試着モニター募集のお知らせ"></label></p>'+
