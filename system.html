@@ -5098,8 +5098,9 @@ setPINFORMEKarte=function(d){
       })});
       var data=await res.json().catch(function(){ return {}; });
       if(res.ok && data.ok){
-        if(data.stored_only){ status('お知らせを保存しました（プッシュ対象の端末はありませんでした）。'); }
-        else{ status('送信しました（対象'+(data.total||0)+'件／送信'+(data.sent||0)+'件'+(data.cleaned?'／無効な登録を'+(data.cleaned)+'件削除':'')+'）。'); }
+        var inboxNote = checkedInboxOwners>=0 ? '受信箱には '+checkedInboxOwners+' 人に表示されます。' : '';
+        if(data.stored_only){ status('お知らせを保存しました（プッシュ対象の端末はありませんでした）。'+inboxNote); }
+        else{ status('送信しました（対象'+(data.total||0)+'件／送信'+(data.sent||0)+'件'+(data.cleaned?'／無効な登録を'+(data.cleaned)+'件削除':'')+'）。'+inboxNote); }
       }else{
         status('送信できませんでした: '+((data && data.error) || res.status));
         el('admPushSendBtn').disabled=false;
