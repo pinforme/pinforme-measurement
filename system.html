@@ -5018,6 +5018,8 @@ setPINFORMEKarte=function(d){
   var SB_URL='https://dsbvaoqgvtoeukigdjdj.supabase.co';
   var SB_KEY='sb_publishable_403lLhKUQ9X9N1RaxaDduA_9ZQEZ6na';
   var checkedCount=-1;
+  var checkedPushOwners=-1;
+  var checkedInboxOwners=-1;
 
   function token(){
     try{
@@ -5047,6 +5049,7 @@ setPINFORMEKarte=function(d){
     el('admPushKeyRow').style.display = mode==='key' ? '' : 'none';
     el('admPushRangeRow').style.display = mode==='range' ? '' : 'none';
     el('admPushBreedRow').style.display = mode==='breed' ? '' : 'none';
+    if(mode==='breed'){ var bs=el('admPushBreed'); if(bs && !bs.value) loadBreeds(); }
     checkedCount=-1; status('');
     el('admPushSendBtn').disabled=true;
   }
@@ -5055,14 +5058,24 @@ setPINFORMEKarte=function(d){
     var p=formParams();
     if(p.p_mode==='key' && !p.p_key){ status('お客様キーを入力してください。'); return; }
     if(p.p_mode==='range' && (p.p_chest_min===null || p.p_chest_max===null)){ status('胴まわりの範囲を入力してください。'); return; }
+    if(p.p_mode==='breed' && !p.p_breed){ status('犬種を選んでください。'); return; }
     status('対象を確認しています…');
     try{
       var res=await fetch(SB_URL+'/rest/v1/rpc/admin_list_push_subscriptions',{method:'POST',headers:headers(tok),body:JSON.stringify(p)});
       var data=await res.json().catch(function(){ return null; });
       if(!res.ok){ status('確認できませんでした: '+((data && (data.message||data.error)) || res.status)); return; }
       checkedCount=Array.isArray(data)?data.length:0;
-      status('対象は '+checkedCount+' 件（端末）です。');
-      el('admPushSendBtn').disabled = checkedCount===0;
+      var owners={};
+      (data||[]).forEach(function(r){ owners[r.owner_id]=1; });
+      checkedPushOwners=Object.keys(owners).length;
+      checkedInboxOwners=-1;
+      try{
+        var res2=await fetch(SB_URL+'/rest/v1/rpc/admin_push_audience',{method:'POST',headers:headers(tok),body:JSON.stringify(p)});
+        var aud=await res2.json().catch(function(){ return null; });
+        if(res2.ok && Array.isArray(aud) && aud.length) checkedInboxOwners=aud[0].inbox_owners;
+      }catch(e2){}
+      status('対象：プッシュが届く '+checkedPushOwners+' 人（'+checkedCount+' 端末）'+(checkedInboxOwners>=0 ? '／受信箱に表示 '+checkedInboxOwners+' 人' : ''));
+      el('admPushSendBtn').disabled = (checkedCount===0 && !(checkedInboxOwners>0));
     }catch(e){ status('確認エラー: '+((e && e.message) || e)); }
   }
   async function sendPush(){
@@ -5071,7 +5084,10 @@ setPINFORMEKarte=function(d){
     var body=(el('admPushBody').value||'').trim();
     if(!title || !body){ status('タイトルと本文を入力してください。'); return; }
     if(checkedCount<0){ status('先に「対象を確認する」を押してください。'); return; }
-    if(!confirm('対象 '+checkedCount+' 件（端末）に送信します。よろしいですか？')) return;
+    var cmsg = checkedCount>0
+      ? 'プッシュ '+checkedPushOwners+' 人（'+checkedCount+' 端末）に送ります'+(checkedInboxOwners>=0 ? '。受信箱には '+checkedInboxOwners+' 人に表示されます' : '')+'。よろしいですか？'
+      : 'プッシュ対象の端末はありませんが、お知らせとして保存し、受信箱に '+(checkedInboxOwners>=0?checkedInboxOwners:'')+' 人へ表示します。よろしいですか？';
+    if(!confirm(cmsg)) return;
     var p=formParams();
     status('送信しています…');
     el('admPushSendBtn').disabled=true;
@@ -5082,7 +5098,8 @@ setPINFORMEKarte=function(d){
       })});
       var data=await res.json().catch(function(){ return {}; });
       if(res.ok && data.ok){
-        status('送信しました（対象'+(data.total||0)+'件／送信'+(data.sent||0)+'件'+(data.cleaned?'／無効な登録を'+(data.cleaned)+'件削除':'')+'）。');
+        if(data.stored_only){ status('お知らせを保存しました（プッシュ対象の端末はありませんでした）。'); }
+        else{ status('送信しました（対象'+(data.total||0)+'件／送信'+(data.sent||0)+'件'+(data.cleaned?'／無効な登録を'+(data.cleaned)+'件削除':'')+'）。'); }
       }else{
         status('送信できませんでした: '+((data && data.error) || res.status));
         el('admPushSendBtn').disabled=false;
@@ -5090,6 +5107,40 @@ setPINFORMEKarte=function(d){
     }catch(e){ status('送信エラー: '+((e && e.message) || e)); el('admPushSendBtn').disabled=false; }
   }
 
+  function escHtml(t){ return String(t==null?'':t).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  async function loadOnOwners(){
+    var box=el('admPushOnList'); if(!box) return;
+    var tok=token(); if(!tok) return;
+    try{
+      var res=await fetch(SB_URL+'/rest/v1/rpc/admin_list_push_owners',{method:'POST',headers:headers(tok),body:JSON.stringify({})});
+      var data=await res.json().catch(function(){ return null; });
+      if(!res.ok || !Array.isArray(data)) throw new Error('bad');
+      var sum=el('admPushOnSummary');
+      if(sum) sum.textContent='通知をONにしている飼い主（'+data.length+'人）';
+      if(!data.length){ box.textContent='まだいません。'; return; }
+      box.innerHTML=data.map(function(r){
+        return '<div>'+escHtml(r.dog_names||'')+'（'+escHtml(r.breeds||'')+'）— '+r.devices+'端末</div>';
+      }).join('');
+    }catch(e){ box.textContent='取得できませんでした。'; }
+  }
+  async function loadBreeds(){
+    var sel=el('admPushBreed'); if(!sel) return;
+    var tok=token(); if(!tok) return;
+    try{
+      var res=await fetch(SB_URL+'/rest/v1/rpc/admin_list_breeds',{method:'POST',headers:headers(tok),body:JSON.stringify({})});
+      var data=await res.json().catch(function(){ return null; });
+      if(!res.ok || !Array.isArray(data)) throw new Error('bad');
+      sel.innerHTML='';
+      if(!data.length){ sel.innerHTML='<option value="">登録のある犬種がありません</option>'; return; }
+      data.forEach(function(r){
+        var o=document.createElement('option');
+        o.value=r.breed; o.textContent=r.breed+'（'+r.dogs+'頭）';
+        sel.appendChild(o);
+      });
+    }catch(e){
+      sel.innerHTML='<option value="">犬種を取得できませんでした</option>';
+    }
+  }
   function build(){
     if(el('admPushCard')) return;
     var home=el('adm-home'); if(!home) return;
@@ -5109,11 +5160,7 @@ setPINFORMEKarte=function(d){
       '<input class="adm-input" id="admPushMax" type="number" step="0.1" placeholder="未満（例 38）"></label></p>'+
       '<p id="admPushBreedRow" style="display:none"><label>犬種（この犬種の子がいる飼い主さんだけに届きます）<br>'+
       '<select class="adm-input" id="admPushBreed">'+
-      '<option value="ミニチュアピンシャー">ミニチュアピンシャー</option>'+
-      '<option value="トイマンチェスターテリア">トイマンチェスターテリア</option>'+
-      '<option value="ポメラニアン">ポメラニアン</option>'+
-      '<option value="イタリアングレーハウンド">イタリアングレーハウンド</option>'+
-      '<option value="ダックスフンド">ダックスフンド</option>'+
+      '<option value="">読み込み中…</option>'+
       '</select></label></p>'+
       '<p id="admPushKeyRow" style="display:none"><label>お客様キー<br>'+
       '<input class="adm-input" id="admPushKey" type="text" placeholder="XXXX-XXXX-XXXX-XXXX"></label></p>'+
@@ -5121,8 +5168,11 @@ setPINFORMEKarte=function(d){
       '<p><label>本文<br><textarea class="adm-input" id="admPushBody" rows="3" placeholder="例：SIZE37（胴まわり35〜38cm）の試着モニターを募集しています"></textarea></label></p>'+
       '<p><button type="button" class="adm-btn" id="admPushCheckBtn">対象を確認する</button> '+
       '<button type="button" class="adm-btn" id="admPushSendBtn" disabled>この内容で送信する</button></p>'+
-      '<p class="adm-note" id="admPushStatus"></p>';
+      '<p class="adm-note" id="admPushStatus"></p>'+
+      '<details class="adm-note"><summary id="admPushOnSummary">通知をONにしている飼い主</summary><div id="admPushOnList">読み込み中…</div></details>';
     home.insertBefore(card, home.firstChild);
+    loadBreeds();
+    loadOnOwners();
     el('admPushMode').addEventListener('change', syncMode);
     el('admPushCheckBtn').addEventListener('click', checkCount);
     el('admPushSendBtn').addEventListener('click', sendPush);
