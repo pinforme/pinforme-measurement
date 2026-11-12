@@ -6,6 +6,13 @@
     <meta name="color-scheme" content="light dark" />
     <link rel="icon" href="data:," />
     <title>PINFORME 採寸データシステム</title>
+    <link rel="manifest" href="manifest-admin.webmanifest" />
+    <link rel="apple-touch-icon" href="admin-apple-touch-icon.png" />
+    <meta name="theme-color" content="#111111" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="管理画面" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -637,6 +644,69 @@
       /* login form */
       #adm-login-box label { font-size: 14px; font-weight: 600; color: #333; }
       #adm-login-box p { margin: 10px 0; }
+    </style>
+    <style>
+      /* ---------- admin PWA / phone usability (2026-11-13) ----------
+         Phone-width only: larger text, >=48px tap targets, and the
+         frequent admin actions moved ahead of the stage info box.
+         Desktop rendering is untouched. No service worker is
+         registered from this page on purpose: the navi SW (sw.js)
+         already owns the whole /pinforme-measurement/ scope, and a
+         second SW for system.html would have to share that scope
+         and could replace the navi SW (breaking navi push). iOS
+         home-screen app behaviour comes from the apple metas and
+         the manifest link in the head. */
+      @media (max-width: 760px) {
+        /* readability */
+        .adm-wrap { font-size: 16.5px; line-height: 1.8; }
+        .adm-card h3 { font-size: 18.5px; }
+        .adm-note { font-size: 13.5px; line-height: 1.75; }
+        .adm-status { font-size: 14.5px; line-height: 1.7; }
+        .adm-crumbs { font-size: 13.5px; }
+        .adm-card-main { font-size: 17.5px; }
+        .adm-card-sub { font-size: 14px; line-height: 1.55; }
+        .adm-kvrow { font-size: 15.5px; }
+        .adm-kvrow .k { font-size: 13.5px; }
+        .adm-table { font-size: 14px; }
+        .adm-meta, .adm-kv { font-size: 15px; }
+        .adm-badge { font-size: 12.5px; padding: 3px 9px; }
+        .adm-stage-head { font-size: 14px; }
+        .adm-stage-notes { font-size: 12.5px; line-height: 1.75; }
+        .adm-more summary { font-size: 14px; padding: 12px 0; }
+        .adm-sec-head { font-size: 17px; }
+        #adm-login-box label { font-size: 15px; }
+        /* tap targets (about 48px or taller) */
+        .adm-btn { min-height: 48px; padding: 11px 18px; font-size: 15.5px; }
+        .adm-btn.small { min-height: 44px; padding: 8px 14px; font-size: 14px; }
+        .adm-btn.block { min-height: 56px; font-size: 17px; }
+        .adm-back { min-height: 48px; padding: 11px 16px; font-size: 15.5px; }
+        .adm-tab { min-height: 52px; font-size: 16px; }
+        .adm-chip-btn { min-height: 48px; padding: 11px 18px; font-size: 14.5px; }
+        .adm-card-row { min-height: 64px; padding: 13px 14px; }
+        .adm-input { min-height: 54px; }
+        .tab-btn { min-height: 48px; padding: 11px 18px; font-size: 15.5px; }
+        .dl-btn { min-height: 52px; font-size: 16.5px; }
+        .toc { gap: 8px; }
+        .toc a { font-size: 13.5px; padding: 8px 13px; }
+        .toc .toc-label { font-size: 14px; }
+        /* spacing */
+        .adm-card { padding: 18px 16px; margin: 16px 0; }
+        .adm-list { gap: 11px; }
+        .adm-row { gap: 10px; }
+        /* admin home: frequent actions first. The stage box is
+           reference info; on phones it moves below the view tabs so
+           search and lists are reachable without scrolling past it.
+           Flex order only — DOM, functions and data flow unchanged. */
+        #adm-home { display: flex; flex-direction: column; }
+        #adm-home > .adm-session-bar { order: 0; }
+        #adm-home > h3 { order: 1; }
+        #adm-home > .adm-home-summary { order: 2; }
+        #adm-home > .adm-tabs { order: 3; }
+        #adm-home > .adm-status { order: 4; }
+        #adm-home > .adm-stage { order: 5; }
+        #adm-home > .adm-note { order: 6; }
+        #adm-home > #adm-pub-toggle { order: 7; }
+      }
     </style>
   </head>
   <body>
