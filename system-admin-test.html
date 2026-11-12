@@ -6,6 +6,13 @@
     <meta name="color-scheme" content="light dark" />
     <link rel="icon" href="data:," />
     <title>PINFORME 採寸データシステム</title>
+    <link rel="manifest" href="manifest-admin.webmanifest" />
+    <link rel="apple-touch-icon" href="admin-apple-touch-icon.png" />
+    <meta name="theme-color" content="#111111" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="管理画面" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -612,6 +619,43 @@
          admin side only — public markup/scripts are not modified. */
       body.adm-on .wrap > header.hero { display: none; }
       body.adm-on .wrap > section:not(.adm-wrap) > *:not(.sec-head) { display: none; }
+      /* §21 (2026-11-13, usability round 2): pre-login lock. Until an
+         admin session is verified (showAdmin removes this class;
+         showLogin restores it), only the admin section — the login
+         form and its minimal guidance — is visible. The TOC, hero,
+         stats and every public section (checker, distribution,
+         breeds, rule, measurement, findings, tools, progress,
+         pattern) stay hidden, so no registered-dog data, checker or
+         search is reachable before login. After login the same
+         sections remain available via the existing expand toggle.
+         Display control only: markup, functions and data flow are
+         unchanged. */
+      body.adm-locked .wrap > nav.toc,
+      body.adm-locked .wrap > header.hero,
+      body.adm-locked .wrap > .stats,
+      body.adm-locked .wrap > section:not(.adm-wrap) { display: none; }
+      /* §21: admin home order at every width (the phone block below
+         repeats the same order for <=760px). Status summary first,
+         then the view tabs (the main actions), status line, and the
+         stage reference box below them. Flex order only. */
+      #adm-home { display: flex; flex-direction: column; }
+      #adm-home > .adm-session-bar { order: 0; }
+      #adm-home > h3 { order: 1; }
+      #adm-home > .adm-home-summary { order: 2; }
+      #adm-home > .adm-tabs { order: 3; }
+      #adm-home > .adm-status { order: 4; }
+      #adm-home > .adm-stage { order: 5; }
+      #adm-home > .adm-note { order: 6; }
+      #adm-home > #adm-pub-toggle { order: 7; }
+      /* §21: the summary chips read as one "current status" card. */
+      .adm-home-summary { background: #fafafa; border: 1px solid #e3e0ea; border-radius: 12px; padding: 12px; }
+      .adm-home-summary::before { content: "現在の状況"; flex: 0 0 100%; font-size: 13px; font-weight: 700; color: #555; }
+      /* §21: auxiliary searches in the list view (customer key,
+         identity check, karte OCR) fold into labelled details blocks
+         under the one main name/ID search, instead of stacking open
+         above and below the breed list. */
+      .adm-subsearch { border-top: 1px solid #e3e0ea; margin-top: 12px; padding-top: 2px; }
+      .adm-subsearch > summary { font-size: 14.5px; font-weight: 700; color: #333; padding: 10px 0; }
       .adm-home-summary { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; align-items: center; }
       .adm-stage { margin: 12px 0 4px; padding: 10px 12px; border: 1px solid #e2ddd5; border-radius: 10px; background: #faf8f4; }
       .adm-stage-head { font-size: 13px; font-weight: 700; margin-bottom: 8px; }
@@ -648,11 +692,245 @@
       #adm-login-box label { font-size: 14px; font-weight: 600; color: #333; }
       #adm-login-box p { margin: 10px 0; }
     </style>
+    <style>
+      /* ---------- admin PWA / phone usability (2026-11-13) ----------
+         Phone-width only: larger text, >=48px tap targets, and the
+         frequent admin actions moved ahead of the stage info box.
+         Desktop rendering is untouched. No service worker is
+         registered from this page on purpose: the navi SW (sw.js)
+         already owns the whole /pinforme-measurement/ scope, and a
+         second SW for system.html would have to share that scope
+         and could replace the navi SW (breaking navi push). iOS
+         home-screen app behaviour comes from the apple metas and
+         the manifest link in the head. */
+      @media (max-width: 760px) {
+        /* readability */
+        .adm-wrap { font-size: 16.5px; line-height: 1.8; }
+        .adm-card h3 { font-size: 18.5px; }
+        .adm-note { font-size: 13.5px; line-height: 1.75; }
+        .adm-status { font-size: 14.5px; line-height: 1.7; }
+        .adm-crumbs { font-size: 13.5px; }
+        .adm-card-main { font-size: 17.5px; }
+        .adm-card-sub { font-size: 14px; line-height: 1.55; }
+        .adm-kvrow { font-size: 15.5px; }
+        .adm-kvrow .k { font-size: 13.5px; }
+        .adm-table { font-size: 14px; }
+        .adm-meta, .adm-kv { font-size: 15px; }
+        .adm-badge { font-size: 12.5px; padding: 3px 9px; }
+        .adm-stage-head { font-size: 14px; }
+        .adm-stage-notes { font-size: 12.5px; line-height: 1.75; }
+        .adm-more summary { font-size: 14px; padding: 12px 0; }
+        .adm-sec-head { font-size: 17px; }
+        #adm-login-box label { font-size: 15px; }
+        /* tap targets (about 48px or taller) */
+        .adm-btn { min-height: 48px; padding: 11px 18px; font-size: 15.5px; }
+        .adm-btn.small { min-height: 44px; padding: 8px 14px; font-size: 14px; }
+        .adm-btn.block { min-height: 56px; font-size: 17px; }
+        .adm-back { min-height: 48px; padding: 11px 16px; font-size: 15.5px; }
+        .adm-tab { min-height: 52px; font-size: 16px; }
+        .adm-chip-btn { min-height: 48px; padding: 11px 18px; font-size: 14.5px; }
+        .adm-card-row { min-height: 64px; padding: 13px 14px; }
+        .adm-input { min-height: 54px; }
+        .tab-btn { min-height: 48px; padding: 11px 18px; font-size: 15.5px; }
+        .dl-btn { min-height: 52px; font-size: 16.5px; }
+        .toc { gap: 8px; }
+        .toc a { font-size: 13.5px; padding: 8px 13px; }
+        .toc .toc-label { font-size: 14px; }
+        /* spacing */
+        .adm-card { padding: 18px 16px; margin: 16px 0; }
+        .adm-list { gap: 11px; }
+        .adm-row { gap: 10px; }
+        /* admin home: frequent actions first. The stage box is
+           reference info; on phones it moves below the view tabs so
+           search and lists are reachable without scrolling past it.
+           Flex order only — DOM, functions and data flow unchanged. */
+        #adm-home { display: flex; flex-direction: column; }
+        #adm-home > .adm-session-bar { order: 0; }
+        #adm-home > h3 { order: 1; }
+        #adm-home > .adm-home-summary { order: 2; }
+        #adm-home > .adm-tabs { order: 3; }
+        #adm-home > .adm-status { order: 4; }
+        #adm-home > .adm-stage { order: 5; }
+        #adm-home > .adm-note { order: 6; }
+        #adm-home > #adm-pub-toggle { order: 7; }
+      }
+    </style>
+    <style>
+      /* ---------- §22 (2026-11-13, usability round 3): nav-switch sections ----------
+         While an admin is logged in, the public sections no longer
+         stack in one long scroll. body.adm-nav is toggled together
+         with the existing collapsed state (setPublicCollapsed):
+         sections stay hidden until one is chosen from the top toc;
+         only the chosen section (.nav-open) is shown, with its accordion opened.
+         The stats strip belongs to the public page, so it is hidden
+         in nav mode too (the same counts live in the home summary
+         chips). "ページ全体を表示する" turns adm-nav off and the
+         page returns to the previous all-sections rendering.
+         Display control only: markup order, functions and data
+         flow are unchanged. */
+      body.adm-nav .wrap > .stats { display: none; }
+      body.adm-nav .wrap > section:not(.adm-wrap):not(.nav-open) { display: none; }
+      body.adm-on.adm-nav .wrap > section.nav-open > *:not(.sec-head) { display: block; }
+      /* current position in the toc */
+      .toc a.nav-active { background: #333; border-color: #333; color: #fff; }
+      #adm-home > .adm-tabs { order: 4; }
+      #adm-home > .adm-status { order: 5; }
+      #adm-home > .adm-stage { order: 6; }
+      #adm-home > .adm-note { order: 7; }
+      #adm-home > #adm-pub-toggle { order: 8; }
+    </style>
+    <style>
+      /* ---------- §23 (2026-11-13, usability rounds 4-5): app-style admin home (prototype) ----------
+         The admin home leads with the status summary as a card;
+         the daily sections are entered from a grid of round icon
+         buttons with labels instead of pill rows; a fixed bottom
+         tab bar carries the main routes (home / list / checker /
+         notice / menu) with the current route highlighted. In nav
+         mode the public sticky toc is hidden — the grid and the
+         tab bar replace it; in the full-page view it returns.
+         Round 5: the grid keeps only the six daily sections and
+         shows intuitive symbols instead of numbers (◎ target,
+         ▥ distribution, 🐾 breeds, 測 measurement/ID, ➜ progress,
+         ✂ pattern); the reference sections (04/06/07) are grouped
+         under one 資料 entry below the grid; the signed-in strip
+         is demoted to a quiet corner line with text links; the
+         tab bar icons are re-toned to match (⌂ home, ≡ list,
+         ✓ checker, ✉ notice, ▦ menu). Round 6: the summary
+         becomes a hero card — total and Miniature Pinscher counts
+         big, plus a last-7-days increment computed from the dogs'
+         own created_at — with an "action needed" strip under it
+         (measurements arrived in the last 7 days by measuredDate,
+         re-measurement candidates, registrations without a
+         measurement; each row only when its count is non-zero and
+         wired in renderHome to the existing views). Nothing is
+         shown that the page's own data cannot compute.
+         Black/gray brand colours only. Display control only:
+         markup order, functions and data flow are unchanged. */
+      body.adm-on.adm-nav .wrap > nav.toc { display: none; }
+      /* status summary as the home's lead card (hero layout in round 6 below) */
+      #adm-home > .adm-home-summary {
+        background: #f4f4f5; border: 1px solid #e3e3e6; border-radius: 14px;
+        padding: 12px;
+      }
+      /* section grid menu: round icon + label */
+      #adm-home > .adm-grid { order: 3; }
+      .adm-grid {
+        display: grid; grid-template-columns: repeat(3, 1fr);
+        gap: 16px 6px; margin: 14px 0 6px;
+      }
+      .adm-grid a {
+        display: flex; flex-direction: column; align-items: center; gap: 6px;
+        text-decoration: none; color: #333;
+      }
+      .adm-grid .gi {
+        width: 52px; height: 52px; border-radius: 50%;
+        background: #3a3a3c; color: #fff;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 21px; font-weight: 700;
+      }
+      .adm-grid .gl { font-size: 11.5px; font-weight: 700; line-height: 1.35; text-align: center; }
+      .adm-grid a.nav-active .gi { background: #111; box-shadow: 0 0 0 3px #c9c9cd; }
+      /* fixed bottom tab bar (visible only while logged in) */
+      .adm-tabbar { display: none; }
+      body.adm-on { padding-bottom: 78px; }
+      body.adm-on .adm-tabbar {
+        display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 80;
+        background: rgba(255, 255, 255, .97); border-top: 1px solid #ddd;
+        padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+      }
+      .adm-tabbar a {
+        flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;
+        text-decoration: none; color: #8a8a8e; font-size: 10.5px; font-weight: 700;
+        padding: 4px 0 2px;
+      }
+      .adm-tabbar .ti { font-size: 19px; line-height: 1.25; }
+      .adm-tabbar a.nav-active { color: #111; }
+      /* round 5: signed-in state as a quiet corner line, not a box.
+         The home leads with the status card; the session strip only
+         has to be recognisable at a glance when the page opens,
+         and its actions are small text links in the corner
+         (the buttons and their handlers are unchanged). */
+      #adm-home > .adm-session-bar {
+        background: none; border: none; border-radius: 0;
+        padding: 0 2px; margin: 0; gap: 2px 8px; justify-content: flex-end;
+      }
+      .adm-session-bar .adm-session-label { font-size: 11px; font-weight: 400; color: #8a8a8e; }
+      .adm-session-bar .adm-session-mail { font-size: 11px; color: #8a8a8e; }
+      .adm-session-bar .adm-session-actions { gap: 12px; align-items: center; }
+      .adm-session-bar .adm-textlink {
+        background: none; border: none; margin: 0; padding: 2px 0;
+        font: inherit; font-size: 11px; color: #666;
+        text-decoration: underline; cursor: pointer; min-height: 0;
+      }
+      /* round 5: reference sections (04/06/07) grouped under one
+         資料 entry below the daily grid. Opening it lists the
+         three; tapping one enters the section through the
+         existing §22 switching. The sections are unchanged. */
+      #adm-home > .adm-docs { order: 3; }
+      .adm-docs {
+        margin: 10px 0 4px; background: #fff;
+        border: 1px solid #e3e3e6; border-radius: 14px;
+      }
+      .adm-docs > summary {
+        display: flex; align-items: center; gap: 10px;
+        padding: 10px 12px; cursor: pointer; list-style: none;
+      }
+      .adm-docs > summary::-webkit-details-marker { display: none; }
+      .adm-docs .di {
+        width: 40px; height: 40px; border-radius: 50%; flex: none;
+        background: #3a3a3c; color: #fff;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 16px;
+      }
+      .adm-docs .dt { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+      .adm-docs .dt b { font-size: 13.5px; color: #333; }
+      .adm-docs .dt span { font-size: 11px; color: #8a8a8e; }
+      .adm-docs .dc { margin-left: auto; flex: none; color: #8a8a8e; font-size: 12px; transition: transform .15s; }
+      .adm-docs[open] .dc { transform: rotate(180deg); }
+      .adm-docs-list { border-top: 1px solid #eee; }
+      .adm-docs-list a {
+        display: flex; align-items: center;
+        padding: 12px 14px; text-decoration: none; color: #333;
+        font-size: 13.5px; font-weight: 700;
+      }
+      .adm-docs-list a + a { border-top: 1px solid #f2f2f3; }
+      .adm-docs-list a .dn { margin-left: auto; color: #c7c7cc; font-weight: 400; }
+      .adm-docs-list a.nav-active { background: #f4f4f5; }
+      /* round 6: hero card + action-needed strip. The hero shows
+         the two headline counts big and the recent increment; the
+         strip lists only actionable counts the page data can
+         produce, each row a button into an existing view. */
+      #adm-home > .adm-home-summary { display: block; padding: 14px; }
+      #adm-home > .adm-home-summary::before { display: block; margin-bottom: 8px; }
+      .adm-hero-nums { display: flex; gap: 12px; }
+      .adm-hero-num { flex: 1; min-width: 0; }
+      .adm-hero-num + .adm-hero-num { border-left: 1px solid #e3e3e6; padding-left: 12px; }
+      .adm-hero-label { display: block; font-size: 11.5px; font-weight: 700; color: #8a8a8e; }
+      .adm-hero-value { font-size: 32px; font-weight: 800; line-height: 1.2; color: #111; }
+      .adm-hero-value small { font-size: 14px; font-weight: 700; margin-left: 2px; }
+      .adm-hero-inc { margin: 10px 0 0; font-size: 13px; color: #333; }
+      .adm-hero-sub { margin: 3px 0 0; font-size: 11.5px; color: #8a8a8e; }
+      #adm-home > .adm-home-actions { order: 2; }
+      .adm-home-actions { display: flex; flex-direction: column; gap: 8px; margin: 12px 0 0; }
+      .adm-home-actions::before { content: "対応が要ること"; font-size: 13px; font-weight: 700; color: #555; }
+      .adm-act {
+        display: flex; align-items: center; gap: 8px; width: 100%;
+        background: #333; border: 1px solid #333; border-radius: 12px;
+        padding: 12px 14px; font: inherit; font-size: 13.5px; font-weight: 700;
+        color: #fff; cursor: pointer; text-align: left;
+      }
+      .adm-act:active { background: #111; border-color: #111; }
+      .adm-act-count { margin-left: auto; white-space: nowrap; }
+      .adm-act-count strong { font-size: 16px; }
+      .adm-act .adm-chip-arrow { font-size: 17px; font-weight: 900; }
+      .adm-act-none { margin: 0; font-size: 12.5px; color: #8a8a8e; }
+    </style>
   </head>
-  <body>
+  <body class="adm-locked">
     <div class="wrap">
       <nav class="toc" aria-label="目次">
         <span class="toc-label">目次</span>
+        <a href="#adm-home">ホーム</a>
         <a href="#checker">01 対象の子</a>
         <a href="#distribution">02 分布</a>
         <a href="#breeds">03 犬種</a>
@@ -956,7 +1234,7 @@
 
         <div class="adm-card" id="adm-login-box">
           <h3>管理者ログイン</h3>
-          <p class="adm-note">管理者アカウントでログインしてください。タブを閉じるとログアウトします。</p>
+          <p class="adm-note">管理者アカウントでログインしてください。ログインはこの端末に保持され、タブを閉じても次回そのまま開けます（ページの更新時と、30日以上使わなかった場合は、再度ログインが必要です）。</p>
           <form id="adm-login-form">
             <p><label for="adm-email">メールアドレス</label><br /><input class="adm-input" id="adm-email" type="email" autocomplete="username" /></p>
             <p><label for="adm-password">パスワード</label><br /><input class="adm-input" id="adm-password" type="password" autocomplete="current-password" /></p>
@@ -968,15 +1246,32 @@
         <div id="adm-app" class="adm-hidden">
           <div class="adm-card" id="adm-home">
             <div class="adm-session-bar">
-              <span class="adm-session-label">管理者としてログイン中</span>
+              <span class="adm-session-label">ログイン中</span>
               <span class="adm-session-mail" id="adm-session-note"></span>
               <span class="adm-session-actions">
-                <button class="adm-btn light small" id="adm-reload" type="button">一覧を更新</button>
-                <button class="adm-btn light small" id="adm-logout" type="button">ログアウト</button>
+                <button class="adm-textlink" id="adm-reload" type="button">一覧を更新</button>
+                <button class="adm-textlink" id="adm-logout" type="button">ログアウト</button>
               </span>
             </div>
             <h3>管理用ホーム</h3>
             <div class="adm-home-summary" id="adm-home-summary"><span class="adm-chip">読み込み中…</span></div>
+            <div class="adm-home-actions" id="adm-home-actions"></div>
+            <nav class="adm-grid" aria-label="セクション メニュー">
+              <a href="#checker"><span class="gi">◎</span><span class="gl">対象の子</span></a>
+              <a href="#distribution"><span class="gi">▥</span><span class="gl">分布</span></a>
+              <a href="#breeds"><span class="gi">🐾</span><span class="gl">犬種</span></a>
+              <a href="#measurement"><span class="gi">測</span><span class="gl">採寸とID</span></a>
+              <a href="#progress"><span class="gi">➜</span><span class="gl">進み具合</span></a>
+              <a href="#pattern"><span class="gi">✂&#xFE0E;</span><span class="gl">型紙</span></a>
+            </nav>
+            <details class="adm-docs">
+              <summary><span class="di">▤</span><span class="dt"><b>資料</b><span>表記の決め方・分かったこと・道具と自動化</span></span><span class="dc">▾</span></summary>
+              <nav class="adm-docs-list" aria-label="資料">
+                <a href="#rule">サイズ表記の決め方<span class="dn">›</span></a>
+                <a href="#findings">分かったこと<span class="dn">›</span></a>
+                <a href="#tools">道具と自動化<span class="dn">›</span></a>
+              </nav>
+            </details>
             <!-- 製品化の段階：段階が進んだら current の位置と見出しの段階名を移す。運用マニュアル §1 の段階メモと一致させること -->
             <div class="adm-stage" id="adm-stage">
               <div class="adm-stage-head">製品化の段階：<strong>試着確認</strong></div>
@@ -2750,7 +3045,17 @@ setPINFORMEKarte=function(d){
       /* ================================================================
          PINFORME admin (test build) — stages 1-3 + dog-level deletion.
          Auth: Supabase Auth (email/password) + RPC is_pinforme_admin.
-         Session in sessionStorage, same keys as the former in-navi admin.
+         Session persisted in localStorage on this device (same key
+         names as the former sessionStorage scheme), so the admin
+         stays signed in across tab closes and app restarts. Two
+         app-side gates return the user to the login screen: the
+         stored build id differs from this build's BUILD_ID (the
+         page was updated), or the last use is more than 30 days
+         ago. On restore, the access token is renewed with the
+         stored refresh token first, because the Supabase JWT
+         itself lives only about an hour; if the refresh fails
+         (e.g. a shorter session lifetime set on the project),
+         the session is dropped and login is required again.
          No credential values are embedded in this file.
          Record-level deletion (stage 4) is prepared only: it calls
          rpc admin_delete_measurement, which does not exist yet, and
@@ -2763,6 +3068,14 @@ setPINFORMEKarte=function(d){
         var PHOTO_BUCKET = "dog-photos";
         var SESSION_KEY = "PINFORME_ADMIN_SESSION_V1";
         var VERIFIED_KEY = "PINFORME_ADMIN_VERIFIED_V1";
+        /* Device-side persistence gates (see header note). BUILD_ID
+           must be bumped whenever a new build is published; the
+           stored copy is written on every entry into the admin
+           view, so an update build forces exactly one re-login. */
+        var BUILD_KEY = "PINFORME_ADMIN_BUILD_V1";
+        var LASTUSED_KEY = "PINFORME_ADMIN_LASTUSED_V1";
+        var BUILD_ID = "test-2026-11-13-r7";
+        var RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
 
         /* Breed master: formal names + aliases (normalisation is display-side). */
         var BREED_MASTER = [
@@ -2785,15 +3098,15 @@ setPINFORMEKarte=function(d){
             return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
           });
         }
-        function getSession() { try { return JSON.parse(sessionStorage.getItem(SESSION_KEY) || "null"); } catch (e) { return null; } }
+        function getSession() { try { return JSON.parse(localStorage.getItem(SESSION_KEY) || "null"); } catch (e) { return null; } }
         function setSession(v) {
           try {
-            if (v) sessionStorage.setItem(SESSION_KEY, JSON.stringify(v));
-            else { sessionStorage.removeItem(SESSION_KEY); sessionStorage.removeItem(VERIFIED_KEY); }
+            if (v) localStorage.setItem(SESSION_KEY, JSON.stringify(v));
+            else { localStorage.removeItem(SESSION_KEY); localStorage.removeItem(VERIFIED_KEY); }
           } catch (e) {}
         }
-        function isVerified() { try { return sessionStorage.getItem(VERIFIED_KEY) === "1"; } catch (e) { return false; } }
-        function setVerified(v) { try { v ? sessionStorage.setItem(VERIFIED_KEY, "1") : sessionStorage.removeItem(VERIFIED_KEY); } catch (e) {} }
+        function isVerified() { try { return localStorage.getItem(VERIFIED_KEY) === "1"; } catch (e) { return false; } }
+        function setVerified(v) { try { v ? localStorage.setItem(VERIFIED_KEY, "1") : localStorage.removeItem(VERIFIED_KEY); } catch (e) {} }
         function token() { var s = getSession(); return s && s.access_token ? s.access_token : null; }
 
         function headers(tok) {
@@ -4106,7 +4419,9 @@ setPINFORMEKarte=function(d){
             '<p class="adm-note" style="margin:0 0 10px">犬種を選ぶと、その犬種の犬の一覧が出ます。名前・IDでも探せます。</p>' +
             searchBoxHTML() +
             '<div id="adm-search-results"></div>' +
-            keySearchHTML() + identitySearchHTML() + karteOcrHTML();
+            '<details class="adm-more adm-subsearch"' + (A.keyState || (A.keyQuery && String(A.keyQuery).trim()) ? " open" : "") + '><summary>お客様キーで探す</summary>' + keySearchHTML() + "</details>" +
+            '<details class="adm-more adm-subsearch"' + (A.idState || (A.idQuery && (A.idQuery.name || A.idQuery.birth || A.idQuery.weight || A.idQuery.chest)) ? " open" : "") + '><summary>本人確認で探す（モニター応募・キー再発行など）</summary>' + identitySearchHTML() + "</details>" +
+            '<details class="adm-more adm-subsearch"' + (A.ocrState || A.ocrValues ? " open" : "") + '><summary>カルテ写真から読み取る（本人確認の補助）</summary>' + karteOcrHTML() + "</details>";
           attachSearch();
           attachKeySearch();
           attachIdentitySearch();
@@ -4866,21 +5181,62 @@ setPINFORMEKarte=function(d){
           if (sum) {
             var breeds = {};
             A.dogs.forEach(function (d) { breeds[normalizeBreed(rawBreedOf(d)) || "不明"] = true; });
+            var mp = 0;
+            A.dogs.forEach(function (d) { if (normalizeBreed(rawBreedOf(d)) === "ミニチュアピンシャー") mp++; });
             var due = 0;
             A.dogs.forEach(function (d) { if (remeasureDue(latestOf(d.id))) due++; });
             var nomeas = 0;
             A.dogs.forEach(function (d) { if (!latestOf(d.id)) nomeas++; });
+            // Recent movement, computed only from dates the page
+            // itself holds: each dog's created_at (registration
+            // day, read in local time) for the +頭 increment, and
+            // measuredDate() (measured_on, else created_at) for
+            // measurements that arrived recently. Records without
+            // a parseable date are simply not counted — no other
+            // increment is shown.
+            var nowD = new Date();
+            var today0 = new Date(nowD.getFullYear(), nowD.getMonth(), nowD.getDate());
+            var regToday = 0, regWeek = 0;
+            A.dogs.forEach(function (d) {
+              if (!d.created_at) return;
+              var dt = new Date(d.created_at);
+              if (isNaN(dt.getTime())) return;
+              var dd = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate());
+              var diff = Math.round((today0 - dd) / 86400000);
+              if (diff === 0) regToday++;
+              if (diff >= 0 && diff < 7) regWeek++;
+            });
+            var newMeas7 = 0;
+            A.measurements.forEach(function (r) {
+              var p = measuredDate(r).split("-");
+              if (p.length !== 3) return;
+              var md = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+              if (isNaN(md.getTime())) return;
+              var diff = Math.round((today0 - md) / 86400000);
+              if (diff >= 0 && diff < 7) newMeas7++;
+            });
             sum.innerHTML =
-              '<span class="adm-chip">登録 <strong>' + A.dogs.length + '</strong> 頭</span>' +
-              '<span class="adm-chip">犬種 <strong>' + Object.keys(breeds).length + '</strong> 種</span>' +
-              '<span class="adm-chip">採寸履歴 <strong>' + A.measurements.length + '</strong> 件</span>' +
-              '<button type="button" class="adm-chip adm-chip-btn" id="adm-nomeas-chip">採寸なし登録 <strong>' + nomeas + '</strong> 頭<span class="adm-chip-arrow">›</span></button>' +
-              '<button type="button" class="adm-chip adm-chip-btn" id="adm-due-chip">再採寸候補 <strong>' + due + '</strong> 頭<span class="adm-chip-arrow">›</span></button>';
+              '<div class="adm-hero-nums">' +
+              '<div class="adm-hero-num"><span class="adm-hero-label">総頭数</span><span class="adm-hero-value">' + A.dogs.length + '<small>頭</small></span></div>' +
+              '<div class="adm-hero-num"><span class="adm-hero-label">ミニピン</span><span class="adm-hero-value">' + mp + '<small>頭</small></span></div>' +
+              '</div>' +
+              '<p class="adm-hero-inc">直近7日で <strong>+' + regWeek + '頭</strong>' + (regToday ? '（今日 +' + regToday + '頭）' : '') + '</p>' +
+              '<p class="adm-hero-sub">犬種 ' + Object.keys(breeds).length + '種 ・ 採寸履歴 ' + A.measurements.length + '件</p>';
+            var actBox = $("adm-home-actions");
+            if (actBox) {
+              var acts = "";
+              if (newMeas7) acts += '<button type="button" class="adm-act" id="adm-newmeas-chip">新しく届いた採寸（直近7日）<span class="adm-act-count"><strong>' + newMeas7 + '</strong> 件</span><span class="adm-chip-arrow">›</span></button>';
+              if (due) acts += '<button type="button" class="adm-act" id="adm-due-chip">再採寸候補<span class="adm-act-count"><strong>' + due + '</strong> 頭</span><span class="adm-chip-arrow">›</span></button>';
+              if (nomeas) acts += '<button type="button" class="adm-act" id="adm-nomeas-chip">採寸なし登録<span class="adm-act-count"><strong>' + nomeas + '</strong> 頭</span><span class="adm-chip-arrow">›</span></button>';
+              actBox.innerHTML = acts || '<p class="adm-act-none">対応待ちはありません</p>';
+            }
           }
           var dueChip = $("adm-due-chip");
           if (dueChip) dueChip.addEventListener("click", openDueList);
           var nmChip = $("adm-nomeas-chip");
           if (nmChip) nmChip.addEventListener("click", openNomeasList);
+          var nwChip = $("adm-newmeas-chip");
+          if (nwChip) nwChip.addEventListener("click", function () { var t = $("adm-tab-list"); if (t) t.click(); });
           var tl = $("adm-tab-list"), tc = $("adm-tab-checker");
           if (tl) tl.classList.toggle("active", A.tab !== "checker");
           if (tc) tc.classList.toggle("active", A.tab === "checker");
@@ -4966,6 +5322,7 @@ setPINFORMEKarte=function(d){
         function setPublicCollapsed(collapsed) {
           A.pubOpen = !collapsed;
           if (document.body) document.body.classList.toggle("adm-on", !!collapsed);
+          if (document.body) document.body.classList.toggle("adm-nav", !!collapsed);
           var btn = $("adm-pub-toggle");
           if (btn) btn.textContent = collapsed ? "ページ全体を表示する" : "公開ページを畳む（見出しだけ）";
         }
@@ -4994,6 +5351,9 @@ setPINFORMEKarte=function(d){
           }
         }
         function showAdmin() {
+          if (document.body) document.body.classList.remove("adm-locked");
+          // Record this build + this use for the persistence gates.
+          try { localStorage.setItem(BUILD_KEY, BUILD_ID); localStorage.setItem(LASTUSED_KEY, String(Date.now())); } catch (e) {}
           $("adm-login-box").classList.add("adm-hidden");
           $("adm-app").classList.remove("adm-hidden");
           setPublicCollapsed(true);
@@ -5003,6 +5363,7 @@ setPINFORMEKarte=function(d){
           $("adm-session-note").textContent = s && s.user && s.user.email ? s.user.email : "";
         }
         function showLogin(msg) {
+          if (document.body) document.body.classList.add("adm-locked");
           setPublicCollapsed(false);
           $("adm-app").classList.add("adm-hidden");
           $("adm-login-box").classList.remove("adm-hidden");
@@ -5077,6 +5438,35 @@ setPINFORMEKarte=function(d){
           });
 
           var s = getSession();
+          if (s && (s.access_token || s.refresh_token)) {
+            // Persistence gates: a different build than the one
+            // that stored the session (the page was updated), or
+            // more than 30 days since the last use, discards the
+            // session and returns to the login screen.
+            var gateOk = true;
+            try {
+              if (localStorage.getItem(BUILD_KEY) !== BUILD_ID) gateOk = false;
+              var lu = Number(localStorage.getItem(LASTUSED_KEY) || "0");
+              if (!lu || Date.now() - lu > RETENTION_MS) gateOk = false;
+            } catch (e) { gateOk = false; }
+            if (!gateOk) { setSession(null); s = null; }
+          }
+          if (s && s.refresh_token) {
+            // The stored JWT itself has expired by now (about an
+            // hour); renew it with the refresh token before use.
+            // A failed refresh means the server-side session is
+            // over too: back to login.
+            try {
+              var rres = await fetch(BASE + "/auth/v1/token?grant_type=refresh_token", {
+                method: "POST",
+                headers: { apikey: ANON_KEY, "Content-Type": "application/json" },
+                body: JSON.stringify({ refresh_token: s.refresh_token })
+              });
+              var rj = null; try { rj = await rres.json(); } catch (e) {}
+              if (rj && rj.access_token) { setSession(rj); s = rj; }
+              else { setSession(null); s = null; }
+            } catch (e) { setSession(null); s = null; }
+          }
           if (s && s.access_token) {
             if (isVerified()) { A.verified = true; showAdmin(); loadAdminData(); }
             else {
@@ -5088,6 +5478,127 @@ setPINFORMEKarte=function(d){
         }
         if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
         else init();
+      })();
+    </script>
+    <nav class="adm-tabbar" aria-label="主要メニュー">
+      <a href="#adm-home" data-go="home" class="nav-active"><span class="ti">⌂</span><span>ホーム</span></a>
+      <a href="#adm-home" data-go="list"><span class="ti">≡</span><span>犬の一覧</span></a>
+      <a href="#adm-home" data-go="checker"><span class="ti">✓</span><span>チェッカー</span></a>
+      <a href="#adm-home" data-go="notice"><span class="ti">✉&#xFE0E;</span><span>お知らせ</span></a>
+      <a href="#adm-home" data-go="menu"><span class="ti">▦</span><span>メニュー</span></a>
+    </nav>
+    <script>
+      // ---------- §22 (2026-11-13): toc section switching (display only) ----------
+      // In nav mode (body.adm-nav, on while the admin view is the
+      // collapsed/home state) the toc no longer scrolls a long page:
+      // tapping a toc entry shows only that section; tapping ホーム
+      // hides all sections again. In the full-page view the toc
+      // keeps its previous anchor behaviour. No named functions are
+      // added and existing behaviour / data flow is untouched.
+      (function () {
+        var SEC_IDS = ["checker", "distribution", "breeds", "rule", "measurement", "findings", "tools", "progress", "pattern"];
+        var inNav = function () { return !!(document.body && document.body.classList.contains("adm-nav")); };
+        var markActive = function (id) {
+          document.querySelectorAll('.toc a[href^="#"], .adm-grid a[href^="#"], .adm-docs-list a[href^="#"]').forEach(function (a) {
+            a.classList.toggle("nav-active", a.getAttribute("href") === "#" + id);
+          });
+        };
+        var openSection = function (id) {
+          var t = document.getElementById(id);
+          if (t) { var d = t.querySelector("details.acc"); if (d) d.open = true; }
+          return t;
+        };
+        var select = function (id) {
+          SEC_IDS.forEach(function (sid) {
+            var s = document.getElementById(sid);
+            if (s) s.classList.toggle("nav-open", sid === id);
+          });
+          var target = id ? openSection(id) : document.getElementById("adm-home");
+          markActive(id || "adm-home");
+          if (target) {
+            // One instant jump to just below the sticky toc. The
+            // page sets scroll-behavior: smooth, and the toc wraps
+            // to several rows on narrow screens (taller than the
+            // CSS scroll margin), so scrollIntoView plus a
+            // correction would fight each other and hide the
+            // section heading behind the toc.
+            var tocEl = document.querySelector(".toc");
+            var off = tocEl ? tocEl.getBoundingClientRect().height + 8 : 118;
+            var y = target.getBoundingClientRect().top + window.scrollY - off;
+            window.scrollTo({ top: Math.max(0, y), behavior: "instant" });
+          }
+        };
+        document.addEventListener("click", function (ev) {
+          var a = ev.target && ev.target.closest ? ev.target.closest('a[href^="#"]') : null;
+          if (!a) return;
+          var id = a.getAttribute("href").slice(1);
+          var inToc = !!(a.closest && a.closest(".toc"));
+          if (!inToc) {
+            if (inNav() && SEC_IDS.indexOf(id) >= 0) { ev.preventDefault(); select(id); }
+            return;
+          }
+          if (id === "adm-home") {
+            if (inNav()) { ev.preventDefault(); select(null); }
+            return;
+          }
+          if (SEC_IDS.indexOf(id) < 0) return;
+          if (inNav()) { ev.preventDefault(); select(id); }
+          else openSection(id);
+        });
+        if (location.hash) {
+          var hid = location.hash.slice(1);
+          if (SEC_IDS.indexOf(hid) >= 0) {
+            var hs = document.getElementById(hid);
+            if (hs) { hs.classList.add("nav-open"); markActive(hid); }
+          }
+        }
+      })();
+    </script>
+    <script>
+      // ---------- §23 (2026-11-13): bottom tab bar routes (display only) ----------
+      // The tab bar reuses existing behaviour only: ホーム goes
+      // through the toc home entry (§22 select), 犬の一覧 and
+      // 対象の子チェッカー press the existing view tabs after
+      // returning home, メニュー scrolls to the grid menu. In the
+      // test build お知らせ has no panel, so it only returns home
+      // for now; the production build will point it at the push
+      // panel card.
+      (function () {
+        var bar = document.querySelector(".adm-tabbar");
+        if (!bar) return;
+        var setActive = function (go) {
+          bar.querySelectorAll("a").forEach(function (a) {
+            a.classList.toggle("nav-active", a.getAttribute("data-go") === go);
+          });
+        };
+        var goHome = function () {
+          var h = document.querySelector('.toc a[href="#adm-home"]');
+          if (h) h.click();
+          var home = document.getElementById("adm-home");
+          if (home) home.scrollIntoView({ block: "start" });
+        };
+        bar.addEventListener("click", function (ev) {
+          var a = ev.target && ev.target.closest ? ev.target.closest("a[data-go]") : null;
+          if (!a) return;
+          ev.preventDefault();
+          var go = a.getAttribute("data-go");
+          setActive(go);
+          if (go === "list" || go === "checker") {
+            goHome();
+            var t = document.getElementById(go === "list" ? "adm-tab-list" : "adm-tab-checker");
+            if (t) t.click();
+          } else if (go === "menu") {
+            goHome();
+            var g = document.querySelector(".adm-grid");
+            if (g) g.scrollIntoView({ block: "start" });
+          } else {
+            goHome();
+          }
+        });
+        document.addEventListener("click", function (ev) {
+          var a = ev.target && ev.target.closest ? ev.target.closest('.adm-grid a[href^="#"], .adm-docs-list a[href^="#"]') : null;
+          if (a) setActive("");
+        });
       })();
     </script>
   </body>
