@@ -604,6 +604,43 @@
       .adm-kv { font-size: 14px; line-height: 1.9; overflow-wrap: anywhere; }
       .adm-card-row.selected { border-color: #333; background: #f2f2f3; box-shadow: inset 0 0 0 1px #333; }
       .adm-karte-frame { width: 100%; border: 1px solid #d8d8dc; border-radius: 12px; background: #fff; }
+      /* §21 (2026-11-13, usability round 2): pre-login lock. Until an
+         admin session is verified (showAdmin removes this class;
+         showLogin restores it), only the admin section — the login
+         form and its minimal guidance — is visible. The TOC, hero,
+         stats and every public section (checker, distribution,
+         breeds, rule, measurement, findings, tools, progress,
+         pattern) stay hidden, so no registered-dog data, checker or
+         search is reachable before login. After login the same
+         sections remain available via the existing expand toggle.
+         Display control only: markup, functions and data flow are
+         unchanged. */
+      body.adm-locked .wrap > nav.toc,
+      body.adm-locked .wrap > header.hero,
+      body.adm-locked .wrap > .stats,
+      body.adm-locked .wrap > section:not(.adm-wrap) { display: none; }
+      /* §21: admin home order at every width (the phone block below
+         repeats the same order for <=760px). Status summary first,
+         then the view tabs (the main actions), status line, and the
+         stage reference box below them. Flex order only. */
+      #adm-home { display: flex; flex-direction: column; }
+      #adm-home > .adm-session-bar { order: 0; }
+      #adm-home > h3 { order: 1; }
+      #adm-home > .adm-home-summary { order: 2; }
+      #adm-home > .adm-tabs { order: 3; }
+      #adm-home > .adm-status { order: 4; }
+      #adm-home > .adm-stage { order: 5; }
+      #adm-home > .adm-note { order: 6; }
+      #adm-home > #adm-pub-toggle { order: 7; }
+      /* §21: the summary chips read as one "current status" card. */
+      .adm-home-summary { background: #fafafa; border: 1px solid #e3e0ea; border-radius: 12px; padding: 12px; }
+      .adm-home-summary::before { content: "現在の状況"; flex: 0 0 100%; font-size: 13px; font-weight: 700; color: #555; }
+      /* §21: auxiliary searches in the list view (customer key,
+         identity check, karte OCR) fold into labelled details blocks
+         under the one main name/ID search, instead of stacking open
+         above and below the breed list. */
+      .adm-subsearch { border-top: 1px solid #e3e0ea; margin-top: 12px; padding-top: 2px; }
+      .adm-subsearch > summary { font-size: 14.5px; font-weight: 700; color: #333; padding: 10px 0; }
       /* §13 scroll reduction: while an admin is logged in (body.adm-on), public
          sections collapse to their headings only. Display control from the
          admin side only — public markup/scripts are not modified. */
@@ -708,11 +745,52 @@
         #adm-home > #adm-pub-toggle { order: 7; }
       }
     </style>
+    <style>
+      /* ---------- §22 (2026-11-13, usability round 3): nav-switch sections ----------
+         While an admin is logged in, the public sections no longer
+         stack in one long scroll. body.adm-nav is toggled together
+         with the existing collapsed state (setPublicCollapsed):
+         sections stay hidden until one is chosen from the toc (the
+         top toc, or the toc inside the admin home); only the chosen
+         section (.nav-open) is shown, with its accordion opened.
+         The stats strip belongs to the public page, so it is hidden
+         in nav mode too (the same counts live in the home summary
+         chips). "ページ全体を表示する" turns adm-nav off and the
+         page returns to the previous all-sections rendering.
+         Display control only: markup order, functions and data
+         flow are unchanged. */
+      body.adm-nav .wrap > .stats { display: none; }
+      body.adm-nav .wrap > section:not(.adm-wrap):not(.nav-open) { display: none; }
+      body.adm-on.adm-nav .wrap > section.nav-open > *:not(.sec-head) { display: block; }
+      /* current position in the toc */
+      .toc a.nav-active, #adm-toc a.nav-active { background: #333; border-color: #333; color: #fff; }
+      /* toc inside the admin home: session bar -> status card -> toc */
+      #adm-toc { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 10px 0 2px; }
+      #adm-toc .toc-label { font-size: 13px; font-weight: 700; color: #555; margin-right: 2px; }
+      #adm-toc a {
+        font-size: 13px; font-weight: 700; line-height: 1.4;
+        color: #333; text-decoration: none;
+        background: #fff; border: 1px solid #d8d8dc; border-radius: 999px;
+        padding: 8px 13px;
+      }
+      #adm-home > #adm-toc { order: 3; }
+      #adm-home > .adm-tabs { order: 4; }
+      #adm-home > .adm-status { order: 5; }
+      #adm-home > .adm-stage { order: 6; }
+      #adm-home > .adm-note { order: 7; }
+      #adm-home > #adm-pub-toggle { order: 8; }
+      /* prod only: the push-send panel card (#admPushCard) is
+         appended into #adm-home at runtime. Without an explicit
+         order it would default to 0 and rise above the status
+         card, so it takes the slot below the expand toggle. */
+      #adm-home > #admPushCard { order: 9; }
+    </style>
   </head>
-  <body>
+  <body class="adm-locked">
     <div class="wrap">
       <nav class="toc" aria-label="目次">
         <span class="toc-label">目次</span>
+        <a href="#adm-home">ホーム</a>
         <a href="#checker">01 対象の子</a>
         <a href="#distribution">02 分布</a>
         <a href="#breeds">03 犬種</a>
@@ -1037,6 +1115,18 @@
             </div>
             <h3>管理用ホーム</h3>
             <div class="adm-home-summary" id="adm-home-summary"><span class="adm-chip">読み込み中…</span></div>
+            <nav id="adm-toc" aria-label="目次（セクション切り替え）">
+              <span class="toc-label">目次</span>
+              <a href="#checker">01 対象の子</a>
+              <a href="#distribution">02 分布</a>
+              <a href="#breeds">03 犬種</a>
+              <a href="#rule">04 表記の決め方</a>
+              <a href="#measurement">05 採寸とID</a>
+              <a href="#findings">06 分かったこと</a>
+              <a href="#tools">07 道具と自動化</a>
+              <a href="#progress">08 進み具合</a>
+              <a href="#pattern">09 型紙</a>
+            </nav>
             <!-- 製品化の段階：段階が進んだら current の位置と見出しの段階名を移す。運用マニュアル §1 の段階メモと一致させること -->
             <div class="adm-stage" id="adm-stage">
               <div class="adm-stage-head">製品化の段階：<strong>試着確認</strong></div>
@@ -4168,7 +4258,9 @@ setPINFORMEKarte=function(d){
             '<p class="adm-note" style="margin:0 0 10px">犬種を選ぶと、その犬種の犬の一覧が出ます。名前・IDでも探せます。</p>' +
             searchBoxHTML() +
             '<div id="adm-search-results"></div>' +
-            keySearchHTML() + identitySearchHTML() + karteOcrHTML();
+            '<details class="adm-more adm-subsearch"' + (A.keyState || (A.keyQuery && String(A.keyQuery).trim()) ? " open" : "") + '><summary>お客様キーで探す</summary>' + keySearchHTML() + "</details>" +
+            '<details class="adm-more adm-subsearch"' + (A.idState || (A.idQuery && (A.idQuery.name || A.idQuery.birth || A.idQuery.weight || A.idQuery.chest)) ? " open" : "") + '><summary>本人確認で探す（モニター応募・キー再発行など）</summary>' + identitySearchHTML() + "</details>" +
+            '<details class="adm-more adm-subsearch"' + (A.ocrState || A.ocrValues ? " open" : "") + '><summary>カルテ写真から読み取る（本人確認の補助）</summary>' + karteOcrHTML() + "</details>";
           attachSearch();
           attachKeySearch();
           attachIdentitySearch();
@@ -4955,6 +5047,7 @@ setPINFORMEKarte=function(d){
         function setPublicCollapsed(collapsed) {
           A.pubOpen = !collapsed;
           if (document.body) document.body.classList.toggle("adm-on", !!collapsed);
+          if (document.body) document.body.classList.toggle("adm-nav", !!collapsed);
           var btn = $("adm-pub-toggle");
           if (btn) btn.textContent = collapsed ? "ページ全体を表示する" : "公開ページを畳む（見出しだけ）";
         }
@@ -4983,6 +5076,7 @@ setPINFORMEKarte=function(d){
           }
         }
         function showAdmin() {
+          if (document.body) document.body.classList.remove("adm-locked");
           $("adm-login-box").classList.add("adm-hidden");
           $("adm-app").classList.remove("adm-hidden");
           setPublicCollapsed(true);
@@ -4992,6 +5086,7 @@ setPINFORMEKarte=function(d){
           $("adm-session-note").textContent = s && s.user && s.user.email ? s.user.email : "";
         }
         function showLogin(msg) {
+          if (document.body) document.body.classList.add("adm-locked");
           setPublicCollapsed(false);
           $("adm-app").classList.add("adm-hidden");
           $("adm-login-box").classList.remove("adm-hidden");
@@ -5077,6 +5172,73 @@ setPINFORMEKarte=function(d){
         }
         if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
         else init();
+      })();
+    </script>
+    <script>
+      // ---------- §22 (2026-11-13): toc section switching (display only) ----------
+      // In nav mode (body.adm-nav, on while the admin view is the
+      // collapsed/home state) the toc no longer scrolls a long page:
+      // tapping a toc entry shows only that section; tapping ホーム
+      // hides all sections again. In the full-page view the toc
+      // keeps its previous anchor behaviour. No named functions are
+      // added and existing behaviour / data flow is untouched.
+      (function () {
+        var SEC_IDS = ["checker", "distribution", "breeds", "rule", "measurement", "findings", "tools", "progress", "pattern"];
+        var inNav = function () { return !!(document.body && document.body.classList.contains("adm-nav")); };
+        var markActive = function (id) {
+          document.querySelectorAll('.toc a[href^="#"], #adm-toc a[href^="#"]').forEach(function (a) {
+            a.classList.toggle("nav-active", a.getAttribute("href") === "#" + id);
+          });
+        };
+        var openSection = function (id) {
+          var t = document.getElementById(id);
+          if (t) { var d = t.querySelector("details.acc"); if (d) d.open = true; }
+          return t;
+        };
+        var select = function (id) {
+          SEC_IDS.forEach(function (sid) {
+            var s = document.getElementById(sid);
+            if (s) s.classList.toggle("nav-open", sid === id);
+          });
+          var target = id ? openSection(id) : document.getElementById("adm-home");
+          markActive(id || "adm-home");
+          if (target) {
+            // One instant jump to just below the sticky toc. The
+            // page sets scroll-behavior: smooth, and the toc wraps
+            // to several rows on narrow screens (taller than the
+            // CSS scroll margin), so scrollIntoView plus a
+            // correction would fight each other and hide the
+            // section heading behind the toc.
+            var tocEl = document.querySelector(".toc");
+            var off = tocEl ? tocEl.getBoundingClientRect().height + 8 : 118;
+            var y = target.getBoundingClientRect().top + window.scrollY - off;
+            window.scrollTo({ top: Math.max(0, y), behavior: "instant" });
+          }
+        };
+        document.addEventListener("click", function (ev) {
+          var a = ev.target && ev.target.closest ? ev.target.closest('a[href^="#"]') : null;
+          if (!a) return;
+          var id = a.getAttribute("href").slice(1);
+          var inToc = !!(a.closest && (a.closest(".toc") || a.closest("#adm-toc")));
+          if (!inToc) {
+            if (inNav() && SEC_IDS.indexOf(id) >= 0) { ev.preventDefault(); select(id); }
+            return;
+          }
+          if (id === "adm-home") {
+            if (inNav()) { ev.preventDefault(); select(null); }
+            return;
+          }
+          if (SEC_IDS.indexOf(id) < 0) return;
+          if (inNav()) { ev.preventDefault(); select(id); }
+          else openSection(id);
+        });
+        if (location.hash) {
+          var hid = location.hash.slice(1);
+          if (SEC_IDS.indexOf(hid) >= 0) {
+            var hs = document.getElementById(hid);
+            if (hs) { hs.classList.add("nav-open"); markActive(hid); }
+          }
+        }
       })();
     </script>
   <script>
