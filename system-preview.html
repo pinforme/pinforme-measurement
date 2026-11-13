@@ -1181,6 +1181,16 @@
          (.adm-tool-block) under the main name / ID search. The
          blocks reuse the generators' own dividers and headings,
          so the wrapper itself needs no styling. */
+      /* ---------- §34 (2026-11-13): no site footer under the app
+         while signed in ----------
+         The page footer is the public page's closing comment; in
+         the signed-in app it trailed under the admin section as a
+         leftover paragraph (the owner: 「下のコメントもなくす」).
+         While an admin session is on (body.adm-on) the screen
+         shows the app only. Before login the footer belongs to
+         the public page and stays exactly as it was.
+         Display control only. */
+      body.adm-on .wrap > footer { display: none; }
     </style>
   </head>
   <body class="adm-locked">
