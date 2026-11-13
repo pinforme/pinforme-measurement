@@ -2554,6 +2554,12 @@ setPINFORMEKarte=function(d){
         // anywhere, because band membership feeds band means, size
         // names, patterns and the 5+ candidate threshold).
         // Size name = rounded mean chest of the band.
+        function sizeLabel(mean) {
+          /* サイズ名は二段階の四捨五入（2026-11-13決定）:
+             平均を小数第2位で四捨五入して小数1位にし、整数に四捨五入する。
+             例: 36.49 → 36.5 → 37 / 36.44 → 36.4 → 36 */
+          return Math.round(Math.floor(mean * 10 + 0.5 + 1e-9) / 10);
+        }
         function computeBands(values, anchor) {
           var vs = values.filter(function (v) { return v !== null && v !== undefined; })
                          .sort(function (a, b) { return a - b; });
@@ -2573,7 +2579,7 @@ setPINFORMEKarte=function(d){
             if (!b.members.length) return;
             var sum = 0;
             b.members.forEach(function (m) { sum += m; });
-            out.push({ name: Math.round(sum / b.members.length), lo: b.lo, hi: b.hi, count: b.members.length });
+            out.push({ name: sizeLabel(sum / b.members.length), lo: b.lo, hi: b.hi, count: b.members.length });
           });
           out.anchor = anchor;
           return out;
@@ -3322,7 +3328,8 @@ setPINFORMEKarte=function(d){
           renderBreeds();
           buildSearch();
           initPattern();
-          if (dogs.length) showDog(dogs[0].id);
+          /* §38 (2026-11-13): do not auto-show the first dog. The area
+             below the search bar stays empty until a dog is picked. */
           judge();
         }
 
@@ -3844,6 +3851,12 @@ setPINFORMEKarte=function(d){
            stays: without it, a maximum sitting exactly on a boundary
            — e.g. max 50.0 — would spawn a phantom solo [50,53) band
            instead of folding into [47,50]. See design memo.) */
+        function sizeLabel(mean) {
+          /* サイズ名は二段階の四捨五入（2026-11-13決定）:
+             平均を小数第2位で四捨五入して小数1位にし、整数に四捨五入する。
+             例: 36.49 → 36.5 → 37 / 36.44 → 36.4 → 36 */
+          return Math.round(Math.floor(mean * 10 + 0.5 + 1e-9) / 10);
+        }
         function computeBands(values, anchor) {
           var vs = values.filter(function (v) { return v !== null && v !== undefined && isFinite(v); })
             .map(Number).sort(function (a, b) { return a - b; });
@@ -3862,7 +3875,7 @@ setPINFORMEKarte=function(d){
           raw.forEach(function (b) {
             if (!b.members.length) return;
             var sum = 0; b.members.forEach(function (m) { sum += m; });
-            out.push({ lo: b.lo, hi: b.hi, name: Math.round(sum / b.members.length), count: b.members.length });
+            out.push({ lo: b.lo, hi: b.hi, name: sizeLabel(sum / b.members.length), count: b.members.length });
           });
           out.anchor = anchor;
           return out;
