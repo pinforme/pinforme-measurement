@@ -8,7 +8,7 @@
 
 <script id="pinforme-latest-version-guard">
 (function(){
-  const PINFORME_BUILD_ID="20261111-navi-v4-b41";
+  const PINFORME_BUILD_ID="20261113-navi-v4-b42";
 
   function forceFresh(reason){
     try{
@@ -313,6 +313,9 @@ body.on-choice #progressHeader{display:block}
 .owner-choice .n{display:block;font-size:13px;color:#5a5a5e;margin-top:3px}
 .dog-card{border:1px solid var(--line);border-radius:14px;padding:14px;margin:12px 0;background:#fff}
 .dog-card .dog-title{font-weight:800;margin:0 0 8px}
+.dog-card .dog-advice{margin:0 0 10px;padding:10px 12px;border-radius:10px;background:#f4f1ec;font-size:14px;line-height:1.6}
+.dog-card .dog-advice .sz{font-weight:800;font-size:16px}
+.dog-card .dog-advice .sub{display:block;color:#666;font-size:12.5px;margin-top:2px}
 .dog-card button{width:100%;margin-top:8px;text-align:left}
 .dog-card button .t{display:block;font-weight:700}
 .dog-card button .n{display:block;font-size:12px;color:#5a5a5e}
@@ -2867,10 +2870,35 @@ async function pinV2Unlock(){
     const records = await Promise.all(dogs.map(async dog => pinV2FromServer(dog, await pinRpc('get_remeasure_snapshot_v2', {p_dog_id:dog.dog_id, p_remeasure_key:key}), contact, key)));
     if(generation !== pinV2UnlockGeneration || pinformeNormalizeRemeasureKey(input.value) !== key) return;
     pinV2StoreJSON('PINFORME_V2_RECORDS', records);
+    /* 推奨サイズ（キーに紐付いた子だけ・サーバー側で帯判定）。
+       取得できない場合は表示しないだけで、他の操作には影響しない。 */
+    try{
+      const advice = await pinRpc('get_my_size_advice', {p_key:key});
+      if(Array.isArray(advice)) for(const a of advice){
+        const r = records.find(x=>x.id===String(a.dog_id));
+        if(r) r.advice = a;
+      }
+    }catch(e){ /* 推奨サイズは任意表示。失敗しても進む */ }
     pinV2OwnerMenu(records);
   }catch(e){
     if(generation === pinV2UnlockGeneration) status.textContent = e.http ? 'お客様キーを確認してください。確認できない場合は、再発行の案内をご覧ください。' : (e.message || '確認できませんでした。');
   }finally{ button.disabled = false; }
+}
+function pinV2AdviceHTML(r){
+  const a = r.advice;
+  if(!a) return '';
+  if(a.status === 'accumulating') return '<p class="dog-advice">推奨サイズは、データが集まってから表示します。</p>';
+  if(a.status !== 'ok') return '';
+  const fmt = v => (v == null ? '' : (Math.round(Number(v)*10)/10).toString().replace(/\.0$/, ''));
+  let html = '<p class="dog-advice"><span class="sz">推奨サイズ SIZE ' + a.size_label + '</span>' +
+    '<span class="sub">胴まわり ' + fmt(a.chest) + 'cm → ' + fmt(a.band_lo) + '〜' + fmt(a.band_hi) + 'cm の帯のサイズです</span>';
+  if(a.near_edge && a.other_label != null) html += '<span class="sub">帯の境目に近い値です。隣の SIZE ' + a.other_label + ' も候補になります</span>';
+  if(a.measured_on){
+    const t = new Date(a.measured_on + 'T00:00:00');
+    const th = new Date(t.getFullYear(), t.getMonth() + 3, t.getDate());
+    if(new Date(pinTodayDate() + 'T00:00:00') >= th) html += '<span class="sub">採寸から3か月以上が経っています。再採寸すると、今の体型で判定できます</span>';
+  }
+  return html + '</p>';
 }
 function pinV2OwnerMenu(records){
   const box = document.getElementById('pinV2OwnerMenu');
@@ -2902,6 +2930,7 @@ function pinV2OwnerMenu(records){
     const title = document.createElement('p'); title.className = 'dog-title';
     title.textContent = (r.dogName ? r.dog : '名前未登録') + ' ／ 最新記録 ' + (r.history[0]?.date || '未採寸');
     card.append(title);
+    const adv = pinV2AdviceHTML(r); if(adv) card.insertAdjacentHTML('beforeend', adv);
     const mk = (cls, t, n, fn)=>{ const b = document.createElement('button'); b.type = 'button'; b.className = cls; b.innerHTML = `<span class="t">${t}</span><span class="n">${n}</span>`; b.onclick = fn; return b; };
     card.append(
       mk('v2-update', '再採寸する', '服・目的を選び、必要な項目を測り直します。', ()=>pinV2Purpose(r.id)),
@@ -2920,6 +2949,7 @@ function pinV2OwnerMenu(records){
     const title = document.createElement('p'); title.className = 'dog-title';
     title.textContent = (r.dogName ? r.dog : '名前未登録') + ' ／ 最新記録 ' + (r.history[0]?.date || '未採寸');
     card.append(title);
+    const adv = pinV2AdviceHTML(r); if(adv) card.insertAdjacentHTML('beforeend', adv);
     const mkK = (cls, t, n, fn)=>{ const b = document.createElement('button'); b.type = 'button'; b.className = cls; b.innerHTML = `<span class="t">${t}</span><span class="n">${n}</span>`; b.onclick = fn; return b; };
     card.append(mkK('v2-karte', 'カルテを見る', 'カルテが開きます。PDF保存はカルテの画面からできます。', ()=>pinV2ShowKarte(r.id)));
     karteList.append(card);
