@@ -2663,8 +2663,6 @@ setPINFORMEKarte=function(d){
           document.getElementById("remeasure-count").textContent = due;
           var sumDogs = document.getElementById("sum-dogs");
           if (sumDogs) sumDogs.textContent = "現在 " + dogs.length + "頭が登録されています";
-          var sumBands = document.getElementById("sum-bands");
-          if (sumBands) sumBands.textContent = "現在 " + BANDS.length + "サイズ（" + primaryBreed + "）";
           applyRegistryCounts();
         }
 
@@ -3482,10 +3480,10 @@ setPINFORMEKarte=function(d){
           s.className = "sec-sum";
           s.textContent = SEC_SUM[sec.id] || "";
           sum.appendChild(s);
-          if (sec.id === "checker" || sec.id === "distribution") {
+          if (sec.id === "checker") {
             var dyn = document.createElement("span");
             dyn.className = "sec-sum dyn";
-            dyn.id = sec.id === "checker" ? "sum-dogs" : "sum-bands";
+            dyn.id = "sum-dogs";
             sum.appendChild(dyn);
           }
           var chv = document.createElement("span");
