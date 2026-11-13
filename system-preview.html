@@ -1217,6 +1217,42 @@
          signed-in nav state; the login screen and the full-page
          view are untouched. */
       body.adm-on.adm-nav.adm-sub .wrap > section.adm-wrap { display: none; }
+      /* ---------- §37 (2026-11-13): the checker picks by name
+         ----------
+         Owner feedback: the 対象の子 checker chose its dog from
+         an ID select, but nobody knows which ID belongs to which
+         dog. Selection is now a name search: type a name, tap a
+         candidate — name plus breed / chest / latest measurement
+         date, so same-name dogs can be told apart — and the usual
+         checker result renders. The input element itself is never
+         rebuilt while typing; only the candidate list below it
+         re-renders, and never mid-composition (IME-safe). The
+         names themselves are signed-in admin data: the admin
+         script hands an id -> name map to the checker, and the
+         public dataset stays name-free as before. */
+      .lookup-grid input.dog-search {
+        width: 100%; font: inherit; font-size: 17px; font-weight: 700;
+        padding: 11px 12px; border: 2px solid var(--line); border-radius: 12px;
+        background: var(--card); color: var(--ink);
+      }
+      .lookup-grid input.dog-search:focus { outline: none; border-color: var(--terra); }
+      .lookup-grid input.dog-search:disabled { opacity: 0.6; }
+      .dog-cands {
+        margin-top: 10px; display: flex; flex-direction: column; gap: 8px;
+        max-height: 330px; overflow-y: auto; -webkit-overflow-scrolling: touch;
+      }
+      .dog-cand {
+        font: inherit; text-align: left; cursor: pointer; width: 100%;
+        padding: 10px 14px; border: 2px solid var(--line); border-radius: 12px;
+        background: var(--card); color: var(--ink);
+        display: flex; align-items: center; gap: 10px;
+      }
+      .dog-cand.selected { border-color: var(--terra); background: var(--terra-soft); }
+      .dog-cand .dc-body { flex: 1 1 auto; min-width: 0; }
+      .dog-cand .dc-main { display: block; font-size: 16px; font-weight: 900; }
+      .dog-cand .dc-sub { display: block; font-size: 13px; color: var(--ink-soft); margin-top: 2px; }
+      .dog-cand .dc-arrow { font-weight: 900; color: var(--ink-soft); }
+      .dog-cands .dc-none { font-size: 14px; color: var(--ink-soft); margin: 2px 0; }
     </style>
   </head>
   <body class="adm-locked">
@@ -1266,7 +1302,7 @@
              screen by owner decision — explanations live under
              資料 > 項目の説明 (#itemdesc) instead. -->
         <div class="tabs" role="tablist" aria-label="対象の子の選び方">
-          <button class="tab-btn" id="tabbtn-id" role="tab" aria-selected="true" aria-controls="panel-id">登録済みの子（IDで選ぶ）</button>
+          <button class="tab-btn" id="tabbtn-id" role="tab" aria-selected="true" aria-controls="panel-id">登録済みの子（名前で選ぶ）</button>
           <button class="tab-btn" id="tabbtn-manual" role="tab" aria-selected="false" aria-controls="panel-manual">未登録の子（目安）</button>
         </div>
 
@@ -1275,8 +1311,12 @@
             <p class="fetch-note" id="fetch-note" role="status">採寸ナビから最新のデータを取得しています…</p>
             <div class="lookup-grid">
               <div>
-                <label for="dog-select">犬のID</label>
-                <select id="dog-select" disabled><option>読み込み中…</option></select>
+                <label for="dog-search">犬の名前で探す</label>
+                <!-- §37 (2026-11-13): name search replaces the ID
+                     select. The input is never rebuilt while
+                     typing; only #dog-cands below it re-renders. -->
+                <input id="dog-search" class="dog-search" type="search" placeholder="読み込み中…" autocomplete="off" disabled />
+                <div id="dog-cands" class="dog-cands"></div>
                 <p class="hint"><span id="dog-count-note"></span></p>
                 <div id="dog-detail"></div>
               </div>
@@ -1552,9 +1592,9 @@
         <div class="sec-head"><span class="sec-no">説</span><h2>項目の説明</h2></div>
         <p class="sec-lead">「対象の子」画面に出てくる項目の説明です。画面の中には説明文を置かず、分からない時はここを見ます。</p>
         <div class="card">
-          <h3>登録済みの子（IDで選ぶ）</h3>
+          <h3>登録済みの子（名前で選ぶ）</h3>
           <table class="plain">
-            <tr><th>犬のID</th><td>飼い主名・犬の名前は扱わず、IDだけをキーにしています。お客様情報から探す部分は、個人情報を持つ採寸ナビ／ショップ側の担当で、こちらはIDだけでつながります。IDの下に出る「現在○頭が登録されています」は、いま登録されている犬の総数です。</td></tr>
+            <tr><th>犬の名前で探す</th><td>名前を入力すると候補が出ます。同名の子は、候補に併記される犬種・胴まわり・最終採寸日で見分けます。内部の紐付けはIDのまま変わりません。検索欄の下に出る「現在○頭が登録されています」は、いま登録されている犬の総数です。</td></tr>
             <tr><th>最新の採寸</th><td>その子のいちばん新しい採寸の5項目（首まわり・胴まわり・ウエスト・着丈・前身頃）です。各IDでは常に最新の採寸が使われるため、再採寸されれば自動で新しいデータに切り替わります。あわせて性別・生年月日・体重を記録していて、年齢は生年月日から出した月齢・年齢で表示します。</td></tr>
             <tr><th>首まわり</th><td>首輪の位置で測ります。採寸ナビの案内では、姿勢を正した時にちょうど首から胴体に変わる境目の、毛並みが変わる所です。</td></tr>
             <tr><th>胴まわり</th><td>サイズ判定の軸になる項目です。一番胸が張っているポイントで測ります。</td></tr>
@@ -1572,7 +1612,7 @@
         <div class="card" style="margin-top:16px">
           <h3>未登録の子（目安）</h3>
           <table class="plain">
-            <tr><th>胴まわり（目安）</th><td>まだ登録のない子は、胴まわりから目安だけを出します。いちばん太い部分を、きつく締めずに測った値です。あくまで目安で、登録済みの子はIDで選ぶほうが正確です。帯の境目に近い子は、隣のサイズとの両方試着がおすすめです。</td></tr>
+            <tr><th>胴まわり（目安）</th><td>まだ登録のない子は、胴まわりから目安だけを出します。いちばん太い部分を、きつく締めずに測った値です。あくまで目安で、登録済みの子は名前で選ぶほうが正確です。帯の境目に近い子は、隣のサイズとの両方試着がおすすめです。</td></tr>
             <tr><th>実データからの推定</th><td>胴まわりから推定した首まわりとウエストです。型紙づくりの目安に使います。</td></tr>
           </table>
         </div>
@@ -1686,7 +1726,7 @@
 
           <div class="adm-card" id="adm-checker">
             <h3>対象の子チェッカー（名前で選ぶ）</h3>
-            <p class="adm-note">公開側「01 対象の子」と同じ判定（最新の5項目・推奨サイズ・帯の境目・再採寸候補）を、名前で選んで確認できます。計算の前提は公開側と同一です。IDだけで探す公開側と違い、こちらはログイン後の管理専用です。</p>
+            <p class="adm-note">公開側「01 対象の子」と同じ判定（最新の5項目・推奨サイズ・帯の境目・再採寸候補）を、名前で選んで確認できます。計算の前提は公開側と同一です。こちらは管理用ホームの中に置いたチェッカーです（セクション版の01も、名前で探す形に揃えています）。</p>
             <input class="adm-input adm-search" id="adm-check-search" type="search" placeholder="名前・IDで探す" />
             <div class="adm-list" id="adm-check-list"><p class="adm-note">読み込み中…</p></div>
             <div id="adm-check-result" style="margin-top:14px"></div>
@@ -2560,7 +2600,8 @@ setPINFORMEKarte=function(d){
         var fetchNote = document.getElementById("fetch-note");
         var chart = document.getElementById("chart");
         var breedGrid = document.getElementById("breed-grid");
-        var sel = document.getElementById("dog-select");
+        var sel = document.getElementById("dog-search");
+        var candsBox = document.getElementById("dog-cands");
         var dDetail = document.getElementById("dog-detail");
         var dSize = document.getElementById("dog-size");
         var dBand = document.getElementById("dog-band");
@@ -2717,28 +2758,80 @@ setPINFORMEKarte=function(d){
           });
         }
 
-        function buildSelect() {
-          sel.innerHTML = "";
-          breedNames.forEach(function (br) {
-            var g = document.createElement("optgroup");
-            g.label = br;
-            dogsOf(br).forEach(function (d) {
-              var o = document.createElement("option");
-              o.value = d.id;
-              o.textContent = "ID " + d.id;
-              g.appendChild(o);
-            });
-            sel.appendChild(g);
+        /* ---------- §37 (2026-11-13): selection by name search ----------
+           The ID select is gone: the owner pointed out that nobody
+           knows which ID belongs to which dog, so the entry point is
+           a name search. Names are admin-only data — the public
+           dataset stays name-free (ID-keyed) — and the admin script
+           hands over an id -> name map after sign-in through
+           window.__checkerNames (and clears it on logout). Until a
+           name is known, a candidate falls back to "ID n", so the
+           checker never breaks; matching also still accepts ID
+           digits, as the admin searches do. */
+        var dogNames = {};
+        var currentDogId = null;
+        var searchQuery = "";
+        var searchComposing = false;
+        function nameNorm(s) {
+          return String(s || "").normalize("NFKC").toLowerCase()
+            .replace(/[ぁ-ゖ]/g, function (c) { return String.fromCharCode(c.charCodeAt(0) + 0x60); })
+            .replace(/[ァィゥェォッャュョヮ]/g, function (c) { return "アイウエオツヤユヨワ".charAt("ァィゥェォッャュョヮ".indexOf(c)); });
+        }
+        function dogDisplayName(d) { return dogNames[d.id] ? String(dogNames[d.id]) : ""; }
+        function dogMatchesSearch(d, q) {
+          q = String(q || "").trim();
+          if (!q) return true;
+          var nq = nameNorm(q);
+          var n = nameNorm(dogDisplayName(d));
+          if (n && nq && n.indexOf(nq) >= 0) return true;
+          return String(d.id).indexOf(q) >= 0;
+        }
+        function escHtml(s) {
+          return String(s === null || s === undefined ? "" : s).replace(/[&<>"']/g, function (c) {
+            return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
           });
+        }
+        function renderCandidates() {
+          if (!candsBox) return;
+          if (loadState !== "ok") { candsBox.innerHTML = ""; return; }
+          var list = dogs.filter(function (d) { return dogMatchesSearch(d, searchQuery); });
+          if (!list.length) {
+            candsBox.innerHTML = '<p class="dc-none">一致する子はいません。名前の一部で試してください。</p>';
+            return;
+          }
+          candsBox.innerHTML = list.map(function (d) {
+            var n = dogDisplayName(d);
+            var main = n ? escHtml(n) + "（ID " + d.id + "）" : "名前なし（ID " + d.id + "）";
+            var sub = d.breed + " ・ 胴まわり " +
+              (d.chest === null || d.chest === undefined ? "—" : fmt(d.chest) + "cm") +
+              " ・ 最終採寸 " + jpDate(d.date);
+            return '<button type="button" class="dog-cand' + (currentDogId === d.id ? " selected" : "") +
+              '" data-dog-id="' + d.id + '"><span class="dc-body"><span class="dc-main">' + main +
+              '</span><span class="dc-sub">' + escHtml(sub) + '</span></span>' +
+              '<span class="dc-arrow">›</span></button>';
+          }).join("");
+        }
+        function pickDog(id) {
+          var d = null;
+          dogs.forEach(function (x) { if (x.id === id) d = x; });
+          if (!d) return;
+          searchQuery = dogDisplayName(d);
+          sel.value = searchQuery;
+          showDog(id);
+        }
+        function buildSearch() {
           sel.disabled = false;
+          sel.placeholder = "名前を入力";
           document.getElementById("dog-count-note").textContent =
             "現在" + dogs.length + "頭が登録されています。";
+          renderCandidates();
         }
 
         function showDog(id) {
           var d = null;
           dogs.forEach(function (x) { if (x.id === id) d = x; });
           if (!d) return;
+          currentDogId = id;
           var meta = [d.breed];
           if (d.sex) meta.push(d.sex);
           meta.push(ageText(d.birth));
@@ -2790,8 +2883,41 @@ setPINFORMEKarte=function(d){
             patDogSel.value = String(id);
             renderPattern();
           }
+          renderCandidates();
         }
-        sel.addEventListener("change", function () { showDog(parseInt(sel.value, 10)); });
+        /* §37: live name search wiring. The input element is never
+           rebuilt and its value is never rewritten while typing;
+           only the candidate list below re-renders, and never
+           mid-composition, so Japanese IME input stays intact
+           (the same rule as the admin searches). */
+        sel.addEventListener("compositionstart", function () { searchComposing = true; });
+        sel.addEventListener("compositionend", function () {
+          searchComposing = false;
+          searchQuery = sel.value;
+          renderCandidates();
+        });
+        sel.addEventListener("input", function (e) {
+          if (searchComposing || (e && e.isComposing)) return;
+          searchQuery = sel.value;
+          renderCandidates();
+        });
+        if (candsBox) candsBox.addEventListener("click", function (e) {
+          var t = e.target;
+          var btn = t && t.closest ? t.closest("[data-dog-id]") : null;
+          if (!btn) return;
+          pickDog(parseInt(btn.getAttribute("data-dog-id"), 10));
+        });
+        /* The admin script's name-map hand-off (§37). Called after
+           admin data loads, and with null on logout so names do not
+           linger in the checker after sign-out. */
+        window.__checkerNames = function (map) {
+          dogNames = map || {};
+          if (loadState !== "ok") return;
+          // Only the candidates gain names; the input is a pure
+          // search box and is never filled in from here (the picked
+          // dog is visible as the highlighted candidate).
+          renderCandidates();
+        };
 
         // ---------- manual checker (rough guide for unregistered dogs) ----------
         var input = document.getElementById("chest-manual");
@@ -3190,7 +3316,7 @@ setPINFORMEKarte=function(d){
           renderStats();
           renderChart();
           renderBreeds();
-          buildSelect();
+          buildSearch();
           initPattern();
           if (dogs.length) showDog(dogs[0].id);
           judge();
@@ -3207,8 +3333,9 @@ setPINFORMEKarte=function(d){
           btn.textContent = "再試行";
           btn.addEventListener("click", loadData);
           fetchNote.appendChild(btn);
-          sel.innerHTML = "<option>取得できませんでした</option>";
+          sel.placeholder = "取得できませんでした";
           sel.disabled = true;
+          if (candsBox) candsBox.innerHTML = "";
           chart.innerHTML = '<p class="hint">データを取得できませんでした。</p>';
           breedGrid.innerHTML = '<div class="card"><p style="margin:0">データを取得できませんでした。再試行してください。</p></div>';
           patDogSel.innerHTML = "<option>取得できませんでした</option>";
@@ -3225,8 +3352,11 @@ setPINFORMEKarte=function(d){
           stamp.textContent = "採寸ナビのデータを取得中…";
           fetchNote.classList.remove("err");
           fetchNote.textContent = "採寸ナビから最新のデータを取得しています…";
-          sel.innerHTML = "<option>読み込み中…</option>";
+          sel.value = "";
+          sel.placeholder = "読み込み中…";
           sel.disabled = true;
+          searchQuery = "";
+          if (candsBox) candsBox.innerHTML = "";
           judge();
 
           var ctrl = ("AbortController" in window) ? new AbortController() : null;
@@ -3270,7 +3400,7 @@ setPINFORMEKarte=function(d){
 
         // ---------- accordion: fold each section under its own heading ----------
         var SEC_SUM = {
-          checker: "IDで選ぶと、その子の採寸・推奨サイズ・履歴を表示します",
+          checker: "名前で選ぶと、その子の採寸・推奨サイズ・履歴を表示します",
           distribution: "サイズ帯ごとの頭数です",
           breeds: "頭数もサイズ帯も、犬種を混ぜずに管理します",
           rule: "帯は固定ではなく、実データから自動で組み替わります",
@@ -5281,8 +5411,10 @@ setPINFORMEKarte=function(d){
         /* ---------- dog checker (name-based twin of the public "01" checker) ----------
            Same premises and wording as the public showDog(): latest 5 core
            items, recommended size from the shared band helpers, boundary
-           caution, re-measurement candidate. Only the selection differs:
-           by name here (admin-only data), by ID on the public side. */
+           caution, re-measurement candidate. Selection is by name on
+           both sides since §37: straight from the admin dataset here,
+           and in the section checker through the __checkerNames
+           hand-off (names remain admin-only data). */
         function checkJpDate(s) {
           var p = String(s || "").split("-");
           if (p.length !== 3) return String(s || "");
@@ -5745,6 +5877,15 @@ setPINFORMEKarte=function(d){
             showList(true);
             renderBreeds();
             renderCheckList();
+            // §37: hand the id -> name map to the section checker
+            // (01 対象の子), whose selection is a name search now.
+            // Names stay admin-only data; the public dataset itself
+            // remains name-free.
+            if (window.__checkerNames) {
+              var nameMap = {};
+              A.dogs.forEach(function (d) { var n = dogNameOf(d); if (n) nameMap[d.id] = n; });
+              window.__checkerNames(nameMap);
+            }
             renderHome();
             setStatus("犬 " + A.dogs.length + " 頭・採寸履歴 " + A.measurements.length + " 件を取得しました。");
           } catch (e) {
@@ -5806,6 +5947,9 @@ setPINFORMEKarte=function(d){
             setSession(null); A.verified = false; A.dogs = []; A.measurements = [];
             A.view = "breeds"; A.activeBreed = null; A.activeDogId = null; A.activeOwnerId = null; A.query = "";
             A.checkQuery = ""; A.checkDogId = null;
+            // §37: names are admin-only data — clear the checker's
+            // name map on logout so they do not linger.
+            if (window.__checkerNames) window.__checkerNames(null);
             showLogin("");
           });
           $("adm-reload").addEventListener("click", function () { if (A.verified) loadAdminData(); });
