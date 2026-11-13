@@ -2685,9 +2685,10 @@ setPINFORMEKarte=function(d){
 
         function renderChart() {
           var CB = distBreed || primaryBreed;
-          var CBANDS = bandsForBreed(CB) || [];
+          var CBANDS = bandsByBreed[CB] || [];
           if (!CBANDS.length) {
-            chart.innerHTML = '<p class="hint">' + CB + "は、胴まわりを測った子がまだ" + latestChestsOfBreed(CB).length + "頭で、分布を作るには" + BAND_MIN_DOGS + "頭分が必要です。集まってきたら、ここに分布が出ます。</p>";
+            var chestN = dogsOf(CB).filter(function (d) { return d.chest !== null && d.chest !== undefined; }).length;
+            chart.innerHTML = '<p class="hint">' + CB + "は、胴まわりを測った子がまだ" + chestN + "頭で、分布を作るには" + BAND_MIN_DOGS + "頭分が必要です。集まってきたら、ここに分布が出ます。</p>";
             var hpEmpty = document.getElementById("hp-range-note");
             if (hpEmpty) hpEmpty.innerHTML = "";
             return;
