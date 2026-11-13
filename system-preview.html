@@ -6166,6 +6166,7 @@ setPINFORMEKarte=function(d){
           // whose re-measurement is due — and each 確認 in the bell
           // panel (§24 calls window.__admBellOpen) removes one.
           if (window.__admBellSet) window.__admBellSet(bellNotices().length);
+          admNotifyRefresh();
           var tl = $("adm-tab-list"), tc = $("adm-tab-checker");
           if (tl) tl.classList.toggle("active", A.tab !== "checker");
           if (tc) tc.classList.toggle("active", A.tab === "checker");
@@ -6471,6 +6472,100 @@ setPINFORMEKarte=function(d){
           }, 300);
         }
         window.__admBellOpen = openBellPanel;
+        /* ---------- §57 admin push notifications (own devices) ----------
+           The account panel gains a notify box: this device subscribes
+           through the navi's service worker (same sw.js, so the same
+           registration) and the admin-gated RPCs; the admin-notify
+           Edge Function pushes the two states email never covers
+           (no-measurement registrations, re-measurement due). */
+        var ADM_VAPID_PUB = "BPq1zDtjMB-aaf65f0BRYd4-zSpTkLOtxOQ8jr9W6NawAK9Kp86fWgsK_XM68vCd_ybqHt3quNEjWNPdiSeyGz4";
+        function admB64ToUint8(s) { var pad = "=".repeat((4 - s.length % 4) % 4); var b = atob((s + pad).replace(/-/g, "+").replace(/_/g, "/")); var a = new Uint8Array(b.length); for (var i = 0; i < b.length; i++) a[i] = b.charCodeAt(i); return a; }
+        function admNotifyStatus(t) { var el = $("adm-notify-status"); if (el) el.textContent = t; }
+        async function admNotifyReg() {
+          try {
+            var reg = await navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).catch(function () { return null; });
+            if (!reg) reg = await navigator.serviceWorker.ready;
+            return reg;
+          } catch (e) { return null; }
+        }
+        async function admNotifyRefresh() {
+          if (!$("adm-notify-box")) return;
+          var en = $("adm-notify-enable"), dis = $("adm-notify-disable"), test = $("adm-notify-test");
+          if (!("Notification" in window) || !("serviceWorker" in navigator) || !("PushManager" in window)) {
+            admNotifyStatus("この開き方では通知が使えません。ホーム画面のアプリから開いてください。");
+            if (en) en.disabled = true;
+            if (dis) dis.disabled = true;
+            if (test) test.disabled = true;
+            return;
+          }
+          try {
+            var reg = await navigator.serviceWorker.getRegistration();
+            var sub = reg ? await reg.pushManager.getSubscription() : null;
+            var count = null;
+            try { count = await rpc("admin_push_subscription_count", {}, token()); } catch (e) {}
+            if (sub) admNotifyStatus("この端末で受け取る設定になっています" + (count != null ? "（登録端末 " + count + "台）" : "") + "。");
+            else admNotifyStatus("この端末は未登録です。「通知を受け取る」を押してください。");
+            if (en) { en.disabled = !!sub; en.style.opacity = sub ? "0.45" : ""; }
+            if (dis) { dis.disabled = !sub; dis.style.opacity = sub ? "" : "0.45"; }
+            if (test) { test.disabled = !sub; test.style.opacity = sub ? "" : "0.45"; }
+          } catch (e) {}
+        }
+        async function admNotifyEnable() {
+          if (!("Notification" in window) || !("serviceWorker" in navigator) || !("PushManager" in window)) { admNotifyStatus("この開き方では通知が使えません。ホーム画面のアプリから開いてください。"); return; }
+          try {
+            admNotifyStatus("許可を確認しています…");
+            var perm = await Notification.requestPermission();
+            if (perm !== "granted") { admNotifyStatus("通知が許可されませんでした。"); admNotifyRefresh(); return; }
+            var reg = await admNotifyReg();
+            if (!reg) { admNotifyStatus("登録できませんでした。"); admNotifyRefresh(); return; }
+            var sub = await reg.pushManager.getSubscription();
+            if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: admB64ToUint8(ADM_VAPID_PUB) });
+            var j = sub.toJSON();
+            await rpc("register_admin_push_subscription", { p_endpoint: j.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth, p_user_agent: navigator.userAgent }, token());
+            admNotifyStatus("登録できました。");
+          } catch (e) { admNotifyStatus("登録できませんでした: " + ((e && e.message) || e)); }
+          admNotifyRefresh();
+        }
+        async function admNotifyDisable() {
+          try {
+            var reg = await navigator.serviceWorker.getRegistration();
+            var sub = reg ? await reg.pushManager.getSubscription() : null;
+            if (sub) {
+              try { await rpc("unregister_admin_push_subscription", { p_endpoint: sub.endpoint }, token()); } catch (e) {}
+              await sub.unsubscribe();
+            }
+            admNotifyStatus("通知を止めました。");
+          } catch (e) { admNotifyStatus("止められませんでした: " + ((e && e.message) || e)); }
+          admNotifyRefresh();
+        }
+        async function admNotifyTest() {
+          try {
+            admNotifyStatus("テスト通知を送っています…");
+            var res = await fetch(BASE + "/functions/v1/admin-notify", { method: "POST", headers: headers(token()), body: JSON.stringify({ action: "test" }) });
+            var data = null;
+            try { data = await res.json(); } catch (e) {}
+            if (res.ok && data && data.ok) admNotifyStatus("テスト通知を送りました（" + data.sent + "台に送信）。");
+            else admNotifyStatus("送れませんでした" + (data && data.error ? "：" + data.error : "（" + res.status + "）"));
+          } catch (e) { admNotifyStatus("送れませんでした: " + ((e && e.message) || e)); }
+        }
+        function buildAdmNotifyBox() {
+          var panel = $("adm-account-panel");
+          if (!panel || $("adm-notify-box")) return;
+          var box = document.createElement("div");
+          box.id = "adm-notify-box";
+          box.innerHTML = '<p class="adm-note" style="margin:14px 0 4px;font-weight:700;color:#111">管理者への通知（この端末）</p>' +
+            '<p class="adm-note" style="margin:0 0 8px">採寸なしの登録と、再採寸の時期を、この端末へ知らせます。</p>' +
+            '<p class="adm-status" id="adm-notify-status" role="status"></p>' +
+            '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
+            '<button type="button" class="adm-btn" id="adm-notify-enable">通知を受け取る</button>' +
+            '<button type="button" class="adm-btn" id="adm-notify-test">テスト通知</button>' +
+            '<button type="button" class="adm-btn" id="adm-notify-disable">通知を止める</button></div>';
+          panel.appendChild(box);
+          $("adm-notify-enable").addEventListener("click", admNotifyEnable);
+          $("adm-notify-disable").addEventListener("click", admNotifyDisable);
+          $("adm-notify-test").addEventListener("click", admNotifyTest);
+          admNotifyRefresh();
+        }
         function setTab(tab) {
           A.tab = tab === "checker" ? "checker" : "list";
           if (!A.activeDogId) showList(); else renderHome();
@@ -6606,6 +6701,7 @@ setPINFORMEKarte=function(d){
             showList(true); renderBreeds();
             var h = $("adm-home"); if (h) h.scrollIntoView({ behavior: "smooth", block: "start" });
           });
+          buildAdmNotifyBox();
           var bellCloseBtn = $("adm-bell-close");
           if (bellCloseBtn) bellCloseBtn.addEventListener("click", closeBellPanel);
           var bellOverlay = $("adm-bell-overlay");
