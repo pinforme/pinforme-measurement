@@ -1194,6 +1194,24 @@
       .adm-drawer-close svg { width: 17px; height: 17px; }
       .adm-drawer-close:active { background: #e6e6e9; }
       .adm-drawer-body { overflow-y: auto; padding: 2px 0 calc(20px + env(safe-area-inset-bottom)); }
+      /* §54 bell panel rows (the shell reuses the drawer classes) */
+      .adm-bell-list { padding: 4px 16px 0; }
+      .adm-bell-row {
+        display: flex; align-items: center; gap: 10px; width: 100%;
+        padding: 11px 0; border-bottom: 1px solid #eee; text-align: left;
+      }
+      .adm-bell-main { display: block; font-size: 14.5px; font-weight: 700; color: #111; }
+      .adm-bell-sub { display: block; font-size: 12px; color: #777; margin-top: 2px; }
+      .adm-bell-confirm {
+        margin-left: auto; flex: none; border: 1.5px solid #111; background: #111; color: #fff;
+        font-size: 12.5px; font-weight: 700; border-radius: 999px; padding: 6px 13px; cursor: pointer;
+      }
+      .adm-bell-confirm:active { background: #333; }
+      .adm-bell-all {
+        width: 100%; margin: 12px 0 4px; border: 1.5px solid #111; background: #fff; color: #111;
+        font-size: 13.5px; font-weight: 700; border-radius: 999px; padding: 9px 0; cursor: pointer;
+      }
+      .adm-bell-empty { padding: 18px 16px; font-size: 13.5px; color: #777; }
       .adm-drawer-group {
         margin: 18px 16px 4px; font-size: 11.5px; font-weight: 800;
         letter-spacing: .1em; color: #8a8a8e;
@@ -6134,6 +6152,13 @@ setPINFORMEKarte=function(d){
           if (nmChip) nmChip.addEventListener("click", openNomeasList);
           var nwChip = $("adm-newmeas-chip");
           if (nwChip) nwChip.addEventListener("click", openNewmeasList);
+          // §54 (2026-11-14, owner spec): the bell badge counts
+          // measurements the admin has not confirmed yet. Confirmed
+          // ids live in localStorage; the first run baselines every
+          // current id as confirmed, so only later arrivals count.
+          // The bell panel (§24 calls window.__admBellOpen) lists the
+          // unconfirmed arrivals, and each 確認 removes one.
+          if (window.__admBellSet) window.__admBellSet(bellUnseen().length);
           var tl = $("adm-tab-list"), tc = $("adm-tab-checker");
           if (tl) tl.classList.toggle("active", A.tab !== "checker");
           if (tc) tc.classList.toggle("active", A.tab === "checker");
@@ -6279,6 +6304,105 @@ setPINFORMEKarte=function(d){
           card.classList.remove("adm-hidden");
           card.scrollIntoView({ behavior: "smooth", block: "start" });
         }
+        /* ---------- §54 bell notices (unconfirmed arrivals) ----------
+           The bell panel slides in like the menu drawer. Its rows are
+           the measurement arrivals the admin has not confirmed yet;
+           each 確認 stores that measurement's id as seen and the
+           badge count drops by one. First run baselines all current
+           ids as seen, so history never floods the panel. */
+        var BELL_SEEN_KEY = "PINFORME_ADMIN_BELL_SEEN_IDS_V1";
+        function bellSeenIds() {
+          var raw = null;
+          try { raw = localStorage.getItem(BELL_SEEN_KEY); } catch (e) {}
+          if (raw === null) {
+            var all = {};
+            A.measurements.forEach(function (r) { if (r.id != null) all[String(r.id)] = true; });
+            try { localStorage.setItem(BELL_SEEN_KEY, JSON.stringify(Object.keys(all))); } catch (e) {}
+            return all;
+          }
+          var set = {};
+          try { JSON.parse(raw || "[]").forEach(function (id) { set[String(id)] = true; }); } catch (e) {}
+          return set;
+        }
+        function bellSaveSeen(set) {
+          var keep = [];
+          A.measurements.forEach(function (r) { if (r.id != null && set[String(r.id)]) keep.push(String(r.id)); });
+          try { localStorage.setItem(BELL_SEEN_KEY, JSON.stringify(keep)); } catch (e) {}
+        }
+        function bellUnseen() {
+          var seen = bellSeenIds();
+          var byId = {};
+          A.dogs.forEach(function (d) { byId[String(d.id)] = d; });
+          var out = [];
+          A.measurements.forEach(function (r) {
+            if (r.id == null || seen[String(r.id)]) return;
+            var dog = byId[String(r.dog_id)];
+            if (!dog) return;
+            out.push({ dog: dog, rec: r });
+          });
+          out.sort(function (a, b) {
+            var ca = String(a.rec.created_at || ""), cb = String(b.rec.created_at || "");
+            if (ca !== cb) return ca < cb ? 1 : -1;
+            return Number(b.rec.id || 0) - Number(a.rec.id || 0);
+          });
+          return out;
+        }
+        function renderBellPanel() {
+          var box = $("adm-bell-list"); if (!box) return;
+          var rows = bellUnseen();
+          if (window.__admBellSet) window.__admBellSet(rows.length);
+          if (!rows.length) {
+            box.innerHTML = '<p class="adm-bell-empty">新しいお知らせはありません。</p>';
+            return;
+          }
+          var html = rows.map(function (c) {
+            var d = c.dog, r = c.rec;
+            return '<div class="adm-bell-row"><span style="min-width:0">' +
+              '<span class="adm-bell-main">' + esc(dogTitleOf(d)) + '</span>' +
+              '<span class="adm-bell-sub">新しい採寸が届きました ・ 採寸日 ' + esc(measuredDate(r)) + ' ・ 胴まわり ' + fmt(r.chest, "cm") + '</span>' +
+              '</span><button type="button" class="adm-bell-confirm" data-bell-confirm="' + esc(r.id) + '">確認</button></div>';
+          }).join("");
+          if (rows.length >= 2) html += '<button type="button" class="adm-bell-all" id="adm-bell-all">全部確認する</button>';
+          box.innerHTML = html;
+          box.querySelectorAll("[data-bell-confirm]").forEach(function (btn) {
+            btn.addEventListener("click", function () { bellConfirm([btn.getAttribute("data-bell-confirm")]); });
+          });
+          var allBtn = $("adm-bell-all");
+          if (allBtn) allBtn.addEventListener("click", function () {
+            bellConfirm(bellUnseen().map(function (c) { return String(c.rec.id); }));
+          });
+        }
+        function bellConfirm(ids) {
+          var set = bellSeenIds();
+          ids.forEach(function (id) { set[String(id)] = true; });
+          bellSaveSeen(set);
+          renderBellPanel();
+        }
+        var bellCloseTimer = null;
+        function openBellPanel() {
+          var panel = $("adm-bell-panel"), overlay = $("adm-bell-overlay");
+          if (!panel || !overlay) return;
+          renderBellPanel();
+          clearTimeout(bellCloseTimer);
+          panel.hidden = false;
+          overlay.hidden = false;
+          void panel.offsetWidth;
+          panel.classList.add("open");
+          overlay.classList.add("open");
+          panel.setAttribute("aria-hidden", "false");
+        }
+        function closeBellPanel() {
+          var panel = $("adm-bell-panel"), overlay = $("adm-bell-overlay");
+          if (!panel || panel.hidden) return;
+          panel.classList.remove("open");
+          if (overlay) overlay.classList.remove("open");
+          panel.setAttribute("aria-hidden", "true");
+          bellCloseTimer = setTimeout(function () {
+            panel.hidden = true;
+            if (overlay) overlay.hidden = true;
+          }, 300);
+        }
+        window.__admBellOpen = openBellPanel;
         function setTab(tab) {
           A.tab = tab === "checker" ? "checker" : "list";
           if (!A.activeDogId) showList(); else renderHome();
@@ -6414,6 +6538,13 @@ setPINFORMEKarte=function(d){
             showList(true); renderBreeds();
             var h = $("adm-home"); if (h) h.scrollIntoView({ behavior: "smooth", block: "start" });
           });
+          var bellCloseBtn = $("adm-bell-close");
+          if (bellCloseBtn) bellCloseBtn.addEventListener("click", closeBellPanel);
+          var bellOverlay = $("adm-bell-overlay");
+          if (bellOverlay) bellOverlay.addEventListener("click", closeBellPanel);
+          document.addEventListener("keydown", function (ev) {
+            if (ev.key === "Escape") closeBellPanel();
+          });
           var kartePdf = $("adm-karte-pdf");
           if (kartePdf) kartePdf.addEventListener("click", function () { printAdmKarte(); });
           var karteClose = $("adm-karte-close");
@@ -6523,6 +6654,16 @@ setPINFORMEKarte=function(d){
           <a href="https://suzuri.jp/PINFORME" target="_blank" rel="noopener noreferrer">SUZURI<span class="dn">↗</span></a>
         </div>
       </nav>
+    </aside>
+    <div class="adm-drawer-overlay" id="adm-bell-overlay" hidden></div>
+    <aside class="adm-drawer" id="adm-bell-panel" aria-label="お知らせ" aria-hidden="true" hidden>
+      <div class="adm-drawer-head">
+        <span class="adm-drawer-title">お知らせ</span>
+        <button type="button" class="adm-drawer-close" id="adm-bell-close" aria-label="お知らせを閉じる"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"/></svg></button>
+      </div>
+      <div class="adm-drawer-body">
+        <div class="adm-bell-list" id="adm-bell-list"><p class="adm-bell-empty">読み込み中…</p></div>
+      </div>
     </aside>
     <script>
       // ---------- §22 (2026-11-13): toc section switching (display only) ----------
@@ -6718,9 +6859,12 @@ setPINFORMEKarte=function(d){
           var b = ev.target && ev.target.closest ? ev.target.closest("#adm-reload, #adm-logout") : null;
           if (b) setPanel(false);
         });
-        // Bell: back home, then point at the action strip.
+        // Bell (§54): slide the notices panel in, like the menu
+        // drawer. The admin script owns the panel (window.__admBellOpen);
+        // before login it falls back to pointing at the action strip.
         if (bellBtn) bellBtn.addEventListener("click", function () {
           setPanel(false);
+          if (window.__admBellOpen) { window.__admBellOpen(); return; }
           var h = document.querySelector('.toc a[href="#adm-home"]');
           if (h) h.click();
           var home = document.getElementById("adm-home");
@@ -6733,22 +6877,18 @@ setPINFORMEKarte=function(d){
             act.classList.add("adm-flash");
           }, 60);
         });
-        // Badge: the total of the action strip's counts, in sync.
-        var syncBadge = function () {
+        // Badge (§53, owner revision 2026-11-14): NOT the action
+        // strip's totals — those already live on the home screen.
+        // The badge is an arrival signal only: how many measurements
+        // arrived since the admin last marked them seen. The admin
+        // script owns the data, so it drives the badge through
+        // window.__admBellSet; tapping the bell marks them seen.
+        var syncBadge = function () {};
+        window.__admBellSet = function (n) {
           if (!badge) return;
-          var total = 0;
-          document.querySelectorAll("#adm-home-actions .adm-act-count strong").forEach(function (el) {
-            var n = parseInt(el.textContent, 10);
-            if (!isNaN(n)) total += n;
-          });
-          badge.textContent = String(total);
-          badge.hidden = total <= 0;
+          badge.textContent = String(n);
+          badge.hidden = !(n > 0);
         };
-        var actBox = document.getElementById("adm-home-actions");
-        if (actBox && window.MutationObserver) {
-          new MutationObserver(syncBadge).observe(actBox, { childList: true, subtree: true, characterData: true });
-        }
-        syncBadge();
       })();
     </script>
     <script>
