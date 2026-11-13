@@ -1443,7 +1443,7 @@
           </ul>
           <p style="font-size:14.5px;color:var(--ink-soft);margin:12px 0 0">なお、このデータ処理の側では飼い主や犬の名前は扱わず、IDだけを結合のキーにしています。「対象の子」の画面は、その読み出しの実働版です。開くたびに採寸ナビから最新データを取得するので、名前で選べばその時点の採寸・推奨サイズ・最終採寸日がそのまま出ます。</p>
           <h3>再採寸のおすすめは「3か月に1度」</h3>
-          <p style="margin:0;font-size:15px">成犬でも、時間とともに体型が変わってサイズ感がずれることがあります。最終採寸から3か月以上たった子は「再採寸の声かけ候補」として自動でリストアップされ、毎日のチェックと月次レポートでお知らせします。</p>
+          <p style="margin:0;font-size:15px">成犬でも、時間とともに体型が変わってサイズ感がずれることがあります。最終採寸から3か月以上たった子は「再採寸の声かけ候補」として自動でリストアップされ、毎日のチェックと月次レポートでお知らせします。候補の頭数は「お知らせ送信」の画面で確認できます。</p>
         </div>
       </section>
 
@@ -1476,16 +1476,10 @@
       <!-- ============ 05 MEASUREMENT & ID ============ -->
       <section id="measurement">
         <div class="sec-head"><span class="sec-no">05</span><h2>採寸とID管理</h2></div>
-        <div class="grid-2">
-          <div class="stat">
-            <div class="num"><span id="remeasure-count">—</span><small>頭</small></div>
-            <div class="lbl">再採寸の声かけ候補（最終採寸から3か月以上）</div>
-          </div>
-          <div class="card">
-            <h3>必須の5項目</h3>
-            <p style="margin:0;font-size:15px">首まわり／胴まわり／ウエスト／着丈／前身頃</p>
-            <p style="font-size:14.5px;color:var(--ink-soft);margin:8px 0 0">あわせて性別・生年月日・体重を記録します。</p>
-          </div>
+        <div class="card">
+          <h3>必須の5項目</h3>
+          <p style="margin:0;font-size:15px">首まわり／胴まわり／ウエスト／着丈／前身頃</p>
+          <p style="font-size:14.5px;color:var(--ink-soft);margin:8px 0 0">あわせて性別・生年月日・体重を記録します。</p>
         </div>
       </section>
 
@@ -1689,7 +1683,11 @@
       <section id="pushsend">
         <div class="sec-head"><span class="sec-no">送</span><h2>お知らせ送信</h2></div>
         <p class="sec-lead">採寸協力者のみなさんへ、お知らせを送る画面です。</p>
-        <div class="card">
+        <div class="stat">
+          <div class="num"><span id="remeasure-count">—</span><small>頭</small></div>
+          <div class="lbl">再採寸の声かけ候補（最終採寸から3か月以上）</div>
+        </div>
+        <div class="card" style="margin-top:16px">
           <h3>ここからお知らせを送ります</h3>
           <p style="margin:0;font-size:15px">この確認用プレビュー（テスト版）には、送信パネル本体は入っていません。本番の管理画面では、この場所に送信パネル（対象の選択・タイトルと本文の入力・対象の確認・送信）が入ります。</p>
         </div>
