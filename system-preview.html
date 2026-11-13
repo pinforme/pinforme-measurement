@@ -404,6 +404,12 @@
       table.matrix td .rng { display: block; font-size: 11.5px; color: var(--ink-soft); }
       .matrix-actions { margin-top: 14px; }
 
+      /* ---------- §44 (2026-11-13): progress stepper ---------- */
+      #progress .tl-item { grid-template-columns: 92px 1fr; align-items: start; }
+      #progress .tl-item .when { justify-self: start; background: var(--paper-2); color: var(--ink-soft); border-radius: 999px; padding: 3px 10px; font-size: 13px; white-space: nowrap; }
+      #progress .tl-item.now .when { background: var(--ink); color: var(--paper); }
+      #progress .tl-item p b { font-size: 15.5px; }
+
       /* ---------- rule steps ---------- */
       .steps { counter-reset: step; display: flex; flex-direction: column; gap: 0; }
       .step { display: grid; grid-template-columns: 44px 1fr; gap: 14px; padding: 14px 0; border-bottom: 1px dashed var(--line); }
@@ -1557,14 +1563,38 @@
       <!-- ============ 08 PROGRESS ============ -->
       <section id="progress">
         <div class="sec-head"><span class="sec-no">08</span><h2>製品化の進み具合</h2></div>
-        <p class="sec-lead">データ側の準備は整い、いまはOEM（製造委託先）とのサンプル製作フェーズです。</p>
+        <p class="sec-lead">製品化の段階と、いまの現在地です。</p>
         <div class="card">
           <div class="timeline">
-            <div class="tl-item"><span class="when">済み</span><p>26頭分の5項目データをOEMへ送付し、データに基づくサイズ表の提案を依頼。</p></div>
-            <div class="tl-item"><span class="when">来週（10/26の週）</span><p>OEMからサイズ表の提案が届く予定。帯の境目が頭数の密集地帯を割っていないか、洗濯後の寸法が基準になっているかを照合して、サンプル発注を確定します。</p></div>
-            <div class="tl-item"><span class="when">サンプル到着後</span><p>SIZE 37／42／49のサンプルで、採寸協力者が試着モニターに。各サイズ、中心の子2頭ほど＋境目の子1〜2頭が着用し、境目の子は隣のサイズも試着して、境目の置き方を確かめます。飛ばした帯（34・39・45）は今回の製作対象外で、先行する3サイズがその分を肩代わりするわけではありません。修正点を確認してから製品化します。</p></div>
-            <div class="tl-item"><span class="when">2027年 2〜3月</span><p>最終サンプル確定後にクラウドファンディングを開始（30〜45日間、支援者へのお届けは4月）。タンクトップが春夏のアイテムであることに合わせた時期です。</p></div>
+            <div class="tl-item"><span class="when">継続中</span><p><b>採寸データを集める</b><br>登録は現在 <b id="prog-total">–</b>頭（ミニピン <b id="prog-mp">–</b>頭）。データはこれからも集め続けます。</p></div>
+            <div class="tl-item"><span class="when">済み</span><p><b>サンプルを作る</b><br>SIZE37・42・48のサンプルが完成しました（2026年11月13日）。</p></div>
+            <div class="tl-item now"><span class="when">いまここ</span><p><b>試着して確かめる</b><br>ぴんちゃん・シャーくんの試着は確認済み。追加のサンプルは到着待ちです。</p></div>
+            <div class="tl-item"><span class="when">次</span><p><b>モニター試着</b><br>SIZE37の試着モニターを募集中です（11月20日まで）。</p></div>
+            <div class="tl-item"><span class="when">これから</span><p><b>直す</b><br>モニターの声を集めて、直すところを決めます。</p></div>
+            <div class="tl-item"><span class="when">これから</span><p><b>量産を決める</b><br>直しが固まったら、作る色と数を決めます。</p></div>
+            <div class="tl-item"><span class="when">これから</span><p><b>販売</b><br>クラウドファンディングは2027年2〜3月の予定です。</p></div>
           </div>
+        </div>
+      </section>
+
+      <section id="prognote">
+        <div class="sec-head"><span class="sec-no">進</span><h2>進み具合について</h2></div>
+        <p class="sec-lead">「進み具合」画面の読み方です。画面の中には説明文を置かず、分からない時はここを見ます。</p>
+        <div class="card">
+          <h3>段階の進み方</h3>
+          <p style="font-size:15px;margin:0">上から順に進みます。「いまここ」は、段階が進むたびに付け替えます。</p>
+        </div>
+        <div class="card">
+          <h3>モニターの選び方</h3>
+          <p style="font-size:15px;margin:0">各サイズ、中心の子2頭ほど＋境目の子1〜2頭に着てもらいます。境目の子には隣のサイズも試着してもらい、境目の置き方を確かめます。</p>
+        </div>
+        <div class="card">
+          <h3>飛ばしたサイズ</h3>
+          <p style="font-size:15px;margin:0">SIZE34・40・45は、37・42・48の発売のあとに追加します。</p>
+        </div>
+        <div class="card">
+          <h3>販売の時期</h3>
+          <p style="font-size:15px;margin:0">最終サンプルが固まってから、クラウドファンディングを開始します（2027年2〜3月、30〜45日間、支援者へのお届けは4月）。タンクトップが春夏のアイテムなので、この時期に合わせています。</p>
         </div>
       </section>
 
@@ -1645,6 +1675,7 @@
             <a href="#distnote">分布の見方<span class="dn">›</span></a>
             <a href="#breednote">犬種について<span class="dn">›</span></a>
             <a href="#measnote">採寸とIDについて<span class="dn">›</span></a>
+            <a href="#prognote">進み具合について<span class="dn">›</span></a>
           </nav>
         </div>
       </section>
@@ -2935,6 +2966,15 @@ setPINFORMEKarte=function(d){
             "</body></html>";
         }
 
+        function renderProgress() {
+          var total = 0;
+          breedNames.forEach(function (br) { total += dogsOf(br).length; });
+          var t = document.getElementById("prog-total");
+          var m = document.getElementById("prog-mp");
+          if (t) t.textContent = total;
+          if (m) m.textContent = dogsOf(primaryBreed).length;
+        }
+
         function renderBreeds() {
           breedGrid.innerHTML = "";
           breedNames.forEach(function (br) {
@@ -3533,6 +3573,7 @@ setPINFORMEKarte=function(d){
           renderBreeds();
           renderMeasBreedSelect();
           renderMatrix();
+          renderProgress();
           buildSearch();
           initPattern();
           /* §38 (2026-11-13): do not auto-show the first dog. The area
@@ -3625,7 +3666,7 @@ setPINFORMEKarte=function(d){
           measurement: "サイズ帯ごとの集計表と、送付用資料づくりです",
           findings: "首・ウエスト・前身頃に見つかった関係です",
           tools: "型紙生成・品質チェック・月次レポートなど",
-          progress: "OEMとのサンプル製作フェーズです",
+          progress: "7つの段階と、いまの現在地です",
           pattern: "実寸の型紙を作成し、A4分割印刷もできます"
         };
         var SEC_OPEN = { checker: true, distribution: true };
@@ -6296,6 +6337,7 @@ setPINFORMEKarte=function(d){
           <a href="#distnote">分布の見方<span class="dn">›</span></a>
           <a href="#breednote">犬種について<span class="dn">›</span></a>
           <a href="#measnote">採寸とIDについて<span class="dn">›</span></a>
+          <a href="#prognote">進み具合について<span class="dn">›</span></a>
         </div>
         <p class="adm-drawer-group">リンク</p>
         <div class="adm-docs-list adm-drawer-list">
@@ -6329,7 +6371,7 @@ setPINFORMEKarte=function(d){
       // stands alone. Home routes call select(null), which clears
       // the class and brings the admin block back.
       (function () {
-        var SEC_IDS = ["checker", "distribution", "breeds", "rule", "measurement", "findings", "tools", "progress", "pattern", "sales", "docs", "links", "pushsend", "itemdesc", "distnote", "breednote", "measnote"];
+        var SEC_IDS = ["checker", "distribution", "breeds", "rule", "measurement", "findings", "tools", "progress", "pattern", "sales", "docs", "links", "pushsend", "itemdesc", "distnote", "breednote", "measnote", "prognote"];
         var inNav = function () { return !!(document.body && document.body.classList.contains("adm-nav")); };
         var markActive = function (id) {
           document.querySelectorAll('.toc a[href^="#"], .adm-grid a[href^="#"], .adm-docs-list a[href^="#"]').forEach(function (a) {
