@@ -1619,8 +1619,9 @@
           <div class="pat-grid">
             <div>
               <div id="ppanel-id" role="tabpanel" aria-labelledby="ptabbtn-id">
-                <label for="pat-dog-select">犬のID（実測値で作る）</label>
-                <select id="pat-dog-select" disabled><option>読み込み中…</option></select>
+                <label for="pat-dog-search">犬の名前（名前で探す）</label>
+                <input id="pat-dog-search" class="dog-search" type="search" placeholder="読み込み中…" autocomplete="off" disabled />
+                <div id="pat-dog-cands" class="dog-cands"></div>
               </div>
               <div id="ppanel-band" role="tabpanel" aria-labelledby="ptabbtn-band" hidden>
                 <label for="pat-band-select" id="pat-band-label">サイズ帯（帯の平均値で作る）</label>
@@ -3135,8 +3136,11 @@ setPINFORMEKarte=function(d){
              is the single place for measurement values. (The data itself
              stays in the system; only this display is removed.) */
           dHist.innerHTML = "";
-          if (patReady && patMode === "id" && patDogSel.value !== String(id)) {
-            patDogSel.value = String(id);
+          if (patReady && patMode === "id" && patDogId !== id) {
+            patDogId = id;
+            patSearchQuery = dogDisplayName(d);
+            if (patDogSearch) patDogSearch.value = patSearchQuery;
+            renderPatDogCands();
             renderPattern();
           }
           renderCandidates();
@@ -3168,6 +3172,7 @@ setPINFORMEKarte=function(d){
            linger in the checker after sign-out. */
         window.__checkerNames = function (map) {
           dogNames = map || {};
+          if (typeof renderPatDogCands === "function") renderPatDogCands();
           if (loadState !== "ok") return;
           // Only the candidates gain names; the input is a pure
           // search box and is never filled in from here (the picked
@@ -3235,7 +3240,11 @@ setPINFORMEKarte=function(d){
         var patSets = null;
         var patFileBase = "pattern";
 
-        var patDogSel = document.getElementById("pat-dog-select");
+        var patDogSearch = document.getElementById("pat-dog-search");
+        var patDogCands = document.getElementById("pat-dog-cands");
+        var patDogId = null;
+        var patSearchQuery = "";
+        var patSearchComposing = false;
         var patBandSel = document.getElementById("pat-band-select");
         var patSource = document.getElementById("pat-source");
         var patPreview = document.getElementById("pat-preview");
@@ -3346,6 +3355,54 @@ setPINFORMEKarte=function(d){
             '<g transform="translate(0 ' + headH + ')">' + body + "</g></svg>";
           return { svg: svg, pattern: { name: titleName + "（" + B.label + "）", info: info, parts: parts } };
         }
+        function renderPatDogCands() {
+          if (!patDogCands) return;
+          if (loadState !== "ok") { patDogCands.innerHTML = ""; return; }
+          if (!String(patSearchQuery || "").trim()) { patDogCands.innerHTML = ""; return; }
+          var list = dogs.filter(function (d) { return dogMatchesSearch(d, patSearchQuery); });
+          if (!list.length) {
+            patDogCands.innerHTML = '<p class="dc-none">一致する子はいません。名前の一部で試してください。</p>';
+            return;
+          }
+          patDogCands.innerHTML = list.map(function (d) {
+            var n = dogDisplayName(d);
+            var main = n ? escHtml(n) + "（ID " + d.id + "）" : "名前なし（ID " + d.id + "）";
+            var sub = d.breed + " ・ 胴まわり " +
+              (d.chest === null || d.chest === undefined ? "—" : fmt(d.chest) + "cm") +
+              " ・ 最終採寸 " + jpDate(d.date);
+            return '<button type="button" class="dog-cand' + (patDogId === d.id ? " selected" : "") +
+              '" data-pat-dog-id="' + d.id + '"><span class="dc-body"><span class="dc-main">' + main +
+              '</span><span class="dc-sub">' + escHtml(sub) + '</span></span>' +
+              '<span class="dc-arrow">›</span></button>';
+          }).join("");
+        }
+        function pickPatDog(id) {
+          var d = null;
+          dogs.forEach(function (x) { if (x.id === id) d = x; });
+          if (!d) return;
+          patDogId = id;
+          patSearchQuery = dogDisplayName(d);
+          patDogSearch.value = patSearchQuery;
+          renderPatDogCands();
+          renderPattern();
+        }
+        patDogSearch.addEventListener("compositionstart", function () { patSearchComposing = true; });
+        patDogSearch.addEventListener("compositionend", function () {
+          patSearchComposing = false;
+          patSearchQuery = patDogSearch.value;
+          renderPatDogCands();
+        });
+        patDogSearch.addEventListener("input", function (e) {
+          if (patSearchComposing || (e && e.isComposing)) return;
+          patSearchQuery = patDogSearch.value;
+          renderPatDogCands();
+        });
+        patDogCands.addEventListener("click", function (e) {
+          var t = e.target;
+          var btn = t && t.closest ? t.closest("[data-pat-dog-id]") : null;
+          if (!btn) return;
+          pickPatDog(parseInt(btn.getAttribute("data-pat-dog-id"), 10));
+        });
         function patSizeKeyForChest(c) {
           if (c === null || c === undefined) return null;
           var keys = Object.keys(PAT_SIZE_RANGE);
@@ -3368,9 +3425,10 @@ setPINFORMEKarte=function(d){
               desc: "SIZE" + key + "（胴まわり " + r[0] + "〜" + r[1] + "cm）の型紙" + (band ? " ・ この帯の登録は " + band.count + "頭" : "")
             };
           }
-          var id = parseInt(patDogSel.value, 10);
           var d = null;
-          dogs.forEach(function (x) { if (x.id === id) d = x; });
+          if (patDogId !== null && patDogId !== undefined) {
+            dogs.forEach(function (x) { if (x.id === patDogId) d = x; });
+          }
           if (!d) return null;
           var miss = [];
           if (d.chest === null || d.chest === undefined) miss.push("胴まわり");
@@ -3461,19 +3519,9 @@ setPINFORMEKarte=function(d){
         }
 
         function initPattern() {
-          patDogSel.innerHTML = "";
-          breedNames.forEach(function (br) {
-            var g = document.createElement("optgroup");
-            g.label = br;
-            dogsOf(br).forEach(function (d) {
-              var o = document.createElement("option");
-              o.value = d.id;
-              o.textContent = "ID " + d.id;
-              g.appendChild(o);
-            });
-            patDogSel.appendChild(g);
-          });
-          patDogSel.disabled = !dogs.length;
+          patDogSearch.disabled = !dogs.length;
+          patDogSearch.placeholder = "名前を入力";
+          renderPatDogCands();
           document.getElementById("pat-band-label").textContent = "サイズ帯（型紙は37・42・48）";
           patBandSel.innerHTML = "";
           ["37", "42", "48"].forEach(function (key) {
@@ -3499,7 +3547,6 @@ setPINFORMEKarte=function(d){
         }
         ptabId.addEventListener("click", function () { setPatTab("id"); });
         ptabBand.addEventListener("click", function () { setPatTab("band"); });
-        patDogSel.addEventListener("change", renderPattern);
         patBandSel.addEventListener("change", renderPattern);
         document.querySelectorAll('input[name="pat-out"]').forEach(function (r) {
           r.addEventListener("change", function () { patOutBasis = this.value; patApplyOutput(); });
@@ -3606,8 +3653,8 @@ setPINFORMEKarte=function(d){
           if (candsBox) candsBox.innerHTML = "";
           chart.innerHTML = '<p class="hint">データを取得できませんでした。</p>';
           breedGrid.innerHTML = '<p class="hint" style="padding:10px 14px;margin:0">データを取得できませんでした。再試行してください。</p>';
-          patDogSel.innerHTML = "<option>取得できませんでした</option>";
-          patDogSel.disabled = true;
+          patDogSearch.placeholder = "取得できませんでした";
+          patDogSearch.disabled = true;
           patBandSel.innerHTML = "<option>取得できませんでした</option>";
           patBandSel.disabled = true;
           patSource.textContent = "";
