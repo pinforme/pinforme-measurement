@@ -385,6 +385,15 @@
       .pill.wait { background: var(--paper-2); color: var(--ink-soft); }
       .breed p { font-size: 14.5px; color: var(--ink-soft); margin: 8px 0 0; }
 
+      /* ---------- §41 (2026-11-13): breeds as a compact one-line list ---------- */
+      .breed-list { background: var(--card); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+      .breed-row { display: flex; align-items: center; gap: 10px; padding: 9px 14px; border-top: 1px solid var(--line); }
+      .breed-row:first-child { border-top: none; }
+      .breed-row .bn { flex: 1; font-weight: 700; font-size: 15px; }
+      .breed-row .pill { margin-bottom: 0; flex: none; }
+      .breed-row .bc { font-weight: 900; font-size: 17px; flex: none; }
+      .breed-row .bc small { font-size: 12.5px; font-weight: 700; color: var(--ink-soft); margin-left: 2px; }
+
       /* ---------- rule steps ---------- */
       .steps { counter-reset: step; display: flex; flex-direction: column; gap: 0; }
       .step { display: grid; grid-template-columns: 44px 1fr; gap: 14px; padding: 14px 0; border-bottom: 1px dashed var(--line); }
@@ -1396,7 +1405,7 @@
           <h3>なぜ犬種ごとに分けるか</h3>
           <p>体型が違う犬種を混ぜて集計すると、どちらの体型にも合わない数字になります。頭数もサイズ帯も、犬種ごとに分けて管理しています。</p>
           <h3>状態の見方</h3>
-          <p>「サイズ帯あり」は、その犬種専用のサイズ帯が立っている状態です。「データを蓄積中」は、まだ帯を作るには頭数が足りない状態で、頭数が貯まれば、この犬種専用のサイズ帯が自動で立ち上がります。</p>
+          <p>「サイズ帯あり」は、その犬種専用のサイズ帯が立っている状態です。「蓄積中」は、まだ帯を作るには頭数が足りない状態で、頭数が貯まれば、この犬種専用のサイズ帯が自動で立ち上がります。</p>
           <h3>新しい犬種が増えたら</h3>
           <ul class="tight">
             <li>増えるのは、その犬種の行とグラフだけ。他の犬種の数字やサイズ帯は動きません。</li>
@@ -1412,7 +1421,7 @@
       <!-- ============ 03 BREEDS ============ -->
       <section id="breeds">
         <div class="sec-head"><span class="sec-no">03</span><h2>犬種ごとに数える</h2></div>
-        <div class="grid-2" id="breed-grid"><p class="hint">読み込み中…</p></div>
+        <div class="breed-list" id="breed-grid"><p class="hint" style="padding:10px 14px;margin:0">読み込み中…</p></div>
       </section>
 
       <!-- ============ 04 RULE ============ -->
@@ -2797,13 +2806,13 @@ setPINFORMEKarte=function(d){
           breedNames.forEach(function (br) {
             var list = dogsOf(br);
             var hasBands = !!bandsByBreed[br];
-            var card = document.createElement("div");
-            card.className = "card breed";
-            card.innerHTML =
-              '<span class="pill ' + (hasBands ? "on" : "wait") + '">' + (hasBands ? "サイズ帯あり" : "データを蓄積中") + "</span>" +
-              "<h3>" + br + "</h3>" +
-              '<div class="big">' + list.length + "<small>頭</small></div>";
-            breedGrid.appendChild(card);
+            var row = document.createElement("div");
+            row.className = "breed-row";
+            row.innerHTML =
+              '<span class="bn">' + br + "</span>" +
+              '<span class="pill ' + (hasBands ? "on" : "wait") + '">' + (hasBands ? "サイズ帯あり" : "蓄積中") + "</span>" +
+              '<span class="bc">' + list.length + "<small>頭</small></span>";
+            breedGrid.appendChild(row);
           });
         }
 
@@ -3395,7 +3404,7 @@ setPINFORMEKarte=function(d){
           sel.disabled = true;
           if (candsBox) candsBox.innerHTML = "";
           chart.innerHTML = '<p class="hint">データを取得できませんでした。</p>';
-          breedGrid.innerHTML = '<div class="card"><p style="margin:0">データを取得できませんでした。再試行してください。</p></div>';
+          breedGrid.innerHTML = '<p class="hint" style="padding:10px 14px;margin:0">データを取得できませんでした。再試行してください。</p>';
           patDogSel.innerHTML = "<option>取得できませんでした</option>";
           patDogSel.disabled = true;
           patBandSel.innerHTML = "<option>取得できませんでした</option>";
