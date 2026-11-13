@@ -1418,6 +1418,35 @@
         </div>
       </section>
 
+      <!-- ============ MEASUREMENT NOTE (§42, 2026-11-13) ============ -->
+      <section id="measnote">
+        <div class="sec-head"><span class="sec-no">測</span><h2>採寸とIDについて</h2></div>
+        <p class="sec-lead">「採寸とID」画面の読み方です。画面の中には説明文を置かず、分からない時はここを見ます。</p>
+        <div class="card">
+          <h3>考え方</h3>
+          <p>集める項目は、服づくりに効く最小限に絞っています。そして1頭ごとにIDを振り、採寸が「測って終わり」にならないようにしています。</p>
+          <h3>必須の5項目＋基本情報</h3>
+          <table class="plain">
+            <tr><th>首まわり</th><td>首輪の位置で測る</td></tr>
+            <tr><th>胴まわり</th><td>サイズ判定の軸になる項目</td></tr>
+            <tr><th>ウエスト</th><td>胴との差がテーパー（絞り）の設計に直結</td></tr>
+            <tr><th>着丈</th><td>背中の長さ</td></tr>
+            <tr><th>前身頃</th><td>性別で比率が変わることが分かっている項目</td></tr>
+          </table>
+          <p style="font-size:14.5px;color:var(--ink-soft);margin:12px 0 0">あわせて性別・生年月日・体重を記録します。フルフォームでは全15項目を各3回測って平均を取ります。各IDでは常に最新の採寸が使われるため、再採寸されれば自動で新しいデータに切り替わります。</p>
+          <h3>なぜIDで管理するのか</h3>
+          <ul class="tight">
+            <li><b>購入時のサイズ提供</b>：採寸協力者が購入するとき、その子のデータをそのまま推奨サイズとして提示できます。</li>
+            <li><b>購入の傾向が分かる</b>：購入頻度や、どの形をよく買うかがIDに紐づいて蓄積されます。</li>
+            <li><b>新作の提案につながる</b>：履歴をもとに、その子に合う新作を提案できます。</li>
+            <li><b>体型の変化も追える</b>：同じIDで履歴が積み上がると、サイズ感の変化まで見えるようになります。</li>
+          </ul>
+          <p style="font-size:14.5px;color:var(--ink-soft);margin:12px 0 0">なお、このデータ処理の側では飼い主や犬の名前は扱わず、IDだけを結合のキーにしています。「対象の子」の画面は、その読み出しの実働版です。開くたびに採寸ナビから最新データを取得するので、名前で選べばその時点の採寸・推奨サイズ・最終採寸日がそのまま出ます。</p>
+          <h3>再採寸のおすすめは「3か月に1度」</h3>
+          <p style="margin:0;font-size:15px">成犬でも、時間とともに体型が変わってサイズ感がずれることがあります。最終採寸から3か月以上たった子は「再採寸の声かけ候補」として自動でリストアップされ、毎日のチェックと月次レポートでお知らせします。</p>
+        </div>
+      </section>
+
       <!-- ============ 03 BREEDS ============ -->
       <section id="breeds">
         <div class="sec-head"><span class="sec-no">03</span><h2>犬種ごとに数える</h2></div>
@@ -1447,33 +1476,16 @@
       <!-- ============ 05 MEASUREMENT & ID ============ -->
       <section id="measurement">
         <div class="sec-head"><span class="sec-no">05</span><h2>採寸とID管理</h2></div>
-        <p class="sec-lead">集める項目は、服づくりに効く最小限に絞っています。そして1頭ごとにIDを振り、採寸が「測って終わり」にならないようにしています。</p>
         <div class="grid-2">
-          <div class="card">
-            <h3>必須の5項目＋基本情報</h3>
-            <table class="plain">
-              <tr><th>首まわり</th><td>首輪の位置で測る</td></tr>
-              <tr><th>胴まわり</th><td>サイズ判定の軸になる項目</td></tr>
-              <tr><th>ウエスト</th><td>胴との差がテーパー（絞り）の設計に直結</td></tr>
-              <tr><th>着丈</th><td>背中の長さ</td></tr>
-              <tr><th>前身頃</th><td>性別で比率が変わることが分かっている項目</td></tr>
-            </table>
-            <p style="font-size:14.5px;color:var(--ink-soft);margin:12px 0 0">あわせて性別・生年月日・体重を記録します。フルフォームでは全15項目を各3回測って平均を取ります。各IDでは常に最新の採寸が使われるため、再採寸されれば自動で新しいデータに切り替わります。</p>
+          <div class="stat">
+            <div class="num"><span id="remeasure-count">—</span><small>頭</small></div>
+            <div class="lbl">再採寸の声かけ候補（最終採寸から3か月以上）</div>
           </div>
           <div class="card">
-            <h3>なぜIDで管理するのか</h3>
-            <ul class="tight">
-              <li><b>購入時のサイズ提供</b>：採寸協力者が購入するとき、その子のデータをそのまま推奨サイズとして提示できます。</li>
-              <li><b>購入の傾向が分かる</b>：購入頻度や、どの形をよく買うかがIDに紐づいて蓄積されます。</li>
-              <li><b>新作の提案につながる</b>：履歴をもとに、その子に合う新作を提案できます。</li>
-              <li><b>体型の変化も追える</b>：同じIDで履歴が積み上がると、サイズ感の変化まで見えるようになります。</li>
-            </ul>
-            <p style="font-size:14.5px;color:var(--ink-soft);margin:12px 0 0">なお、このデータ処理の側では飼い主や犬の名前は扱わず、IDだけを結合のキーにしています。このページの「01 対象の子を選ぶ」は、その読み出しの実働版です。開くたびに採寸ナビから最新データを取得するので、IDで選べばその時点の採寸・推奨サイズ・最終採寸日がそのまま出ます。</p>
+            <h3>必須の5項目</h3>
+            <p style="margin:0;font-size:15px">首まわり／胴まわり／ウエスト／着丈／前身頃</p>
+            <p style="font-size:14.5px;color:var(--ink-soft);margin:8px 0 0">あわせて性別・生年月日・体重を記録します。</p>
           </div>
-        </div>
-        <div class="card" style="margin-top:16px">
-          <h3>再採寸のおすすめは「3か月に1度」</h3>
-          <p style="margin:0;font-size:15px">成犬でも、時間とともに体型が変わってサイズ感がずれることがあります。最終採寸から3か月以上たった子は「再採寸の声かけ候補」として自動でリストアップされ、毎日のチェックと月次レポートでお知らせします。現在の候補は <b><span id="remeasure-count">—</span>頭</b> です（このページを開いた時点の集計）。</p>
         </div>
       </section>
 
@@ -1624,6 +1636,7 @@
             <a href="#itemdesc">項目の説明<span class="dn">›</span></a>
             <a href="#distnote">分布の見方<span class="dn">›</span></a>
             <a href="#breednote">犬種について<span class="dn">›</span></a>
+            <a href="#measnote">採寸とIDについて<span class="dn">›</span></a>
           </nav>
         </div>
       </section>
@@ -6144,6 +6157,7 @@ setPINFORMEKarte=function(d){
           <a href="#itemdesc">項目の説明<span class="dn">›</span></a>
           <a href="#distnote">分布の見方<span class="dn">›</span></a>
           <a href="#breednote">犬種について<span class="dn">›</span></a>
+          <a href="#measnote">採寸とIDについて<span class="dn">›</span></a>
         </div>
         <p class="adm-drawer-group">リンク</p>
         <div class="adm-docs-list adm-drawer-list">
@@ -6177,7 +6191,7 @@ setPINFORMEKarte=function(d){
       // stands alone. Home routes call select(null), which clears
       // the class and brings the admin block back.
       (function () {
-        var SEC_IDS = ["checker", "distribution", "breeds", "rule", "measurement", "findings", "tools", "progress", "pattern", "sales", "docs", "links", "pushsend", "itemdesc", "distnote", "breednote"];
+        var SEC_IDS = ["checker", "distribution", "breeds", "rule", "measurement", "findings", "tools", "progress", "pattern", "sales", "docs", "links", "pushsend", "itemdesc", "distnote", "breednote", "measnote"];
         var inNav = function () { return !!(document.body && document.body.classList.contains("adm-nav")); };
         var markActive = function (id) {
           document.querySelectorAll('.toc a[href^="#"], .adm-grid a[href^="#"], .adm-docs-list a[href^="#"]').forEach(function (a) {
