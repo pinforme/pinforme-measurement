@@ -1194,6 +1194,33 @@
       .adm-drawer-close svg { width: 17px; height: 17px; }
       .adm-drawer-close:active { background: #e6e6e9; }
       .adm-drawer-body { overflow-y: auto; padding: 2px 0 calc(20px + env(safe-area-inset-bottom)); }
+      /* §54 bell panel rows (the shell reuses the drawer classes) */
+      .adm-bell-list { padding: 4px 16px 0; }
+      .adm-bell-row {
+        display: flex; align-items: center; gap: 10px; width: 100%;
+        padding: 11px 0; border-bottom: 1px solid #eee; text-align: left;
+      }
+      .adm-bell-main { display: block; font-size: 14.5px; font-weight: 700; color: #111; }
+      .adm-bell-sub { display: block; font-size: 12px; color: #777; margin-top: 2px; }
+      .adm-bell-confirm {
+        margin-left: auto; flex: none; border: 1.5px solid #111; background: #111; color: #fff;
+        font-size: 12.5px; font-weight: 700; border-radius: 999px; padding: 6px 13px; cursor: pointer;
+      }
+      .adm-bell-confirm:active { background: #333; }
+      .adm-bell-all {
+        width: 100%; margin: 12px 0 4px; border: 1.5px solid #111; background: #fff; color: #111;
+        font-size: 13.5px; font-weight: 700; border-radius: 999px; padding: 9px 0; cursor: pointer;
+      }
+      .adm-bell-empty { padding: 18px 16px; font-size: 13.5px; color: #777; }
+      /* §56 kind tags: black = normal, amber = needs action, red = error */
+      .adm-bell-tag {
+        flex: none; align-self: flex-start; margin-top: 2px;
+        font-size: 10.5px; font-weight: 800; letter-spacing: .04em;
+        border-radius: 6px; padding: 3px 7px; background: #111; color: #fff;
+      }
+      .adm-bell-tag.warn { background: #fef3c7; color: #b45309; }
+      .adm-bell-tag.err { background: #fee2e2; color: #b91c1c; }
+      .adm-bell-row.err .adm-bell-main { color: #b91c1c; }
       .adm-drawer-group {
         margin: 18px 16px 4px; font-size: 11.5px; font-weight: 800;
         letter-spacing: .1em; color: #8a8a8e;
@@ -1856,6 +1883,7 @@
             <p class="adm-crumbs">管理画面 ＞ 管理用ホーム ＞ 再採寸候補</p>
             <div class="adm-view-head"><button type="button" class="adm-back" id="adm-due-close">← 管理用ホームに戻る</button><h3>再採寸候補</h3></div>
             <p class="adm-note">最終採寸から3か月以上たった子を、経過日数の多い順に並べています。タップすると犬の詳細が開きます。お声がけは、管理者が文面を確認してから送ります（この画面から自動では送りません）。</p>
+            <p style="margin:0 0 10px"><button type="button" class="adm-btn" id="adm-due-send">この候補にお知らせを送る ›</button></p>
             <div class="adm-list" id="adm-due-list"><p class="adm-note">読み込み中…</p></div>
           </div>
 
@@ -1864,6 +1892,13 @@
             <div class="adm-view-head"><button type="button" class="adm-back" id="adm-nomeas-close">← 管理用ホームに戻る</button><h3>採寸なし登録</h3></div>
             <p class="adm-note">登録はあるのに採寸データが1件も無い子を、登録の新しい順に並べています。送信が途中で止まった可能性があります。タップすると犬の詳細が開きます。お声がけは、管理者が文面を確認してから送ります（この画面から自動では送りません）。</p>
             <div class="adm-list" id="adm-nomeas-list"><p class="adm-note">読み込み中…</p></div>
+          </div>
+
+          <div class="adm-card adm-hidden" id="adm-newmeas">
+            <p class="adm-crumbs">管理画面 ＞ 管理用ホーム ＞ 新しく届いた採寸</p>
+            <div class="adm-view-head"><button type="button" class="adm-back" id="adm-newmeas-close">← 管理用ホームに戻る</button><h3>新しく届いた採寸（直近7日）</h3></div>
+            <p class="adm-note">直近7日に届いた採寸を、新しい順に並べています（ホームの件数と同じ数え方です）。タップすると犬の詳細が開きます。</p>
+            <div class="adm-list" id="adm-newmeas-list"><p class="adm-note">読み込み中…</p></div>
           </div>
 
           <div class="adm-card adm-hidden" id="adm-detail"></div>
@@ -3932,7 +3967,7 @@ setPINFORMEKarte=function(d){
            view, so an update build forces exactly one re-login. */
         var BUILD_KEY = "PINFORME_ADMIN_BUILD_V1";
         var LASTUSED_KEY = "PINFORME_ADMIN_LASTUSED_V1";
-        var BUILD_ID = "prod-2026-11-14-r1";
+        var BUILD_ID = "prod-2026-11-14-r2";
         var RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
 
         /* Breed master: formal names + aliases (normalisation is display-side). */
@@ -4300,6 +4335,7 @@ setPINFORMEKarte=function(d){
           var kar = $("adm-karte"); if (kar) kar.classList.add("adm-hidden");
           var dueC = $("adm-due"); if (dueC) dueC.classList.add("adm-hidden");
           var nmC0 = $("adm-nomeas"); if (nmC0) nmC0.classList.add("adm-hidden");
+          var nwC0 = $("adm-newmeas"); if (nwC0) nwC0.classList.add("adm-hidden");
           renderHome();
         }
         // §33: the nav scripts (§22 toc home / §23 tab bar / §24
@@ -4315,6 +4351,7 @@ setPINFORMEKarte=function(d){
           var kar = $("adm-karte"); if (kar) kar.classList.add("adm-hidden");
           var dueC = $("adm-due"); if (dueC) dueC.classList.add("adm-hidden");
           var nmC = $("adm-nomeas"); if (nmC) nmC.classList.add("adm-hidden");
+          var nwC = $("adm-newmeas"); if (nwC) nwC.classList.add("adm-hidden");
         }
         function dogCardHTML(d) {
           var l = latestOf(d.id);
@@ -6030,7 +6067,7 @@ setPINFORMEKarte=function(d){
               '<div class="adm-hero-num"><span class="adm-hero-label">総頭数</span><span class="adm-hero-value">' + A.dogs.length + '<small>頭</small></span></div>' +
               '<div class="adm-hero-num"><span class="adm-hero-label">ミニピン</span><span class="adm-hero-value">' + mp + '<small>頭</small></span></div>' +
               '</div>' +
-              '<p class="adm-hero-inc">直近7日で <strong>+' + regWeek + '頭</strong>' + (regToday ? '（今日 +' + regToday + '頭）' : '') + '</p>' +
+              '<p class="adm-hero-inc">直近7日で 新規登録 <strong>+' + regWeek + '頭</strong>' + (regToday ? '（今日 +' + regToday + '頭）' : '') + '</p>' +
               '<p class="adm-hero-sub">犬種 ' + Object.keys(breeds).length + '種 ・ 採寸履歴 ' + A.measurements.length + '件</p>';
             var actBox = $("adm-home-actions");
             if (actBox) {
@@ -6046,7 +6083,13 @@ setPINFORMEKarte=function(d){
           var nmChip = $("adm-nomeas-chip");
           if (nmChip) nmChip.addEventListener("click", openNomeasList);
           var nwChip = $("adm-newmeas-chip");
-          if (nwChip) nwChip.addEventListener("click", function () { var t = $("adm-tab-list"); if (t) t.click(); });
+          if (nwChip) nwChip.addEventListener("click", openNewmeasList);
+          // §54/§55 (2026-11-14, owner spec): the bell badge counts
+          // unconfirmed notices — new measurement arrivals and dogs
+          // whose re-measurement is due — and each 確認 in the bell
+          // panel (§24 calls window.__admBellOpen) removes one.
+          if (window.__admBellSet) window.__admBellSet(bellNotices().length);
+          admNotifyRefresh();
           var tl = $("adm-tab-list"), tc = $("adm-tab-checker");
           if (tl) tl.classList.toggle("active", A.tab !== "checker");
           if (tc) tc.classList.toggle("active", A.tab === "checker");
@@ -6085,6 +6128,16 @@ setPINFORMEKarte=function(d){
           card.classList.remove("adm-hidden");
           card.scrollIntoView({ behavior: "smooth", block: "start" });
         }
+        /* "Send to these candidates": stash the audience preset for the
+           production push panel, then jump to the お知らせ送信 section.
+           The panel (production build only) reads the preset on its poll
+           and selects the 再採寸候補 audience; nothing is sent from here. */
+        var dueSendBtn = $("adm-due-send");
+        if (dueSendBtn) dueSendBtn.addEventListener("click", function () {
+          try { sessionStorage.setItem("PINFORME_PUSH_PRESET", "due"); } catch (e) {}
+          var link = document.querySelector('a[href="#pushsend"]');
+          if (link) link.click();
+        });
         /* ---------- no-measurement registrations ----------
            Dogs whose registration exists but that have no measurement rows
            at all (latestOf is null). A submission that stopped after the
@@ -6124,6 +6177,317 @@ setPINFORMEKarte=function(d){
           renderNomeasList();
           card.classList.remove("adm-hidden");
           card.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+        /* ---------- §51 newly arrived measurements (last 7 days) ----------
+           The home chip's own view: the measurements behind the chip
+           count, newest first — same membership rule as the count in
+           renderHome (measuredDate within today + previous 6 days).
+           Until §51 the chip jumped to the full breed list, so the new
+           arrivals could not be told apart from everything else. */
+        function newmeasRows() {
+          var nowD = new Date();
+          var today0 = new Date(nowD.getFullYear(), nowD.getMonth(), nowD.getDate());
+          var byId = {};
+          A.dogs.forEach(function (d) { byId[String(d.id)] = d; });
+          var out = [];
+          A.measurements.forEach(function (r) {
+            var p = measuredDate(r).split("-");
+            if (p.length !== 3) return;
+            var md = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+            if (isNaN(md.getTime())) return;
+            var diff = Math.round((today0 - md) / 86400000);
+            if (diff < 0 || diff >= 7) return;
+            var dog = byId[String(r.dog_id)];
+            if (!dog) return;
+            out.push({ dog: dog, rec: r, diff: diff });
+          });
+          out.sort(function (a, b) {
+            if (a.diff !== b.diff) return a.diff - b.diff;
+            return Number(b.rec.id || 0) - Number(a.rec.id || 0);
+          });
+          return out;
+        }
+        function renderNewmeasList() {
+          var box = $("adm-newmeas-list"); if (!box) return;
+          var rows = newmeasRows();
+          if (!rows.length) {
+            box.innerHTML = '<p class="adm-note">直近7日に届いた採寸はありません。</p>';
+            return;
+          }
+          box.innerHTML = rows.map(function (c) {
+            var d = c.dog, r = c.rec;
+            return '<button type="button" class="adm-card-row" data-adm-newmeas-dog="' + esc(d.id) + '">' +
+              '<span class="adm-card-body">' +
+              '<span class="adm-card-main">' + esc(dogTitleOf(d)) + '</span>' +
+              '<span class="adm-card-sub">' + esc(normalizeBreed(rawBreedOf(d)) || "犬種未登録") + " ・ 採寸日 " + esc(measuredDate(r)) + (c.diff === 0 ? "（今日）" : "（" + c.diff + "日前）") + '</span>' +
+              '<span class="adm-card-sub">胴まわり ' + fmt(r.chest, "cm") + " ・ 着丈 " + fmt(r.back_length, "cm") + " ・ 体重 " + fmt(r.weight, "kg") + '</span>' +
+              '</span><span class="adm-card-arrow">›</span></button>';
+          }).join("");
+          box.querySelectorAll("[data-adm-newmeas-dog]").forEach(function (btn) {
+            btn.addEventListener("click", function () { openDog(btn.getAttribute("data-adm-newmeas-dog")); });
+          });
+        }
+        function openNewmeasList() {
+          A.view = "newmeas"; A.activeDogId = null; A.activeOwnerId = null;
+          hideAdminCards();
+          var card = $("adm-newmeas"); if (!card) return;
+          renderNewmeasList();
+          card.classList.remove("adm-hidden");
+          card.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+        /* ---------- §54/§55 bell notices ----------
+           The bell panel slides in like the menu drawer. Rows are
+           unconfirmed notices of three kinds: new measurement
+           arrivals (key "m:<measurement id>"), re-measurement-due
+           dogs (key "due:<dog id>:<latest measurement id>", so a dog
+           that re-measures and later becomes due again notifies
+           afresh) and registrations with no measurement yet
+           (key "nomeas:<dog id>").
+           Each 確認 stores the key as seen and the badge drops by
+           one. First run baselines every current key as seen, so
+           history never floods the panel. Rows show whatever parts
+           are known when some data is missing. */
+        var BELL_SEEN_KEY = "PINFORME_ADMIN_BELL_SEEN_IDS_V1";
+        function bellAllKeys() {
+          var keys = [];
+          A.measurements.forEach(function (r) { if (r.id != null) keys.push("m:" + r.id); });
+          A.dogs.forEach(function (d) {
+            var h = historyOf(d.id);
+            if (!h.length) { keys.push("nomeas:" + d.id); return; }
+            if (remeasureDue(d)) keys.push("due:" + d.id + ":" + h[0].id);
+          });
+          return keys;
+        }
+        function bellSeenKeys() {
+          var raw = null;
+          try { raw = localStorage.getItem(BELL_SEEN_KEY); } catch (e) {}
+          if (raw === null) {
+            var all = {};
+            bellAllKeys().forEach(function (k) { all[k] = true; });
+            try { localStorage.setItem(BELL_SEEN_KEY, JSON.stringify(Object.keys(all))); } catch (e) {}
+            return all;
+          }
+          var set = {};
+          try {
+            JSON.parse(raw || "[]").forEach(function (k) {
+              // §54 stored bare measurement ids; read them as m: keys.
+              set[/^\d+$/.test(k) ? "m:" + k : k] = true;
+            });
+          } catch (e) {}
+          return set;
+        }
+        function bellSaveSeen(set) {
+          var keep = {};
+          bellAllKeys().forEach(function (k) { if (set[k]) keep[k] = true; });
+          // due:/nomeas: keys stay confirmed even after the dog's
+          // state moves on, so the same notice never comes back.
+          Object.keys(set).forEach(function (k) { if (k.indexOf("m:") !== 0) keep[k] = true; });
+          try { localStorage.setItem(BELL_SEEN_KEY, JSON.stringify(Object.keys(keep))); } catch (e) {}
+        }
+        function bellNotices() {
+          var seen = bellSeenKeys();
+          var byId = {};
+          A.dogs.forEach(function (d) { byId[String(d.id)] = d; });
+          var out = [];
+          A.measurements.forEach(function (r) {
+            if (r.id == null) return;
+            var key = "m:" + r.id;
+            if (seen[key]) return;
+            out.push({ kind: "meas", key: key, dog: byId[String(r.dog_id)] || null, rec: r, when: String(r.created_at || "") });
+          });
+          A.dogs.forEach(function (d) {
+            var h = historyOf(d.id);
+            if (!h.length) {
+              var nkey = "nomeas:" + d.id;
+              if (!seen[nkey]) out.push({ kind: "nomeas", key: nkey, dog: d, rec: null, when: String(d.created_at || "").slice(0, 10) });
+              return;
+            }
+            if (!remeasureDue(d)) return;
+            var key = "due:" + d.id + ":" + h[0].id;
+            if (seen[key]) return;
+            var dueD = new Date(measuredDate(h[0]) + "T00:00:00");
+            dueD.setMonth(dueD.getMonth() + 3);
+            var when = isNaN(dueD.getTime()) ? "" : dueD.getFullYear() + "-" + ("0" + (dueD.getMonth() + 1)).slice(-2) + "-" + ("0" + dueD.getDate()).slice(-2);
+            out.push({ kind: "due", key: key, dog: d, rec: h[0], when: when });
+          });
+          out.sort(function (a, b) {
+            if (a.when !== b.when) return a.when < b.when ? 1 : -1;
+            return a.kind === b.kind ? 0 : (a.kind === "meas" ? -1 : 1);
+          });
+          return out;
+        }
+        function renderBellPanel() {
+          var box = $("adm-bell-list"); if (!box) return;
+          var rows = bellNotices();
+          if (window.__admBellSet) window.__admBellSet(rows.length);
+          if (!rows.length) {
+            box.innerHTML = '<p class="adm-bell-empty">新しいお知らせはありません。</p>';
+            return;
+          }
+          var html = rows.map(function (c) {
+            var d = c.dog, r = c.rec;
+            var main = d ? dogTitleOf(d) : ("ID " + r.dog_id + " の子");
+            var segs = [];
+            if (c.kind === "meas") {
+              segs.push("新規採寸データがあります");
+              var md = measuredDate(r);
+              if (md) segs.push(fmtDateJa(md));
+              if (d && d.breed) segs.push(d.breed);
+              if (r.chest != null) segs.push("胴まわり " + fmt(r.chest, "cm"));
+            } else if (c.kind === "due") {
+              segs.push("再採寸の時期です");
+              var ld = measuredDate(r);
+              if (ld) segs.push("最終採寸 " + fmtDateJa(ld));
+              if (d && d.breed) segs.push(d.breed);
+            } else {
+              segs.push("採寸なしで登録されています");
+              var rd = d && d.created_at ? String(d.created_at).slice(0, 10) : "";
+              if (rd) segs.push("登録日 " + fmtDateJa(rd));
+              if (d && d.breed) segs.push(d.breed);
+            }
+            var tag = c.kind === "meas" ? "新規採寸" : (c.kind === "due" ? "再採寸" : "未採寸");
+            var tagCls = c.kind === "meas" ? "" : " warn";
+            var rowCls = "";
+            if (!d) { tag = "要確認"; tagCls = " err"; rowCls = " err"; }
+            return '<div class="adm-bell-row' + rowCls + '"><span class="adm-bell-tag' + tagCls + '">' + tag + '</span><span style="min-width:0">' +
+              '<span class="adm-bell-main">' + esc(main) + '</span>' +
+              '<span class="adm-bell-sub">' + esc(segs.join(" ・ ")) + '</span>' +
+              '</span><button type="button" class="adm-bell-confirm" data-bell-confirm="' + esc(c.key) + '">確認</button></div>';
+          }).join("");
+          if (rows.length >= 2) html += '<button type="button" class="adm-bell-all" id="adm-bell-all">全部確認する</button>';
+          box.innerHTML = html;
+          box.querySelectorAll("[data-bell-confirm]").forEach(function (btn) {
+            btn.addEventListener("click", function () { bellConfirm([btn.getAttribute("data-bell-confirm")]); });
+          });
+          var allBtn = $("adm-bell-all");
+          if (allBtn) allBtn.addEventListener("click", function () {
+            bellConfirm(bellNotices().map(function (c) { return c.key; }));
+          });
+        }
+        function bellConfirm(keys) {
+          var set = bellSeenKeys();
+          keys.forEach(function (k) { set[String(k)] = true; });
+          bellSaveSeen(set);
+          renderBellPanel();
+        }
+        var bellCloseTimer = null;
+        function openBellPanel() {
+          var panel = $("adm-bell-panel"), overlay = $("adm-bell-overlay");
+          if (!panel || !overlay) return;
+          renderBellPanel();
+          clearTimeout(bellCloseTimer);
+          panel.hidden = false;
+          overlay.hidden = false;
+          void panel.offsetWidth;
+          panel.classList.add("open");
+          overlay.classList.add("open");
+          panel.setAttribute("aria-hidden", "false");
+        }
+        function closeBellPanel() {
+          var panel = $("adm-bell-panel"), overlay = $("adm-bell-overlay");
+          if (!panel || panel.hidden) return;
+          panel.classList.remove("open");
+          if (overlay) overlay.classList.remove("open");
+          panel.setAttribute("aria-hidden", "true");
+          bellCloseTimer = setTimeout(function () {
+            panel.hidden = true;
+            if (overlay) overlay.hidden = true;
+          }, 300);
+        }
+        window.__admBellOpen = openBellPanel;
+        /* ---------- §57 admin push notifications (own devices) ----------
+           The account panel gains a notify box: this device subscribes
+           through the navi's service worker (same sw.js, so the same
+           registration) and the admin-gated RPCs; the admin-notify
+           Edge Function pushes the two states email never covers
+           (no-measurement registrations, re-measurement due). */
+        var ADM_VAPID_PUB = "BPq1zDtjMB-aaf65f0BRYd4-zSpTkLOtxOQ8jr9W6NawAK9Kp86fWgsK_XM68vCd_ybqHt3quNEjWNPdiSeyGz4";
+        function admB64ToUint8(s) { var pad = "=".repeat((4 - s.length % 4) % 4); var b = atob((s + pad).replace(/-/g, "+").replace(/_/g, "/")); var a = new Uint8Array(b.length); for (var i = 0; i < b.length; i++) a[i] = b.charCodeAt(i); return a; }
+        function admNotifyStatus(t) { var el = $("adm-notify-status"); if (el) el.textContent = t; }
+        async function admNotifyReg() {
+          try {
+            var reg = await navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).catch(function () { return null; });
+            if (!reg) reg = await navigator.serviceWorker.ready;
+            return reg;
+          } catch (e) { return null; }
+        }
+        async function admNotifyRefresh() {
+          if (!$("adm-notify-box")) return;
+          var en = $("adm-notify-enable"), dis = $("adm-notify-disable"), test = $("adm-notify-test");
+          if (!("Notification" in window) || !("serviceWorker" in navigator) || !("PushManager" in window)) {
+            admNotifyStatus("この開き方では通知が使えません。ホーム画面のアプリから開いてください。");
+            if (en) en.disabled = true;
+            if (dis) dis.disabled = true;
+            if (test) test.disabled = true;
+            return;
+          }
+          try {
+            var reg = await navigator.serviceWorker.getRegistration();
+            var sub = reg ? await reg.pushManager.getSubscription() : null;
+            var count = null;
+            try { count = await rpc("admin_push_subscription_count", {}, token()); } catch (e) {}
+            if (sub) admNotifyStatus("この端末で受け取る設定になっています" + (count != null ? "（登録端末 " + count + "台）" : "") + "。");
+            else admNotifyStatus("この端末は未登録です。「通知を受け取る」を押してください。");
+            if (en) { en.disabled = !!sub; en.style.opacity = sub ? "0.45" : ""; }
+            if (dis) { dis.disabled = !sub; dis.style.opacity = sub ? "" : "0.45"; }
+            if (test) { test.disabled = !sub; test.style.opacity = sub ? "" : "0.45"; }
+          } catch (e) {}
+        }
+        async function admNotifyEnable() {
+          if (!("Notification" in window) || !("serviceWorker" in navigator) || !("PushManager" in window)) { admNotifyStatus("この開き方では通知が使えません。ホーム画面のアプリから開いてください。"); return; }
+          try {
+            admNotifyStatus("許可を確認しています…");
+            var perm = await Notification.requestPermission();
+            if (perm !== "granted") { admNotifyStatus("通知が許可されませんでした。"); admNotifyRefresh(); return; }
+            var reg = await admNotifyReg();
+            if (!reg) { admNotifyStatus("登録できませんでした。"); admNotifyRefresh(); return; }
+            var sub = await reg.pushManager.getSubscription();
+            if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: admB64ToUint8(ADM_VAPID_PUB) });
+            var j = sub.toJSON();
+            await rpc("register_admin_push_subscription", { p_endpoint: j.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth, p_user_agent: navigator.userAgent }, token());
+            admNotifyStatus("登録できました。");
+          } catch (e) { admNotifyStatus("登録できませんでした: " + ((e && e.message) || e)); }
+          admNotifyRefresh();
+        }
+        async function admNotifyDisable() {
+          try {
+            var reg = await navigator.serviceWorker.getRegistration();
+            var sub = reg ? await reg.pushManager.getSubscription() : null;
+            if (sub) {
+              try { await rpc("unregister_admin_push_subscription", { p_endpoint: sub.endpoint }, token()); } catch (e) {}
+              await sub.unsubscribe();
+            }
+            admNotifyStatus("通知を止めました。");
+          } catch (e) { admNotifyStatus("止められませんでした: " + ((e && e.message) || e)); }
+          admNotifyRefresh();
+        }
+        async function admNotifyTest() {
+          try {
+            admNotifyStatus("テスト通知を送っています…");
+            var res = await fetch(BASE + "/functions/v1/admin-notify", { method: "POST", headers: headers(token()), body: JSON.stringify({ action: "test" }) });
+            var data = null;
+            try { data = await res.json(); } catch (e) {}
+            if (res.ok && data && data.ok) admNotifyStatus("テスト通知を送りました（" + data.sent + "台に送信）。");
+            else admNotifyStatus("送れませんでした" + (data && data.error ? "：" + data.error : "（" + res.status + "）"));
+          } catch (e) { admNotifyStatus("送れませんでした: " + ((e && e.message) || e)); }
+        }
+        function buildAdmNotifyBox() {
+          var panel = $("adm-account-panel");
+          if (!panel || $("adm-notify-box")) return;
+          var box = document.createElement("div");
+          box.id = "adm-notify-box";
+          box.innerHTML = '<p class="adm-note" style="margin:14px 0 4px;font-weight:700;color:#111">管理者への通知（この端末）</p>' +
+            '<p class="adm-note" style="margin:0 0 8px">採寸なしの登録と、再採寸の時期を、この端末へ知らせます。</p>' +
+            '<p class="adm-status" id="adm-notify-status" role="status"></p>' +
+            '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
+            '<button type="button" class="adm-btn" id="adm-notify-enable">通知を受け取る</button>' +
+            '<button type="button" class="adm-btn" id="adm-notify-test">テスト通知</button>' +
+            '<button type="button" class="adm-btn" id="adm-notify-disable">通知を止める</button></div>';
+          panel.appendChild(box);
+          $("adm-notify-enable").addEventListener("click", admNotifyEnable);
+          $("adm-notify-disable").addEventListener("click", admNotifyDisable);
+          $("adm-notify-test").addEventListener("click", admNotifyTest);
+          admNotifyRefresh();
         }
         function setTab(tab) {
           A.tab = tab === "checker" ? "checker" : "list";
@@ -6254,6 +6618,20 @@ setPINFORMEKarte=function(d){
             showList(true); renderBreeds();
             var h = $("adm-home"); if (h) h.scrollIntoView({ behavior: "smooth", block: "start" });
           });
+          var newmeasClose = $("adm-newmeas-close");
+          if (newmeasClose) newmeasClose.addEventListener("click", function () {
+            A.view = "breeds"; A.activeDogId = null; A.activeOwnerId = null;
+            showList(true); renderBreeds();
+            var h = $("adm-home"); if (h) h.scrollIntoView({ behavior: "smooth", block: "start" });
+          });
+          buildAdmNotifyBox();
+          var bellCloseBtn = $("adm-bell-close");
+          if (bellCloseBtn) bellCloseBtn.addEventListener("click", closeBellPanel);
+          var bellOverlay = $("adm-bell-overlay");
+          if (bellOverlay) bellOverlay.addEventListener("click", closeBellPanel);
+          document.addEventListener("keydown", function (ev) {
+            if (ev.key === "Escape") closeBellPanel();
+          });
           var kartePdf = $("adm-karte-pdf");
           if (kartePdf) kartePdf.addEventListener("click", function () { printAdmKarte(); });
           var karteClose = $("adm-karte-close");
@@ -6363,6 +6741,16 @@ setPINFORMEKarte=function(d){
           <a href="https://suzuri.jp/PINFORME" target="_blank" rel="noopener noreferrer">SUZURI<span class="dn">↗</span></a>
         </div>
       </nav>
+    </aside>
+    <div class="adm-drawer-overlay" id="adm-bell-overlay" hidden></div>
+    <aside class="adm-drawer" id="adm-bell-panel" aria-label="お知らせ" aria-hidden="true" hidden>
+      <div class="adm-drawer-head">
+        <span class="adm-drawer-title">お知らせ</span>
+        <button type="button" class="adm-drawer-close" id="adm-bell-close" aria-label="お知らせを閉じる"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"/></svg></button>
+      </div>
+      <div class="adm-drawer-body">
+        <div class="adm-bell-list" id="adm-bell-list"><p class="adm-bell-empty">読み込み中…</p></div>
+      </div>
     </aside>
     <script>
       // ---------- §22 (2026-11-13): toc section switching (display only) ----------
@@ -6558,9 +6946,12 @@ setPINFORMEKarte=function(d){
           var b = ev.target && ev.target.closest ? ev.target.closest("#adm-reload, #adm-logout") : null;
           if (b) setPanel(false);
         });
-        // Bell: back home, then point at the action strip.
+        // Bell (§54): slide the notices panel in, like the menu
+        // drawer. The admin script owns the panel (window.__admBellOpen);
+        // before login it falls back to pointing at the action strip.
         if (bellBtn) bellBtn.addEventListener("click", function () {
           setPanel(false);
+          if (window.__admBellOpen) { window.__admBellOpen(); return; }
           var h = document.querySelector('.toc a[href="#adm-home"]');
           if (h) h.click();
           var home = document.getElementById("adm-home");
@@ -6573,22 +6964,18 @@ setPINFORMEKarte=function(d){
             act.classList.add("adm-flash");
           }, 60);
         });
-        // Badge: the total of the action strip's counts, in sync.
-        var syncBadge = function () {
+        // Badge (§53, owner revision 2026-11-14): NOT the action
+        // strip's totals — those already live on the home screen.
+        // The badge is an arrival signal only: how many measurements
+        // arrived since the admin last marked them seen. The admin
+        // script owns the data, so it drives the badge through
+        // window.__admBellSet; tapping the bell marks them seen.
+        var syncBadge = function () {};
+        window.__admBellSet = function (n) {
           if (!badge) return;
-          var total = 0;
-          document.querySelectorAll("#adm-home-actions .adm-act-count strong").forEach(function (el) {
-            var n = parseInt(el.textContent, 10);
-            if (!isNaN(n)) total += n;
-          });
-          badge.textContent = String(total);
-          badge.hidden = total <= 0;
+          badge.textContent = String(n);
+          badge.hidden = !(n > 0);
         };
-        var actBox = document.getElementById("adm-home-actions");
-        if (actBox && window.MutationObserver) {
-          new MutationObserver(syncBadge).observe(actBox, { childList: true, subtree: true, characterData: true });
-        }
-        syncBadge();
       })();
     </script>
     <script>
@@ -6787,6 +7174,7 @@ setPINFORMEKarte=function(d){
       '<option value="range">胴まわりの範囲</option>'+
       '<option value="key">個別（お客様キー）</option>'+
       '<option value="breed">犬種</option>'+
+      '<option value="due">再採寸候補（最終採寸から3か月以上）</option>'+
       '</select></label></p>'+
       '<p id="admPushRangeRow" style="display:none"><label>胴まわり（cm）<br>'+
       '<input class="adm-input" id="admPushMin" type="number" step="0.1" placeholder="以上（例 35）"> 〜 '+
@@ -6813,11 +7201,21 @@ setPINFORMEKarte=function(d){
   function remove(){
     var c=el('admPushCard'); if(c) c.remove();
   }
+  function applyPreset(){
+    var preset=null;
+    try{ preset=sessionStorage.getItem('PINFORME_PUSH_PRESET'); }catch(e){}
+    if(preset!=='due') return;
+    var msel=el('admPushMode'); if(!msel) return;
+    try{ sessionStorage.removeItem('PINFORME_PUSH_PRESET'); }catch(e){}
+    msel.value='due'; syncMode();
+    status('対象に「再採寸候補」が選ばれています。タイトルと本文を入れて、対象を確認してください。');
+  }
   setInterval(function(){
-    if(token()) build(); else remove();
+    if(token()){ build(); applyPreset(); } else remove();
   }, 1000);
 })();
 
 </script>
+
 </body>
 </html>
