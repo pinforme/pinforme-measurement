@@ -3441,7 +3441,7 @@ setPINFORMEKarte=function(d){
           return {
             sizeKey: key2, bandMode: false,
             targets: { back: d.back, chest: d.chest, neck: d.neck, front: d.front, space: null },
-            name: "ID" + d.id + "（SIZE" + key2 + "）", file: "ID" + d.id,
+            name: d.breed + " ID" + d.id + "（SIZE" + key2 + "）", file: "ID" + d.id,
             desc: dName + "（ID " + d.id + "・" + d.breed + "）の実測で作成 ・ もとの帯は SIZE" + key2 + " ・ 最終採寸 " + jpDate(d.date)
           };
         }
