@@ -1212,6 +1212,15 @@
         font-size: 13.5px; font-weight: 700; border-radius: 999px; padding: 9px 0; cursor: pointer;
       }
       .adm-bell-empty { padding: 18px 16px; font-size: 13.5px; color: #777; }
+      /* §56 kind tags: black = normal, amber = needs action, red = error */
+      .adm-bell-tag {
+        flex: none; align-self: flex-start; margin-top: 2px;
+        font-size: 10.5px; font-weight: 800; letter-spacing: .04em;
+        border-radius: 6px; padding: 3px 7px; background: #111; color: #fff;
+      }
+      .adm-bell-tag.warn { background: #fef3c7; color: #b45309; }
+      .adm-bell-tag.err { background: #fee2e2; color: #b91c1c; }
+      .adm-bell-row.err .adm-bell-main { color: #b91c1c; }
       .adm-drawer-group {
         margin: 18px 16px 4px; font-size: 11.5px; font-weight: 800;
         letter-spacing: .1em; color: #8a8a8e;
@@ -6152,13 +6161,11 @@ setPINFORMEKarte=function(d){
           if (nmChip) nmChip.addEventListener("click", openNomeasList);
           var nwChip = $("adm-newmeas-chip");
           if (nwChip) nwChip.addEventListener("click", openNewmeasList);
-          // §54 (2026-11-14, owner spec): the bell badge counts
-          // measurements the admin has not confirmed yet. Confirmed
-          // ids live in localStorage; the first run baselines every
-          // current id as confirmed, so only later arrivals count.
-          // The bell panel (§24 calls window.__admBellOpen) lists the
-          // unconfirmed arrivals, and each 確認 removes one.
-          if (window.__admBellSet) window.__admBellSet(bellUnseen().length);
+          // §54/§55 (2026-11-14, owner spec): the bell badge counts
+          // unconfirmed notices — new measurement arrivals and dogs
+          // whose re-measurement is due — and each 確認 in the bell
+          // panel (§24 calls window.__admBellOpen) removes one.
+          if (window.__admBellSet) window.__admBellSet(bellNotices().length);
           var tl = $("adm-tab-list"), tc = $("adm-tab-checker");
           if (tl) tl.classList.toggle("active", A.tab !== "checker");
           if (tc) tc.classList.toggle("active", A.tab === "checker");
@@ -6304,52 +6311,90 @@ setPINFORMEKarte=function(d){
           card.classList.remove("adm-hidden");
           card.scrollIntoView({ behavior: "smooth", block: "start" });
         }
-        /* ---------- §54 bell notices (unconfirmed arrivals) ----------
-           The bell panel slides in like the menu drawer. Its rows are
-           the measurement arrivals the admin has not confirmed yet;
-           each 確認 stores that measurement's id as seen and the
-           badge count drops by one. First run baselines all current
-           ids as seen, so history never floods the panel. */
+        /* ---------- §54/§55 bell notices ----------
+           The bell panel slides in like the menu drawer. Rows are
+           unconfirmed notices of three kinds: new measurement
+           arrivals (key "m:<measurement id>"), re-measurement-due
+           dogs (key "due:<dog id>:<latest measurement id>", so a dog
+           that re-measures and later becomes due again notifies
+           afresh) and registrations with no measurement yet
+           (key "nomeas:<dog id>").
+           Each 確認 stores the key as seen and the badge drops by
+           one. First run baselines every current key as seen, so
+           history never floods the panel. Rows show whatever parts
+           are known when some data is missing. */
         var BELL_SEEN_KEY = "PINFORME_ADMIN_BELL_SEEN_IDS_V1";
-        function bellSeenIds() {
+        function bellAllKeys() {
+          var keys = [];
+          A.measurements.forEach(function (r) { if (r.id != null) keys.push("m:" + r.id); });
+          A.dogs.forEach(function (d) {
+            var h = historyOf(d.id);
+            if (!h.length) { keys.push("nomeas:" + d.id); return; }
+            if (remeasureDue(d)) keys.push("due:" + d.id + ":" + h[0].id);
+          });
+          return keys;
+        }
+        function bellSeenKeys() {
           var raw = null;
           try { raw = localStorage.getItem(BELL_SEEN_KEY); } catch (e) {}
           if (raw === null) {
             var all = {};
-            A.measurements.forEach(function (r) { if (r.id != null) all[String(r.id)] = true; });
+            bellAllKeys().forEach(function (k) { all[k] = true; });
             try { localStorage.setItem(BELL_SEEN_KEY, JSON.stringify(Object.keys(all))); } catch (e) {}
             return all;
           }
           var set = {};
-          try { JSON.parse(raw || "[]").forEach(function (id) { set[String(id)] = true; }); } catch (e) {}
+          try {
+            JSON.parse(raw || "[]").forEach(function (k) {
+              // §54 stored bare measurement ids; read them as m: keys.
+              set[/^\d+$/.test(k) ? "m:" + k : k] = true;
+            });
+          } catch (e) {}
           return set;
         }
         function bellSaveSeen(set) {
-          var keep = [];
-          A.measurements.forEach(function (r) { if (r.id != null && set[String(r.id)]) keep.push(String(r.id)); });
-          try { localStorage.setItem(BELL_SEEN_KEY, JSON.stringify(keep)); } catch (e) {}
+          var keep = {};
+          bellAllKeys().forEach(function (k) { if (set[k]) keep[k] = true; });
+          // due:/nomeas: keys stay confirmed even after the dog's
+          // state moves on, so the same notice never comes back.
+          Object.keys(set).forEach(function (k) { if (k.indexOf("m:") !== 0) keep[k] = true; });
+          try { localStorage.setItem(BELL_SEEN_KEY, JSON.stringify(Object.keys(keep))); } catch (e) {}
         }
-        function bellUnseen() {
-          var seen = bellSeenIds();
+        function bellNotices() {
+          var seen = bellSeenKeys();
           var byId = {};
           A.dogs.forEach(function (d) { byId[String(d.id)] = d; });
           var out = [];
           A.measurements.forEach(function (r) {
-            if (r.id == null || seen[String(r.id)]) return;
-            var dog = byId[String(r.dog_id)];
-            if (!dog) return;
-            out.push({ dog: dog, rec: r });
+            if (r.id == null) return;
+            var key = "m:" + r.id;
+            if (seen[key]) return;
+            out.push({ kind: "meas", key: key, dog: byId[String(r.dog_id)] || null, rec: r, when: String(r.created_at || "") });
+          });
+          A.dogs.forEach(function (d) {
+            var h = historyOf(d.id);
+            if (!h.length) {
+              var nkey = "nomeas:" + d.id;
+              if (!seen[nkey]) out.push({ kind: "nomeas", key: nkey, dog: d, rec: null, when: String(d.created_at || "").slice(0, 10) });
+              return;
+            }
+            if (!remeasureDue(d)) return;
+            var key = "due:" + d.id + ":" + h[0].id;
+            if (seen[key]) return;
+            var dueD = new Date(measuredDate(h[0]) + "T00:00:00");
+            dueD.setMonth(dueD.getMonth() + 3);
+            var when = isNaN(dueD.getTime()) ? "" : dueD.getFullYear() + "-" + ("0" + (dueD.getMonth() + 1)).slice(-2) + "-" + ("0" + dueD.getDate()).slice(-2);
+            out.push({ kind: "due", key: key, dog: d, rec: h[0], when: when });
           });
           out.sort(function (a, b) {
-            var ca = String(a.rec.created_at || ""), cb = String(b.rec.created_at || "");
-            if (ca !== cb) return ca < cb ? 1 : -1;
-            return Number(b.rec.id || 0) - Number(a.rec.id || 0);
+            if (a.when !== b.when) return a.when < b.when ? 1 : -1;
+            return a.kind === b.kind ? 0 : (a.kind === "meas" ? -1 : 1);
           });
           return out;
         }
         function renderBellPanel() {
           var box = $("adm-bell-list"); if (!box) return;
-          var rows = bellUnseen();
+          var rows = bellNotices();
           if (window.__admBellSet) window.__admBellSet(rows.length);
           if (!rows.length) {
             box.innerHTML = '<p class="adm-bell-empty">新しいお知らせはありません。</p>';
@@ -6357,10 +6402,33 @@ setPINFORMEKarte=function(d){
           }
           var html = rows.map(function (c) {
             var d = c.dog, r = c.rec;
-            return '<div class="adm-bell-row"><span style="min-width:0">' +
-              '<span class="adm-bell-main">' + esc(dogTitleOf(d)) + '</span>' +
-              '<span class="adm-bell-sub">新しい採寸が届きました ・ 採寸日 ' + esc(measuredDate(r)) + ' ・ 胴まわり ' + fmt(r.chest, "cm") + '</span>' +
-              '</span><button type="button" class="adm-bell-confirm" data-bell-confirm="' + esc(r.id) + '">確認</button></div>';
+            var main = d ? dogTitleOf(d) : ("ID " + r.dog_id + " の子");
+            var segs = [];
+            if (c.kind === "meas") {
+              segs.push("新規採寸データがあります");
+              var md = measuredDate(r);
+              if (md) segs.push(fmtDateJa(md));
+              if (d && d.breed) segs.push(d.breed);
+              if (r.chest != null) segs.push("胴まわり " + fmt(r.chest, "cm"));
+            } else if (c.kind === "due") {
+              segs.push("再採寸の時期です");
+              var ld = measuredDate(r);
+              if (ld) segs.push("最終採寸 " + fmtDateJa(ld));
+              if (d && d.breed) segs.push(d.breed);
+            } else {
+              segs.push("採寸なしで登録されています");
+              var rd = d && d.created_at ? String(d.created_at).slice(0, 10) : "";
+              if (rd) segs.push("登録日 " + fmtDateJa(rd));
+              if (d && d.breed) segs.push(d.breed);
+            }
+            var tag = c.kind === "meas" ? "新規採寸" : (c.kind === "due" ? "再採寸" : "未採寸");
+            var tagCls = c.kind === "meas" ? "" : " warn";
+            var rowCls = "";
+            if (!d) { tag = "要確認"; tagCls = " err"; rowCls = " err"; }
+            return '<div class="adm-bell-row' + rowCls + '"><span class="adm-bell-tag' + tagCls + '">' + tag + '</span><span style="min-width:0">' +
+              '<span class="adm-bell-main">' + esc(main) + '</span>' +
+              '<span class="adm-bell-sub">' + esc(segs.join(" ・ ")) + '</span>' +
+              '</span><button type="button" class="adm-bell-confirm" data-bell-confirm="' + esc(c.key) + '">確認</button></div>';
           }).join("");
           if (rows.length >= 2) html += '<button type="button" class="adm-bell-all" id="adm-bell-all">全部確認する</button>';
           box.innerHTML = html;
@@ -6369,12 +6437,12 @@ setPINFORMEKarte=function(d){
           });
           var allBtn = $("adm-bell-all");
           if (allBtn) allBtn.addEventListener("click", function () {
-            bellConfirm(bellUnseen().map(function (c) { return String(c.rec.id); }));
+            bellConfirm(bellNotices().map(function (c) { return c.key; }));
           });
         }
-        function bellConfirm(ids) {
-          var set = bellSeenIds();
-          ids.forEach(function (id) { set[String(id)] = true; });
+        function bellConfirm(keys) {
+          var set = bellSeenKeys();
+          keys.forEach(function (k) { set[String(k)] = true; });
           bellSaveSeen(set);
           renderBellPanel();
         }
