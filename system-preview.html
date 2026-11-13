@@ -1226,7 +1226,7 @@
 
       <!-- ============ ADMIN (test build: system-admin-test) ============ -->
       <section class="adm-wrap" aria-label="管理者専用">
-        <div class="sec-head"><span class="sec-no">管</span><h2>管理者専用（テスト版）</h2></div>
+        <div class="sec-head"><span class="sec-no">管</span><h2>管理者専用（確認用プレビュー）</h2></div>
         <p class="sec-lead">管理者ログイン後にだけ使えます。</p>
         <details class="adm-more"><summary>この画面について</summary>
           <p class="adm-note">犬種の正式名称での管理、IDによる紐付け確認、不要な犬データの削除を行います。未ログインの状態では管理用の情報は一切表示されません。</p>
@@ -1234,7 +1234,7 @@
 
         <div class="adm-card" id="adm-login-box">
           <h3>管理者ログイン</h3>
-          <p class="adm-note">管理者アカウントでログインしてください。ログインはこの端末に保持され、タブを閉じても次回そのまま開けます（ページの更新時と、30日以上使わなかった場合は、再度ログインが必要です）。</p>
+          <p class="adm-note">管理者アカウントでログインしてください。ログインはこの端末に保持され、タブを閉じても次回そのまま開けます（システムの版が新しくなった時と、30日以上使わなかった場合は、再度ログインが必要です）。</p>
           <form id="adm-login-form">
             <p><label for="adm-email">メールアドレス</label><br /><input class="adm-input" id="adm-email" type="email" autocomplete="username" /></p>
             <p><label for="adm-password">パスワード</label><br /><input class="adm-input" id="adm-password" type="password" autocomplete="current-password" /></p>
@@ -3074,7 +3074,7 @@ setPINFORMEKarte=function(d){
            view, so an update build forces exactly one re-login. */
         var BUILD_KEY = "PINFORME_ADMIN_BUILD_V1";
         var LASTUSED_KEY = "PINFORME_ADMIN_LASTUSED_V1";
-        var BUILD_ID = "test-2026-11-13-r7";
+        var BUILD_ID = "test-2026-11-13-r8";
         var RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
 
         /* Breed master: formal names + aliases (normalisation is display-side). */
