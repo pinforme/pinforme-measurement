@@ -1860,6 +1860,7 @@
             <p class="adm-crumbs">管理画面 ＞ 管理用ホーム ＞ 再採寸候補</p>
             <div class="adm-view-head"><button type="button" class="adm-back" id="adm-due-close">← 管理用ホームに戻る</button><h3>再採寸候補</h3></div>
             <p class="adm-note">最終採寸から3か月以上たった子を、経過日数の多い順に並べています。タップすると犬の詳細が開きます。お声がけは、管理者が文面を確認してから送ります（この画面から自動では送りません）。</p>
+            <p style="margin:0 0 10px"><button type="button" class="adm-btn" id="adm-due-send">この候補にお知らせを送る ›</button></p>
             <div class="adm-list" id="adm-due-list"><p class="adm-note">読み込み中…</p></div>
           </div>
 
@@ -6162,6 +6163,16 @@ setPINFORMEKarte=function(d){
           card.classList.remove("adm-hidden");
           card.scrollIntoView({ behavior: "smooth", block: "start" });
         }
+        /* "Send to these candidates": stash the audience preset for the
+           production push panel, then jump to the お知らせ送信 section.
+           The panel (production build only) reads the preset on its poll
+           and selects the 再採寸候補 audience; nothing is sent from here. */
+        var dueSendBtn = $("adm-due-send");
+        if (dueSendBtn) dueSendBtn.addEventListener("click", function () {
+          try { sessionStorage.setItem("PINFORME_PUSH_PRESET", "due"); } catch (e) {}
+          var link = document.querySelector('a[href="#pushsend"]');
+          if (link) link.click();
+        });
         /* ---------- no-measurement registrations ----------
            Dogs whose registration exists but that have no measurement rows
            at all (latestOf is null). A submission that stopped after the
