@@ -394,6 +394,16 @@
       .breed-row .bc { font-weight: 900; font-size: 17px; flex: none; }
       .breed-row .bc small { font-size: 12.5px; font-weight: 700; color: var(--ink-soft); margin-left: 2px; }
 
+      /* ---------- §43 (2026-11-13): aggregate matrix ---------- */
+      .matrix-wrap { overflow-x: auto; background: var(--card); border: 1px solid var(--line); border-radius: 14px; }
+      table.matrix { border-collapse: collapse; width: 100%; font-size: 14px; }
+      table.matrix th, table.matrix td { border-top: 1px solid var(--line); padding: 8px 10px; text-align: right; white-space: nowrap; }
+      table.matrix thead th { border-top: none; background: var(--paper-2); font-size: 13px; }
+      table.matrix th.band, table.matrix td.band { text-align: left; }
+      table.matrix td .avg { font-weight: 900; font-size: 15.5px; }
+      table.matrix td .rng { display: block; font-size: 11.5px; color: var(--ink-soft); }
+      .matrix-actions { margin-top: 14px; }
+
       /* ---------- rule steps ---------- */
       .steps { counter-reset: step; display: flex; flex-direction: column; gap: 0; }
       .step { display: grid; grid-template-columns: 44px 1fr; gap: 14px; padding: 14px 0; border-bottom: 1px dashed var(--line); }
@@ -1421,7 +1431,7 @@
       <!-- ============ MEASUREMENT NOTE (§42, 2026-11-13) ============ -->
       <section id="measnote">
         <div class="sec-head"><span class="sec-no">測</span><h2>採寸とIDについて</h2></div>
-        <p class="sec-lead">「採寸とID」画面の読み方です。画面の中には説明文を置かず、分からない時はここを見ます。</p>
+        <p class="sec-lead">採寸の集め方と、「集計と送付資料」画面の読み方です。画面の中には説明文を置かず、分からない時はここを見ます。</p>
         <div class="card">
           <h3>考え方</h3>
           <p>集める項目は、服づくりに効く最小限に絞っています。そして1頭ごとにIDを振り、採寸が「測って終わり」にならないようにしています。</p>
@@ -1442,6 +1452,8 @@
             <li><b>体型の変化も追える</b>：同じIDで履歴が積み上がると、サイズ感の変化まで見えるようになります。</li>
           </ul>
           <p style="font-size:14.5px;color:var(--ink-soft);margin:12px 0 0">なお、このデータ処理の側では飼い主や犬の名前は扱わず、IDだけを結合のキーにしています。「対象の子」の画面は、その読み出しの実働版です。開くたびに採寸ナビから最新データを取得するので、名前で選べばその時点の採寸・推奨サイズ・最終採寸日がそのまま出ます。</p>
+          <h3>集計マトリクスについて</h3>
+          <p>「集計と送付資料」の表は、サイズ帯ごとに中核5項目の平均と幅（最小〜最大）を並べたものです。OEMなどへ送る資料は、画面の「送付用資料を作る（PDF）」から作ります（開くと印刷画面になり、PDFで保存できます）。最終版では、服ごとに項目を選んでPDFにできるようにします。</p>
           <h3>再採寸のおすすめは「3か月に1度」</h3>
           <p style="margin:0;font-size:15px">成犬でも、時間とともに体型が変わってサイズ感がずれることがあります。最終採寸から3か月以上たった子は「再採寸の声かけ候補」として自動でリストアップされ、毎日のチェックと月次レポートでお知らせします。候補の頭数は「お知らせ送信」の画面で確認できます。</p>
         </div>
@@ -1475,11 +1487,13 @@
 
       <!-- ============ 05 MEASUREMENT & ID ============ -->
       <section id="measurement">
-        <div class="sec-head"><span class="sec-no">05</span><h2>採寸とID管理</h2></div>
-        <div class="card">
-          <h3>必須の5項目</h3>
-          <p style="margin:0;font-size:15px">首まわり／胴まわり／ウエスト／着丈／前身頃</p>
-          <p style="font-size:14.5px;color:var(--ink-soft);margin:8px 0 0">あわせて性別・生年月日・体重を記録します。</p>
+        <div class="sec-head"><span class="sec-no">05</span><h2>集計と送付資料</h2></div>
+        <p class="sec-lead" id="matrix-lead">読み込み中…</p>
+        <div class="dist-breed-row"><label for="meas-breed-select">犬種</label> <select id="meas-breed-select" disabled><option>読み込み中…</option></select></div>
+        <div class="matrix-wrap"><table class="matrix" id="matrix-table"></table></div>
+        <p class="hint" id="matrix-empty" hidden></p>
+        <div class="matrix-actions">
+          <button class="dl-btn" id="matrix-pdf-btn" type="button">送付用資料を作る（PDF）</button>
         </div>
       </section>
 
@@ -2812,6 +2826,100 @@ setPINFORMEKarte=function(d){
           }
         }
 
+        var measBreed = null;
+        var MATRIX_ITEMS = [
+          { key: "neck", label: "首まわり" },
+          { key: "chest", label: "胴まわり" },
+          { key: "waist", label: "ウエスト" },
+          { key: "back", label: "着丈" },
+          { key: "front", label: "前身頃" }
+        ];
+        function renderMeasBreedSelect() {
+          var sel = document.getElementById("meas-breed-select");
+          if (!sel) return;
+          sel.innerHTML = "";
+          breedNames.forEach(function (br) {
+            var o = document.createElement("option");
+            o.value = br;
+            o.textContent = br + "（" + dogsOf(br).length + "頭）";
+            sel.appendChild(o);
+          });
+          sel.value = measBreed || primaryBreed;
+          sel.disabled = false;
+        }
+        function matrixStat(list, key) {
+          var vs = list.map(function (d) { return d[key]; })
+                       .filter(function (v) { return v !== null && v !== undefined; });
+          if (!vs.length) return null;
+          var sum = 0, mn = vs[0], mx = vs[0];
+          vs.forEach(function (v) { sum += v; if (v < mn) mn = v; if (v > mx) mx = v; });
+          return { avg: sum / vs.length, min: mn, max: mx };
+        }
+        function matrixRows(breed) {
+          var bands = bandsByBreed[breed] || [];
+          var list = dogsOf(breed);
+          return bands.map(function (b) {
+            return { band: b, members: list.filter(function (d) { return bandFor(d.chest, bands) === b; }) };
+          });
+        }
+        function renderMatrix() {
+          var breed = measBreed || primaryBreed;
+          var tbl = document.getElementById("matrix-table");
+          var lead = document.getElementById("matrix-lead");
+          var empty = document.getElementById("matrix-empty");
+          var btn = document.getElementById("matrix-pdf-btn");
+          if (!tbl || !breed) return;
+          lead.textContent = breed + dogsOf(breed).length + "頭の集計です（タンクトップ用・5項目）。";
+          var rows = matrixRows(breed);
+          if (!rows.length) {
+            tbl.innerHTML = "";
+            var withChest = dogsOf(breed).filter(function (d) { return d.chest !== null && d.chest !== undefined; }).length;
+            empty.hidden = false;
+            empty.textContent = breed + "は、胴まわりを測った子がまだ" + withChest + "頭で、集計を作るには5頭分が必要です。集まってきたら、ここに表が出ます。";
+            btn.disabled = true;
+            return;
+          }
+          empty.hidden = true;
+          btn.disabled = false;
+          var html = "<thead><tr><th class=\"band\">サイズ帯</th>";
+          MATRIX_ITEMS.forEach(function (it) { html += "<th>" + it.label + "</th>"; });
+          html += "</tr></thead><tbody>";
+          rows.forEach(function (r) {
+            html += "<tr><td class=\"band\"><b>SIZE" + r.band.name + "</b>（" + r.band.lo + "〜" + r.band.hi + "cm）<br>" + r.members.length + "頭</td>";
+            MATRIX_ITEMS.forEach(function (it) {
+              var st = matrixStat(r.members, it.key);
+              html += st ? "<td><span class=\"avg\">" + fmt(st.avg) + "</span><span class=\"rng\">" + fmt(st.min) + "〜" + fmt(st.max) + "</span></td>" : "<td>—</td>";
+            });
+            html += "</tr>";
+          });
+          html += "</tbody>";
+          tbl.innerHTML = html;
+        }
+        function buildMatrixDocHTML() {
+          var breed = measBreed || primaryBreed;
+          var rows = matrixRows(breed);
+          var dateStr = TODAY.getFullYear() + "年" + (TODAY.getMonth() + 1) + "月" + TODAY.getDate() + "日";
+          var head = "";
+          MATRIX_ITEMS.forEach(function (it) { head += "<th>" + it.label + "</th>"; });
+          var body = "";
+          rows.forEach(function (r) {
+            body += "<tr><td>SIZE" + r.band.name + "（" + r.band.lo + "〜" + r.band.hi + "cm）・" + r.members.length + "頭</td>";
+            MATRIX_ITEMS.forEach(function (it) {
+              var st = matrixStat(r.members, it.key);
+              body += st ? "<td>" + fmt(st.avg) + "（" + fmt(st.min) + "〜" + fmt(st.max) + "）</td>" : "<td>—</td>";
+            });
+            body += "</tr>";
+          });
+          var css = "body{font-family:sans-serif;color:#000;margin:24px}h1{font-size:18px;margin:0 0 4px}.meta{font-size:12px;color:#333;margin:0 0 14px}table{border-collapse:collapse;width:100%;font-size:12.5px}th,td{border:1px solid #999;padding:6px 8px;text-align:right}th:first-child,td:first-child{text-align:left}.note{font-size:11.5px;color:#333;margin-top:10px}";
+          return '<!doctype html><html lang="ja"><head><meta charset="utf-8"><title>PINFORME 採寸集計資料</title><style>' + css + "</style></head><body>" +
+            "<h1>PINFORME 採寸集計資料（タンクトップ用・5項目）</h1>" +
+            '<p class="meta">' + breed + "／" + dogsOf(breed).length + "頭分／作成日 " + dateStr + "</p>" +
+            "<table><thead><tr><th>サイズ帯</th>" + head + "</tr></thead><tbody>" + body + "</tbody></table>" +
+            '<p class="note">数値は各サイズ帯の平均（かっこ内は最小〜最大）です。単位：cm。各頭の最新の採寸記録を使っています。</p>' +
+            "<script>window.onload=function(){setTimeout(function(){window.print();},300);};</" + "script>" +
+            "</body></html>";
+        }
+
         function renderBreeds() {
           breedGrid.innerHTML = "";
           breedNames.forEach(function (br) {
@@ -3334,6 +3442,21 @@ setPINFORMEKarte=function(d){
           renderStats();
           renderChart();
         });
+        document.getElementById("meas-breed-select").addEventListener("change", function () {
+          measBreed = this.value || null;
+          renderMatrix();
+        });
+        document.getElementById("matrix-pdf-btn").addEventListener("click", function () {
+          var blob = new Blob([buildMatrixDocHTML()], { type: "text/html;charset=utf-8" });
+          var url = URL.createObjectURL(blob);
+          var a = document.createElement("a");
+          a.href = url;
+          a.download = "pinforme-matrix.html";
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+        });
         [easeChestEl, easeWaistEl, easeNeckEl].forEach(function (el) {
           el.addEventListener("input", renderPattern);
         });
@@ -3393,6 +3516,8 @@ setPINFORMEKarte=function(d){
           renderDistBreedSelect();
           renderChart();
           renderBreeds();
+          renderMeasBreedSelect();
+          renderMatrix();
           buildSearch();
           initPattern();
           /* §38 (2026-11-13): do not auto-show the first dog. The area
@@ -3482,7 +3607,7 @@ setPINFORMEKarte=function(d){
           distribution: "サイズ帯ごとの頭数です",
           breeds: "頭数もサイズ帯も、犬種を混ぜずに管理します",
           rule: "帯は固定ではなく、実データから自動で組み替わります",
-          measurement: "必須5項目と、IDで管理する理由です",
+          measurement: "サイズ帯ごとの集計表と、送付用資料づくりです",
           findings: "首・ウエスト・前身頃に見つかった関係です",
           tools: "型紙生成・品質チェック・月次レポートなど",
           progress: "OEMとのサンプル製作フェーズです",
