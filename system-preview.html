@@ -1388,19 +1388,31 @@
         </div>
       </section>
 
-      <!-- ============ 03 BREEDS ============ -->
-      <section id="breeds">
-        <div class="sec-head"><span class="sec-no">03</span><h2>犬種ごとに数える</h2></div>
-        <p class="sec-lead">体型が違う犬種を混ぜて集計すると、どちらの体型にも合わない数字になります。頭数もサイズ帯も、犬種ごとに分けて管理しています。</p>
-        <div class="grid-2" id="breed-grid"><p class="hint">読み込み中…</p></div>
-        <div class="card" style="margin-top:16px">
+      <!-- ============ BREED NOTE (§40, 2026-11-13) ============ -->
+      <section id="breednote">
+        <div class="sec-head"><span class="sec-no">種</span><h2>犬種について</h2></div>
+        <p class="sec-lead">「犬種」画面の読み方です。画面の中には説明文を置かず、分からない時はここを見ます。</p>
+        <div class="card">
+          <h3>なぜ犬種ごとに分けるか</h3>
+          <p>体型が違う犬種を混ぜて集計すると、どちらの体型にも合わない数字になります。頭数もサイズ帯も、犬種ごとに分けて管理しています。</p>
+          <h3>状態の見方</h3>
+          <p>「サイズ帯あり」は、その犬種専用のサイズ帯が立っている状態です。「データを蓄積中」は、まだ帯を作るには頭数が足りない状態で、頭数が貯まれば、この犬種専用のサイズ帯が自動で立ち上がります。</p>
           <h3>新しい犬種が増えたら</h3>
           <ul class="tight">
             <li>増えるのは、その犬種の行とグラフだけ。他の犬種の数字やサイズ帯は動きません。</li>
             <li>毎日の増加のお知らせも「ミニピンが1頭増えて27頭」のように、犬種別に届きます。</li>
             <li>第2アイテム以降は他犬種の採寸も本格化予定。候補のイタリアン・グレーハウンドとダックスフンドは、フォロワーの声から上がってきた犬種です。</li>
           </ul>
+          <h3>犬種ごとのメモ</h3>
+          <p>ミニチュア・ピンシャー：2026年10月初旬に募集を開始して集まったデータが、サイズ帯と型紙の土台になっています。</p>
+          <p>トイ・マンチェスター・テリア：帯を作るにはまだ頭数が足りないため、今は頭数だけを表示しています。貯まってくれば、この犬種専用のサイズ帯が自動で立ち上がります。</p>
         </div>
+      </section>
+
+      <!-- ============ 03 BREEDS ============ -->
+      <section id="breeds">
+        <div class="sec-head"><span class="sec-no">03</span><h2>犬種ごとに数える</h2></div>
+        <div class="grid-2" id="breed-grid"><p class="hint">読み込み中…</p></div>
       </section>
 
       <!-- ============ 04 RULE ============ -->
@@ -1602,6 +1614,7 @@
             <a href="#tools">道具と自動化<span class="dn">›</span></a>
             <a href="#itemdesc">項目の説明<span class="dn">›</span></a>
             <a href="#distnote">分布の見方<span class="dn">›</span></a>
+            <a href="#breednote">犬種について<span class="dn">›</span></a>
           </nav>
         </div>
       </section>
@@ -2779,10 +2792,6 @@ setPINFORMEKarte=function(d){
           }
         }
 
-        var BREED_TEXT = {
-          "ミニチュア・ピンシャー": "2026年10月初旬に募集を開始して集まったデータが、サイズ帯と型紙の土台になっています。",
-          "トイ・マンチェスター・テリア": "帯を作るにはまだ頭数が足りないため、今は頭数だけを表示しています。貯まってくれば、この犬種専用のサイズ帯が自動で立ち上がります。"
-        };
         function renderBreeds() {
           breedGrid.innerHTML = "";
           breedNames.forEach(function (br) {
@@ -2790,16 +2799,10 @@ setPINFORMEKarte=function(d){
             var hasBands = !!bandsByBreed[br];
             var card = document.createElement("div");
             card.className = "card breed";
-            var text = BREED_TEXT[br] ||
-              (hasBands ? "この犬種専用のサイズ帯が立っています。" : "採寸データを蓄積中です。頭数が貯まれば、この犬種専用のサイズ帯が自動で立ち上がります。");
-            if (br === "トイ・マンチェスター・テリア" && hasBands) {
-              text = "頭数が貯まり、この犬種専用のサイズ帯が立っています。";
-            }
             card.innerHTML =
               '<span class="pill ' + (hasBands ? "on" : "wait") + '">' + (hasBands ? "サイズ帯あり" : "データを蓄積中") + "</span>" +
               "<h3>" + br + "</h3>" +
-              '<div class="big">' + list.length + "<small>頭</small></div>" +
-              "<p>" + text + "</p>";
+              '<div class="big">' + list.length + "<small>頭</small></div>";
             breedGrid.appendChild(card);
           });
         }
@@ -6131,6 +6134,7 @@ setPINFORMEKarte=function(d){
           <a href="#tools">道具と自動化<span class="dn">›</span></a>
           <a href="#itemdesc">項目の説明<span class="dn">›</span></a>
           <a href="#distnote">分布の見方<span class="dn">›</span></a>
+          <a href="#breednote">犬種について<span class="dn">›</span></a>
         </div>
         <p class="adm-drawer-group">リンク</p>
         <div class="adm-docs-list adm-drawer-list">
@@ -6164,7 +6168,7 @@ setPINFORMEKarte=function(d){
       // stands alone. Home routes call select(null), which clears
       // the class and brings the admin block back.
       (function () {
-        var SEC_IDS = ["checker", "distribution", "breeds", "rule", "measurement", "findings", "tools", "progress", "pattern", "sales", "docs", "links", "pushsend", "itemdesc", "distnote"];
+        var SEC_IDS = ["checker", "distribution", "breeds", "rule", "measurement", "findings", "tools", "progress", "pattern", "sales", "docs", "links", "pushsend", "itemdesc", "distnote", "breednote"];
         var inNav = function () { return !!(document.body && document.body.classList.contains("adm-nav")); };
         var markActive = function (id) {
           document.querySelectorAll('.toc a[href^="#"], .adm-grid a[href^="#"], .adm-docs-list a[href^="#"]').forEach(function (a) {
