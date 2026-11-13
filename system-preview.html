@@ -418,6 +418,7 @@
       .pat-out { font-weight: 700; font-size: 15px; }
       #pat-diff { margin-top: 12px; }
       #pat-diff:empty { margin-top: 0; }
+      .to-pattern-btn { display: inline-block; padding: 10px 18px; border-radius: 999px; background: #14151c; color: #fff; font-weight: 700; font-size: 14.5px; text-decoration: none; }
 
       /* ---------- rule steps ---------- */
       .steps { counter-reset: step; display: flex; flex-direction: column; gap: 0; }
@@ -3104,7 +3105,8 @@ setPINFORMEKarte=function(d){
           dDetail.innerHTML =
             '<div class="dog-meta">' + meta.map(function (m) { return "<span>" + m + "</span>"; }).join("") + "</div>" +
             '<table class="plain">' + rows + "</table>" +
-            '<p class="hint" style="margin-top:10px">最終採寸日：' + jpDate(d.date) + "</p>";
+            '<p class="hint" style="margin-top:10px">最終採寸日：' + jpDate(d.date) + "</p>" +
+            '<p style="margin-top:12px"><a href="#pattern" class="to-pattern-btn" data-dog-id="' + d.id + '">この子の型紙を見る ›</a></p>';
 
           dWarn.textContent = "";
           dNote.textContent = "";
@@ -3402,6 +3404,26 @@ setPINFORMEKarte=function(d){
           var btn = t && t.closest ? t.closest("[data-pat-dog-id]") : null;
           if (!btn) return;
           pickPatDog(parseInt(btn.getAttribute("data-pat-dog-id"), 10));
+        });
+        /* §48 (2026-11-14): 「この子の型紙を見る」 in the checker detail —
+           force the pattern screen onto this dog (ID tab), then the
+           global section router (the anchor's href="#pattern") shows
+           the pattern section itself. */
+        var dogDetailEl = document.getElementById("dog-detail");
+        if (dogDetailEl) dogDetailEl.addEventListener("click", function (e) {
+          var t = e.target;
+          var btn = t && t.closest ? t.closest(".to-pattern-btn") : null;
+          if (!btn) return;
+          var id = parseInt(btn.getAttribute("data-dog-id"), 10);
+          var d = null;
+          dogs.forEach(function (x) { if (x.id === id) d = x; });
+          if (!d) return;
+          patDogId = id;
+          patSearchQuery = dogDisplayName(d);
+          patDogSearch.value = patSearchQuery;
+          setPatTab("id");
+          renderPatDogCands();
+          renderPattern();
         });
         function patBreedShort(breed) {
           var b = String(breed || "").replace(/[・\s]/g, "");
