@@ -2794,6 +2794,10 @@ setPINFORMEKarte=function(d){
         function renderCandidates() {
           if (!candsBox) return;
           if (loadState !== "ok") { candsBox.innerHTML = ""; return; }
+          /* §38 (2026-11-13): before a search, show only the search bar —
+             never the full name list. Candidates appear once the user
+             has typed something. */
+          if (!String(searchQuery || "").trim()) { candsBox.innerHTML = ""; return; }
           var list = dogs.filter(function (d) { return dogMatchesSearch(d, searchQuery); });
           if (!list.length) {
             candsBox.innerHTML = '<p class="dc-none">一致する子はいません。名前の一部で試してください。</p>';
