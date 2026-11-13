@@ -297,7 +297,9 @@
       .bar.hot .bar-pup { background: var(--bar-sample-pup); }
       .bar.cand .bar-pup { background: var(--bar-cand-pup); }
       .bar.sale .bar-pup { background: var(--bar-sale-pup); }
-      .chart-legend {
+      .dist-breed-row { margin: 2px 0 12px; font-size: 14px; }
+        .dist-breed-row select { font-size: 15px; padding: 6px 8px; max-width: 100%; }
+        .chart-legend {
         display: flex;
         flex-wrap: wrap;
         gap: 4px 14px;
@@ -1356,6 +1358,7 @@
       <section id="distribution">
         <div class="sec-head"><span class="sec-no">02</span><h2>サイズ帯と頭数の分布</h2></div>
         <p class="sec-lead" id="dist-lead">ミニチュア・ピンシャーの胴まわり分布です。</p>
+        <div class="dist-breed-row"><label for="dist-breed-select">犬種</label> <select id="dist-breed-select" disabled><option>読み込み中…</option></select></div>
         <div class="card">
           <div class="chart" id="chart"><p class="hint">読み込み中…</p></div>
           <div class="chart-legend">
@@ -2490,6 +2493,7 @@ setPINFORMEKarte=function(d){
         var breedNames = [];      // breed labels, most dogs first
         var bandsByBreed = {};    // breed label -> bands (only breeds with enough dogs)
         var primaryBreed = null;  // breed driving the chart and the manual checker
+        var distBreed = null;  // breed chosen in the distribution select (null = primaryBreed)
         var BANDS = [];
         var loadState = "loading"; // loading | ok | error
 
@@ -2649,8 +2653,9 @@ setPINFORMEKarte=function(d){
             document.getElementById("rule-min").textContent = fmt(Math.min.apply(null, chests));
             document.getElementById("rule-max").textContent = fmt(Math.max.apply(null, chests));
           }
+          var distP = dogsOf(distBreed || primaryBreed);
           document.getElementById("dist-lead").textContent =
-            primaryBreed + p.length + "頭の胴まわり分布です。";
+            (distBreed || primaryBreed) + distP.length + "頭の胴まわり分布です。";
           var due = 0;
           dogs.forEach(function (d) {
             if (addMonths(new Date(d.date + "T00:00:00"), 3) <= TODAY) due += 1;
@@ -2663,11 +2668,34 @@ setPINFORMEKarte=function(d){
           applyRegistryCounts();
         }
 
+        function renderDistBreedSelect() {
+          var sel = document.getElementById("dist-breed-select");
+          if (!sel) return;
+          var cur = distBreed || primaryBreed;
+          sel.innerHTML = "";
+          breedNames.forEach(function (b) {
+            var o = document.createElement("option");
+            o.value = b;
+            o.textContent = b + "（" + dogsOf(b).length + "頭）";
+            if (b === cur) o.selected = true;
+            sel.appendChild(o);
+          });
+          sel.disabled = false;
+        }
+
         function renderChart() {
+          var CB = distBreed || primaryBreed;
+          var CBANDS = bandsForBreed(CB) || [];
+          if (!CBANDS.length) {
+            chart.innerHTML = '<p class="hint">' + CB + "は、胴まわりを測った子がまだ" + latestChestsOfBreed(CB).length + "頭で、分布を作るには" + BAND_MIN_DOGS + "頭分が必要です。集まってきたら、ここに分布が出ます。</p>";
+            var hpEmpty = document.getElementById("hp-range-note");
+            if (hpEmpty) hpEmpty.innerHTML = "";
+            return;
+          }
           chart.innerHTML = "";
           var maxCount = 0;
-          BANDS.forEach(function (b) { if (b.count > maxCount) maxCount = b.count; });
-          var ranked = BANDS.slice().sort(function (a, b) { return (b.count - a.count) || (a.lo - b.lo); });
+          CBANDS.forEach(function (b) { if (b.count > maxCount) maxCount = b.count; });
+          var ranked = CBANDS.slice().sort(function (a, b) { return (b.count - a.count) || (a.lo - b.lo); });
           var rankOf = {};
           ranked.forEach(function (b, i) { rankOf[b.lo + "-" + b.hi] = i + 1; });
           // Reference figures on the homepage yardstick. The bands now
@@ -2685,14 +2713,14 @@ setPINFORMEKarte=function(d){
           // follow the same pure-grid cut as the bands: below = chest
           // < coreLo, above = chest >= coreHi (a dog exactly on coreHi
           // is counted on the above side, in the band starting there).
-          var anchor = (BANDS && BANDS.anchor !== undefined) ? BANDS.anchor
-            : breedAnchor(primaryBreed, dogsOf(primaryBreed).map(function (d) { return d.chest; }));
+          var anchor = (CBANDS && CBANDS.anchor !== undefined) ? CBANDS.anchor
+            : breedAnchor(CB, dogsOf(CB).map(function (d) { return d.chest; }));
           var coreLo = anchor, coreHi = anchor + 18;
-          dogsOf(primaryBreed).forEach(function (d) {
+          dogsOf(CB).forEach(function (d) {
             if (d.chest === null || d.chest === undefined) return;
             var puppy = isPuppyDog(d), adult = isAdultDog(d);
             if (puppy) {
-              var pb = bandFor(d.chest, BANDS);
+              var pb = bandFor(d.chest, CBANDS);
               if (pb) { var pk = pb.lo + "-" + pb.hi; puppyOf[pk] = (puppyOf[pk] || 0) + 1; }
             }
             // Out-of-frame dogs are tallied as total / adult / puppy so
@@ -2708,7 +2736,7 @@ setPINFORMEKarte=function(d){
               else if (puppy) abovePuppies += 1;
             }
           });
-          BANDS.forEach(function (b) {
+          CBANDS.forEach(function (b) {
             var row = document.createElement("div");
             row.className = "chart-row";
             var pct = maxCount ? Math.round((b.count / maxCount) * 100) : 0;
@@ -2748,7 +2776,7 @@ setPINFORMEKarte=function(d){
               : aboveWide ? coreHi + "cm以上の側が、区画を広げる条件に達しています。"
               : "どちらの側も、まだ区画を広げる条件には達していません。";
             hpNote.innerHTML = "範囲外は" + coreLo + "cm未満が <strong>" + belowTotal + "頭</strong>（成犬" + belowAdults + "頭・パピー" + belowPuppies + "頭）、" + coreHi + "cm以上が <strong>" + aboveTotal + "頭</strong>（成犬" + aboveAdults + "頭・パピー" + abovePuppies + "頭）で、" + wideState +
-              (anchorIsFixed(primaryBreed) ? "" : "この犬種の起点は暫定です。");
+              (anchorIsFixed(CB) ? "" : "この犬種の起点は暫定です。");
           }
         }
 
@@ -3279,6 +3307,11 @@ setPINFORMEKarte=function(d){
         ptabBand.addEventListener("click", function () { setPatTab("band"); });
         patDogSel.addEventListener("change", renderPattern);
         patBandSel.addEventListener("change", renderPattern);
+        document.getElementById("dist-breed-select").addEventListener("change", function () {
+          distBreed = this.value || null;
+          renderStats();
+          renderChart();
+        });
         [easeChestEl, easeWaistEl, easeNeckEl].forEach(function (el) {
           el.addEventListener("input", renderPattern);
         });
@@ -3335,6 +3368,7 @@ setPINFORMEKarte=function(d){
           fetchNote.textContent = "採寸ナビから最新データを取得しました。頭数は登録されている全頭、サイズ帯・推奨サイズは採寸データからその場で計算しています。";
 
           renderStats();
+          renderDistBreedSelect();
           renderChart();
           renderBreeds();
           buildSearch();
