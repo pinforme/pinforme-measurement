@@ -1871,6 +1871,13 @@
             <div class="adm-list" id="adm-nomeas-list"><p class="adm-note">読み込み中…</p></div>
           </div>
 
+          <div class="adm-card adm-hidden" id="adm-newmeas">
+            <p class="adm-crumbs">管理画面 ＞ 管理用ホーム ＞ 新しく届いた採寸</p>
+            <div class="adm-view-head"><button type="button" class="adm-back" id="adm-newmeas-close">← 管理用ホームに戻る</button><h3>新しく届いた採寸（直近7日）</h3></div>
+            <p class="adm-note">直近7日に届いた採寸を、新しい順に並べています（ホームの件数と同じ数え方です）。タップすると犬の詳細が開きます。</p>
+            <div class="adm-list" id="adm-newmeas-list"><p class="adm-note">読み込み中…</p></div>
+          </div>
+
           <div class="adm-card adm-hidden" id="adm-detail"></div>
 
           <div class="adm-card adm-hidden" id="adm-owner"></div>
@@ -4305,6 +4312,7 @@ setPINFORMEKarte=function(d){
           var kar = $("adm-karte"); if (kar) kar.classList.add("adm-hidden");
           var dueC = $("adm-due"); if (dueC) dueC.classList.add("adm-hidden");
           var nmC0 = $("adm-nomeas"); if (nmC0) nmC0.classList.add("adm-hidden");
+          var nwC0 = $("adm-newmeas"); if (nwC0) nwC0.classList.add("adm-hidden");
           renderHome();
         }
         // §33: the nav scripts (§22 toc home / §23 tab bar / §24
@@ -4320,6 +4328,7 @@ setPINFORMEKarte=function(d){
           var kar = $("adm-karte"); if (kar) kar.classList.add("adm-hidden");
           var dueC = $("adm-due"); if (dueC) dueC.classList.add("adm-hidden");
           var nmC = $("adm-nomeas"); if (nmC) nmC.classList.add("adm-hidden");
+          var nwC = $("adm-newmeas"); if (nwC) nwC.classList.add("adm-hidden");
         }
         function dogCardHTML(d) {
           var l = latestOf(d.id);
@@ -6124,7 +6133,7 @@ setPINFORMEKarte=function(d){
           var nmChip = $("adm-nomeas-chip");
           if (nmChip) nmChip.addEventListener("click", openNomeasList);
           var nwChip = $("adm-newmeas-chip");
-          if (nwChip) nwChip.addEventListener("click", function () { var t = $("adm-tab-list"); if (t) t.click(); });
+          if (nwChip) nwChip.addEventListener("click", openNewmeasList);
           var tl = $("adm-tab-list"), tc = $("adm-tab-checker");
           if (tl) tl.classList.toggle("active", A.tab !== "checker");
           if (tc) tc.classList.toggle("active", A.tab === "checker");
@@ -6210,6 +6219,63 @@ setPINFORMEKarte=function(d){
           hideAdminCards();
           var card = $("adm-nomeas"); if (!card) return;
           renderNomeasList();
+          card.classList.remove("adm-hidden");
+          card.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+        /* ---------- §51 newly arrived measurements (last 7 days) ----------
+           The home chip's own view: the measurements behind the chip
+           count, newest first — same membership rule as the count in
+           renderHome (measuredDate within today + previous 6 days).
+           Until §51 the chip jumped to the full breed list, so the new
+           arrivals could not be told apart from everything else. */
+        function newmeasRows() {
+          var nowD = new Date();
+          var today0 = new Date(nowD.getFullYear(), nowD.getMonth(), nowD.getDate());
+          var byId = {};
+          A.dogs.forEach(function (d) { byId[String(d.id)] = d; });
+          var out = [];
+          A.measurements.forEach(function (r) {
+            var p = measuredDate(r).split("-");
+            if (p.length !== 3) return;
+            var md = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+            if (isNaN(md.getTime())) return;
+            var diff = Math.round((today0 - md) / 86400000);
+            if (diff < 0 || diff >= 7) return;
+            var dog = byId[String(r.dog_id)];
+            if (!dog) return;
+            out.push({ dog: dog, rec: r, diff: diff });
+          });
+          out.sort(function (a, b) {
+            if (a.diff !== b.diff) return a.diff - b.diff;
+            return Number(b.rec.id || 0) - Number(a.rec.id || 0);
+          });
+          return out;
+        }
+        function renderNewmeasList() {
+          var box = $("adm-newmeas-list"); if (!box) return;
+          var rows = newmeasRows();
+          if (!rows.length) {
+            box.innerHTML = '<p class="adm-note">直近7日に届いた採寸はありません。</p>';
+            return;
+          }
+          box.innerHTML = rows.map(function (c) {
+            var d = c.dog, r = c.rec;
+            return '<button type="button" class="adm-card-row" data-adm-newmeas-dog="' + esc(d.id) + '">' +
+              '<span class="adm-card-body">' +
+              '<span class="adm-card-main">' + esc(dogTitleOf(d)) + '</span>' +
+              '<span class="adm-card-sub">' + esc(normalizeBreed(rawBreedOf(d)) || "犬種未登録") + " ・ 採寸日 " + esc(measuredDate(r)) + (c.diff === 0 ? "（今日）" : "（" + c.diff + "日前）") + '</span>' +
+              '<span class="adm-card-sub">胴まわり ' + fmt(r.chest, "cm") + " ・ 着丈 " + fmt(r.back_length, "cm") + " ・ 体重 " + fmt(r.weight, "kg") + '</span>' +
+              '</span><span class="adm-card-arrow">›</span></button>';
+          }).join("");
+          box.querySelectorAll("[data-adm-newmeas-dog]").forEach(function (btn) {
+            btn.addEventListener("click", function () { openDog(btn.getAttribute("data-adm-newmeas-dog")); });
+          });
+        }
+        function openNewmeasList() {
+          A.view = "newmeas"; A.activeDogId = null; A.activeOwnerId = null;
+          hideAdminCards();
+          var card = $("adm-newmeas"); if (!card) return;
+          renderNewmeasList();
           card.classList.remove("adm-hidden");
           card.scrollIntoView({ behavior: "smooth", block: "start" });
         }
@@ -6338,6 +6404,12 @@ setPINFORMEKarte=function(d){
           });
           var nomeasClose = $("adm-nomeas-close");
           if (nomeasClose) nomeasClose.addEventListener("click", function () {
+            A.view = "breeds"; A.activeDogId = null; A.activeOwnerId = null;
+            showList(true); renderBreeds();
+            var h = $("adm-home"); if (h) h.scrollIntoView({ behavior: "smooth", block: "start" });
+          });
+          var newmeasClose = $("adm-newmeas-close");
+          if (newmeasClose) newmeasClose.addEventListener("click", function () {
             A.view = "breeds"; A.activeDogId = null; A.activeOwnerId = null;
             showList(true); renderBreeds();
             var h = $("adm-home"); if (h) h.scrollIntoView({ behavior: "smooth", block: "start" });
