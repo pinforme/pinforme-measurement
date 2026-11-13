@@ -3403,6 +3403,19 @@ setPINFORMEKarte=function(d){
           if (!btn) return;
           pickPatDog(parseInt(btn.getAttribute("data-pat-dog-id"), 10));
         });
+        function patBreedShort(breed) {
+          var b = String(breed || "").replace(/[・\s]/g, "");
+          var map = {
+            "ミニチュアピンシャー": "ミニピン",
+            "イタリアングレーハウンド": "イタグレ",
+            "ミニチュアダックスフンド": "ミニチュアダックス",
+            "カニンヘンダックスフンド": "カニンヘン",
+            "スタンダードダックスフンド": "スタンダードダックス",
+            "トイマンチェスターテリア": "トイマン",
+            "ポメラニアン": "ポメ"
+          };
+          return map[b] || breed;
+        }
         function patSizeKeyForChest(c) {
           if (c === null || c === undefined) return null;
           var keys = Object.keys(PAT_SIZE_RANGE);
@@ -3441,7 +3454,7 @@ setPINFORMEKarte=function(d){
           return {
             sizeKey: key2, bandMode: false,
             targets: { back: d.back, chest: d.chest, neck: d.neck, front: d.front, space: null },
-            name: d.breed + " ID" + d.id + "（SIZE" + key2 + "）", file: "ID" + d.id,
+            name: patBreedShort(d.breed) + " ID" + d.id + "（SIZE" + key2 + "）", file: "ID" + d.id,
             desc: dName + "（ID " + d.id + "・" + d.breed + "）の実測で作成 ・ もとの帯は SIZE" + key2 + " ・ 最終採寸 " + jpDate(d.date)
           };
         }
