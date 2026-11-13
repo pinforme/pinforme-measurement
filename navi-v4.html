@@ -1406,6 +1406,7 @@ const KARTE_ROWS = [
 const PIN_V2_PRODUCTS = {
  undecided:{label:'未定（基本5項目）',items:[0,1,2,3,4]},
  research:{label:'必須5項目＋任意の追加10項目',items:Array.from({length:15},(_,i)=>i)},
+ otherbreed:{label:'他の犬種（7項目）',items:[0,1,2,3,4,6,8]},
  tank:{label:'タンクトップ（5項目）',items:[0,1,2,3,4]},
  short:{label:'半袖（8項目）',items:[0,1,2,3,4,5,7,12]},
  long:{label:'長袖（8項目）',items:[0,1,2,3,4,5,7,12]},
@@ -1441,6 +1442,7 @@ const PIN_V2_WEAR_PRODUCTS = ['tshirt','raglan','hoodie','romper','pants'];
 const PIN_MEASURE_SETS = {
   core:{label:'必須5項目だけ測る', note:'首まわり・胴まわり・ウエスト・着丈・前身頃', items:[0,1,2,3,4], group:'basic', addName:'任意', product:'undecided'},
   all:{label:'全部の15項目を測る', note:'必須5項目＋任意の追加10項目', items:Array.from({length:15},(_,i)=>i), group:'basic', addName:'任意', product:'research'},
+  otherbreed:{label:'他の犬種用（7項目）', note:'必須5項目＋後脚の太さ・後脚の長さ', items:[0,1,2,3,4,6,8], group:'basic', single:true, name:'他の犬種用', product:'otherbreed'},
   tank:{label:'タンクトップ用（5項目）', note:'必須5項目だけ（首まわり・胴まわり・ウエスト・着丈・前身頃）', items:[0,1,2,3,4], group:'wear', single:true, name:'タンクトップ用', product:'tank'},
   tshirt:{label:'Tシャツ用（6項目）', note:'必須5項目＋前脚の太さ（袖まわり）', items:[0,1,2,3,4,5], group:'wear', single:true, name:'Tシャツ用', product:'tshirt'},
   raglan:{label:'ラグラン長袖用（7項目）', note:'必須5項目＋前脚の太さ・前脚の長さ', items:[0,1,2,3,4,5,7], group:'wear', single:true, name:'ラグラン長袖用', product:'raglan'},
@@ -1448,7 +1450,7 @@ const PIN_MEASURE_SETS = {
   romper:{label:'ロンパース／四脚タイプ用（15項目）', note:'必須5項目＋脚・首・頭まわりなど追加10項目の全部', items:Array.from({length:15},(_,i)=>i), group:'wear', single:true, name:'ロンパース／四脚タイプ用', product:'romper'},
   pants:{label:'ズボン用（4項目）', note:'下半身だけ：ウエスト＋後脚の太さ・後脚の長さ・尻尾の太さ', items:[2,6,8,14], group:'wear', single:true, name:'ズボン用', product:'pants'}
 };
-const PIN_MEASURE_SET_ORDER = ['core','all','tank','tshirt','raglan','hoodie','romper','pants'];
+const PIN_MEASURE_SET_ORDER = ['core','all','otherbreed','tank','tshirt','raglan','hoodie','romper','pants'];
 const PIN_MEASURE_SET_GROUPS = {basic:'基本の測り方', wear:'服で選ぶ'};
 let pinV2ScopeChoice = 'core'; /* 目的選択画面（新規フロー）での測定セット選択。pinV2Begin が PIN_V2.scope へ引き継ぐ */
 
