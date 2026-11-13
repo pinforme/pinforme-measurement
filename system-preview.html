@@ -1355,7 +1355,7 @@
       <!-- ============ 02 DISTRIBUTION ============ -->
       <section id="distribution">
         <div class="sec-head"><span class="sec-no">02</span><h2>サイズ帯と頭数の分布</h2></div>
-        <p class="sec-lead" id="dist-lead">ミニチュア・ピンシャーの胴まわり分布です。サイズ名は、その帯にいる子たちの胴まわりの平均を四捨五入した数字になっています。</p>
+        <p class="sec-lead" id="dist-lead">ミニチュア・ピンシャーの胴まわり分布です。</p>
         <div class="card">
           <div class="chart" id="chart"><p class="hint">読み込み中…</p></div>
           <div class="chart-legend">
@@ -1366,7 +1366,22 @@
             <span><span class="sw sw-pup"></span>バーの薄い部分＝パピー</span>
           </div>
           <p class="chart-note" id="hp-range-note"></p>
-          <p class="chart-note">「サンプル対象」は、1個飛ばしで選んだ3つの帯（胴まわり35〜38cm・41〜44cm・47〜50cm）。OEMへサンプル製作を依頼するサイズです。作るサイズが隣の帯を補う・カバーするわけではありません。各サイズが合わせるのは、自分の帯の子だけです。飛ばした帯は今回の製作対象には入りませんが、5頭以上集まった帯は「開発候補」として次の製作候補になり、頭数の少ない帯はオーダーメイドで対応します。順位は頭数の多い順です。試着モニターには各サイズの中心の子に加えて、帯の境目にいる子も入り、境目の位置そのものを検証します。</p>
+        </div>
+      </section>
+
+      <!-- ============ DISTRIBUTION NOTES (§39, 2026-11-13) ============ -->
+      <section id="distnote">
+        <div class="sec-head"><span class="sec-no">見</span><h2>分布の見方</h2></div>
+        <p class="sec-lead">「分布」画面の読み方です。画面の中には説明文を置かず、分からない時はここを見ます。</p>
+        <div class="card">
+          <h3>サイズ名の決め方</h3>
+          <p>サイズ名は、その帯にいる子たちの胴まわりの平均から付けます。平均をまず小数第2位で四捨五入して小数第1位にし、それを整数に四捨五入します（36.49→36.5→SIZE 37）。詳しくは「サイズ表記の決め方」にあります。</p>
+          <h3>帯の切り方</h3>
+          <p>帯は、犬種ごとの起点から3cm刻みの固定グリッドで切ります。帯の頭数にはパピーも含まれ、パピーがいる帯には「うちパピー」と添えています。起点が暫定の犬種は、集計対象が10頭に届いた時点で、その時点のデータから起点を固定します。</p>
+          <h3>サンプル対象の考え方</h3>
+          <p>「サンプル対象」は、1個飛ばしで選んだ3つの帯（胴まわり35〜38cm・41〜44cm・47〜50cm）。OEMへサンプル製作を依頼するサイズです。作るサイズが隣の帯を補う・カバーするわけではありません。各サイズが合わせるのは、自分の帯の子だけです。飛ばした帯は今回の製作対象には入りませんが、5頭以上集まった帯は「開発候補」として次の製作候補になり、頭数の少ない帯はオーダーメイドで対応します。順位は頭数の多い順です。試着モニターには各サイズの中心の子に加えて、帯の境目にいる子も入り、境目の位置そのものを検証します。</p>
+          <h3>公開グラフの区画が広がる条件</h3>
+          <p>公開グラフの区画が広がるのは、範囲外に成犬がいて、成犬とパピーを合わせて5頭を超えた側です。パピーだけでは広がりません（成犬＝測定時点で12か月以上）。</p>
         </div>
       </section>
 
@@ -1583,6 +1598,7 @@
             <a href="#findings">分かったこと<span class="dn">›</span></a>
             <a href="#tools">道具と自動化<span class="dn">›</span></a>
             <a href="#itemdesc">項目の説明<span class="dn">›</span></a>
+            <a href="#distnote">分布の見方<span class="dn">›</span></a>
           </nav>
         </div>
       </section>
@@ -2634,7 +2650,7 @@ setPINFORMEKarte=function(d){
             document.getElementById("rule-max").textContent = fmt(Math.max.apply(null, chests));
           }
           document.getElementById("dist-lead").textContent =
-            primaryBreed + p.length + "頭の胴まわり分布です。サイズ名は、その帯にいる子たちの胴まわりの平均を四捨五入した数字になっています。";
+            primaryBreed + p.length + "頭の胴まわり分布です。";
           var due = 0;
           dogs.forEach(function (d) {
             if (addMonths(new Date(d.date + "T00:00:00"), 3) <= TODAY) due += 1;
@@ -2731,10 +2747,8 @@ setPINFORMEKarte=function(d){
               : belowWide ? coreLo + "cm未満の側が、区画を広げる条件に達しています。"
               : aboveWide ? coreHi + "cm以上の側が、区画を広げる条件に達しています。"
               : "どちらの側も、まだ区画を広げる条件には達していません。";
-            hpNote.innerHTML = "帯の切り方は" + primaryBreed + "の起点（" + anchor + "cm）から3cm刻みの固定グリッドです。帯の頭数にはパピーも含まれ、パピーがいる帯には「うちパピー」と添えています。" +
-              (anchorIsFixed(primaryBreed) ? "" : "この犬種の起点は暫定です（集計対象が10頭に届いた時点で、その時点のデータから固定します）。") +
-              "公開グラフの区画が広がるのは、範囲外に成犬がいて、成犬とパピーを合わせて5頭を超えた側です。パピーだけでは広がりません（成犬＝測定時点で12か月以上）。" +
-              "現在、" + primaryBreed + "の範囲外は、" + coreLo + "cm未満が <strong>" + belowTotal + "頭</strong>（成犬" + belowAdults + "頭・パピー" + belowPuppies + "頭）、" + coreHi + "cm以上が <strong>" + aboveTotal + "頭</strong>（成犬" + aboveAdults + "頭・パピー" + abovePuppies + "頭）で、" + wideState;
+            hpNote.innerHTML = "範囲外は" + coreLo + "cm未満が <strong>" + belowTotal + "頭</strong>（成犬" + belowAdults + "頭・パピー" + belowPuppies + "頭）、" + coreHi + "cm以上が <strong>" + aboveTotal + "頭</strong>（成犬" + aboveAdults + "頭・パピー" + abovePuppies + "頭）で、" + wideState +
+              (anchorIsFixed(primaryBreed) ? "" : "この犬種の起点は暫定です。");
           }
         }
 
@@ -6083,6 +6097,7 @@ setPINFORMEKarte=function(d){
           <a href="#findings">分かったこと<span class="dn">›</span></a>
           <a href="#tools">道具と自動化<span class="dn">›</span></a>
           <a href="#itemdesc">項目の説明<span class="dn">›</span></a>
+          <a href="#distnote">分布の見方<span class="dn">›</span></a>
         </div>
         <p class="adm-drawer-group">リンク</p>
         <div class="adm-docs-list adm-drawer-list">
@@ -6116,7 +6131,7 @@ setPINFORMEKarte=function(d){
       // stands alone. Home routes call select(null), which clears
       // the class and brings the admin block back.
       (function () {
-        var SEC_IDS = ["checker", "distribution", "breeds", "rule", "measurement", "findings", "tools", "progress", "pattern", "sales", "docs", "links", "pushsend", "itemdesc"];
+        var SEC_IDS = ["checker", "distribution", "breeds", "rule", "measurement", "findings", "tools", "progress", "pattern", "sales", "docs", "links", "pushsend", "itemdesc", "distnote"];
         var inNav = function () { return !!(document.body && document.body.classList.contains("adm-nav")); };
         var markActive = function (id) {
           document.querySelectorAll('.toc a[href^="#"], .adm-grid a[href^="#"], .adm-docs-list a[href^="#"]').forEach(function (a) {
