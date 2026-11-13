@@ -3434,14 +3434,15 @@ setPINFORMEKarte=function(d){
           if (d.chest === null || d.chest === undefined) miss.push("胴まわり");
           if (d.back === null || d.back === undefined) miss.push("着丈");
           if (d.front === null || d.front === undefined) miss.push("前身頃");
-          if (miss.length) return { dogMissing: miss, desc: "ID " + d.id + "（" + d.breed + "）" };
+          var dName = dogDisplayName(d) || "名前なし";
+          if (miss.length) return { dogMissing: miss, desc: dName + "（ID " + d.id + "・" + d.breed + "）" };
           var key2 = patSizeKeyForChest(d.chest);
-          if (!key2) return { noSize: true, desc: "ID " + d.id + "（" + d.breed + "） ・ 胴まわり " + fmt(d.chest) + "cm" };
+          if (!key2) return { noSize: true, desc: dName + "（ID " + d.id + "・" + d.breed + "） ・ 胴まわり " + fmt(d.chest) + "cm" };
           return {
             sizeKey: key2, bandMode: false,
             targets: { back: d.back, chest: d.chest, neck: d.neck, front: d.front, space: null },
             name: "ID" + d.id + "（SIZE" + key2 + "）", file: "ID" + d.id,
-            desc: "ID " + d.id + "（" + d.breed + "）の実測で作成 ・ もとの帯は SIZE" + key2 + " ・ 最終採寸 " + jpDate(d.date)
+            desc: dName + "（ID " + d.id + "・" + d.breed + "）の実測で作成 ・ もとの帯は SIZE" + key2 + " ・ 最終採寸 " + jpDate(d.date)
           };
         }
         function patApplyOutput() {
