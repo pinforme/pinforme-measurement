@@ -439,7 +439,8 @@ label.confirm input{margin-top:4px;width:20px;height:20px;flex:none}
         <button type="button" class="suffix" data-value="ちゃん">ちゃん</button>
         <input type="hidden" id="dogSuffix" value="くん">
       </div></div>
-    <div class="field"><label for="dogBreed">犬種 <span class="req">必須</span></label><input id="dogBreed" type="text" placeholder="犬種を入力"></div>
+    <div class="field"><label for="dogBreed">犬種 <span class="req">必須</span></label><select id="dogBreed"><option value="">選んでください</option><option value="ミニチュアピンシャー">ミニチュアピンシャー</option><option value="イタリアングレーハウンド">イタリアングレーハウンド</option><option value="ミニチュアダックスフンド">ミニチュアダックスフンド</option><option value="カニンヘンダックスフンド">カニンヘンダックスフンド</option><option value="スタンダードダックスフンド">スタンダードダックスフンド</option><option value="トイマンチェスターテリア">トイマンチェスターテリア</option><option value="ポメラニアン">ポメラニアン</option><option value="その他">その他</option></select></div>
+    <div class="field" id="dogBreedOtherField" hidden><label for="dogBreedOther">犬種を入力</label><input id="dogBreedOther" type="text" placeholder="犬種を入力"></div>
     <fieldset id="pinDogAppearance" hidden><legend>耳と尻尾のタイプ <span class="req">必須</span></legend>
       <p class="note">愛犬に近いものを1つ選んでください。</p>
       <div class="appearance-grid">
@@ -1659,7 +1660,7 @@ function breedKey(value){
   return 'default';
 }
 function pinGetDogAppearance(){
-  if(breedKey(document.getElementById('dogBreed')?.value) !== 'minipin') return '';
+  if(breedKey(pinEffectiveBreed()) !== 'minipin') return '';
   const r = document.querySelector('input[name="dogAppearance"]:checked');
   return r && ['drop-short','drop-long','upright-short','upright-long'].includes(r.value) ? r.value : '';
 }
@@ -1669,9 +1670,29 @@ function pinRememberAppearance(id, value){
   const map = pinAppearanceCache(); map[String(id)] = value;
   try{ localStorage.setItem('PINFORME_DOG_APPEARANCE_V1', JSON.stringify(map)); }catch(e){}
 }
+const PIN_BREED_SELECT_VALUES = ['ミニチュアピンシャー','イタリアングレーハウンド','ミニチュアダックスフンド','カニンヘンダックスフンド','スタンダードダックスフンド','トイマンチェスターテリア','ポメラニアン'];
+function pinEffectiveBreed(){
+  const sel = document.getElementById('dogBreed');
+  if(!sel) return '';
+  if(sel.value === 'その他') return (document.getElementById('dogBreedOther')?.value || '').trim();
+  return (sel.value || '').trim();
+}
+function pinBreedSyncOther(){
+  const sel = document.getElementById('dogBreed');
+  const f = document.getElementById('dogBreedOtherField');
+  if(f && sel) f.hidden = sel.value !== 'その他';
+}
+function pinSetBreed(v){
+  const sel = document.getElementById('dogBreed'); if(!sel) return;
+  const other = document.getElementById('dogBreedOther');
+  const val = String(v || '').trim();
+  if(!val){ sel.value = ''; if(other) other.value = ''; }
+  else if(PIN_BREED_SELECT_VALUES.includes(val)){ sel.value = val; if(other) other.value = ''; }
+  else { sel.value = 'その他'; if(other) other.value = val; }
+  pinBreedSyncOther();
+}
 function pinApplyBreedGuide(){
-  const breedField = document.getElementById('dogBreed');
-  const breed = breedKey(breedField?.value);
+  const breed = breedKey(pinEffectiveBreed());
   const box = document.getElementById('pinDogAppearance');
   const appearance = pinGetDogAppearance();
   if(box) box.hidden = breed !== 'minipin';
@@ -1923,6 +1944,7 @@ function restorePINFORMEState(continueDraft=false){
   }catch(e){}
   pinSyncAnonymousMode();
   pinSyncSuffixButtons();
+  pinBreedSyncOther();
   PINFORME_SUBMITTED = state.submitted === true;
   if(Array.isArray(state.measurementInputs)){
     steps.forEach((step,index)=>{
@@ -2753,6 +2775,7 @@ function pinV2Begin(product, id=null, ownerSource=null, mode=''){
   resetNewDogSession();
   document.querySelectorAll('input[name=sex]').forEach(e=>e.checked = false);
   for(const fid of ['ownerName','dogName','dogBreed','recoveryEmail','recoveryPhone','weight','birthDate']){ const e = document.getElementById(fid); if(e) e.value = ''; }
+  pinSetBreed('');
   for(const fid of ['tipsConfirmed','dataConsent','photoPromoConsent','pinAnonymousMode']){ const e = document.getElementById(fid); if(e) e.checked = false; }
   pinSyncAnonymousMode();
   document.getElementById('sendStatus').textContent = '';
@@ -2767,7 +2790,7 @@ function pinV2Begin(product, id=null, ownerSource=null, mode=''){
   }catch(e){}
   if(previous){
     for(const [fid,value] of Object.entries({ownerName:previous.owner, dogName:previous.dogName, dogBreed:previous.breed, birthDate:previous.birthday, weight:previous.weight, recoveryEmail:previous.recoveryEmail||'', recoveryPhone:previous.recoveryPhone||''})){
-      const e = document.getElementById(fid); if(e) e.value = value ?? '';
+      const e = document.getElementById(fid); if(e){ if(fid === 'dogBreed') pinSetBreed(value); else e.value = value ?? ''; }
     }
     const suffix = document.getElementById('dogSuffix'); if(suffix && previous.suffix) suffix.value = previous.suffix;
     document.querySelectorAll('.name-row .suffix').forEach(b=>b.classList.toggle('active', b.dataset.value === getDogSuffix()));
@@ -2796,12 +2819,12 @@ function goDogInfo(){
   if(!pinValidateCustomerEmail()) return;
   const owner = document.getElementById("ownerName").value.trim();
   const dog = document.getElementById("dogName").value.trim();
-  const breed = document.getElementById("dogBreed").value.trim();
+  const breed = pinEffectiveBreed();
   const ok = document.getElementById("tipsConfirmed").checked;
   const dataConsent = document.getElementById("dataConsent")?.checked;
   if(!pinAnonymousActive() && !owner){ alert("ご主人様の名前を入力してください。"); return; }
   if(!pinAnonymousActive() && !dog){ alert("わんちゃんの名前を入力してください。"); return; }
-  if(!breed){ alert("犬種を入力してください。"); return; }
+  if(!breed){ alert(document.getElementById("dogBreed").value === 'その他' ? "犬種を入力してください。" : "犬種を選んでください。"); return; }
   if(breedKey(breed) === 'minipin' && !pinGetDogAppearance()){
     const err = document.getElementById('pinDogAppearanceError'); if(err) err.hidden = false;
     alert("耳と尻尾のタイプを1つ選んでください。"); return;
@@ -2988,7 +3011,7 @@ async function pinV2ShowKarte(id){
   resetNewDogSession();
   document.querySelectorAll('input[name=sex]').forEach(e=>e.checked = false);
   for(const [fid,value] of Object.entries({ownerName:r.owner, dogName:r.dogName, dogBreed:r.breed, birthDate:r.birthday, weight:r.weight, recoveryEmail:r.recoveryEmail||'', recoveryPhone:r.recoveryPhone||''})){
-    const e = document.getElementById(fid); if(e) e.value = value ?? '';
+    const e = document.getElementById(fid); if(e){ if(fid === 'dogBreed') pinSetBreed(value); else e.value = value ?? ''; }
   }
   const suffixEl = document.getElementById('dogSuffix'); if(suffixEl && r.suffix) suffixEl.value = r.suffix;
   document.querySelectorAll('.name-row .suffix').forEach(b=>b.classList.toggle('active', b.dataset.value === getDogSuffix()));
@@ -3167,7 +3190,7 @@ function collectKarte(){
     measuredOn:textValue("pinMeasuredOn"),
     owner:pinAnonymousActive() ? "匿名希望" : textValue("ownerName"),
     dog:(textValue("dogName") || (pinAnonymousActive() ? pinAnonymousDogLabel() : "")) + getDogSuffix(),
-    breed:textValue("dogBreed"),
+    breed:pinEffectiveBreed(),
     dogAppearance:pinGetDogAppearance() || "",
     sex:sexChecked ? sexChecked.value : "",
     birthday:textValue("birthDate"),
@@ -3788,7 +3811,7 @@ async function pinV2FinishSaved(pending, receipt){
   }catch(e){ /* Save receipt remains authoritative; cached acknowledged data is shown. */ }
   const saved = PIN_V2.savedRecord;
   for(const [fid, value] of Object.entries({ownerName:saved.owner, dogName:saved.dogName, dogBreed:saved.breed, birthDate:saved.birthday, weight:saved.weight, recoveryEmail:saved.recoveryEmail, recoveryPhone:saved.recoveryPhone, pinMeasuredOn:pending.args.p_payload.measured_on})){
-    const el = document.getElementById(fid); if(el) el.value = value ?? '';
+    const el = document.getElementById(fid); if(el){ if(fid === 'dogBreed') pinSetBreed(value); else el.value = value ?? ''; }
   }
   const suffixEl = document.getElementById('dogSuffix'); if(suffixEl && saved.suffix){ suffixEl.value = saved.suffix; pinSyncSuffixButtons(); }
   pinSetAnonymousMode(saved.anonymous);
@@ -4140,6 +4163,8 @@ function initNaviV4(){
   document.getElementById('startBackBtn').addEventListener('click', pinV2Home);
   document.getElementById('pinAnonymousMode').addEventListener('change', ()=>{ pinSyncAnonymousMode(); savePINFORMEState(); });
   document.getElementById('dogBreed').addEventListener('input', pinApplyBreedGuide);
+  document.getElementById('dogBreed').addEventListener('change', ()=>{ pinBreedSyncOther(); pinApplyBreedGuide(); });
+  document.getElementById('dogBreedOther')?.addEventListener('input', pinApplyBreedGuide);
   document.querySelectorAll('input[name="dogAppearance"]').forEach(r=>r.addEventListener('change', pinApplyBreedGuide));
   document.querySelectorAll('.name-row .suffix').forEach(b=>b.addEventListener('click', ()=>{
     document.getElementById('dogSuffix').value = b.dataset.value;
