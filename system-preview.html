@@ -995,6 +995,10 @@
             §28 revised the bar again the same day: 採寸とID takes
             the 犬の一覧 slot, and the centre is 売上・利益 from
             the start (a new section — not a later swap).
+            §31 finalised the bar once more: ホーム / 探す /
+            売上・利益 / 型紙 / お知らせ送信 — and メニュー moved
+            up into this header as a third round button beside the
+            person and the bell, opening the §30 drawer.
          4. The home keeps only the hero card, the action strip
             and the grid (+ 資料）: the 管理用ホーム heading, the
             old view tabs (routes live on the tab bar now), the
@@ -1117,12 +1121,14 @@
       .adm-listcard .adm-docs-list { border-top: none; }
       .adm-listcard .adm-docs-list a { padding: 14px 16px; font-size: 14.5px; }
       /* ---------- §30 (2026-11-13): slide-in drawer (side menu) ----------
-         The tab bar's メニュー now opens a drawer from the left
-         (about 85% of the screen wide, the page behind it dimmed),
-         replacing the §23 scroll-to-grid route. Groups: 機能
-         (section entries) / 資料 (04・06・07) / リンク (external).
-         A row tap navigates (section rows ride §22) and closes the
-         drawer; tapping the dimmed backdrop closes it too. */
+         A drawer opens from the left (about 85% of the screen
+         wide, the page behind it dimmed), replacing the §23
+         scroll-to-grid route. It was the tab bar's メニュー at
+         first; §31 moved its button into the header, next to the
+         person and the bell. Groups: 機能 (section entries) /
+         資料 (04・06・07) / リンク (external). A row tap
+         navigates (section rows ride §22) and closes the drawer;
+         tapping the dimmed backdrop closes it too. */
       .adm-drawer-overlay {
         position: fixed; inset: 0; z-index: 110;
         background: rgba(12, 9, 6, .5);
@@ -1157,6 +1163,24 @@
       }
       .adm-drawer-list { border-top: none; }
       .adm-drawer-list a { padding: 13px 16px; font-size: 14.5px; }
+      /* ---------- §31 (2026-11-13): tab bar finalised, menu moves
+         to the header ----------
+         The owner's final word on the bar: ホーム / 探す /
+         売上・利益 / 型紙 / お知らせ送信. メニュー leaves the bar
+         and joins the header as a third round button next to the
+         person and the bell; it opens the §30 drawer from there.
+         探す and お知らせ送信 carry stroke SVG icons in the tab
+         (the header icons' style) instead of text glyphs, so the
+         icon slot needs an svg sizing rule. */
+      .adm-tabbar .ti svg { width: 19px; height: 19px; display: block; }
+      /* ---------- §32 (2026-11-13): the search screen shows every
+         tool in the open ----------
+         The breeds view (the 探す tab's destination) no longer
+         folds the key search, the identity search and the karte
+         OCR into <details>: they render as plain blocks
+         (.adm-tool-block) under the main name / ID search. The
+         blocks reuse the generators' own dividers and headings,
+         so the wrapper itself needs no styling. */
     </style>
   </head>
   <body class="adm-locked">
@@ -1174,6 +1198,7 @@
         <a href="#progress">08 進み具合</a>
         <a href="#pattern">09 型紙</a>
         <a href="#sales">売上・利益</a>
+        <a href="#pushsend">お知らせ送信</a>
       </nav>
 
       <!-- ============ HERO ============ -->
@@ -1497,6 +1522,16 @@
         </div>
       </section>
 
+      <!-- ============ PUSH SEND (§31, 2026-11-13) ============ -->
+      <section id="pushsend">
+        <div class="sec-head"><span class="sec-no">送</span><h2>お知らせ送信</h2></div>
+        <p class="sec-lead">採寸協力者のみなさんへ、お知らせを送る画面です。</p>
+        <div class="card">
+          <h3>ここからお知らせを送ります</h3>
+          <p style="margin:0;font-size:15px">この確認用プレビュー（テスト版）には、送信パネル本体は入っていません。本番の管理画面では、この場所に送信パネル（対象の選択・タイトルと本文の入力・対象の確認・送信）が入ります。</p>
+        </div>
+      </section>
+
       <!-- ============ ADMIN (test build: system-admin-test) ============ -->
       <section class="adm-wrap" aria-label="管理者専用">
         <div class="sec-head"><span class="sec-no">管</span><h2>管理者専用（確認用プレビュー）</h2></div>
@@ -1522,6 +1557,7 @@
             <span class="adm-brand-actions">
               <button type="button" class="adm-iconbtn" id="adm-account-btn" aria-label="マイページ" aria-expanded="false" aria-controls="adm-account-panel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></button>
               <button type="button" class="adm-iconbtn" id="adm-bell-btn" aria-label="お知らせ"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span class="adm-bell-badge" id="adm-bell-badge" hidden>0</span></button>
+              <button type="button" class="adm-iconbtn" id="adm-menu-btn" aria-label="メニュー"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
             </span>
             <div class="adm-account-panel" id="adm-account-panel" hidden></div>
           </header>
@@ -4694,9 +4730,20 @@ setPINFORMEKarte=function(d){
             '<p class="adm-note" style="margin:0 0 10px">犬種を選ぶと、その犬種の犬の一覧が出ます。名前・IDでも探せます。</p>' +
             searchBoxHTML() +
             '<div id="adm-search-results"></div>' +
-            '<details class="adm-more adm-subsearch"' + (A.keyState || (A.keyQuery && String(A.keyQuery).trim()) ? " open" : "") + '><summary>お客様キーで探す</summary>' + keySearchHTML() + "</details>" +
-            '<details class="adm-more adm-subsearch"' + (A.idState || (A.idQuery && (A.idQuery.name || A.idQuery.birth || A.idQuery.weight || A.idQuery.chest)) ? " open" : "") + '><summary>本人確認で探す（モニター応募・キー再発行など）</summary>' + identitySearchHTML() + "</details>" +
-            '<details class="adm-more adm-subsearch"' + (A.ocrState || A.ocrValues ? " open" : "") + '><summary>カルテ写真から読み取る（本人確認の補助）</summary>' + karteOcrHTML() + "</details>";
+            // §32 (2026-11-13): the 探す screen shows every search
+            // tool in the open — the three tools that used to sit
+            // folded in <details class="adm-subsearch"> are now
+            // plain always-visible blocks under the main name / ID
+            // search. The generators and attachers are unchanged;
+            // only the wrapping changed. The key block carries the
+            // divider + heading the fold's <summary> used to give
+            // it (the identity / OCR generators carry their own).
+            '<div class="adm-tool-block">' +
+            '<div style="border-top:1px solid #e3e0ea;margin:14px 0 10px"></div>' +
+            '<p class="adm-note" style="margin:0 0 6px"><strong>お客様キーで探す</strong></p>' +
+            keySearchHTML() + "</div>" +
+            '<div class="adm-tool-block">' + identitySearchHTML() + "</div>" +
+            '<div class="adm-tool-block">' + karteOcrHTML() + "</div>";
           attachSearch();
           attachKeySearch();
           attachIdentitySearch();
@@ -5755,14 +5802,19 @@ setPINFORMEKarte=function(d){
         else init();
       })();
     </script>
+    <!-- §31 (2026-11-13): the owner's final tab bar — ホーム / 探す /
+         売上・利益 / 型紙 / お知らせ送信. メニュー is no longer a
+         tab: its button sits in the header (§24 brand bar) and
+         opens the §30 drawer. -->
     <nav class="adm-tabbar" aria-label="主要メニュー">
       <a href="#adm-home" data-go="home" class="nav-active"><span class="ti">⌂</span><span>ホーム</span></a>
-      <a href="#adm-home" data-go="measurement"><span class="ti">測</span><span>採寸とID</span></a>
+      <a href="#adm-home" data-go="search"><span class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.5-4.5"/></svg></span><span>探す</span></a>
       <a href="#adm-home" data-go="sales"><span class="ti">¥</span><span>売上・利益</span></a>
       <a href="#adm-home" data-go="pattern"><span class="ti">✂&#xFE0E;</span><span>型紙</span></a>
-      <a href="#adm-home" data-go="menu"><span class="ti">▦</span><span>メニュー</span></a>
+      <a href="#pushsend" data-go="pushsend"><span class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg></span><span>お知らせ送信</span></a>
     </nav>
-    <!-- §30 (2026-11-13): slide-in drawer for the tab bar's メニュー.
+    <!-- §30 (2026-11-13): slide-in drawer, opened from the header's
+         menu button since §31 (it was the tab bar's メニュー before).
          Groups mirror the owner's structure: 機能 (section entries),
          資料 (04/06/07), リンク (external). Section rows are plain
          #anchors, so §22 routes them; any row tap also closes the
@@ -5809,8 +5861,11 @@ setPINFORMEKarte=function(d){
       // added and existing behaviour / data flow is untouched.
       // §28 (2026-11-13): "sales" joins SEC_IDS — the new 売上・利益
       // section switches exactly like the 01–09 sections.
+      // §31 (2026-11-13): "pushsend" joins too — the お知らせ送信
+      // section (a placeholder here; the production build's push
+      // panel takes its place) switches the same way.
       (function () {
-        var SEC_IDS = ["checker", "distribution", "breeds", "rule", "measurement", "findings", "tools", "progress", "pattern", "sales", "docs", "links"];
+        var SEC_IDS = ["checker", "distribution", "breeds", "rule", "measurement", "findings", "tools", "progress", "pattern", "sales", "docs", "links", "pushsend"];
         var inNav = function () { return !!(document.body && document.body.classList.contains("adm-nav")); };
         var markActive = function (id) {
           document.querySelectorAll('.toc a[href^="#"], .adm-grid a[href^="#"], .adm-docs-list a[href^="#"]').forEach(function (a) {
@@ -5872,15 +5927,20 @@ setPINFORMEKarte=function(d){
       // ---------- §23 (2026-11-13): bottom tab bar routes (display only) ----------
       // The tab bar reuses existing behaviour only: ホーム goes
       // through the toc home entry (§22 select), the section
-      // entries go through the toc section entries (§22 select),
-      // メニュー scrolled to the grid menu (§30 replaced it with the slide-in drawer). §27 (2026-11-13) set
-      // the five entries as ホーム / 犬の一覧 / 分布 / 型紙 /
-      // メニュー; §28 (2026-11-13) revised them once more —
-      // the owner's latest decision: ホーム / 採寸とID /
-      // 売上・利益 / 型紙 / メニュー. 犬の一覧 keeps its
-      // existing routes (the home view tabs and the like), and
-      // its branch below stays for them. お知らせ left the bar;
-      // notices live on the header bell (§24) only.
+      // entries go through the toc section entries (§22 select).
+      // §27 set the five entries as ホーム / 犬の一覧 / 分布 /
+      // 型紙 / メニュー; §28 revised them to ホーム / 採寸とID /
+      // 売上・利益 / 型紙 / メニュー. §31 (2026-11-13) is the
+      // owner's final word: ホーム / 探す / 売上・利益 / 型紙 /
+      // お知らせ送信. メニュー left the bar entirely — its
+      // button sits in the header now (§31) and opens the §30
+      // drawer. 探す opens the admin search screen (the list
+      // view; §32 shows every search tool there in the open) and
+      // rides the same home-tab switch as the old list route.
+      // 犬の一覧 keeps its existing routes (the home view tabs
+      // and the like), and its branch below stays for them. The
+      // header bell (§24) stays the notices status entrance; the
+      // bar's お知らせ送信 is the sending entrance.
       (function () {
         var bar = document.querySelector(".adm-tabbar");
         if (!bar) return;
@@ -5901,23 +5961,20 @@ setPINFORMEKarte=function(d){
           ev.preventDefault();
           var go = a.getAttribute("data-go");
           setActive(go);
-          if (go === "list") {
+          if (go === "list" || go === "search") {
             goHome();
             var t = document.getElementById("adm-tab-list");
             if (t) t.click();
-          } else if (go === "measurement" || go === "sales" || go === "pattern") {
+            if (go === "search") {
+              // §31/§32: land on the search card itself, where the
+              // name / ID search leads and every other search tool
+              // is shown in the open below it.
+              var lc = document.getElementById("adm-list-card");
+              if (lc) setTimeout(function () { lc.scrollIntoView({ block: "start" }); }, 60);
+            }
+          } else if (go === "sales" || go === "pattern" || go === "pushsend") {
             var tl = document.querySelector('.toc a[href="#' + go + '"]');
             if (tl) tl.click();
-          } else if (go === "menu") {
-            // §30 (2026-11-13): the menu tab opens the slide-in
-            // drawer; the old scroll-to-grid behaviour stays as a
-            // fallback if the drawer script is absent.
-            if (window.__admOpenDrawer) window.__admOpenDrawer();
-            else {
-              goHome();
-              var g = document.querySelector(".adm-grid");
-              if (g) g.scrollIntoView({ block: "start" });
-            }
           } else {
             goHome();
           }
@@ -6005,12 +6062,12 @@ setPINFORMEKarte=function(d){
     </script>
     <script>
       // ---------- §30 (2026-11-13): slide-in drawer wiring ----------
-      // Placement and display only. The tab bar's menu branch (§23)
-      // calls window.__admOpenDrawer; section rows inside the
-      // drawer are plain #anchors, so §22's switching routes them,
-      // and any row tap (or the backdrop, the close button, or
-      // Escape) closes the drawer. While signed out the drawer
-      // never opens.
+      // Placement and display only. The header's menu button (§31;
+      // at first it was the tab bar's menu branch in §23) calls
+      // window.__admOpenDrawer; section rows inside the drawer are
+      // plain #anchors, so §22's switching routes them, and any
+      // row tap (or the backdrop, the close button, or Escape)
+      // closes the drawer. While signed out the drawer never opens.
       (function () {
         var drawer = document.getElementById("adm-drawer");
         var overlay = document.getElementById("adm-drawer-overlay");
@@ -6037,6 +6094,10 @@ setPINFORMEKarte=function(d){
           }, 300);
         };
         window.__admOpenDrawer = open;
+        // §31 (2026-11-13): the drawer's button lives in the
+        // header now, beside the person and the bell.
+        var mb = document.getElementById("adm-menu-btn");
+        if (mb) mb.addEventListener("click", open);
         overlay.addEventListener("click", close);
         var cb = document.getElementById("adm-drawer-close");
         if (cb) cb.addEventListener("click", close);
