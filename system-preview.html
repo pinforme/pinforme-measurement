@@ -1191,6 +1191,32 @@
          the public page and stays exactly as it was.
          Display control only. */
       body.adm-on .wrap > footer { display: none; }
+      /* ---------- §35 (2026-11-13): checker explanations move to 資料
+         ----------
+         Owner decision: build the buttons one at a time.
+         Button 1 (対象の子) keeps its current behaviour and layout,
+         but the screen itself no longer carries explanatory prose:
+         the section lead, the ID hint and the chest hint are gone
+         from #checker, and their content — plus sourced notes for
+         every other field the checker shows — now lives in the
+         資料 > 項目の説明 section (#itemdesc, markup only, rides
+         the §22 switching via SEC_IDS). Result / status displays
+         (fetch note, count note, notes and warnings rendered from
+         data) stay untouched. */
+      /* ---------- §36 (2026-11-13): a sub-screen stands alone
+         ----------
+         Owner feedback: on a sub-screen (対象の子 etc.), scrolling
+         down still reached the home screen. Cause: in nav mode the
+         section-visibility rule exempts the admin block
+         (.adm-wrap — brand bar + home card), so it stacked under
+         whichever section was open. Now §22's select() marks
+         body.adm-sub while a section is selected, and the whole
+         admin block is hidden in that state; the fixed tab bar
+         stays, so ホーム (select(null), which clears the class)
+         brings back the home screen alone. Scoped to the
+         signed-in nav state; the login screen and the full-page
+         view are untouched. */
+      body.adm-on.adm-nav.adm-sub .wrap > section.adm-wrap { display: none; }
     </style>
   </head>
   <body class="adm-locked">
@@ -1236,7 +1262,9 @@
       <!-- ============ 01 DOG LOOKUP ============ -->
       <section id="checker">
         <div class="sec-head"><span class="sec-no">01</span><h2>対象の子を選ぶ</h2></div>
-        <p class="sec-lead">入口はこの選択タブに集約します。登録済みの子はIDで選ぶと、その子の採寸・推奨サイズ・最終採寸日を読み出します。データはページを開くたびに採寸ナビのデータベースから取得する実働版で、常に最新の状態で判定します（お客様情報から探す部分は、個人情報を持つ採寸ナビ／ショップ側の担当で、こちらはIDだけでつながります）。まだ登録のない子は、右のタブで胴まわりから目安だけを出します。</p>
+        <!-- §35 (2026-11-13): the section lead was removed from this
+             screen by owner decision — explanations live under
+             資料 > 項目の説明 (#itemdesc) instead. -->
         <div class="tabs" role="tablist" aria-label="対象の子の選び方">
           <button class="tab-btn" id="tabbtn-id" role="tab" aria-selected="true" aria-controls="panel-id">登録済みの子（IDで選ぶ）</button>
           <button class="tab-btn" id="tabbtn-manual" role="tab" aria-selected="false" aria-controls="panel-manual">未登録の子（目安）</button>
@@ -1249,7 +1277,7 @@
               <div>
                 <label for="dog-select">犬のID</label>
                 <select id="dog-select" disabled><option>読み込み中…</option></select>
-                <p class="hint">飼い主名・犬の名前は扱わず、IDだけをキーにしています。<span id="dog-count-note"></span></p>
+                <p class="hint"><span id="dog-count-note"></span></p>
                 <div id="dog-detail"></div>
               </div>
               <div aria-live="polite">
@@ -1268,10 +1296,10 @@
             <div class="in-pane">
               <label for="chest-manual">胴まわり（cm）</label>
               <div class="input-row">
-                <input id="chest-manual" type="number" inputmode="decimal" step="0.1" min="20" max="70" value="40.0" aria-describedby="chest-hint" />
+                <input id="chest-manual" type="number" inputmode="decimal" step="0.1" min="20" max="70" value="40.0" />
                 <span class="unit">cm</span>
               </div>
-              <p class="hint" id="chest-hint">いちばん太い部分を、きつく締めずに測った値です。あくまで目安で、登録済みの子はIDで選ぶほうが正確です。帯の境目に近い子は、隣のサイズとの両方試着がおすすめです。</p>
+              <!-- §35: the chest hint moved to 資料 > 項目の説明 (#itemdesc). -->
             </div>
             <div class="out-pane" aria-live="polite">
               <div class="result-size" id="res-size">SIZE 39</div>
@@ -1514,7 +1542,39 @@
             <a href="#rule">サイズ表記の決め方<span class="dn">›</span></a>
             <a href="#findings">分かったこと<span class="dn">›</span></a>
             <a href="#tools">道具と自動化<span class="dn">›</span></a>
+            <a href="#itemdesc">項目の説明<span class="dn">›</span></a>
           </nav>
+        </div>
+      </section>
+
+      <!-- ============ ITEM DESCRIPTIONS (§35, 2026-11-13) ============ -->
+      <section id="itemdesc">
+        <div class="sec-head"><span class="sec-no">説</span><h2>項目の説明</h2></div>
+        <p class="sec-lead">「対象の子」画面に出てくる項目の説明です。画面の中には説明文を置かず、分からない時はここを見ます。</p>
+        <div class="card">
+          <h3>登録済みの子（IDで選ぶ）</h3>
+          <table class="plain">
+            <tr><th>犬のID</th><td>飼い主名・犬の名前は扱わず、IDだけをキーにしています。お客様情報から探す部分は、個人情報を持つ採寸ナビ／ショップ側の担当で、こちらはIDだけでつながります。IDの下に出る「現在○頭が登録されています」は、いま登録されている犬の総数です。</td></tr>
+            <tr><th>最新の採寸</th><td>その子のいちばん新しい採寸の5項目（首まわり・胴まわり・ウエスト・着丈・前身頃）です。各IDでは常に最新の採寸が使われるため、再採寸されれば自動で新しいデータに切り替わります。あわせて性別・生年月日・体重を記録していて、年齢は生年月日から出した月齢・年齢で表示します。</td></tr>
+            <tr><th>首まわり</th><td>首輪の位置で測ります。採寸ナビの案内では、姿勢を正した時にちょうど首から胴体に変わる境目の、毛並みが変わる所です。</td></tr>
+            <tr><th>胴まわり</th><td>サイズ判定の軸になる項目です。一番胸が張っているポイントで測ります。</td></tr>
+            <tr><th>ウエスト</th><td>胴体で一番細い部分を一周測ります。胴まわりとの差が、テーパー（絞り）の設計に直結します。</td></tr>
+            <tr><th>着丈</th><td>背中の長さです。首まわりを測った位置から、尻尾の付け根までを測ります。</td></tr>
+            <tr><th>前身頃</th><td>首まわりを測った位置から、お腹側を通って、みぞおちまでを測ります。性別で比率が変わることが分かっている項目です。</td></tr>
+            <tr><th>最終採寸日</th><td>その子の採寸がいちばん最近行われた日です。</td></tr>
+            <tr><th>推奨サイズ</th><td>その子の胴まわりが入る帯のサイズです。サイズ名は、その帯にいる子たちの胴まわりの平均を四捨五入した数字になっています。</td></tr>
+            <tr><th>帯の表示</th><td>「胴まわり ○cm → ○〜○cm の帯（現在 ○頭）」は、その子の胴まわりと、入っている帯の範囲、その帯にいる子の頭数です。帯は犬種ごとの起点（ミニチュア・ピンシャーは32cm）から3cm刻みの固定グリッドで切ります。</td></tr>
+            <tr><th>帯の境目</th><td>胴まわりが帯の境目に近い値の子は、試着モニターでは隣のサイズとの両方試着の対象になります。</td></tr>
+            <tr><th>再採寸の目安</th><td>最終採寸から3か月以上経つと、「再採寸の声かけ候補」と表示されます。</td></tr>
+            <tr><th>採寸記録</th><td>その子の過去の採寸の一覧です。</td></tr>
+          </table>
+        </div>
+        <div class="card" style="margin-top:16px">
+          <h3>未登録の子（目安）</h3>
+          <table class="plain">
+            <tr><th>胴まわり（目安）</th><td>まだ登録のない子は、胴まわりから目安だけを出します。いちばん太い部分を、きつく締めずに測った値です。あくまで目安で、登録済みの子はIDで選ぶほうが正確です。帯の境目に近い子は、隣のサイズとの両方試着がおすすめです。</td></tr>
+            <tr><th>実データからの推定</th><td>胴まわりから推定した首まわりとウエストです。型紙づくりの目安に使います。</td></tr>
+          </table>
         </div>
       </section>
 
@@ -5868,6 +5928,7 @@ setPINFORMEKarte=function(d){
           <a href="#rule">サイズ表記の決め方<span class="dn">›</span></a>
           <a href="#findings">分かったこと<span class="dn">›</span></a>
           <a href="#tools">道具と自動化<span class="dn">›</span></a>
+          <a href="#itemdesc">項目の説明<span class="dn">›</span></a>
         </div>
         <p class="adm-drawer-group">リンク</p>
         <div class="adm-docs-list adm-drawer-list">
@@ -5891,8 +5952,17 @@ setPINFORMEKarte=function(d){
       // §31 (2026-11-13): "pushsend" joins too — the お知らせ送信
       // section (a placeholder here; the production build's push
       // panel takes its place) switches the same way.
+      // §35 (2026-11-13): "itemdesc" joins too — the 項目の説明
+      // section under 資料 (the checker screen's explanations moved
+      // there; the checker itself no longer carries prose).
+      // §36 (2026-11-13): while a section is selected, the admin
+      // block (brand bar + home card) no longer stacks underneath
+      // it — select() toggles body.adm-sub, and the final style
+      // block hides .adm-wrap in that state, so the chosen screen
+      // stands alone. Home routes call select(null), which clears
+      // the class and brings the admin block back.
       (function () {
-        var SEC_IDS = ["checker", "distribution", "breeds", "rule", "measurement", "findings", "tools", "progress", "pattern", "sales", "docs", "links", "pushsend"];
+        var SEC_IDS = ["checker", "distribution", "breeds", "rule", "measurement", "findings", "tools", "progress", "pattern", "sales", "docs", "links", "pushsend", "itemdesc"];
         var inNav = function () { return !!(document.body && document.body.classList.contains("adm-nav")); };
         var markActive = function (id) {
           document.querySelectorAll('.toc a[href^="#"], .adm-grid a[href^="#"], .adm-docs-list a[href^="#"]').forEach(function (a) {
@@ -5909,6 +5979,9 @@ setPINFORMEKarte=function(d){
             var s = document.getElementById(sid);
             if (s) s.classList.toggle("nav-open", sid === id);
           });
+          // §36: a selected section stands alone (the admin block
+          // with the home card is hidden); no selection = home.
+          if (document.body) document.body.classList.toggle("adm-sub", !!id);
           var target = id ? openSection(id) : document.getElementById("adm-home");
           markActive(id || "adm-home");
           if (target) {
@@ -5948,6 +6021,7 @@ setPINFORMEKarte=function(d){
           if (SEC_IDS.indexOf(hid) >= 0) {
             var hs = document.getElementById(hid);
             if (hs) { hs.classList.add("nav-open"); markActive(hid); }
+            if (document.body) document.body.classList.add("adm-sub");
           }
         }
       })();
