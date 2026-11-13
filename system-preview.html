@@ -1602,11 +1602,10 @@
             <tr><th>着丈</th><td>背中の長さです。首まわりを測った位置から、尻尾の付け根までを測ります。</td></tr>
             <tr><th>前身頃</th><td>首まわりを測った位置から、お腹側を通って、みぞおちまでを測ります。性別で比率が変わることが分かっている項目です。</td></tr>
             <tr><th>最終採寸日</th><td>その子の採寸がいちばん最近行われた日です。</td></tr>
-            <tr><th>推奨サイズ</th><td>その子の胴まわりが入る帯のサイズです。サイズ名は、その帯にいる子たちの胴まわりの平均を四捨五入した数字になっています。</td></tr>
+            <tr><th>推奨サイズ</th><td>その子の胴まわりが入る帯のサイズです。サイズ名は、その帯にいる子たちの胴まわりの平均を、小数第2位で四捨五入して小数1位にし、それを四捨五入した数字になっています。</td></tr>
             <tr><th>帯の表示</th><td>「胴まわり ○cm → ○〜○cm の帯（現在 ○頭）」は、その子の胴まわりと、入っている帯の範囲、その帯にいる子の頭数です。帯は犬種ごとの起点（ミニチュア・ピンシャーは32cm）から3cm刻みの固定グリッドで切ります。</td></tr>
             <tr><th>帯の境目</th><td>胴まわりが帯の境目に近い値の子は、試着モニターでは隣のサイズとの両方試着の対象になります。</td></tr>
             <tr><th>再採寸の目安</th><td>最終採寸から3か月以上経つと、「再採寸の声かけ候補」と表示されます。</td></tr>
-            <tr><th>採寸記録</th><td>その子の過去の採寸の一覧です。</td></tr>
           </table>
         </div>
         <div class="card" style="margin-top:16px">
@@ -2882,13 +2881,11 @@ setPINFORMEKarte=function(d){
             dWarn.textContent = "最終採寸から3か月以上が経過しています。再採寸の声かけ候補です。";
           }
 
-          var items = d.history.slice().reverse().map(function (h) {
-            return '<li><span class="d">' + jpDate(h.date) + "</span>胴 " + val(h.chest, "") +
-              " ／ 首 " + val(h.neck, "") + " ／ ウエスト " + val(h.waist, "") +
-              " ／ 着丈 " + val(h.back, "") + " ／ 前身頃 " + val(h.front, "") +
-              " ／ 体重 " + (h.weight === null || h.weight === undefined ? "—" : fmt(h.weight) + "kg") + "</li>";
-          }).join("");
-          dHist.innerHTML = "<h4>採寸記録（最新の採寸・単位cm）</h4><ul>" + items + "</ul>";
+          /* §38 (2026-11-13): no record list under the size — the owner
+             judged it unnecessary on this screen; the detail table above
+             is the single place for measurement values. (The data itself
+             stays in the system; only this display is removed.) */
+          dHist.innerHTML = "";
           if (patReady && patMode === "id" && patDogSel.value !== String(id)) {
             patDogSel.value = String(id);
             renderPattern();
@@ -3411,7 +3408,7 @@ setPINFORMEKarte=function(d){
 
         // ---------- accordion: fold each section under its own heading ----------
         var SEC_SUM = {
-          checker: "名前で選ぶと、その子の採寸・推奨サイズ・履歴を表示します",
+          checker: "名前で選ぶと、その子の採寸と推奨サイズを表示します",
           distribution: "サイズ帯ごとの頭数です",
           breeds: "頭数もサイズ帯も、犬種を混ぜずに管理します",
           rule: "帯は固定ではなく、実データから自動で組み替わります",
@@ -5515,14 +5512,10 @@ setPINFORMEKarte=function(d){
           if (!warnText && l && remeasureDue(l)) {
             warnText = "最終採寸から3か月以上が経過しています。再採寸の声かけ候補です。";
           }
+          /* §38 (2026-11-13): no record list under the size here either —
+             same values as the rows above; the full history lives in the
+             dog detail （採寸履歴）. */
           var histHTML = "";
-          if (l) {
-            var hv = function (v) { return v === null || v === undefined ? "—" : fmt(v); };
-            histHTML = '<div class="hist"><h4>採寸記録（最新の採寸・単位cm）</h4><ul><li><span class="d">' +
-              esc(checkJpDate(measuredDate(l))) + "</span>胴 " + hv(l.chest) + " ／ 首 " + hv(l.neck) +
-              " ／ ウエスト " + hv(l.waist) + " ／ 着丈 " + hv(l.back_length) + " ／ 前身頃 " + hv(l.front_length) +
-              " ／ 体重 " + (l.weight === null || l.weight === undefined ? "—" : fmt(l.weight) + "kg") + "</li></ul></div>";
-          }
           box.innerHTML =
             '<h4 class="adm-sec-head">' + esc(dogTitleOf(d)) + "</h4>" +
             '<div class="dog-meta">' + meta.map(function (m) { return "<span>" + esc(m) + "</span>"; }).join("") + "</div>" +
