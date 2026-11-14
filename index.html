@@ -8,7 +8,7 @@
 
 <script id="pinforme-latest-version-guard">
 (function(){
-  const PINFORME_BUILD_ID="20261114-navi-v4-b44";
+  const PINFORME_BUILD_ID="20261114-navi-v4-b45";
 
   function forceFresh(reason){
     try{
@@ -4458,6 +4458,19 @@ document.addEventListener('DOMContentLoaded', initNaviV4);
     if(isNaN(d.getTime())) return '';
     return (d.getMonth()+1)+'月'+d.getDate()+'日';
   }
+
+  function fireRpc(name, payload){
+    var key=currentKey();
+    if(!key) return;
+    payload.p_key=normKey(key);
+    try{
+      fetch(SB_URL+'/rest/v1/rpc/'+name,{
+        method:'POST',
+        headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'},
+        body:JSON.stringify(payload)
+      }).catch(function(){});
+    }catch(e){}
+  }
   function readSet(){
     try{ return JSON.parse(localStorage.getItem(READ_STORE)||'[]'); }catch(e){ return []; }
   }
@@ -4575,17 +4588,36 @@ document.addEventListener('DOMContentLoaded', initNaviV4);
     notices.forEach(function(x){ if(x.id===id) n=x; });
     if(!n) return;
     markRead(id);
+    fireRpc('mark_push_notice_opened',{p_notice_id:id});
     var body=document.getElementById('pinNoticePanelBody');
     var html='<button type="button" id="pinNoticeBack" style="background:none;border:none;color:#555;font-size:14px;padding:6px 0;cursor:pointer">← 一覧へもどる</button>'
       +'<p style="font-size:12px;color:#888;margin:8px 0 2px">'+esc(fmtDate(n.created_at))+'</p>'
       +'<h3 style="margin:0 0 10px;font-size:17px">'+esc(n.title)+'</h3>'
       +'<p style="white-space:pre-wrap;line-height:1.7;margin:0">'+esc(n.body)+'</p>';
     var naviRoot='https://pinforme.github.io/pinforme-measurement';
-    if(n.url && n.url.indexOf(naviRoot)!==0){
+    var actItems=null;
+    if(n.url){
+      var m=String(n.url).match(/#act=partial&items=([0-9,]+)/);
+      if(m) actItems=m[1].split(',').map(function(x){ return parseInt(x,10); }).filter(function(x){ return !isNaN(x); });
+    }
+    if(actItems && actItems.length){
+      html+='<p style="margin-top:16px"><button type="button" id="pinNoticeAct" style="display:block;width:100%;background:#222;color:#fff;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:700;cursor:pointer">この内容で測る</button></p>'
+        +'<p class="note" style="margin-top:8px">押すと、測る子の選択に進みます。項目は選ばれた状態で始まります。</p>';
+    }else if(n.url && n.url.indexOf(naviRoot)!==0){
       html+='<p style="margin-top:14px"><a href="'+esc(n.url)+'">くわしくはこちら</a></p>';
     }
     body.innerHTML=html;
     document.getElementById('pinNoticeBack').addEventListener('click',renderList);
+    var actBtn=document.getElementById('pinNoticeAct');
+    if(actBtn && actItems && actItems.length){
+      actBtn.addEventListener('click',function(){
+        try{
+          sessionStorage.setItem('PINFORME_PENDING_ACT_V1', JSON.stringify({items:actItems, ts:Date.now()}));
+        }catch(e){}
+        closePanel();
+        window.scrollTo(0,0);
+      });
+    }
     var panel=document.getElementById('pinNoticePanel');
     if(panel) panel.scrollTop=0;
   }
@@ -4604,6 +4636,7 @@ document.addEventListener('DOMContentLoaded', initNaviV4);
       if(!res.ok) throw new Error('http '+res.status);
       notices=await res.json();
       loadedOnce=true;
+      if(notices.length) fireRpc('mark_push_notices_listed',{p_ids:notices.map(function(n){ return n.id; })});
       updateBadge();
       var panel=document.getElementById('pinNoticePanel');
       if(panel && panel.style.display!=='none'){
@@ -4654,6 +4687,58 @@ document.addEventListener('DOMContentLoaded', initNaviV4);
   document.addEventListener("visibilitychange", function () {
     if (!document.hidden) clearBadge();
   });
+})();
+</script>
+
+<script>
+/* PINFORME: notice action receiver. A notice button stores the items to
+   measure in sessionStorage; here we show a banner on the owner menu and
+   pre-check those items when the partial-update item list appears. */
+(function(){
+  'use strict';
+  var STORE='PINFORME_PENDING_ACT_V1';
+  function pending(){
+    try{
+      var v=JSON.parse(sessionStorage.getItem(STORE)||'null');
+      if(!v || !v.items || !v.items.length) return null;
+      if(Date.now()-(v.ts||0) > 60*60*1000){ sessionStorage.removeItem(STORE); return null; }
+      return v;
+    }catch(e){ return null; }
+  }
+  function itemName(i){
+    try{ if(typeof PIN_ITEM_NAMES!=='undefined' && PIN_ITEM_NAMES[i]) return PIN_ITEM_NAMES[i]; }catch(e){}
+    return '項目'+(i+1);
+  }
+  function applyToManual(){
+    var p=pending(); if(!p) return;
+    var box=document.getElementById('v2ManualItems');
+    if(!box || !box.children.length) return;
+    var hit=0;
+    box.querySelectorAll('input[name="v2Manual"]').forEach(function(inp){
+      if(p.items.indexOf(Number(inp.value))!==-1){ inp.checked=true; hit++; }
+    });
+    if(hit){
+      var det=document.getElementById('v2ManualDetails'); if(det) det.open=true;
+      try{ sessionStorage.removeItem(STORE); }catch(e){}
+      box.querySelectorAll('input[name="v2Manual"]:checked').forEach(function(inp){
+        inp.dispatchEvent(new Event('change',{bubbles:true}));
+      });
+      var b=document.getElementById('pinActBanner'); if(b) b.remove();
+    }
+  }
+  function banner(){
+    var p=pending(); if(!p) return;
+    var card=document.querySelector('.dog-card');
+    if(!card || !card.parentElement) return;
+    if(document.getElementById('pinActBanner')) return;
+    var names=p.items.map(itemName).join('・');
+    var el=document.createElement('div');
+    el.id='pinActBanner';
+    el.style.cssText='border:2px solid #222;border-radius:14px;padding:12px 14px;margin:0 0 12px;background:#fafafa';
+    el.innerHTML='<p style="margin:0;font-weight:700">お知らせから「'+names+'」の採寸に来ています</p><p class="note" style="margin:6px 0 0">測る子の「部分更新する」から始めると、項目が選ばれた状態になります。</p>';
+    card.parentElement.insertBefore(el, card.parentElement.firstChild);
+  }
+  setInterval(function(){ banner(); applyToManual(); }, 1200);
 })();
 </script>
 </body>
