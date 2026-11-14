@@ -3967,7 +3967,7 @@ setPINFORMEKarte=function(d){
            view, so an update build forces exactly one re-login. */
         var BUILD_KEY = "PINFORME_ADMIN_BUILD_V1";
         var LASTUSED_KEY = "PINFORME_ADMIN_LASTUSED_V1";
-        var BUILD_ID = "prod-2026-11-14-r2";
+        var BUILD_ID = "prod-2026-11-14-r3";
         var RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
 
         /* Breed master: formal names + aliases (normalisation is display-side). */
@@ -7028,7 +7028,22 @@ setPINFORMEKarte=function(d){
         });
       })();
     </script>
-    <script>
+  <script>
+(function () {
+  function clearBadge() {
+    try {
+      if ("clearAppBadge" in navigator) {
+        var p = navigator.clearAppBadge();
+        if (p && p.catch) p.catch(function () {});
+      }
+    } catch (e) {}
+  }
+  if (document.readyState !== "loading") clearBadge();
+  else document.addEventListener("DOMContentLoaded", clearBadge);
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) clearBadge(); });
+})();
+</script>
+  <script>
 /* PINFORME admin: push send panel (add-on). Shown only while an admin
    session exists in localStorage; the server enforces admin rights on
    every call, so this panel is a UI convenience, not the security gate. */
