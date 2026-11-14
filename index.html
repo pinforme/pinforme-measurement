@@ -8,7 +8,7 @@
 
 <script id="pinforme-latest-version-guard">
 (function(){
-  const PINFORME_BUILD_ID="20261113-navi-v4-b43";
+  const PINFORME_BUILD_ID="20261114-navi-v4-b44";
 
   function forceFresh(reason){
     try{
@@ -1398,7 +1398,7 @@ const PIN_ITEMS = [
  {title:'首の長さ(ネック)', loc:'首の長さ', desc:'首の付け根から頭側へ、首の長さを測ります。', groups:[null]},
  {title:'首の長さ(スヌーズ)', loc:'首の長さ(スヌーズ)', desc:'首まわりを測った位置から、頭側のスヌーズを仕上げたい位置までの長さを測ります。', groups:[null]},
  {title:'頭まわり', loc:'頭まわり', desc:'頭の一番太い部分を一周測ります。', groups:[null]},
- {title:'前脚の間', loc:'前脚の間', desc:'正面から見て、左右の前脚の内側の間を測ります。', groups:[null]},
+ {title:'前脚の間', loc:'前脚の間', desc:'正面から見て、左右の前脚の付け根の内側の間を測ります。', groups:[null]},
  {title:'首の真ん中', loc:'首の真ん中', desc:'首の中でも一番細い部分を測ります', groups:[null]},
  {title:'尻尾の太さ', loc:'尻尾の太さ', desc:'付け根の一番太い部分を測ります', groups:[null]}
 ];
@@ -4633,5 +4633,28 @@ document.addEventListener('DOMContentLoaded', initNaviV4);
 </script>
 
 
+<script>
+/* b44 (2026-11-14): clear the home-screen app icon badge on open,
+   same fix as the admin screen — iOS badges the icon with the
+   unread push count and nothing cleared it. */
+(function () {
+  function clearBadge() {
+    try {
+      if (navigator && typeof navigator.clearAppBadge === "function") {
+        var p = navigator.clearAppBadge();
+        if (p && typeof p.catch === "function") p.catch(function () {});
+      }
+    } catch (e) {}
+  }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", clearBadge);
+  } else {
+    clearBadge();
+  }
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden) clearBadge();
+  });
+})();
+</script>
 </body>
 </html>
