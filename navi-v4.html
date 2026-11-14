@@ -72,7 +72,8 @@ body.on-choice #progressHeader{display:block}
 .segbar .seg.divider-after::after{content:"";position:absolute;right:-4px;top:-3px;width:2px;height:14px;background:#1c1c1e}
 /* ===== 測定画面（シート型をページ本体として実装） ===== */
 /* B6：キー寸法は実測した「正常時」の固定値で組み直した（§12）。キーパッド＋決定行は .kp-zone として下部に独立させ、兄弟要素の高さ変化に影響されない。収まらない小画面ではステップ全体のスクロールにフォールバックする */
-.step.active{display:flex;flex-direction:column;height:calc(var(--v4h) - var(--progH));overflow-y:auto;overflow-x:hidden;background:var(--bg)}
+/* 2026-11-15：viewport-fit=cover で時計（ステータスバー）に内容が被る端末向けに、上方向の安全余白をステップ内側に確保する。余白ゼロの環境では従来どおり（box-sizing:border-box のため総高は不変で、差分は kp-zone の自動余白が吸収する） */
+.step.active{display:flex;flex-direction:column;height:calc(var(--v4h) - var(--progH));overflow-y:auto;overflow-x:hidden;background:var(--bg);padding-top:env(safe-area-inset-top)}
 /* B8：ユーザーの手描きモック（2026-10-25 07:51）に沿ってヘッダーを作り替えた。左＝大きな黒丸に白抜き数字（その項目のグループ内通し番号）、右列＝項目名（大きく）／位置テキスト（「5項目のうち 3項目め／残り2項目」）／その真下にセグメント式ゲージ（.hd-gauge、様式はB7のバーと同一）。B7の .step-pos（n/総数）はこのヘッダーに置き換え、廃止した（二重表示にしない）。長い項目名（首の長さ(スヌーズ)等）でも位置テキストとゲージの幅が潰れないよう、タイトルと位置情報は右列に縦積みする */
 .step .sheet-head{display:flex;align-items:center;gap:10px;height:74px;padding:8px 12px;flex:none}
 .step .sheet-head .num{background:var(--ink);color:#fff;border-radius:50%;width:48px;height:48px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:23px;line-height:1;flex:none}
@@ -1390,7 +1391,7 @@ const PIN_ITEMS = [
  {title:'首の長さ(ネック)', loc:'首の長さ', desc:'首の付け根から頭側へ、首の長さを測ります。', groups:[null]},
  {title:'首の長さ(スヌーズ)', loc:'首の長さ(スヌーズ)', desc:'首まわりを測った位置から、頭側のスヌーズを仕上げたい位置までの長さを測ります。', groups:[null]},
  {title:'頭まわり', loc:'頭まわり', desc:'頭の一番太い部分を一周測ります。', groups:[null]},
- {title:'前脚の間', loc:'前脚の間', desc:'正面から見て、左右の前脚の内側の間を測ります。', groups:[null]},
+ {title:'前脚の間', loc:'前脚の間', desc:'正面から見て、左右の前脚の付け根の内側の間を測ります。', groups:[null]},
  {title:'首の真ん中', loc:'首の真ん中', desc:'首の中でも一番細い部分を測ります', groups:[null]},
  {title:'尻尾の太さ', loc:'尻尾の太さ', desc:'付け根の一番太い部分を測ります', groups:[null]}
 ];
@@ -4117,6 +4118,13 @@ window.addEventListener('orientationchange', ()=>{
   /* 向き変更直後は寸法が安定しないため、少し待ってから再固定する */
   setTimeout(lockViewportHeight, 120);
 });
+/* 2026-11-15：B5の「開いた時点で固定し、途中では変えない」は維持する。ただしアプリが
+   背面から戻った時は、開いた時点の高さのままでは実表示高とずれて、下部のボタンが
+   画面外に出ることがあった（再現は不定期）。戻ってきた瞬間だけ実表示高で固定し直す */
+window.addEventListener('visibilitychange', ()=>{
+  if(!document.hidden) lockViewportHeight();
+});
+window.addEventListener('pageshow', ()=>{ lockViewportHeight(); });
 window.addEventListener('resize', ()=>{
   if(document.getElementById('kartePage').classList.contains('active')){
     const frame = document.getElementById("finalKarteFrame");
@@ -4440,6 +4448,58 @@ document.addEventListener('DOMContentLoaded', initNaviV4);
     refresh();
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', build); else build();
+})();
+</script>
+
+<script>
+/* PINFORME: notice action receiver. A notice button stores the items to
+   measure in sessionStorage; here we show a banner on the owner menu and
+   pre-check those items when the partial-update item list appears. */
+(function(){
+  'use strict';
+  var STORE='PINFORME_PENDING_ACT_V1';
+  function pending(){
+    try{
+      var v=JSON.parse(sessionStorage.getItem(STORE)||'null');
+      if(!v || !v.items || !v.items.length) return null;
+      if(Date.now()-(v.ts||0) > 60*60*1000){ sessionStorage.removeItem(STORE); return null; }
+      return v;
+    }catch(e){ return null; }
+  }
+  function itemName(i){
+    try{ if(typeof PIN_ITEM_NAMES!=='undefined' && PIN_ITEM_NAMES[i]) return PIN_ITEM_NAMES[i]; }catch(e){}
+    return '項目'+(i+1);
+  }
+  function applyToManual(){
+    var p=pending(); if(!p) return;
+    var box=document.getElementById('v2ManualItems');
+    if(!box || !box.children.length) return;
+    var hit=0;
+    box.querySelectorAll('input[name="v2Manual"]').forEach(function(inp){
+      if(p.items.indexOf(Number(inp.value))!==-1){ inp.checked=true; hit++; }
+    });
+    if(hit){
+      var det=document.getElementById('v2ManualDetails'); if(det) det.open=true;
+      try{ sessionStorage.removeItem(STORE); }catch(e){}
+      box.querySelectorAll('input[name="v2Manual"]:checked').forEach(function(inp){
+        inp.dispatchEvent(new Event('change',{bubbles:true}));
+      });
+      var b=document.getElementById('pinActBanner'); if(b) b.remove();
+    }
+  }
+  function banner(){
+    var p=pending(); if(!p) return;
+    var card=document.querySelector('.dog-card');
+    if(!card || !card.parentElement) return;
+    if(document.getElementById('pinActBanner')) return;
+    var names=p.items.map(itemName).join('・');
+    var el=document.createElement('div');
+    el.id='pinActBanner';
+    el.style.cssText='border:2px solid #222;border-radius:14px;padding:12px 14px;margin:0 0 12px;background:#fafafa';
+    el.innerHTML='<p style="margin:0;font-weight:700">お知らせから「'+names+'」の採寸に来ています</p><p class="note" style="margin:6px 0 0">測る子の「部分更新する」から始めると、項目が選ばれた状態になります。</p>';
+    card.parentElement.insertBefore(el, card.parentElement.firstChild);
+  }
+  setInterval(function(){ banner(); applyToManual(); }, 1200);
 })();
 </script>
 </body>
