@@ -3967,7 +3967,7 @@ setPINFORMEKarte=function(d){
            view, so an update build forces exactly one re-login. */
         var BUILD_KEY = "PINFORME_ADMIN_BUILD_V1";
         var LASTUSED_KEY = "PINFORME_ADMIN_LASTUSED_V1";
-        var BUILD_ID = "prod-2026-11-14-r4";
+        var BUILD_ID = "prod-2026-11-14-r5";
         var RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
 
         /* Breed master: formal names + aliases (normalisation is display-side). */
@@ -7128,7 +7128,7 @@ setPINFORMEKarte=function(d){
     try{
       var res=await fetch(SB_URL+'/functions/v1/push-send',{method:'POST',headers:headers(tok),body:JSON.stringify({
         mode:p.p_mode, p_key:p.p_key, chest_min:p.p_chest_min, chest_max:p.p_chest_max, breed:p.p_breed,
-        title:title, body:body, url:'https://pinforme.github.io/pinforme-measurement/'
+        title:title, body:body, url:actUrl()
       })});
       var data=await res.json().catch(function(){ return {}; });
       if(res.ok && data.ok){
@@ -7142,6 +7142,19 @@ setPINFORMEKarte=function(d){
     }catch(e){ status('送信エラー: '+((e && e.message) || e)); el('admPushSendBtn').disabled=false; }
   }
 
+  var ACT_PRESETS={
+    '': null,
+    'remeasure': {items:'4,12'},
+    'longsleeve': {items:'5,7,12'},
+    'rompers': {items:'6,8'}
+  };
+  function actUrl(){
+    var sel=el('admPushAct');
+    var key=sel ? sel.value : '';
+    var preset=ACT_PRESETS[key];
+    var root='https://pinforme.github.io/pinforme-measurement/';
+    return preset ? root+'#act=partial&items='+preset.items : root;
+  }
   function escHtml(t){ return String(t==null?'':t).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
   async function loadOnOwners(){
     var box=el('admPushOnList'); if(!box) return;
@@ -7202,6 +7215,13 @@ setPINFORMEKarte=function(d){
       '<input class="adm-input" id="admPushKey" type="text" placeholder="XXXX-XXXX-XXXX-XXXX"></label></p>'+
       '<p><label>タイトル<br><input class="adm-input" id="admPushTitle" type="text" placeholder="例：試着モニター募集のお知らせ"></label></p>'+
       '<p><label>本文<br><textarea class="adm-input" id="admPushBody" rows="3" placeholder="例：SIZE37（胴まわり35〜38cm）の試着モニターを募集しています"></textarea></label></p>'+
+      '<p><label>本文の下に付けるボタン<br><select class="adm-input" id="admPushAct">'+
+      '<option value="">付けない</option>'+
+      '<option value="remeasure">この内容で測る（前身頃・前脚の間）</option>'+
+      '<option value="longsleeve">この内容で測る（長袖用：前脚の太さ・長さ＋前脚の間）</option>'+
+      '<option value="rompers">この内容で測る（ロンパース用：後脚の太さ・長さ）</option>'+
+      '</select></label></p>'+
+      '<p class="adm-note">ボタンを付けると、お知らせを開いた方がそのまま部分更新（項目が選ばれた状態）に入れます。</p>'+
       '<p><button type="button" class="adm-btn" id="admPushCheckBtn">対象を確認する</button> '+
       '<button type="button" class="adm-btn" id="admPushSendBtn" disabled>この内容で送信する</button></p>'+
       '<p class="adm-note" id="admPushStatus"></p>'+
@@ -7213,8 +7233,41 @@ setPINFORMEKarte=function(d){
     el('admPushCheckBtn').addEventListener('click', checkCount);
     el('admPushSendBtn').addEventListener('click', sendPush);
   }
+  var reactionsLoaded=false;
+  async function loadReactions(){
+    var list=el('admReactList'); if(!list) return;
+    var tok=token(); if(!tok) return;
+    try{
+      var res=await fetch(SB_URL+'/rest/v1/rpc/admin_push_notice_reactions',{method:'POST',headers:headers(tok),body:JSON.stringify({})});
+      var data=await res.json().catch(function(){ return null; });
+      if(!res.ok || !Array.isArray(data)) throw new Error('bad');
+      reactionsLoaded=true;
+      if(!data.length){ list.textContent='まだお知らせがありません。'; return; }
+      list.innerHTML=data.map(function(r){
+        var d=new Date(r.created_at);
+        var ds=isNaN(d.getTime())?'':(d.getMonth()+1)+'/'+d.getDate();
+        return '<div style="padding:7px 0;border-bottom:1px solid #eee"><div style="font-size:13px">'+escHtml(ds)+' '+escHtml(r.title)+'</div>'+
+          '<div class="adm-note">一覧に表示 '+(r.listed_owners||0)+' 人／開いた '+(r.opened_owners||0)+' 人</div></div>';
+      }).join('');
+    }catch(e){ list.textContent='取得できませんでした（SQL適用後に表示されます）。'; }
+  }
+  function buildReactions(){
+    if(el('admReactCard')) return;
+    var home=el('pushsend'); if(!home) return;
+    var card=document.createElement('div');
+    card.className='adm-card'; card.id='admReactCard';
+    card.innerHTML='<h3>お知らせの反応</h3>'+
+      '<p class="adm-note">「一覧に表示」はカルテを開いた時に受信箱に出ていた人数、「開いた」は本文を開いた人数です。</p>'+
+      '<div id="admReactList">読み込み中…</div>'+
+      '<p><button type="button" class="adm-btn" id="admReactRefresh">更新する</button></p>';
+    home.appendChild(card);
+    el('admReactRefresh').addEventListener('click', loadReactions);
+    loadReactions();
+  }
   function remove(){
     var c=el('admPushCard'); if(c) c.remove();
+    var r=el('admReactCard'); if(r) r.remove();
+    reactionsLoaded=false;
   }
   function applyPreset(){
     var preset=null;
@@ -7226,7 +7279,7 @@ setPINFORMEKarte=function(d){
     status('対象に「再採寸候補」が選ばれています。タイトルと本文を入れて、対象を確認してください。');
   }
   setInterval(function(){
-    if(token()){ build(); applyPreset(); } else remove();
+    if(token()){ build(); buildReactions(); applyPreset(); } else remove();
   }, 1000);
 })();
 
