@@ -3968,7 +3968,7 @@ setPINFORMEKarte=function(d){
            view, so an update build forces exactly one re-login. */
         var BUILD_KEY = "PINFORME_ADMIN_BUILD_V1";
         var LASTUSED_KEY = "PINFORME_ADMIN_LASTUSED_V1";
-        var BUILD_ID = "prod-2026-11-14-r7";
+        var BUILD_ID = "prod-2026-11-14-r8";
         var RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
 
         /* Breed master: formal names + aliases (normalisation is display-side). */
@@ -6284,6 +6284,11 @@ setPINFORMEKarte=function(d){
           // state moves on, so the same notice never comes back.
           Object.keys(set).forEach(function (k) { if (k.indexOf("m:") !== 0) keep[k] = true; });
           try { localStorage.setItem(BELL_SEEN_KEY, JSON.stringify(Object.keys(keep))); } catch (e) {}
+        }
+        function fmtDateJa(s) {
+          var p = String(s || "").slice(0, 10).split("-");
+          if (p.length !== 3) return String(s || "");
+          return p[0] + "年" + parseInt(p[1], 10) + "月" + parseInt(p[2], 10) + "日";
         }
         function bellNotices() {
           var seen = bellSeenKeys();
