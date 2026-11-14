@@ -3967,7 +3967,7 @@ setPINFORMEKarte=function(d){
            view, so an update build forces exactly one re-login. */
         var BUILD_KEY = "PINFORME_ADMIN_BUILD_V1";
         var LASTUSED_KEY = "PINFORME_ADMIN_LASTUSED_V1";
-        var BUILD_ID = "prod-2026-11-14-r5";
+        var BUILD_ID = "prod-2026-11-14-r6";
         var RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
 
         /* Breed master: formal names + aliases (normalisation is display-side). */
@@ -7044,7 +7044,9 @@ setPINFORMEKarte=function(d){
 })();
 </script>
   <script>
-/* PINFORME admin: push send panel (add-on). Shown only while an admin
+/* PINFORME admin: push send panel (add-on) v4: on 401 the stored
+   session is refreshed once and the call retried, so an expired
+   access token no longer surfaces as an error mid-session. Shown only while an admin
    session exists in localStorage; the server enforces admin rights on
    every call, so this panel is a UI convenience, not the security gate. */
 (function(){
@@ -7063,6 +7065,27 @@ setPINFORMEKarte=function(d){
   }
   function headers(tok){
     return {'apikey':SB_KEY,'Authorization':'Bearer '+(tok||SB_KEY),'Content-Type':'application/json'};
+  }
+  async function refreshSession(){
+    try{
+      var s=JSON.parse(localStorage.getItem(SESSION_KEY)||'null');
+      if(!s || !s.refresh_token) return '';
+      var res=await fetch(SB_URL+'/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:{'apikey':SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:s.refresh_token})});
+      var j=await res.json().catch(function(){ return null; });
+      if(j && j.access_token){
+        try{ localStorage.setItem(SESSION_KEY, JSON.stringify(j)); }catch(e){}
+        return j.access_token;
+      }
+    }catch(e){}
+    return '';
+  }
+  async function sbFetch(path, body){
+    var res=await fetch(SB_URL+path,{method:'POST',headers:headers(token()),body:JSON.stringify(body||{})});
+    if(res.status===401){
+      var ntok=await refreshSession();
+      if(ntok) res=await fetch(SB_URL+path,{method:'POST',headers:headers(ntok),body:JSON.stringify(body||{})});
+    }
+    return res;
   }
   function el(id){ return document.getElementById(id); }
   function status(t){ var s=el('admPushStatus'); if(s) s.textContent=t; }
@@ -7095,7 +7118,7 @@ setPINFORMEKarte=function(d){
     if(p.p_mode==='breed' && !p.p_breed){ status('犬種を選んでください。'); return; }
     status('対象を確認しています…');
     try{
-      var res=await fetch(SB_URL+'/rest/v1/rpc/admin_list_push_subscriptions',{method:'POST',headers:headers(tok),body:JSON.stringify(p)});
+      var res=await sbFetch('/rest/v1/rpc/admin_list_push_subscriptions', p);
       var data=await res.json().catch(function(){ return null; });
       if(!res.ok){ status('確認できませんでした: '+((data && (data.message||data.error)) || res.status)); return; }
       checkedCount=Array.isArray(data)?data.length:0;
@@ -7104,7 +7127,7 @@ setPINFORMEKarte=function(d){
       checkedPushOwners=Object.keys(owners).length;
       checkedInboxOwners=-1;
       try{
-        var res2=await fetch(SB_URL+'/rest/v1/rpc/admin_push_audience',{method:'POST',headers:headers(tok),body:JSON.stringify(p)});
+        var res2=await sbFetch('/rest/v1/rpc/admin_push_audience', p);
         var aud=await res2.json().catch(function(){ return null; });
         if(res2.ok && Array.isArray(aud) && aud.length) checkedInboxOwners=aud[0].inbox_owners;
       }catch(e2){}
@@ -7126,10 +7149,10 @@ setPINFORMEKarte=function(d){
     status('送信しています…');
     el('admPushSendBtn').disabled=true;
     try{
-      var res=await fetch(SB_URL+'/functions/v1/push-send',{method:'POST',headers:headers(tok),body:JSON.stringify({
+      var res=await sbFetch('/functions/v1/push-send', {
         mode:p.p_mode, p_key:p.p_key, chest_min:p.p_chest_min, chest_max:p.p_chest_max, breed:p.p_breed,
         title:title, body:body, url:actUrl()
-      })});
+      });
       var data=await res.json().catch(function(){ return {}; });
       if(res.ok && data.ok){
         var inboxNote = checkedInboxOwners>=0 ? '受信箱には '+checkedInboxOwners+' 人に表示されます。' : '';
@@ -7160,7 +7183,7 @@ setPINFORMEKarte=function(d){
     var box=el('admPushOnList'); if(!box) return;
     var tok=token(); if(!tok) return;
     try{
-      var res=await fetch(SB_URL+'/rest/v1/rpc/admin_list_push_owners',{method:'POST',headers:headers(tok),body:JSON.stringify({})});
+      var res=await sbFetch('/rest/v1/rpc/admin_list_push_owners', {});
       var data=await res.json().catch(function(){ return null; });
       if(!res.ok || !Array.isArray(data)) throw new Error('bad');
       var sum=el('admPushOnSummary');
@@ -7175,7 +7198,7 @@ setPINFORMEKarte=function(d){
     var sel=el('admPushBreed'); if(!sel) return;
     var tok=token(); if(!tok) return;
     try{
-      var res=await fetch(SB_URL+'/rest/v1/rpc/admin_list_breeds',{method:'POST',headers:headers(tok),body:JSON.stringify({})});
+      var res=await sbFetch('/rest/v1/rpc/admin_list_breeds', {});
       var data=await res.json().catch(function(){ return null; });
       if(!res.ok || !Array.isArray(data)) throw new Error('bad');
       sel.innerHTML='';
@@ -7238,7 +7261,7 @@ setPINFORMEKarte=function(d){
     var list=el('admReactList'); if(!list) return;
     var tok=token(); if(!tok) return;
     try{
-      var res=await fetch(SB_URL+'/rest/v1/rpc/admin_push_notice_reactions',{method:'POST',headers:headers(tok),body:JSON.stringify({})});
+      var res=await sbFetch('/rest/v1/rpc/admin_push_notice_reactions', {});
       var data=await res.json().catch(function(){ return null; });
       if(!res.ok || !Array.isArray(data)) throw new Error('bad');
       reactionsLoaded=true;
@@ -7249,7 +7272,7 @@ setPINFORMEKarte=function(d){
         return '<div style="padding:7px 0;border-bottom:1px solid #eee"><div style="font-size:13px">'+escHtml(ds)+' '+escHtml(r.title)+'</div>'+
           '<div class="adm-note">一覧に表示 '+(r.listed_owners||0)+' 人／開いた '+(r.opened_owners||0)+' 人</div></div>';
       }).join('');
-    }catch(e){ list.textContent='取得できませんでした（SQL適用後に表示されます）。'; }
+    }catch(e){ list.textContent='取得できませんでした。時間をおいてもう一度お試しください。'; }
   }
   function buildReactions(){
     if(el('admReactCard')) return;
