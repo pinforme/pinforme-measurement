@@ -3,6 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<style>html{touch-action:manipulation}button,a,input,select,textarea,label,summary{touch-action:manipulation}</style>
     <meta name="color-scheme" content="light dark" />
     <link rel="icon" href="data:," />
     <title>PINFORME 採寸データシステム</title>
@@ -926,7 +927,7 @@
         text-decoration: none; color: #8a8a8e; font-size: 10.5px; font-weight: 700;
         padding: 4px 0 2px;
       }
-      .adm-tabbar .ti { font-size: 19px; line-height: 1.25; }
+      .adm-tabbar .ti { height: 24px; display: flex; align-items: center; justify-content: center; font-size: 19px; line-height: 1; }
       .adm-tabbar a.nav-active { color: #111; }
       /* round 5: signed-in state as a quiet corner line, not a box.
          The home leads with the status card; the session strip only
@@ -6335,12 +6336,48 @@ setPINFORMEKarte=function(d){
           });
           return keys;
         }
+        /* 2026-11-15 bell fix: the first-run baseline used to mark
+           EVERY current key as seen, so on a fresh storage (new PWA
+           install, storage reset) even that morning's arrivals were
+           silently treated as already confirmed and the panel showed
+           "no notices". Baseline now skips keys whose event is within
+           the last 7 days (the same window as the home cards), and a
+           one-time repair un-sees recent keys an older baseline may
+           have swallowed. Confirming a row still hides it for good. */
+        var BELL_FIX_KEY = "PINFORME_ADMIN_BELL_FIX_20261115";
+        function bellKeyDate(k) {
+          var p = String(k).split(":");
+          if (p[0] === "m") {
+            var r = null;
+            A.measurements.forEach(function (x) { if (String(x.id) === p[1]) r = x; });
+            return r ? measuredDate(r) : "";
+          }
+          if (p[0] === "nomeas") {
+            var d = dogById(p[1]);
+            return d ? String(d.created_at || "").slice(0, 10) : "";
+          }
+          if (p[0] === "due") {
+            var h = historyOf(p[1]);
+            return h.length ? measuredDate(h[0]) : "";
+          }
+          return "";
+        }
+        function bellRecent(k, days) {
+          var ds = bellKeyDate(k);
+          if (!ds) return false;
+          var t = new Date(ds + "T00:00:00");
+          if (isNaN(t.getTime())) return false;
+          var nowD = new Date();
+          var today0 = new Date(nowD.getFullYear(), nowD.getMonth(), nowD.getDate());
+          var diff = Math.round((today0 - t) / 86400000);
+          return diff >= 0 && diff < days;
+        }
         function bellSeenKeys() {
           var raw = null;
           try { raw = localStorage.getItem(BELL_SEEN_KEY); } catch (e) {}
           if (raw === null) {
             var all = {};
-            bellAllKeys().forEach(function (k) { all[k] = true; });
+            bellAllKeys().forEach(function (k) { if (!bellRecent(k, 7)) all[k] = true; });
             try { localStorage.setItem(BELL_SEEN_KEY, JSON.stringify(Object.keys(all))); } catch (e) {}
             return all;
           }
@@ -6351,6 +6388,13 @@ setPINFORMEKarte=function(d){
               set[/^\d+$/.test(k) ? "m:" + k : k] = true;
             });
           } catch (e) {}
+          try {
+            if (!localStorage.getItem(BELL_FIX_KEY)) {
+              Object.keys(set).forEach(function (k) { if (bellRecent(k, 7)) delete set[k]; });
+              try { localStorage.setItem(BELL_SEEN_KEY, JSON.stringify(Object.keys(set))); } catch (e) {}
+              localStorage.setItem(BELL_FIX_KEY, "1");
+            }
+          } catch (e) {}
           return set;
         }
         function bellSaveSeen(set) {
@@ -6360,6 +6404,11 @@ setPINFORMEKarte=function(d){
           // state moves on, so the same notice never comes back.
           Object.keys(set).forEach(function (k) { if (k.indexOf("m:") !== 0) keep[k] = true; });
           try { localStorage.setItem(BELL_SEEN_KEY, JSON.stringify(Object.keys(keep))); } catch (e) {}
+        }
+        function fmtDateJa(s) {
+          var p = String(s || "").slice(0, 10).split("-");
+          if (p.length !== 3) return String(s || "");
+          return p[0] + "年" + parseInt(p[1], 10) + "月" + parseInt(p[2], 10) + "日";
         }
         function bellNotices() {
           var seen = bellSeenKeys();
@@ -7105,5 +7154,20 @@ setPINFORMEKarte=function(d){
         });
       })();
     </script>
-  </body>
+  <script>
+(function () {
+  function clearBadge() {
+    try {
+      if ("clearAppBadge" in navigator) {
+        var p = navigator.clearAppBadge();
+        if (p && p.catch) p.catch(function () {});
+      }
+    } catch (e) {}
+  }
+  if (document.readyState !== "loading") clearBadge();
+  else document.addEventListener("DOMContentLoaded", clearBadge);
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) clearBadge(); });
+})();
+</script>
+</body>
 </html>
