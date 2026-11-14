@@ -3968,7 +3968,7 @@ setPINFORMEKarte=function(d){
            view, so an update build forces exactly one re-login. */
         var BUILD_KEY = "PINFORME_ADMIN_BUILD_V1";
         var LASTUSED_KEY = "PINFORME_ADMIN_LASTUSED_V1";
-        var BUILD_ID = "prod-2026-11-14-r8";
+        var BUILD_ID = "prod-2026-11-15-r9";
         var RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
 
         /* Breed master: formal names + aliases (normalisation is display-side). */
@@ -6259,12 +6259,48 @@ setPINFORMEKarte=function(d){
           });
           return keys;
         }
+        /* 2026-11-15 bell fix: the first-run baseline used to mark
+           EVERY current key as seen, so on a fresh storage (new PWA
+           install, storage reset) even that morning's arrivals were
+           silently treated as already confirmed and the panel showed
+           "no notices". Baseline now skips keys whose event is within
+           the last 7 days (the same window as the home cards), and a
+           one-time repair un-sees recent keys an older baseline may
+           have swallowed. Confirming a row still hides it for good. */
+        var BELL_FIX_KEY = "PINFORME_ADMIN_BELL_FIX_20261115";
+        function bellKeyDate(k) {
+          var p = String(k).split(":");
+          if (p[0] === "m") {
+            var r = null;
+            A.measurements.forEach(function (x) { if (String(x.id) === p[1]) r = x; });
+            return r ? measuredDate(r) : "";
+          }
+          if (p[0] === "nomeas") {
+            var d = dogById(p[1]);
+            return d ? String(d.created_at || "").slice(0, 10) : "";
+          }
+          if (p[0] === "due") {
+            var h = historyOf(p[1]);
+            return h.length ? measuredDate(h[0]) : "";
+          }
+          return "";
+        }
+        function bellRecent(k, days) {
+          var ds = bellKeyDate(k);
+          if (!ds) return false;
+          var t = new Date(ds + "T00:00:00");
+          if (isNaN(t.getTime())) return false;
+          var nowD = new Date();
+          var today0 = new Date(nowD.getFullYear(), nowD.getMonth(), nowD.getDate());
+          var diff = Math.round((today0 - t) / 86400000);
+          return diff >= 0 && diff < days;
+        }
         function bellSeenKeys() {
           var raw = null;
           try { raw = localStorage.getItem(BELL_SEEN_KEY); } catch (e) {}
           if (raw === null) {
             var all = {};
-            bellAllKeys().forEach(function (k) { all[k] = true; });
+            bellAllKeys().forEach(function (k) { if (!bellRecent(k, 7)) all[k] = true; });
             try { localStorage.setItem(BELL_SEEN_KEY, JSON.stringify(Object.keys(all))); } catch (e) {}
             return all;
           }
@@ -6274,6 +6310,13 @@ setPINFORMEKarte=function(d){
               // §54 stored bare measurement ids; read them as m: keys.
               set[/^\d+$/.test(k) ? "m:" + k : k] = true;
             });
+          } catch (e) {}
+          try {
+            if (!localStorage.getItem(BELL_FIX_KEY)) {
+              Object.keys(set).forEach(function (k) { if (bellRecent(k, 7)) delete set[k]; });
+              try { localStorage.setItem(BELL_SEEN_KEY, JSON.stringify(Object.keys(set))); } catch (e) {}
+              localStorage.setItem(BELL_FIX_KEY, "1");
+            }
           } catch (e) {}
           return set;
         }
