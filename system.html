@@ -926,7 +926,7 @@
         text-decoration: none; color: #8a8a8e; font-size: 10.5px; font-weight: 700;
         padding: 4px 0 2px;
       }
-      .adm-tabbar .ti { font-size: 19px; line-height: 1.25; }
+      .adm-tabbar .ti { height: 24px; display: flex; align-items: center; justify-content: center; font-size: 19px; line-height: 1; }
       .adm-tabbar a.nav-active { color: #111; }
       /* round 5: signed-in state as a quiet corner line, not a box.
          The home leads with the status card; the session strip only
@@ -3967,7 +3967,7 @@ setPINFORMEKarte=function(d){
            view, so an update build forces exactly one re-login. */
         var BUILD_KEY = "PINFORME_ADMIN_BUILD_V1";
         var LASTUSED_KEY = "PINFORME_ADMIN_LASTUSED_V1";
-        var BUILD_ID = "prod-2026-11-14-r3";
+        var BUILD_ID = "prod-2026-11-14-r4";
         var RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
 
         /* Breed master: formal names + aliases (normalisation is display-side). */
