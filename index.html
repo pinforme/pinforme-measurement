@@ -8,7 +8,7 @@
 
 <script id="pinforme-latest-version-guard">
 (function(){
-  const PINFORME_BUILD_ID="20261115-navi-v4-b46";
+  const PINFORME_BUILD_ID="20261116-navi-v4-b47";
 
   function forceFresh(reason){
     try{
@@ -89,11 +89,11 @@ input[type=file]{max-width:100%}
 #dogInfoPage .sex-row label{min-width:0}
 #dogInfoPage label.confirm>span{min-width:0}
 .wrap{max-width:560px;margin:0 auto;padding:20px 16px 48px}
-.brand{text-align:center;margin:10px 0 4px}
+.brand{display:flex;align-items:center;gap:8px;text-align:left;margin:0 0 6px}
 .brand-logo{display:block;width:min(240px,68%);height:auto;margin:0 auto}
-.brand .paw{font-size:28px}
-.brand .word{font-size:30px;font-weight:800;letter-spacing:.18em;color:var(--brand)}
-.brand .sub{font-size:12px;letter-spacing:.3em;color:#8e8e93;margin-top:2px}
+.brand .paw{font-size:18px}
+.brand .word{font-size:19px;font-weight:800;letter-spacing:.12em;color:var(--brand)}
+.brand .sub{font-size:12px;letter-spacing:.2em;color:#8e8e93;margin-top:0}
 h1{font-size:22px;line-height:1.4;margin:14px 0 10px}
 h2{font-size:18px;margin:18px 0 8px}
 .card-box{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;margin:14px 0}
@@ -279,10 +279,18 @@ body.on-choice #progressHeader{display:block}
 /* ===== 入口・フォーム系 ===== */
 .entry-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px;margin:14px 0}
 .entry-card h2{margin-top:0}
+#pinEarlyPushArea .entry-card{border:2px solid #17171a;background:#f6f6f4}
+#pinEarlyPushArea .push-reco{display:inline-block;background:#17171a;color:#fff;font-size:11px;font-weight:700;border-radius:999px;padding:2px 10px;margin-bottom:6px}
+#pinKeyIssuePage .wrap{padding-top:10px}
+#pinKeyIssuePage h1{margin:6px 0 6px;font-size:20px}
+#pinKeyIssuePage .key-head{display:flex;gap:12px;align-items:stretch;margin-bottom:12px}
+#pinKeyIssuePage .key-head-text{flex:1 1 auto;min-width:0}
+#pinKeyIssuePage .key-head-text p{margin:0}
+#pinKeyIssuePage #pinEarlyProceedBtn{flex:0 0 33%;width:auto;margin-top:0;font-size:16px}
 .v2-primary{width:100%;background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700;margin-top:10px}
 /* 入口（homePage）だけ詰める：新規＋お客様キーの2枚、再開カードが増えた3枚でもスクロールなしで収める。文字サイズは変えず、ロゴと余白だけを調整 */
 #homePage .wrap{padding:10px 16px 20px}
-#homePage .brand{margin:0}
+#homePage .brand{display:block;margin:0}
 #homePage .brand-logo{width:128px;margin:0}
 #homePage .home-head{display:flex;align-items:center;gap:14px}
 #homePage .home-head .brand{margin:0;text-align:left;flex:0 0 auto}
@@ -500,7 +508,7 @@ label.confirm input{margin-top:4px;width:20px;height:20px;flex:none}
 <!-- わんちゃんの情報 -->
 <section class="page" id="dogInfoPage">
   <div class="wrap">
-    <div class="brand"><div class="word" style="font-size:22px">PINFORME</div><div class="sub">DOG WEAR MEASUREMENT NAVI</div></div>
+    <div class="brand"><div class="paw">🐾</div><div class="word">PINFORME</div><div class="sub">採寸ナビ</div></div>
     <h1 id="dogInfoTitle">わんちゃんの情報</h1>
     <div class="summary-box"><div><small>ご主人様の名前</small><strong id="ownerDisplay">—</strong></div><div><small>わんちゃんの名前</small><strong id="dogDisplay">—</strong></div></div>
     <div class="field"><label>性別 <span class="rec">入力推奨</span></label>
@@ -537,8 +545,13 @@ label.confirm input{margin-top:4px;width:20px;height:20px;flex:none}
 <section class="page" id="pinKeyIssuePage">
   <div class="wrap">
     <div class="brand"><div class="paw">🐾</div><div class="word">PINFORME</div><div class="sub">採寸ナビ</div></div>
-    <h1>お客様キーを発行しました</h1>
-    <p>カルテの表示や再採寸、<br>2匹目以降の登録に使います。</p>
+    <div class="key-head">
+      <div class="key-head-text">
+        <h1>お客様キーを発行しました</h1>
+        <p>カルテの表示や再採寸、<br>2匹目以降の登録に使います。</p>
+      </div>
+      <button type="button" class="primary" id="pinEarlyProceedBtn">採寸に進む</button>
+    </div>
     <div class="key-box show">
       <div style="font-weight:800">お客様キー</div>
       <div class="note">この端末に保存しました。念のため、<br>コピーかスクリーンショットでも保管を。<br>キーは他の人に見せないでください。</div>
@@ -547,7 +560,6 @@ label.confirm input{margin-top:4px;width:20px;height:20px;flex:none}
     </div>
     <div id="pinEarlyMailStatus" class="status" role="status" aria-live="polite"></div>
     <div id="pinEarlyPushArea" style="margin-top:16px"></div>
-    <button type="button" class="primary" id="pinEarlyProceedBtn" style="width:100%;margin-top:16px">採寸に進む</button>
     <p class="note" style="margin-top:10px">通知は後からでも設定できます。</p>
   </div>
 </section>
@@ -2606,7 +2618,7 @@ function showStep(n){
 function showOptionalChoice(){
   const box = document.getElementById('pinV2OptionalChoice');
   box.innerHTML = `<div class="wrap">
-    <div class="brand"><div class="word" style="font-size:22px">PINFORME</div></div>
+    <div class="brand"><div class="paw">🐾</div><div class="word">PINFORME</div><div class="sub">採寸ナビ</div></div>
     <h1>必須5項目の入力ができました！</h1>
     <p>ご協力ありがとうございます。<strong>この5項目だけで採寸協力として送信できます。</strong></p>
     <button type="button" class="v2-primary" id="v2FiveReview">5項目で確認・送信へ進む</button>
@@ -2689,7 +2701,7 @@ function pinV2Purpose(id=null, ownerSource=null){
        前回の目的が現行の定義に無い場合は 'research' に倒す（部分更新の既存フォールバックと同じ） */
     const prevProduct = previous && PIN_V2_PRODUCTS[previous.product] ? previous.product : 'research';
     box.innerHTML = `<div class="wrap">
-    <div class="brand"><div class="word" style="font-size:22px">PINFORME</div></div>
+    <div class="brand"><div class="paw">🐾</div><div class="word">PINFORME</div><div class="sub">採寸ナビ</div></div>
     <h1>採寸の目的</h1>
     <p id="v2PurposeDog"></p>
     <div class="card-box"><p>前回と同じ目的「${PIN_V2_PRODUCTS[prevProduct].label}」で再採寸します。</p><p class="note">目的を変える場合は、入口から新規の採寸としてはじめてください。</p></div>
@@ -2705,7 +2717,7 @@ function pinV2Purpose(id=null, ownerSource=null){
   pinV2PurposeStep = 'group';
   pinV2PurposeGroup = (PIN_MEASURE_SETS[pinV2ScopeChoice] || {}).group || 'basic';
   box.innerHTML = `<div class="wrap">
-    <div class="brand"><div class="word" style="font-size:22px">PINFORME</div></div>
+    <div class="brand"><div class="paw">🐾</div><div class="word">PINFORME</div><div class="sub">採寸ナビ</div></div>
     <h1 id="v2PurposeTitle">測る範囲を選んでください</h1>
     <p id="v2PurposeDog"></p>
     <div id="v2PurposeBody"></div>
@@ -2929,7 +2941,7 @@ function pinV2AdviceHTML(r){
 function pinV2OwnerMenu(records){
   const box = document.getElementById('pinV2OwnerMenu');
   box.innerHTML = `<div class="wrap">
-    <div class="brand"><div class="word" style="font-size:22px">PINFORME</div></div>
+    <div class="brand"><div class="paw">🐾</div><div class="word">PINFORME</div><div class="sub">採寸ナビ</div></div>
     <div id="v2OwnerChoices">
       <h1>今回は何をしますか？</h1>
       <p>ご希望の操作をお選びください。</p>
@@ -3073,7 +3085,7 @@ function pinV2UpdatePlan(){
 function pinV2ChangePage(){
   const box = document.getElementById('pinV2Change');
   box.innerHTML = `<div class="wrap">
-    <div class="brand"><div class="word" style="font-size:22px">PINFORME</div></div>
+    <div class="brand"><div class="paw">🐾</div><div class="word">PINFORME</div><div class="sub">採寸ナビ</div></div>
     <h1>前回から体型に変化はありますか？</h1>
     <p>成長や体重の変化、お洋服の着心地の変化など、気付いた範囲で教えてください。分からない場合は、今回必要な部位を一緒に確認できます。</p>
     <p id="v2LastRecord"></p>
@@ -3863,12 +3875,12 @@ function pinEarlyRenderPushArea(){
   const standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
   const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent || '');
   if(standalone || !isIOS){
-    area.innerHTML = '<div class="entry-card"><h2>お知らせ通知</h2><p class="note">カルテの更新や、採寸の送信が途中のときのお知らせを、この端末に届けられます。</p><button type="button" class="primary" id="pinEarlyPushBtn" style="width:100%">通知を受け取る</button><p class="note" id="pinEarlyPushStatus"></p></div>';
+    area.innerHTML = '<div class="entry-card"><span class="push-reco">おすすめ</span><h2>お知らせ通知</h2><p class="note">カルテの更新や、採寸の送信が途中のときのお知らせを、この端末に届けられます。</p><button type="button" class="primary" id="pinEarlyPushBtn" style="width:100%">通知を受け取る</button><p class="note" id="pinEarlyPushStatus"></p></div>';
     const b = document.getElementById('pinEarlyPushBtn');
     if(b) b.addEventListener('click', ()=>{ if(window.pinformePushEnable) window.pinformePushEnable(); else { const s = document.getElementById('pinEarlyPushStatus'); if(s) s.textContent = '最初の画面の「お知らせ通知」から設定できます。'; } });
     if(window.pinformePushState) window.pinformePushState().then(st=>{ const s = document.getElementById('pinEarlyPushStatus'); if(!s) return; if(st === 'subscribed') s.textContent = 'この端末では、すでに通知を受け取る設定ができています。'; else if(st === 'denied') s.textContent = '端末の設定で通知がオフになっています。設定アプリから許可すると受け取れます。'; });
   }else{
-    area.innerHTML = '<div class="entry-card"><h2>通知を受け取るには（iPhone）</h2>'
+    area.innerHTML = '<div class="entry-card"><span class="push-reco">おすすめ</span><h2>通知を受け取るには（iPhone）</h2>'
       + '<p class="note">お知らせは、ホーム画面のアプリから受け取れます。</p>'
       + '<ol style="font-size:13px;line-height:1.7;padding-left:20px;margin:6px 0">'
       + '<li>下の共有ボタンを押す</li>'
