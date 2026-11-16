@@ -478,7 +478,7 @@ label.confirm input{margin-top:4px;width:20px;height:20px;flex:none}
 <!-- わんちゃんの情報 -->
 <section class="page" id="dogInfoPage">
   <div class="wrap">
-    <div class="brand"><div class="word">PINFORME</div><div class="sub">DOG WEAR MEASUREMENT NAVI</div></div>
+    <div class="brand"><div class="paw">🐾</div><div class="word">PINFORME</div><div class="sub">採寸ナビ</div></div>
     <h1 id="dogInfoTitle">わんちゃんの情報</h1>
     <div class="summary-box"><div><small>ご主人様の名前</small><strong id="ownerDisplay">—</strong></div><div><small>わんちゃんの名前</small><strong id="dogDisplay">—</strong></div></div>
     <div class="field"><label>性別 <span class="rec">入力推奨</span></label>
@@ -2616,7 +2616,7 @@ function showStep(n){
 function showOptionalChoice(){
   const box = document.getElementById('pinV2OptionalChoice');
   box.innerHTML = `<div class="wrap">
-    <div class="brand"><div class="word">PINFORME</div></div>
+    <div class="brand"><div class="paw">🐾</div><div class="word">PINFORME</div><div class="sub">採寸ナビ</div></div>
     <h1>必須5項目の入力ができました！</h1>
     <p>ご協力ありがとうございます。<strong>この5項目だけで採寸協力として送信できます。</strong></p>
     <p class="note">自動保存されています。今日はここで閉じても、続きから進められます。<br>※同じ端末・同じブラウザで開いたときだけ有効です。</p>
@@ -2700,7 +2700,7 @@ function pinV2Purpose(id=null, ownerSource=null){
        前回の目的が現行の定義に無い場合は 'research' に倒す（部分更新の既存フォールバックと同じ） */
     const prevProduct = previous && PIN_V2_PRODUCTS[previous.product] ? previous.product : 'research';
     box.innerHTML = `<div class="wrap">
-    <div class="brand"><div class="word">PINFORME</div></div>
+    <div class="brand"><div class="paw">🐾</div><div class="word">PINFORME</div><div class="sub">採寸ナビ</div></div>
     <h1>採寸の目的</h1>
     <p id="v2PurposeDog"></p>
     <div class="card-box"><p>前回と同じ目的「${PIN_V2_PRODUCTS[prevProduct].label}」で再採寸します。</p><p class="note">目的を変える場合は、入口から新規の採寸としてはじめてください。</p></div>
@@ -2716,7 +2716,7 @@ function pinV2Purpose(id=null, ownerSource=null){
   pinV2PurposeStep = 'group';
   pinV2PurposeGroup = (PIN_MEASURE_SETS[pinV2ScopeChoice] || {}).group || 'basic';
   box.innerHTML = `<div class="wrap">
-    <div class="brand"><div class="word">PINFORME</div></div>
+    <div class="brand"><div class="paw">🐾</div><div class="word">PINFORME</div><div class="sub">採寸ナビ</div></div>
     <h1 id="v2PurposeTitle">測る範囲を選んでください</h1>
     <p id="v2PurposeDog"></p>
     <div id="v2PurposeBody"></div>
@@ -2940,7 +2940,7 @@ function pinV2AdviceHTML(r){
 function pinV2OwnerMenu(records){
   const box = document.getElementById('pinV2OwnerMenu');
   box.innerHTML = `<div class="wrap">
-    <div class="brand"><div class="word">PINFORME</div></div>
+    <div class="brand"><div class="paw">🐾</div><div class="word">PINFORME</div><div class="sub">採寸ナビ</div></div>
     <div id="v2OwnerChoices">
       <h1>今回は何をしますか？</h1>
       <p>ご希望の操作をお選びください。</p>
@@ -3084,7 +3084,7 @@ function pinV2UpdatePlan(){
 function pinV2ChangePage(){
   const box = document.getElementById('pinV2Change');
   box.innerHTML = `<div class="wrap">
-    <div class="brand"><div class="word">PINFORME</div></div>
+    <div class="brand"><div class="paw">🐾</div><div class="word">PINFORME</div><div class="sub">採寸ナビ</div></div>
     <h1>前回から体型に変化はありますか？</h1>
     <p>成長や体重の変化、お洋服の着心地の変化など、気付いた範囲で教えてください。分からない場合は、今回必要な部位を一緒に確認できます。</p>
     <p id="v2LastRecord"></p>
