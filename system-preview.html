@@ -6627,9 +6627,30 @@ setPINFORMEKarte=function(d){
           if (btn) btn.textContent = collapsed ? "ページ全体を表示する" : "公開ページを畳む（見出しだけ）";
         }
 
+        /* ---------- §60 (2026-11-16): foreground auto-reload ----------
+           The trailing badge script (a separate scope) fires on
+           visibilitychange / pageshow and calls this hook, the same
+           window.__adm* pattern as __admShowHomeOnly (§33). Only a
+           verified session reloads, at most once per 60 seconds
+           (admLastLoadAt is stamped by every loadAdminData run,
+           including login and the manual 一覧を更新）. While the
+           お知らせ送信 section (#pushsend) is the open section the
+           reload is skipped, so a notice being composed is never
+           disturbed; the next foreground return (or the manual
+           button) refreshes instead. */
+        var admLastLoadAt = 0;
+        window.__admAutoReload = function () {
+          if (!A.verified) return;
+          if (Date.now() - admLastLoadAt < 60000) return;
+          var ps = document.getElementById("pushsend");
+          if (ps && ps.classList.contains("nav-open")) return;
+          loadAdminData();
+        };
+
         /* ---------- auth flow ---------- */
         async function loadAdminData() {
           var tok = token(); if (!tok) return;
+          admLastLoadAt = Date.now();
           setStatus("管理データを取得しています…");
           try {
             var results = await Promise.all([
@@ -7164,9 +7185,18 @@ setPINFORMEKarte=function(d){
       }
     } catch (e) {}
   }
+  // §60 (2026-11-16): returning to the foreground also asks the
+  // admin scope to refresh its data via window.__admAutoReload
+  // (defined there; throttled and verified-only inside). The
+  // badge clearing itself is unchanged.
+  function onForeground() {
+    clearBadge();
+    if (window.__admAutoReload) window.__admAutoReload();
+  }
   if (document.readyState !== "loading") clearBadge();
   else document.addEventListener("DOMContentLoaded", clearBadge);
-  document.addEventListener("visibilitychange", function () { if (!document.hidden) clearBadge(); });
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) onForeground(); });
+  window.addEventListener("pageshow", onForeground);
 })();
 </script>
 </body>
