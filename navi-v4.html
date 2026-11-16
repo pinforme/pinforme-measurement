@@ -234,6 +234,16 @@ body.on-choice #progressHeader{display:block}
 .entry-card h2{margin-top:0}
 #pinEarlyPushArea .entry-card{border:2px solid #17171a;background:#f6f6f4}
 #pinEarlyPushArea .push-reco{display:inline-block;background:#17171a;color:#fff;font-size:11px;font-weight:700;border-radius:999px;padding:2px 10px;margin-bottom:6px}
+#pinKeyIssuePage .wrap{padding-top:10px}
+#pinKeyIssuePage .brand{display:flex;align-items:center;gap:8px;text-align:left;margin:0 0 6px}
+#pinKeyIssuePage .brand .paw{font-size:18px}
+#pinKeyIssuePage .brand .word{font-size:19px;letter-spacing:.12em}
+#pinKeyIssuePage .brand .sub{margin-top:0;letter-spacing:.2em}
+#pinKeyIssuePage h1{margin:6px 0 6px;font-size:20px}
+#pinKeyIssuePage .key-head{display:flex;gap:12px;align-items:stretch;margin-bottom:12px}
+#pinKeyIssuePage .key-head-text{flex:1 1 auto;min-width:0}
+#pinKeyIssuePage .key-head-text p{margin:0}
+#pinKeyIssuePage #pinEarlyProceedBtn{flex:0 0 33%;width:auto;margin-top:0;font-size:16px}
 .v2-primary{width:100%;background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700;margin-top:10px}
 /* 入口（homePage）だけ詰める：新規＋お客様キーの2枚、再開カードが増えた3枚でもスクロールなしで収める。文字サイズは変えず、ロゴと余白だけを調整 */
 #homePage .wrap{padding:10px 16px 20px}
@@ -510,15 +520,19 @@ label.confirm input{margin-top:4px;width:20px;height:20px;flex:none}
 <section class="page" id="pinKeyIssuePage">
   <div class="wrap">
     <div class="brand"><div class="paw">🐾</div><div class="word">PINFORME</div><div class="sub">採寸ナビ</div></div>
-    <h1>お客様キーを発行しました</h1>
-    <p>カルテの表示や再採寸、<br>2匹目以降の登録に使います。</p>
+    <div class="key-head">
+      <div class="key-head-text">
+        <h1>お客様キーを発行しました</h1>
+        <p>カルテの表示や再採寸、<br>2匹目以降の登録に使います。</p>
+      </div>
+      <button type="button" class="primary" id="pinEarlyProceedBtn">採寸に進む</button>
+    </div>
     <div class="key-box show">
       <div style="font-weight:800">お客様キー</div>
       <div class="note">この端末に保存しました。念のため、<br>コピーかスクリーンショットでも保管を。<br>キーは他の人に見せないでください。</div>
       <div id="pinEarlyKeyValue" class="key-value"></div>
       <button type="button" id="pinEarlyKeyCopyBtn" style="width:100%">お客様キーをコピー</button>
     </div>
-    <button type="button" class="primary" id="pinEarlyProceedBtn" style="width:100%;margin-top:16px">採寸に進む</button>
     <div id="pinEarlyMailStatus" class="status" role="status" aria-live="polite"></div>
     <div id="pinEarlyPushArea" style="margin-top:16px"></div>
     <p class="note" style="margin-top:10px">通知は後からでも設定できます。</p>
