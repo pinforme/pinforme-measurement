@@ -33,56 +33,30 @@ self.addEventListener('fetch', function(e){
     });
   }));
 });
-// App-icon badge counter, shared with the page (the page writes the true
-// unread count here whenever it reconciles; the worker increments on push).
-function badgeDb(){
-  return new Promise(function(resolve, reject){
-    var req = indexedDB.open('pinforme-badge', 1);
-    req.onupgradeneeded = function(){ req.result.createObjectStore('kv'); };
-    req.onsuccess = function(){ resolve(req.result); };
-    req.onerror = function(){ reject(req.error); };
-  });
-}
-function badgeGet(){
-  return badgeDb().then(function(db){
-    return new Promise(function(resolve){
-      var tx = db.transaction('kv', 'readonly').objectStore('kv').get('count');
-      tx.onsuccess = function(){ resolve(tx.result || 0); };
-      tx.onerror = function(){ resolve(0); };
-    });
-  }).catch(function(){ return 0; });
-}
-function badgeSet(n){
-  return badgeDb().then(function(db){
-    return new Promise(function(resolve){
-      var tx = db.transaction('kv', 'readwrite').objectStore('kv').put(n, 'count');
-      tx.onsuccess = function(){ resolve(); };
-      tx.onerror = function(){ resolve(); };
-    });
-  }).catch(function(){});
-}
-function applyBadge(n){
-  if (!('setAppBadge' in self.navigator)) return Promise.resolve();
-  var p = n > 0 ? self.navigator.setAppBadge(n) : self.navigator.clearAppBadge();
-  return Promise.resolve(p).catch(function(){});
-}
 self.addEventListener('push', function(e){
   var data = {};
   try { data = e.data ? e.data.json() : {}; } catch (err) {}
   var title = data.title || 'PINFORME';
-  // The notification shows the title only; the body is read inside the app.
   var options = {
-    body: 'タップして内容を確認できます',
+    body: data.body || '',
     icon: 'icon-192.png',
     badge: 'icon-192.png',
     data: { url: data.url || 'index.html' }
   };
-  var shown = self.registration.showNotification(title, options);
-  var badged = badgeGet().then(function(n){
-    var next = n + 1;
-    return badgeSet(next).then(function(){ return applyBadge(next); });
-  });
-  e.waitUntil(Promise.all([shown, badged]));
+  // §61 (2026-11-16): admin pushes (the admin-notify payload always
+  // carries url "system.html") also wake any open window client so
+  // the admin screen can refresh its data in place. User-facing
+  // pushes (url is the site root) never message clients. When no
+  // client is open there is nothing to message; tapping the
+  // notification then focuses/opens the app and its foreground
+  // refresh takes over.
+  var isAdminPush = String(data.url || '').indexOf('system.html') !== -1;
+  e.waitUntil(self.registration.showNotification(title, options).then(function(){
+    if (!isAdminPush) return;
+    return self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(list){
+      list.forEach(function(c){ c.postMessage({ type: 'pinforme-admin-push' }); });
+    });
+  }));
 });
 self.addEventListener('notificationclick', function(e){
   e.notification.close();
