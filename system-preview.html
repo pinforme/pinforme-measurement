@@ -3658,7 +3658,11 @@ setPINFORMEKarte=function(d){
         renderPattern();
 
         // ---------- data loading ----------
-        function onData(rows) {
+        /* Data application shared by the full load (onData) and the
+           §61 soft reload: replaces the dataset and the derived
+           band tables, and refreshes the fetch stamp/note. It never
+           touches any input element. */
+        function applyDataCore(rows) {
           dogs = rows.map(function (r) {
             var rec = {
               date: r.measured_on, weight: r.weight, neck: r.neck, chest: r.chest,
@@ -3694,7 +3698,10 @@ setPINFORMEKarte=function(d){
           stamp.textContent = "採寸ナビと連携中 ・ " + jpDate(now.getFullYear() + "-" + (now.getMonth() + 1) + "-" + now.getDate()) + " " + hh + ":" + mm + " 取得";
           fetchNote.classList.remove("err");
           fetchNote.textContent = "採寸ナビから最新データを取得しました。頭数は登録されている全頭、サイズ帯・推奨サイズは採寸データからその場で計算しています。";
+        }
 
+        function onData(rows) {
+          applyDataCore(rows);
           renderStats();
           renderDistBreedSelect();
           renderChart();
@@ -3769,6 +3776,78 @@ setPINFORMEKarte=function(d){
             onError();
           });
         }
+
+        /* ---------- §61 (2026-11-16): soft reload (public dataset) ----------
+           Triggered by the admin scope through window.__pubSoftReload
+           when the app returns to the foreground or an admin push
+           arrives. Unlike loadData() it never clears an input, a
+           selection or the scroll position: the dataset is swapped
+           via applyDataCore() and only the views whose renderers are
+           state-driven are redrawn in place —
+             distribution / breeds / measurement / progress: their
+               renderers read the state vars (distBreed / measBreed),
+               so selections survive;
+             checker: buildSearch() only re-renders the candidate
+               list (the input is never rebuilt), and the shown dog
+               is re-rendered via showDog(currentDogId); while an IME
+               composition is running the checker is left alone;
+             pattern: renderPattern() derives everything from the
+               state vars and the band select's current value, and
+               renderPatDogCands() only redraws the candidate list;
+               initPattern() is NOT called (it would rebuild the
+               band select and lose the chosen band).
+           A failed fetch keeps the data already on screen. */
+        var pubSoftInFlight = false;
+        function softReloadData() {
+          if (pubSoftInFlight) return;
+          if (loadState === "loading") return;
+          pubSoftInFlight = true;
+          var ctrl = ("AbortController" in window) ? new AbortController() : null;
+          var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, 20000) : null;
+          fetch(RPC_URL, {
+            method: "POST",
+            headers: {
+              "apikey": PUBLISHABLE_KEY,
+              "Authorization": "Bearer " + PUBLISHABLE_KEY,
+              "Content-Type": "application/json"
+            },
+            body: "{}",
+            signal: ctrl ? ctrl.signal : undefined
+          }).then(function (r) {
+            if (!r.ok) throw new Error("HTTP " + r.status);
+            return r.json();
+          }).then(function (rows) {
+            if (timer) clearTimeout(timer);
+            if (!rows || !rows.length) throw new Error("empty");
+            var y = window.scrollY;
+            var wraps = document.querySelectorAll(".matrix-wrap");
+            var wrapPos = [];
+            wraps.forEach(function (w, i) { wrapPos[i] = [w.scrollLeft, w.scrollTop]; });
+            applyDataCore(rows);
+            renderStats();
+            renderDistBreedSelect();
+            renderChart();
+            renderBreeds();
+            renderMeasBreedSelect();
+            renderMatrix();
+            renderProgress();
+            if (!searchComposing) {
+              buildSearch();
+              if (currentDogId) showDog(currentDogId);
+            }
+            judge();
+            if (!patSearchComposing) renderPatDogCands();
+            renderPattern();
+            wraps.forEach(function (w, i) {
+              if (wrapPos[i]) { w.scrollLeft = wrapPos[i][0]; w.scrollTop = wrapPos[i][1]; }
+            });
+            window.scrollTo({ top: y, behavior: "instant" });
+          }).catch(function () {
+            if (timer) clearTimeout(timer);
+            /* keep the data already shown; the next trigger retries */
+          }).then(function () { pubSoftInFlight = false; });
+        }
+        window.__pubSoftReload = softReloadData;
 
         // ---------- tabs ----------
         var tabId = document.getElementById("tabbtn-id");
@@ -6627,25 +6706,95 @@ setPINFORMEKarte=function(d){
           if (btn) btn.textContent = collapsed ? "ページ全体を表示する" : "公開ページを畳む（見出しだけ）";
         }
 
-        /* ---------- §60 (2026-11-16): foreground auto-reload ----------
-           The trailing badge script (a separate scope) fires on
-           visibilitychange / pageshow and calls this hook, the same
-           window.__adm* pattern as __admShowHomeOnly (§33). Only a
-           verified session reloads, at most once per 60 seconds
-           (admLastLoadAt is stamped by every loadAdminData run,
-           including login and the manual 一覧を更新）. While the
-           お知らせ送信 section (#pushsend) is the open section the
-           reload is skipped, so a notice being composed is never
-           disturbed; the next foreground return (or the manual
-           button) refreshes instead. */
+        /* ---------- §61 (2026-11-16): auto refresh, in place ----------
+           Triggers: the trailing badge script calls this hook when
+           the app returns to the foreground (visibilitychange /
+           pageshow), and the service worker messages it when an
+           admin push arrives (listener below) — the same
+           window.__adm* pattern as __admShowHomeOnly (§33). The
+           manual 一覧を更新 button still runs the full
+           loadAdminData() (view reset included, as before).
+           The auto path is deliberately NOT loadAdminData(): it
+           refetches into A.dogs / A.measurements and redraws only
+           the state-driven renderers, so the open section, the
+           selected dog, the search boxes and the scroll position
+           all survive:
+             home summary / action chips / bell badge: renderHome()
+             bell panel (only while it is open): renderBellPanel()
+             探す results region: renderSearchResults() — the
+               search inputs themselves are never rebuilt
+             due / nomeas / newmeas lists: their list renderers
+             本人確認 tab: renderCheckList() + renderCheckResult()
+           Deferred on purpose (data is refreshed, the screen is
+           not): the dog detail and the owner view — both carry
+           live form state (the breed edit and order-link inputs in
+           the detail; the on-demand contact / key block in the
+           owner view), so they redraw when the admin navigates
+           back into them, not under their hands.
+           Guards are minimal: verified session only, an in-flight
+           flag, and a 3-second dedupe stamped by every load start
+           (admLastLoadAt, full or soft) so the visibilitychange +
+           pageshow pair — or a push landing right as the app is
+           opened — cannot double-fetch. There is no longer a 60s
+           throttle (§60): opening the app always refreshes. While
+           the お知らせ送信 section (#pushsend) is open the refresh
+           is skipped entirely, so a notice being composed is never
+           disturbed. */
         var admLastLoadAt = 0;
+        var admSoftInFlight = false;
         window.__admAutoReload = function () {
           if (!A.verified) return;
-          if (Date.now() - admLastLoadAt < 60000) return;
+          if (admSoftInFlight) return;
+          if (Date.now() - admLastLoadAt < 3000) return;
           var ps = document.getElementById("pushsend");
           if (ps && ps.classList.contains("nav-open")) return;
-          loadAdminData();
+          admSoftInFlight = true;
+          admLastLoadAt = Date.now();
+          softRefreshAdmin().then(
+            function () { admSoftInFlight = false; },
+            function () { admSoftInFlight = false; }
+          );
         };
+        async function softRefreshAdmin() {
+          var tok = token(); if (!tok) return;
+          var results;
+          try {
+            results = await Promise.all([
+              fetchAll("/rest/v1/dogs?select=*&order=created_at.desc,id.desc", tok),
+              fetchAll("/rest/v1/measurements?select=*&order=created_at.desc,id.desc", tok)
+            ]);
+          } catch (e) { return; /* keep the data already shown */ }
+          A.dogs = results[0]; A.measurements = results[1];
+          // Same name-map hand-off as loadAdminData (§37).
+          if (window.__checkerNames) {
+            var nameMap = {};
+            A.dogs.forEach(function (d) { var n = dogNameOf(d); if (n) nameMap[d.id] = n; });
+            window.__checkerNames(nameMap);
+          }
+          var y = window.scrollY;
+          renderHome();
+          var panel = $("adm-bell-panel");
+          if (panel && !panel.hidden) renderBellPanel();
+          if (A.view === "breeds" || A.view === "dogs") renderSearchResults();
+          else if (A.view === "due") renderDueList();
+          else if (A.view === "nomeas") renderNomeasList();
+          else if (A.view === "newmeas") renderNewmeasList();
+          /* "detail" / "owner": data only — see the note above. */
+          renderCheckList();
+          if (A.checkDogId) { var cd = dogById(A.checkDogId); if (cd) renderCheckResult(cd); }
+          window.scrollTo({ top: y, behavior: "instant" });
+          if (window.__pubSoftReload) window.__pubSoftReload();
+        }
+        /* "Refresh when a notification arrives": admin pushes
+           (payload url "system.html") make the service worker
+           message every open window client. When no client is open,
+           tapping the notification focuses / opens the app and the
+           foreground trigger above covers the refresh instead. */
+        if ("serviceWorker" in navigator) {
+          navigator.serviceWorker.addEventListener("message", function (ev) {
+            if (ev.data && ev.data.type === "pinforme-admin-push") window.__admAutoReload();
+          });
+        }
 
         /* ---------- auth flow ---------- */
         async function loadAdminData() {
@@ -7185,10 +7334,11 @@ setPINFORMEKarte=function(d){
       }
     } catch (e) {}
   }
-  // §60 (2026-11-16): returning to the foreground also asks the
-  // admin scope to refresh its data via window.__admAutoReload
-  // (defined there; throttled and verified-only inside). The
-  // badge clearing itself is unchanged.
+  // §60/§61 (2026-11-16): returning to the foreground also asks
+  // the admin scope to refresh its data in place via
+  // window.__admAutoReload (defined there; verified-only, with a
+  // short dedupe against the visibilitychange + pageshow pair).
+  // The badge clearing itself is unchanged.
   function onForeground() {
     clearBadge();
     if (window.__admAutoReload) window.__admAutoReload();
