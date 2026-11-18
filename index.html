@@ -8,7 +8,7 @@
 
 <script id="pinforme-latest-version-guard">
 (function(){
-  const PINFORME_BUILD_ID="20261117-navi-v4-b48";
+  const PINFORME_BUILD_ID="20261118-navi-v4-b49";
 
   function forceFresh(reason){
     try{
@@ -2945,6 +2945,39 @@ function pinV2AdviceHTML(r){
   }
   return html + '</p>';
 }
+/* ================= 試着モニターのお送り先（キー解錠後のみ・DMでは受け取らない） ================= */
+async function pinV2LoadShipping(key){
+  const st = document.getElementById('shipStatus'); if(!st) return;
+  try{
+    const rows = await pinRpc('get_my_monitor_shipping', {p_key:key});
+    if(rows && rows.length){
+      const r = rows[0];
+      document.getElementById('shipName').value = r.recipient_name || '';
+      document.getElementById('shipPostal').value = r.postal_code || '';
+      document.getElementById('shipAddress').value = r.address || '';
+      document.getElementById('shipPhone').value = r.phone || '';
+      st.textContent = '登録済みのお送り先を表示しています。変更したら「登録する」を押してください。';
+    } else {
+      st.textContent = '';
+    }
+  }catch(e){ st.textContent = ''; }
+}
+async function pinV2SaveShipping(key){
+  const st = document.getElementById('shipStatus');
+  const name = document.getElementById('shipName').value.trim();
+  const postal = document.getElementById('shipPostal').value.trim();
+  const address = document.getElementById('shipAddress').value.trim();
+  const phone = document.getElementById('shipPhone').value.trim();
+  if(!name || !postal || !address || !phone){ st.textContent = 'すべての欄を入力してください。'; return; }
+  const btn = document.getElementById('shipSaveBtn');
+  btn.disabled = true; st.textContent = '登録しています…';
+  try{
+    await pinRpc('save_monitor_shipping', {p_key:key, p_name:name, p_postal:postal, p_address:address, p_phone:phone});
+    st.textContent = '登録しました。サンプルの発送の時に使わせていただきます。';
+  }catch(e){
+    st.textContent = '登録できませんでした。電波の良いところで、もう一度お試しください。';
+  }finally{ btn.disabled = false; }
+}
 function pinV2OwnerMenu(records){
   const box = document.getElementById('pinV2OwnerMenu');
   box.innerHTML = `<div class="wrap">
@@ -2955,7 +2988,19 @@ function pinV2OwnerMenu(records){
       <button type="button" class="owner-choice" id="v2ExistingDogs"><span class="t">登録済みの子の採寸</span><span class="n">再採寸・部分更新・項目の追加</span></button>
       <button type="button" class="owner-choice" id="v2KarteView"><span class="t">採寸カルテを見る・保存する</span><span class="n">送信済みのカルテを表示します。PDFで保存もできます</span></button>
       <button type="button" class="owner-choice" id="v2AnotherDog"><span class="t">2匹目以降のわんちゃんを登録</span><span class="n">同じ飼い主様で、新しい子のカルテを作成</span></button>
+      <button type="button" class="owner-choice" id="v2Shipping"><span class="t">試着モニターのお送り先を登録する</span><span class="n">モニターに選ばれた方のみ。サンプルの発送に使います</span></button>
       <button type="button" id="v2MenuHome" style="width:100%;margin-top:10px">入口に戻る</button>
+    </div>
+    <div id="v2ShippingPanel" hidden>
+      <button type="button" id="v2ShippingBack">操作の選択に戻る</button>
+      <h2>試着モニターのお送り先</h2>
+      <p class="note">試着モニターに選ばれた方のみ、ご入力ください。サンプルの発送だけに使い、試着と返送が終わったら削除します。DMで住所をお送りいただく必要はありません。</p>
+      <p><label for="shipName">お名前（宛名）</label><br><input id="shipName" type="text" autocomplete="name" style="width:100%;padding:10px;box-sizing:border-box;font-size:16px"></p>
+      <p><label for="shipPostal">郵便番号</label><br><input id="shipPostal" type="text" autocomplete="postal-code" inputmode="numeric" placeholder="例：123-4567" style="width:100%;padding:10px;box-sizing:border-box;font-size:16px"></p>
+      <p><label for="shipAddress">住所</label><br><input id="shipAddress" type="text" autocomplete="street-address" style="width:100%;padding:10px;box-sizing:border-box;font-size:16px"></p>
+      <p><label for="shipPhone">電話番号（配送用）</label><br><input id="shipPhone" type="tel" autocomplete="tel" inputmode="tel" style="width:100%;padding:10px;box-sizing:border-box;font-size:16px"></p>
+      <button type="button" class="primary" id="shipSaveBtn" style="width:100%">登録する</button>
+      <p class="note" id="shipStatus" role="status"></p>
     </div>
     <div id="v2OwnerDogs" hidden>
       <button type="button" id="v2OwnerMenuBack">操作の選択に戻る</button>
@@ -3004,10 +3049,13 @@ function pinV2OwnerMenu(records){
     note.textContent = 'まだ送信済みのカルテがありません。採寸を送信すると、ここからカルテを見られます。';
     karteList.append(note);
   }
-  document.getElementById('v2ExistingDogs').onclick = ()=>{ document.getElementById('v2OwnerChoices').hidden = true; document.getElementById('v2KarteDogs').hidden = true; document.getElementById('v2OwnerDogs').hidden = false; window.scrollTo(0,0); };
-  document.getElementById('v2KarteView').onclick = ()=>{ document.getElementById('v2OwnerChoices').hidden = true; document.getElementById('v2OwnerDogs').hidden = true; document.getElementById('v2KarteDogs').hidden = false; window.scrollTo(0,0); };
+  document.getElementById('v2ExistingDogs').onclick = ()=>{ document.getElementById('v2OwnerChoices').hidden = true; document.getElementById('v2KarteDogs').hidden = true; document.getElementById('v2ShippingPanel').hidden = true; document.getElementById('v2OwnerDogs').hidden = false; window.scrollTo(0,0); };
+  document.getElementById('v2KarteView').onclick = ()=>{ document.getElementById('v2OwnerChoices').hidden = true; document.getElementById('v2OwnerDogs').hidden = true; document.getElementById('v2ShippingPanel').hidden = true; document.getElementById('v2KarteDogs').hidden = false; window.scrollTo(0,0); };
   document.getElementById('v2KarteMenuBack').onclick = ()=>{ document.getElementById('v2KarteDogs').hidden = true; document.getElementById('v2OwnerChoices').hidden = false; window.scrollTo(0,0); };
   document.getElementById('v2OwnerMenuBack').onclick = ()=>{ document.getElementById('v2OwnerDogs').hidden = true; document.getElementById('v2OwnerChoices').hidden = false; window.scrollTo(0,0); };
+  document.getElementById('v2Shipping').onclick = ()=>{ document.getElementById('v2OwnerChoices').hidden = true; document.getElementById('v2OwnerDogs').hidden = true; document.getElementById('v2KarteDogs').hidden = true; document.getElementById('v2ShippingPanel').hidden = false; window.scrollTo(0,0); pinV2LoadShipping(records[0].customerKey); };
+  document.getElementById('v2ShippingBack').onclick = ()=>{ document.getElementById('v2ShippingPanel').hidden = true; document.getElementById('v2OwnerChoices').hidden = false; window.scrollTo(0,0); };
+  document.getElementById('shipSaveBtn').onclick = ()=>pinV2SaveShipping(records[0].customerKey);
   document.getElementById('v2AnotherDog').onclick = ()=>pinV2Purpose(null, records[0]);
   document.getElementById('v2MenuHome').onclick = pinV2Home;
   showPage('pinV2OwnerMenu');
