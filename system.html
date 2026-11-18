@@ -4049,7 +4049,7 @@ setPINFORMEKarte=function(d){
            view, so an update build forces exactly one re-login. */
         var BUILD_KEY = "PINFORME_ADMIN_BUILD_V1";
         var LASTUSED_KEY = "PINFORME_ADMIN_LASTUSED_V1";
-        var BUILD_ID = "prod-2026-11-16-r10";
+        var BUILD_ID = "prod-2026-11-18-r11";
         var RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
 
         /* Breed master: formal names + aliases (normalisation is display-side). */
@@ -7378,6 +7378,7 @@ setPINFORMEKarte=function(d){
     if(!confirm(cmsg)) return;
     var p=formParams();
     status('送信しています…');
+    hideAfterSend();
     el('admPushSendBtn').disabled=true;
     try{
       var res=await sbFetch('/functions/v1/push-send', {
@@ -7389,11 +7390,30 @@ setPINFORMEKarte=function(d){
         var inboxNote = checkedInboxOwners>=0 ? '受信箱には '+checkedInboxOwners+' 人に表示されます。' : '';
         if(data.stored_only){ status('お知らせを保存しました（プッシュ対象の端末はありませんでした）。'+inboxNote); }
         else{ status('送信しました（対象'+(data.total||0)+'件／送信'+(data.sent||0)+'件'+(data.cleaned?'／無効な登録を'+(data.cleaned)+'件削除':'')+'）。'+inboxNote); }
+        showAfterSend();
       }else{
         status('送信できませんでした: '+((data && data.error) || res.status));
         el('admPushSendBtn').disabled=false;
       }
     }catch(e){ status('送信エラー: '+((e && e.message) || e)); el('admPushSendBtn').disabled=false; }
+  }
+  function showAfterSend(){
+    var row=el('admPushAfterSend'); if(row) row.style.display='';
+  }
+  function hideAfterSend(){
+    var row=el('admPushAfterSend'); if(row) row.style.display='none';
+  }
+  function clearSentContent(){
+    el('admPushTitle').value='';
+    el('admPushBody').value='';
+    checkedCount=-1;
+    el('admPushSendBtn').disabled=true;
+    hideAfterSend();
+    status('内容を消しました');
+  }
+  function keepSentContent(){
+    hideAfterSend();
+    status('内容を残しました。直してから、対象を確認→送信できます');
   }
 
   var ACT_PRESETS={
@@ -7479,6 +7499,8 @@ setPINFORMEKarte=function(d){
       '<p><button type="button" class="adm-btn" id="admPushCheckBtn">対象を確認する</button> '+
       '<button type="button" class="adm-btn" id="admPushSendBtn" disabled>この内容で送信する</button></p>'+
       '<p class="adm-note" id="admPushStatus"></p>'+
+      '<p id="admPushAfterSend" style="display:none"><button type="button" class="adm-btn" id="admPushClearBtn">内容を消す</button> '+
+      '<button type="button" class="adm-btn" id="admPushKeepBtn">そのまま流用する</button></p>'+
       '<details class="adm-note"><summary id="admPushOnSummary">通知をONにしている飼い主</summary><div id="admPushOnList">読み込み中…</div></details>';
     home.appendChild(card);
     loadBreeds();
@@ -7486,6 +7508,8 @@ setPINFORMEKarte=function(d){
     el('admPushMode').addEventListener('change', syncMode);
     el('admPushCheckBtn').addEventListener('click', checkCount);
     el('admPushSendBtn').addEventListener('click', sendPush);
+    el('admPushClearBtn').addEventListener('click', clearSentContent);
+    el('admPushKeepBtn').addEventListener('click', keepSentContent);
   }
   var reactionsLoaded=false;
   async function loadReactions(){
