@@ -8,7 +8,7 @@
 
 <script id="pinforme-latest-version-guard">
 (function(){
-  const PINFORME_BUILD_ID="20261118-navi-v4-b49";
+  const PINFORME_BUILD_ID="20261119-navi-v4-b50";
 
   function forceFresh(reason){
     try{
@@ -287,6 +287,9 @@ body.on-choice #progressHeader{display:block}
 #pinKeyIssuePage .key-head-text{flex:1 1 auto;min-width:0}
 #pinKeyIssuePage .key-head-text p{margin:0}
 #pinKeyIssuePage #pinEarlyProceedBtn{flex:0 0 33%;width:auto;margin-top:0;font-size:16px}
+#pinKeyIssuePage .key-warn{background:#17171a;color:#fff;border-radius:14px;padding:14px 16px;text-align:left}
+#pinKeyIssuePage .key-warn-title{font-size:17px;font-weight:800;line-height:1.4;margin:0 0 6px}
+#pinKeyIssuePage .key-warn p{font-size:13.5px;line-height:1.7;margin:0}
 .v2-primary{width:100%;background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700;margin-top:10px}
 /* 入口（homePage）だけ詰める：新規＋お客様キーの2枚、再開カードが増えた3枚でもスクロールなしで収める。文字サイズは変えず、ロゴと余白だけを調整 */
 #homePage .wrap{padding:10px 16px 20px}
@@ -551,6 +554,10 @@ label.confirm input{margin-top:4px;width:20px;height:20px;flex:none}
         <p>カルテの表示や再採寸、<br>2匹目以降の登録に使います。</p>
       </div>
       <button type="button" class="primary" id="pinEarlyProceedBtn">採寸に進む</button>
+    </div>
+    <div class="key-warn">
+      <p class="key-warn-title">⚠️ まだ登録は完了していません</p>
+      <p>このキーを保存したら、上の「採寸に進む」ボタンから愛犬の採寸を入力してください。採寸を入力して送信が終わって、はじめて登録完了です。</p>
     </div>
     <div class="key-box show">
       <div style="font-weight:800">お客様キー</div>
@@ -3951,7 +3958,7 @@ function pinEarlyRenderPushArea(){
 function pinEarlyMailCompose(){
   const el = document.getElementById('pinEarlyMailStatus'); if(!el) return;
   if(pinAnonymousActive()){ el.textContent = 'メールは送信しません。この画面のお客様キーを必ず保管してください。'; return; }
-  el.textContent = 'ご登録できました。お客様キーは、採寸データの保存完了時にもメールでお送りします。';
+  el.textContent = 'お客様キーは、採寸データの保存完了時にもメールでお送りします。';
 }
 async function pinEarlyKeyIssue(first){
   if(!PIN_V2 || PIN_V2.baseline || PIN_V2.serverDogId || PIN_V2.earlyKeyShown) return false;
