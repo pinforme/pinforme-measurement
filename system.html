@@ -3371,7 +3371,7 @@ setPINFORMEKarte=function(d){
           var info = [
             "PINFORME 型紙（" + B.label + "） " + titleName,
             "目標寸法（cm）: 胴 " + fmt(tgt.chest) + " / 首 " + fmt(tgt.neck) + " / 着丈 " + fmt(tgt.back) + " / 前丈 " + fmt(tgt.front) + (tgt.space ? " / 前足間巾 " + fmt(tgt.space) : ""),
-            "実線＝縫い線／点線＝裁断線（縫い代はOEMの型のまま）",
+            "実線＝裁断線／点線＝縫い線（縫い代はOEMの型のまま）",
             "首まわりは型の形を変えず、リブの裁断で合わせます"
           ];
           var parts = [], body = "", y = margin;
@@ -3383,8 +3383,8 @@ setPINFORMEKarte=function(d){
               var dim = (p.w / 10).toFixed(1) + "×" + (p.h / 10).toFixed(1) + "cm";
               parts.push({ short: nm, label: nm, pts: p.sew, sa: p.cut, cx: p.cx, cy: p.cy, dim: dim, stroke: col[0], fill: col[1] });
               body += '<g transform="translate(' + x.toFixed(1) + " " + y.toFixed(1) + ')">' +
-                '<path d="' + pathFrom(p.cut, true) + '" fill="none" stroke="#999" stroke-width="1.4" stroke-dasharray="7 6"/>' +
-                '<path d="' + pathFrom(p.sew, true) + '" fill="' + col[1] + '" fill-opacity="0.55" stroke="' + col[0] + '" stroke-width="2.4"/>' +
+                '<path d="' + pathFrom(p.sew, true) + '" fill="none" stroke="#999" stroke-width="1.4" stroke-dasharray="7 6"/>' +
+                '<path d="' + pathFrom(p.cut, true) + '" fill="' + col[1] + '" fill-opacity="0.55" stroke="' + col[0] + '" stroke-width="2.4"/>' +
                 '<text x="' + p.cx.toFixed(1) + '" y="' + p.cy.toFixed(1) + '" font-size="15" text-anchor="middle" fill="' + col[0] + '">' + nm + " " + dim + "</text></g>";
               x += p.w + gap;
             });
@@ -3969,7 +3969,7 @@ setPINFORMEKarte=function(d){
             '<div class="pp-info">' + infoPs + "</div>" +
             '<svg width="60mm" height="60mm" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="5" width="50" height="50" fill="none" stroke="#000" stroke-width="0.5"/></svg>' +
             '<p class="pp-note">【校正マス】印刷後にこのマスの一辺を定規で測り、5cm（50mm）になっているか確認してください。違う場合は、プリンタの設定で倍率を100%（実際のサイズ）に直して、印刷し直してください。</p>' +
-            '<p class="pp-note">【貼り合わせ】ページ構成は ' + layout + ' です。同じ部位のページを番号順に並べ、重なる部分（15mm）にある赤い十字マーク同士をぴったり合わせて貼ると、実寸の型紙になります。実線が縫い線、点線が裁断線（縫い代1cm）です。</p>' +
+            '<p class="pp-note">【貼り合わせ】ページ構成は ' + layout + ' です。同じ部位のページを番号順に並べ、重なる部分（15mm）にある赤い十字マーク同士をぴったり合わせて貼ると、実寸の型紙になります。実線が裁断線、点線が縫い線（縫い代1cm）です。</p>' +
             "</div>"
           );
           cp.parts.forEach(function (part, pi) {
@@ -3994,8 +3994,8 @@ setPINFORMEKarte=function(d){
                   '<div class="print-page">' +
                   '<div class="pp-head"><span>PINFORME 型紙 ' + cp.name + '</span><span>' + part.short + " " + n + "/" + g.total + pos + '</span><span>実寸印刷・倍率100%</span></div>' +
                   '<svg width="190mm" height="268mm" viewBox="' + f2(x0) + " " + f2(y0) + ' 190 268" xmlns="http://www.w3.org/2000/svg">' +
-                  '<path d="' + pathFrom(part.sa, true) + '" fill="none" stroke="#999" stroke-width="0.35" stroke-dasharray="2.2 1.8"/>' +
-                  '<path d="' + pathFrom(part.pts, true) + '" fill="' + part.fill + '" fill-opacity="0.35" stroke="' + part.stroke + '" stroke-width="0.6"/>' +
+                  '<path d="' + pathFrom(part.pts, true) + '" fill="none" stroke="#999" stroke-width="0.35" stroke-dasharray="2.2 1.8"/>' +
+                  '<path d="' + pathFrom(part.sa, true) + '" fill="' + part.fill + '" fill-opacity="0.35" stroke="' + part.stroke + '" stroke-width="0.6"/>' +
                   center + marks + "</svg></div>"
                 );
               }
@@ -4055,7 +4055,7 @@ setPINFORMEKarte=function(d){
            view, so an update build forces exactly one re-login. */
         var BUILD_KEY = "PINFORME_ADMIN_BUILD_V1";
         var LASTUSED_KEY = "PINFORME_ADMIN_LASTUSED_V1";
-        var BUILD_ID = "prod-2026-11-19-r13";
+        var BUILD_ID = "prod-2026-11-19-r14";
         var RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
 
         /* Breed master: formal names + aliases (normalisation is display-side). */
