@@ -1676,7 +1676,7 @@
             <button class="dl-btn ghost" id="pat-print-save" type="button" disabled>A4で印刷する（分割）</button>
           </div>
           <p class="hint" style="margin-top:10px">SVGは実寸で保存されます（幅と高さにmm単位の寸法入り）。対応ソフトで開くと、そのまま実寸で表示されます。画面で文字が小さい場合は、ダウンロードしたファイルで確認してください。</p>
-          <p class="hint">印刷の前提はA4判です。「A4で印刷する（分割）」を押すと印刷画面が開きます。そのままプリンタで印刷するか、印刷画面の共有ボタンから「ファイルに保存」を選ぶとPDFで保存できます。型紙は実寸のままA4用紙（余白10mm）に分割されます（ページ同士に15mmの重なりがあり、各ページに通し番号と位置合わせの十字マークが付きます）。プリンタの設定は倍率100%（実際のサイズ）にし、最初のページの校正マスが一辺5cmで印刷されるか確認してください。</p>
+          <p class="hint">印刷の前提はA4判です。「A4で印刷する（分割）」を押すと印刷用の画面が開き、続けて印刷画面が出ます。印刷画面が出ない時は、印刷用画面の上の「印刷する」ボタンを押してください。印刷画面の共有ボタンから「ファイルに保存」を選ぶとPDFで保存できます。終わったら印刷用画面の上の「管理画面に戻る」で戻れます。型紙は実寸のままA4用紙（余白10mm）に分割されます（ページ同士に15mmの重なりがあり、各ページに通し番号と位置合わせの十字マークが付きます）。プリンタの設定は倍率100%（実際のサイズ）にし、最初のページの校正マスが一辺5cmで印刷されるか確認してください。</p>
         </div>
       </section>
 
@@ -4015,11 +4015,22 @@ setPINFORMEKarte=function(d){
           });
           return pages.join("");
         }
-        // 印刷はカルテPDFと同じ方式（新しい画面に印刷用ページを書き込み、
-        // そのまま印刷画面を開く）。HTMLファイルの保存では携帯で印刷できない。
+        // 印刷ページを新しい画面で開く。開いた画面の中に「印刷する」と
+        // 「管理画面に戻る」のボタンを置き、読み込み後に印刷画面も自動で開く
+        // （r17では外から印刷を呼んだが、携帯では印刷画面が出ず、戻る手段も
+        // なかったための修正。HTMLファイルの保存方式は携帯で印刷できない）。
         patPrintSave.addEventListener("click", function () {
           if (!currentPattern || !currentSVG) return;
-          var doc = '<!doctype html><html lang="ja"><head><meta charset="utf-8"><title>PINFORME 型紙 印刷用 ' + currentPattern.name + "</title><style>" + PRINT_CSS + "</style></head><body>" + buildPrintHTML() + "</body></html>";
+          var backUrl = location.origin + location.pathname;
+          var toolCss = ".print-toolbar{position:fixed;top:0;left:0;right:0;z-index:10;display:flex;gap:10px;padding:10px;background:rgba(255,255,255,.96);border-bottom:1px solid #ccc}" +
+            ".print-toolbar button{flex:1;font-size:16px;padding:12px;border-radius:10px;border:1px solid #111;background:#111;color:#fff;cursor:pointer}" +
+            ".print-toolbar button.back{background:#fff;color:#111}" +
+            "@media screen{body{padding-top:62px}}" +
+            "@media print{.print-toolbar{display:none!important}}";
+          var toolbar = '<div class="print-toolbar"><button type="button" onclick="window.print()">印刷する</button>' +
+            '<button type="button" class="back" onclick="window.close();setTimeout(function(){location.href=\'' + backUrl + '\';},350);">管理画面に戻る</button></div>';
+          var autoPrint = "<script>window.onload=function(){setTimeout(function(){window.print();},400);};</" + "script>";
+          var doc = '<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>PINFORME 型紙 印刷用 ' + currentPattern.name + "</title><style>" + PRINT_CSS + toolCss + "</style></head><body>" + toolbar + buildPrintHTML() + autoPrint + "</body></html>";
           var printWin = window.open("", "_blank");
           if (!printWin) {
             alert("印刷画面を開けませんでした。Safariのポップアップを許可して、もう一度お試しください。");
@@ -4028,9 +4039,6 @@ setPINFORMEKarte=function(d){
           printWin.document.open();
           printWin.document.write(doc);
           printWin.document.close();
-          setTimeout(function () {
-            try { printWin.focus(); printWin.print(); } catch (e) {}
-          }, 350);
         });
 
         loadData();
@@ -4071,7 +4079,7 @@ setPINFORMEKarte=function(d){
            view, so an update build forces exactly one re-login. */
         var BUILD_KEY = "PINFORME_ADMIN_BUILD_V1";
         var LASTUSED_KEY = "PINFORME_ADMIN_LASTUSED_V1";
-        var BUILD_ID = "prod-2026-11-20-r17";
+        var BUILD_ID = "prod-2026-11-20-r18";
         var RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
 
         /* Breed master: formal names + aliases (normalisation is display-side). */
