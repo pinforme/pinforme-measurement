@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PINFORME お守り印刷シート</title>
+<style>
+  :root { --ink:#1c1c1e; --mut:#6d6d72; --line:#d9d9de; --bg:#f4f4f5; --card:#fff; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif; background: var(--bg); color: var(--ink); }
+  header { background:#111; color:#fff; padding: 14px 16px; display:flex; align-items:center; gap:12px; }
+  header h1 { font-size: 17px; margin:0; font-weight: 700; }
+  header a { color:#fff; text-decoration:none; font-size: 13px; border:1px solid #555; border-radius: 999px; padding: 6px 12px; margin-left:auto; }
+  main { max-width: 760px; margin: 0 auto; padding: 16px; }
+  .note { color: var(--mut); font-size: 13px; line-height: 1.7; }
+  .set { background: var(--card); border:1px solid var(--line); border-radius: 14px; padding: 14px; margin: 14px 0; }
+  .set h2 { font-size: 15px; margin: 0 0 10px; }
+  .set .del { float:right; font-size: 12px; color:#b00020; background:none; border:none; cursor:pointer; }
+  .name { width: 100%; font-size: 15px; padding: 9px 10px; border:1px solid var(--line); border-radius: 10px; margin-bottom: 12px; }
+  .pickrow { display:flex; gap: 12px; }
+  .pick { flex:1; }
+  .pick p { margin: 0 0 6px; font-size: 13px; color: var(--mut); }
+  .pick label { display:block; border:1.5px dashed #b9b9c0; border-radius: 12px; padding: 10px; text-align:center; cursor:pointer; font-size: 13px; }
+  .pick input[type=file] { display:none; }
+  .pick svg { display:block; margin: 8px auto 2px; }
+  .btn { display:block; width:100%; padding: 14px; font-size: 16px; font-weight: 700; border:none; border-radius: 12px; cursor:pointer; }
+  .btn-main { background:#111; color:#fff; margin-top: 16px; }
+  .btn-sub { background:#e8e8ec; color: var(--ink); margin-top: 10px; }
+  .opt { display:flex; align-items:center; gap:8px; font-size: 14px; margin-top: 14px; }
+  /* ---------- sheet (print) ---------- */
+  #sheetView { display:none; }
+  .sheet-controls { position: sticky; top:0; background:#111; padding: 10px; display:flex; gap:10px; z-index: 5; }
+  .sheet-controls button { flex:1; padding: 12px; font-size: 15px; font-weight:700; border-radius: 10px; border:none; cursor:pointer; }
+  .sc-print { background:#fff; color:#111; }
+  .sc-back { background:#333; color:#fff; }
+  .page { background:#fff; width: 210mm; min-height: 297mm; margin: 12px auto; padding: 14mm 15mm; box-shadow: 0 1px 6px rgba(0,0,0,.18); }
+  .page h3 { font-size: 13pt; margin: 0 0 2mm; }
+  .page .sub { font-size: 9pt; color:#444; margin: 0 0 6mm; }
+  .grid { display:grid; grid-template-columns: 44mm 44mm; gap: 8mm 16mm; }
+  .slot p { margin: 0 0 2mm; font-size: 10pt; }
+  .calib { margin-top: 10mm; display:flex; align-items:center; gap: 6mm; }
+  .calib .box { width: 50mm; height: 50mm; border: 0.4mm solid #333; }
+  .calib p { font-size: 9pt; color:#333; margin:0; }
+  @page { size: A4; margin: 0; }
+  @media print {
+    body { background:#fff; }
+    header, main#toolView, .sheet-controls { display:none !important; }
+    #sheetView { display:block !important; }
+    .page { margin:0; box-shadow:none; page-break-after: always; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>🐾 お守り印刷シート</h1>
+  <a href="system.html">管理画面に戻る</a>
+</header>
+
+<main id="toolView">
+  <p class="note">ハメパチ KO62（内寸62×44mm）用の中身を作ります。セットごとに名前と表・裏の絵を選んで、「印刷シートを作る」を押してください。印刷は100%（実寸）で、フチなしはオフにしてください。</p>
+  <div id="sets"></div>
+  <button class="btn btn-sub" id="addSet" type="button">＋ セットを追加</button>
+  <label class="opt"><input type="checkbox" id="spare" checked> 予備も入れる（各セットもう1組）</label>
+  <button class="btn btn-main" id="makeSheet" type="button">印刷シートを作る</button>
+</main>
+
+<div id="sheetView">
+  <div class="sheet-controls">
+    <button class="sc-print" id="doPrint" type="button">印刷する</button>
+    <button class="sc-back" id="backTool" type="button">ツールに戻る</button>
+  </div>
+  <div id="pages"></div>
+</div>
+
+<script>
+"use strict";
+/* Official KO62 omamori outline (44x62mm), extracted from the maker's template. */
+var CONTOUR = "M41.49,62.00 L2.59,62.00 L1.23,61.41 L0.34,60.34 L0.00,59.15 L0.00,14.99 L0.25,13.97 L0.93,12.87 L8.75,1.32 L9.81,0.34 L10.66,0.00 L33.68,0.08 L34.61,0.59 L35.25,1.23 L43.58,13.55 L44.00,14.65 L44.00,59.49 L43.66,60.43 L43.15,61.11 L42.43,61.66 L41.49,62.00 Z";
+var PW = 519, PH = 732; /* 44x62mm at 300dpi */
+var sets = [];
+var setSeq = 0;
+
+function svgPreview(dataURL) {
+  var inner = dataURL
+    ? '<image href="' + dataURL + '" x="0" y="0" width="44" height="62" preserveAspectRatio="none" clip-path="url(#cp)"/>'
+    : '<rect x="0" y="0" width="44" height="62" fill="#eee"/>';
+  return '<svg viewBox="0 0 44 62" width="66" height="93" aria-hidden="true">'
+    + '<defs><clipPath id="cp"><path d="' + CONTOUR + '"/></clipPath></defs>'
+    + inner
+    + '<path d="' + CONTOUR + '" fill="none" stroke="#888" stroke-width="0.4"/></svg>';
+}
+
+function processImage(img) {
+  var cv = document.createElement('canvas'); cv.width = PW; cv.height = PH;
+  var cx = cv.getContext('2d');
+  cx.drawImage(img, 0, 0, PW, PH);
+  /* exact-shape mask */
+  var mc = document.createElement('canvas'); mc.width = PW; mc.height = PH;
+  var mx = mc.getContext('2d');
+  var S = PW / 44;
+  mx.scale(S, S); mx.fillStyle = '#000';
+  mx.fill(new Path2D(CONTOUR));
+  var mask = mx.getImageData(0, 0, PW, PH).data;
+  var id = cx.getImageData(0, 0, PW, PH), d = id.data;
+  /* sample the artwork's field colour (left edge, inside the shape) */
+  var si = (Math.floor(30 * S) * PW + Math.floor(3 * S)) * 4;
+  var fr = d[si], fg = d[si + 1], fb = d[si + 2];
+  /* flood fill near-white from the borders = outside the drawn shape */
+  var seen = new Uint8Array(PW * PH);
+  var stack = [];
+  function isWhite(i) { return d[i * 4] > 245 && d[i * 4 + 1] > 245 && d[i * 4 + 2] > 245; }
+  function push(i) { if (!seen[i] && isWhite(i)) { seen[i] = 1; stack.push(i); } }
+  var x, y, i;
+  for (x = 0; x < PW; x++) { push(x); push((PH - 1) * PW + x); }
+  for (y = 0; y < PH; y++) { push(y * PW); push(y * PW + PW - 1); }
+  while (stack.length) {
+    i = stack.pop(); x = i % PW; y = (i / PW) | 0;
+    if (x > 0) push(i - 1);
+    if (x < PW - 1) push(i + 1);
+    if (y > 0) push(i - PW);
+    if (y < PH - 1) push(i + PW);
+  }
+  for (i = 0; i < PW * PH; i++) {
+    if (seen[i] && mask[i * 4 + 3] > 0) { d[i * 4] = fr; d[i * 4 + 1] = fg; d[i * 4 + 2] = fb; }
+  }
+  /* clip to the exact shape, transparent outside */
+  var src = document.createElement('canvas'); src.width = PW; src.height = PH;
+  src.getContext('2d').putImageData(id, 0, 0);
+  var out = document.createElement('canvas'); out.width = PW; out.height = PH;
+  var ox = out.getContext('2d');
+  ox.scale(S, S); ox.clip(new Path2D(CONTOUR)); ox.setTransform(1, 0, 0, 1, 0, 0);
+  ox.drawImage(src, 0, 0);
+  return out.toDataURL('image/png');
+}
+
+function renderSets() {
+  var wrap = document.getElementById('sets');
+  wrap.innerHTML = '';
+  sets.forEach(function (st, idx) {
+    var div = document.createElement('div');
+    div.className = 'set';
+    div.innerHTML =
+      '<button type="button" class="del">削除</button><h2>セット' + (idx + 1) + '</h2>'
+      + '<input class="name" type="text" placeholder="名前（例：ぴんちゃん）" value="' + (st.name || '') + '">'
+      + '<div class="pickrow">'
+      + '<div class="pick"><p>表の絵</p><label>タップして選ぶ<input type="file" accept="image/*" data-side="front"></label><div class="pv">' + svgPreview(st.front) + '</div></div>'
+      + '<div class="pick"><p>裏の絵</p><label>タップして選ぶ<input type="file" accept="image/*" data-side="back"></label><div class="pv">' + svgPreview(st.back) + '</div></div>'
+      + '</div>';
+    div.querySelector('.del').addEventListener('click', function () {
+      sets.splice(idx, 1); renderSets();
+    });
+    div.querySelector('.name').addEventListener('input', function (e) { st.name = e.target.value; });
+    div.querySelectorAll('input[type=file]').forEach(function (inp) {
+      inp.addEventListener('change', function () {
+        var f = inp.files && inp.files[0];
+        if (!f) return;
+        var url = URL.createObjectURL(f);
+        var img = new Image();
+        img.onload = function () {
+          st[inp.getAttribute('data-side')] = processImage(img);
+          URL.revokeObjectURL(url);
+          renderSets();
+        };
+        img.src = url;
+      });
+    });
+    wrap.appendChild(div);
+  });
+  document.getElementById('addSet').style.display = sets.length >= 4 ? 'none' : 'block';
+}
+
+function buildSheet() {
+  var usable = sets.filter(function (s) { return s.front && s.back; });
+  if (!usable.length) { alert('表と裏の両方の絵が入っているセットがありません。'); return; }
+  var slots = [];
+  usable.forEach(function (s) {
+    var nm = s.name || 'お守り';
+    slots.push({ label: nm + ' 表', img: s.front });
+    slots.push({ label: nm + ' 裏', img: s.back });
+  });
+  if (document.getElementById('spare').checked) {
+    usable.forEach(function (s) {
+      var nm = s.name || 'お守り';
+      slots.push({ label: '予備 ' + nm + ' 表', img: s.front });
+      slots.push({ label: '予備 ' + nm + ' 裏', img: s.back });
+    });
+  }
+  var pagesEl = document.getElementById('pages');
+  pagesEl.innerHTML = '';
+  var per = 4, pageNo = 0;
+  for (var i = 0; i < slots.length; i += per) {
+    pageNo++;
+    var chunk = slots.slice(i, i + per);
+    var pg = document.createElement('div');
+    pg.className = 'page';
+    var h = '';
+    if (pageNo === 1) {
+      h += '<h3>PINFORME お守り（ハメパチ KO62用）中身・印刷シート</h3>'
+        + '<p class="sub">内寸62×44mm・実寸で印刷（100%）。グレーの線に沿って切り、表と裏を重ねてケースに入れます。</p>';
+    } else {
+      h += '<h3>予備</h3><p class="sub">切り損じ用です。</p>';
+    }
+    h += '<div class="grid">';
+    chunk.forEach(function (sl) {
+      var cid = 'cp' + Math.random().toString(36).slice(2, 9);
+      h += '<div class="slot"><p>' + sl.label + '</p>'
+        + '<svg viewBox="0 0 44 62" style="width:44mm;height:62mm;display:block">'
+        + '<defs><clipPath id="' + cid + '"><path d="' + CONTOUR + '"/></clipPath></defs>'
+        + '<image href="' + sl.img + '" x="0" y="0" width="44" height="62" preserveAspectRatio="none" clip-path="url(#' + cid + ')"/>'
+        + '<path d="' + CONTOUR + '" fill="none" stroke="#8a8a8a" stroke-width="0.25"/></svg></div>';
+    });
+    h += '</div>';
+    if (pageNo === 1) {
+      h += '<div class="calib"><div class="box"></div><p>校正マス（一辺50mm）印刷後に実寸か確認してください。</p></div>';
+    }
+    pg.innerHTML = h;
+    pagesEl.appendChild(pg);
+  }
+  document.getElementById('toolView').style.display = 'none';
+  document.querySelector('header').style.display = 'none';
+  document.getElementById('sheetView').style.display = 'block';
+  window.scrollTo(0, 0);
+  setTimeout(function () { window.print(); }, 600);
+}
+
+document.getElementById('addSet').addEventListener('click', function () {
+  if (sets.length >= 4) return;
+  sets.push({ id: ++setSeq, name: '', front: null, back: null });
+  renderSets();
+});
+document.getElementById('makeSheet').addEventListener('click', buildSheet);
+document.getElementById('doPrint').addEventListener('click', function () { window.print(); });
+document.getElementById('backTool').addEventListener('click', function () {
+  document.getElementById('sheetView').style.display = 'none';
+  document.getElementById('toolView').style.display = 'block';
+  document.querySelector('header').style.display = 'flex';
+});
+sets.push({ id: ++setSeq, name: '', front: null, back: null });
+renderSets();
+</script>
+</body>
+</html>
