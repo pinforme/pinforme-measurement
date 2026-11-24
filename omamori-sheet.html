@@ -27,27 +27,8 @@
   .btn-main { background:#111; color:#fff; margin-top: 16px; }
   .btn-sub { background:#e8e8ec; color: var(--ink); margin-top: 10px; }
   .opt { display:flex; align-items:center; gap:8px; font-size: 14px; margin-top: 14px; }
-  /* ---------- sheet (print) ---------- */
-  #sheetView { display:none; }
-  .sheet-controls { position: sticky; top:0; background:#111; padding: 10px; display:flex; gap:10px; z-index: 5; }
-  .sheet-controls button { flex:1; padding: 12px; font-size: 15px; font-weight:700; border-radius: 10px; border:none; cursor:pointer; }
-  .sc-print { background:#fff; color:#111; }
-  .sc-back { background:#333; color:#fff; }
-  .page { background:#fff; width: 210mm; min-height: 297mm; margin: 12px auto; padding: 14mm 15mm; box-shadow: 0 1px 6px rgba(0,0,0,.18); }
-  .page h3 { font-size: 13pt; margin: 0 0 2mm; }
-  .page .sub { font-size: 9pt; color:#444; margin: 0 0 6mm; }
-  .grid { display:grid; grid-template-columns: 44mm 44mm; gap: 8mm 16mm; }
-  .slot p { margin: 0 0 2mm; font-size: 10pt; }
-  .calib { margin-top: 10mm; display:flex; align-items:center; gap: 6mm; }
-  .calib .box { width: 50mm; height: 50mm; border: 0.4mm solid #333; }
-  .calib p { font-size: 9pt; color:#333; margin:0; }
-  @page { size: A4; margin: 0; }
-  @media print {
-    body { background:#fff; }
-    header, main#toolView, .sheet-controls { display:none !important; }
-    #sheetView { display:block !important; }
-    .page { margin:0; box-shadow:none; page-break-after: always; }
-  }
+  .done { display:none; background:#e9f7ee; border:1px solid #bfe3cc; color:#14532d; border-radius: 12px; padding: 12px 14px; font-size: 14px; line-height: 1.7; margin-top: 14px; }
+  footer { color:#9a9aa0; font-size: 11px; text-align:center; padding: 18px 0 26px; }
 </style>
 </head>
 <body>
@@ -57,21 +38,16 @@
 </header>
 
 <main id="toolView">
-  <p class="note">ハメパチ KO62（内寸62×44mm）用の中身を作ります。セットごとに名前と表・裏の絵を選んで、「印刷シートを作る」を押してください。印刷は100%（実寸）で、フチなしはオフにしてください。</p>
+  <p class="note">ハメパチ KO62（内寸62×44mm）用の中身を作ります。セットごとに名前と表・裏の絵を選んで、「PDFを作る」を押してください。できたPDFを開いて、100%（実寸）で印刷してください。フチなしはオフです。</p>
   <div id="sets"></div>
   <button class="btn btn-sub" id="addSet" type="button">＋ セットを追加</button>
   <label class="opt"><input type="checkbox" id="spare" checked> 予備も入れる（各セットもう1組）</label>
-  <button class="btn btn-main" id="makeSheet" type="button">印刷シートを作る</button>
+  <button class="btn btn-main" id="makePdf" type="button">PDFを作る</button>
+  <div class="done" id="doneMsg">PDFを作りました。開いたPDFを100%で印刷し、校正マスが50mmになっているか確認してから切ってください。</div>
 </main>
+<footer>omamori-sheet v2</footer>
 
-<div id="sheetView">
-  <div class="sheet-controls">
-    <button class="sc-print" id="doPrint" type="button">印刷する</button>
-    <button class="sc-back" id="backTool" type="button">ツールに戻る</button>
-  </div>
-  <div id="pages"></div>
-</div>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 "use strict";
 /* Official KO62 omamori outline (44x62mm), extracted from the maker's template. */
@@ -130,7 +106,7 @@ function processImage(img) {
   var ox = out.getContext('2d');
   ox.scale(S, S); ox.clip(new Path2D(CONTOUR)); ox.setTransform(1, 0, 0, 1, 0, 0);
   ox.drawImage(src, 0, 0);
-  return out.toDataURL('image/png');
+  return { canvas: out, url: out.toDataURL('image/png') };
 }
 
 function renderSets() {
@@ -143,8 +119,8 @@ function renderSets() {
       '<button type="button" class="del">削除</button><h2>セット' + (idx + 1) + '</h2>'
       + '<input class="name" type="text" placeholder="名前（例：ぴんちゃん）" value="' + (st.name || '') + '">'
       + '<div class="pickrow">'
-      + '<div class="pick"><p>表の絵</p><label>タップして選ぶ<input type="file" accept="image/*" data-side="front"></label><div class="pv">' + svgPreview(st.front) + '</div></div>'
-      + '<div class="pick"><p>裏の絵</p><label>タップして選ぶ<input type="file" accept="image/*" data-side="back"></label><div class="pv">' + svgPreview(st.back) + '</div></div>'
+      + '<div class="pick"><p>表の絵</p><label>タップして選ぶ<input type="file" accept="image/*" data-side="front"></label><div class="pv">' + svgPreview(st.frontURL) + '</div></div>'
+      + '<div class="pick"><p>裏の絵</p><label>タップして選ぶ<input type="file" accept="image/*" data-side="back"></label><div class="pv">' + svgPreview(st.backURL) + '</div></div>'
       + '</div>';
     div.querySelector('.del').addEventListener('click', function () {
       sets.splice(idx, 1); renderSets();
@@ -157,7 +133,9 @@ function renderSets() {
         var url = URL.createObjectURL(f);
         var img = new Image();
         img.onload = function () {
-          st[inp.getAttribute('data-side')] = processImage(img);
+          var r = processImage(img);
+          if (inp.getAttribute('data-side') === 'front') { st.front = r.canvas; st.frontURL = r.url; }
+          else { st.back = r.canvas; st.backURL = r.url; }
           URL.revokeObjectURL(url);
           renderSets();
         };
@@ -169,73 +147,92 @@ function renderSets() {
   document.getElementById('addSet').style.display = sets.length >= 4 ? 'none' : 'block';
 }
 
-function buildSheet() {
+/* Render one A4 sheet page (300dpi canvas) and return its JPEG data URL. */
+function renderPage(pageSlots, isFirst) {
+  var S = 300 / 25.4;                 /* px per mm */
+  var W = Math.round(210 * S), H = Math.round(297 * S);
+  var cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+  var c = cv.getContext('2d');
+  c.fillStyle = '#fff'; c.fillRect(0, 0, W, H);
+  c.fillStyle = '#1c1c1e';
+  c.textBaseline = 'alphabetic';
+  if (isFirst) {
+    c.font = '700 54px sans-serif';
+    c.fillText('PINFORME お守り（ハメパチ KO62用）中身・印刷シート', 15 * S, 18 * S);
+    c.font = '34px sans-serif'; c.fillStyle = '#444';
+    c.fillText('内寸62×44mm・実寸で印刷（100%）。グレーの線に沿って切り、表と裏を重ねてケースに入れます。', 15 * S, 25 * S);
+    c.fillStyle = '#1c1c1e';
+  } else {
+    c.font = '700 54px sans-serif';
+    c.fillText('予備', 15 * S, 18 * S);
+    c.font = '34px sans-serif'; c.fillStyle = '#444';
+    c.fillText('切り損じ用です。', 15 * S, 25 * S);
+    c.fillStyle = '#1c1c1e';
+  }
+  var pos = [[30, 48], [120, 48], [30, 128], [120, 128]];
+  pageSlots.forEach(function (sl, k) {
+    var px = pos[k][0], py = pos[k][1];
+    c.font = '40px sans-serif'; c.fillStyle = '#1c1c1e';
+    c.fillText(sl.label, px * S, (py - 3) * S);
+    c.drawImage(sl.canvas, px * S, py * S, 44 * S, 62 * S);
+    c.save();
+    c.translate(px * S, py * S); c.scale(S, S);
+    c.strokeStyle = '#8a8a8a'; c.lineWidth = 0.25;
+    c.stroke(new Path2D(CONTOUR));
+    c.restore();
+  });
+  if (isFirst) {
+    c.strokeStyle = '#333'; c.lineWidth = 1.5;
+    c.strokeRect(30 * S, 215 * S, 50 * S, 50 * S);
+    c.font = '34px sans-serif'; c.fillStyle = '#333';
+    c.fillText('校正マス（一辺50mm）印刷後に実寸か確認', 85 * S, 242 * S);
+  }
+  return cv.toDataURL('image/jpeg', 0.92);
+}
+
+function makePdf() {
+  try { makePdfInner(); }
+  catch (e) { alert('PDFを作れませんでした。もう一度お試しください。'); }
+}
+function makePdfInner() {
+  if (!window.jspdf || !window.jspdf.jsPDF) {
+    alert('PDFの部品を読み込めませんでした。通信の良いところでもう一度開いてください。');
+    return;
+  }
   var usable = sets.filter(function (s) { return s.front && s.back; });
   if (!usable.length) { alert('表と裏の両方の絵が入っているセットがありません。'); return; }
   var slots = [];
   usable.forEach(function (s) {
     var nm = s.name || 'お守り';
-    slots.push({ label: nm + ' 表', img: s.front });
-    slots.push({ label: nm + ' 裏', img: s.back });
+    slots.push({ label: nm + ' 表', canvas: s.front });
+    slots.push({ label: nm + ' 裏', canvas: s.back });
   });
   if (document.getElementById('spare').checked) {
     usable.forEach(function (s) {
       var nm = s.name || 'お守り';
-      slots.push({ label: '予備 ' + nm + ' 表', img: s.front });
-      slots.push({ label: '予備 ' + nm + ' 裏', img: s.back });
+      slots.push({ label: '予備 ' + nm + ' 表', canvas: s.front });
+      slots.push({ label: '予備 ' + nm + ' 裏', canvas: s.back });
     });
   }
-  var pagesEl = document.getElementById('pages');
-  pagesEl.innerHTML = '';
-  var per = 4, pageNo = 0;
+  var doc = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+  var per = 4, first = true;
   for (var i = 0; i < slots.length; i += per) {
-    pageNo++;
-    var chunk = slots.slice(i, i + per);
-    var pg = document.createElement('div');
-    pg.className = 'page';
-    var h = '';
-    if (pageNo === 1) {
-      h += '<h3>PINFORME お守り（ハメパチ KO62用）中身・印刷シート</h3>'
-        + '<p class="sub">内寸62×44mm・実寸で印刷（100%）。グレーの線に沿って切り、表と裏を重ねてケースに入れます。</p>';
-    } else {
-      h += '<h3>予備</h3><p class="sub">切り損じ用です。</p>';
-    }
-    h += '<div class="grid">';
-    chunk.forEach(function (sl) {
-      var cid = 'cp' + Math.random().toString(36).slice(2, 9);
-      h += '<div class="slot"><p>' + sl.label + '</p>'
-        + '<svg viewBox="0 0 44 62" style="width:44mm;height:62mm;display:block">'
-        + '<defs><clipPath id="' + cid + '"><path d="' + CONTOUR + '"/></clipPath></defs>'
-        + '<image href="' + sl.img + '" x="0" y="0" width="44" height="62" preserveAspectRatio="none" clip-path="url(#' + cid + ')"/>'
-        + '<path d="' + CONTOUR + '" fill="none" stroke="#8a8a8a" stroke-width="0.25"/></svg></div>';
-    });
-    h += '</div>';
-    if (pageNo === 1) {
-      h += '<div class="calib"><div class="box"></div><p>校正マス（一辺50mm）印刷後に実寸か確認してください。</p></div>';
-    }
-    pg.innerHTML = h;
-    pagesEl.appendChild(pg);
+    if (!first) doc.addPage();
+    var img = renderPage(slots.slice(i, i + per), first);
+    doc.addImage(img, 'JPEG', 0, 0, 210, 297);
+    first = false;
   }
-  document.getElementById('toolView').style.display = 'none';
-  document.querySelector('header').style.display = 'none';
-  document.getElementById('sheetView').style.display = 'block';
-  window.scrollTo(0, 0);
-  setTimeout(function () { window.print(); }, 600);
+  doc.save('omamori-sheet.pdf');
+  document.getElementById('doneMsg').style.display = 'block';
 }
 
 document.getElementById('addSet').addEventListener('click', function () {
   if (sets.length >= 4) return;
-  sets.push({ id: ++setSeq, name: '', front: null, back: null });
+  sets.push({ id: ++setSeq, name: '', front: null, back: null, frontURL: null, backURL: null });
   renderSets();
 });
-document.getElementById('makeSheet').addEventListener('click', buildSheet);
-document.getElementById('doPrint').addEventListener('click', function () { window.print(); });
-document.getElementById('backTool').addEventListener('click', function () {
-  document.getElementById('sheetView').style.display = 'none';
-  document.getElementById('toolView').style.display = 'block';
-  document.querySelector('header').style.display = 'flex';
-});
-sets.push({ id: ++setSeq, name: '', front: null, back: null });
+document.getElementById('makePdf').addEventListener('click', makePdf);
+sets.push({ id: ++setSeq, name: '', front: null, back: null, frontURL: null, backURL: null });
 renderSets();
 </script>
 </body>
