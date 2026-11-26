@@ -3401,13 +3401,14 @@ setPINFORMEKarte=function(d){
             var neckFin = Math.round(neckSpec * 10) / 10;
             var neckCut = Math.round((neckSpec + 2.0) * 10) / 10;
             var armArc = patArmholeCm(byName["前身頃"].sew, byName["後ろ身頃"].sew);
+            var neckArc = Math.round((patChainLen(byName["前身頃"].sew, 120, 14) + patChainLen(byName["後ろ身頃"].sew, 162, 20)) * 100) / 100;
             var armFin = Math.round(armArc * 0.95 * 10) / 10;
             var armCut = Math.round((armArc * 0.95 + 2.0) * 10) / 10;
             byName["首まわりバインディング"] = patRibPart("首まわりバインディング", neckCut, bandMm, [10, bandMm / 2, bandMm - 10],
               "帯幅" + fmt(bandMm / 10) + "cm×長さ" + fmt(neckCut) + "cm ×1本・仕上がり幅" + fmt(finW) + "cm・仕上がり一周" + fmt(neckFin) + "cm");
             byName["袖口バインディング"] = patRibPart("袖口バインディング", armCut, 40, [10, 20, 30],
               "帯幅4.0cm×長さ" + fmt(armCut) + "cm ×2本・仕上がり幅1cm・仕上がり一周" + fmt(armFin) + "cm");
-            ribInfo = { neckFin: neckFin, bandMm: bandMm, finW: finW, armFin: armFin, armArc: armArc };
+            ribInfo = { neckFin: neckFin, bandMm: bandMm, finW: finW, armFin: armFin, armArc: armArc, neckArc: neckArc };
           }
           var order = ribInfo ? [["後ろ身頃", "前身頃"], ["後ろ裾内貼り"], ["首まわりバインディング", "袖口バインディング"]] : [["後ろ身頃", "前身頃"], ["後ろ裾内貼り"], ["袖口バインディング"]];
           var gap = 15, margin = 12, headH = ribInfo ? 132 : 108;
@@ -3425,7 +3426,7 @@ setPINFORMEKarte=function(d){
             "実線＝裁断線／点線＝縫い線（縫い代はOEMの型のまま）",
             ribInfo ? "首リブの仕上がり一周 " + fmt(ribInfo.neckFin) + "cm（首の寸法）・帯幅" + fmt(ribInfo.bandMm / 10) + "cm（仕上がり幅" + fmt(ribInfo.finW) + "cm）" : "首まわりは型の形を変えず、リブの裁断で合わせます"
           ];
-          if (ribInfo) info.push("リブはパーツごとの型紙（実線＝裁断線／点線＝つなぎ目の縫い線・つなぎ代1cm×2含む／青線＝折り線）／袖口リブの仕上がり一周 " + fmt(ribInfo.armFin) + "cm（袖ぐり " + fmt(ribInfo.armArc) + "cm の95%）");
+          if (ribInfo) info.push("リブはパーツごとの型紙（実線＝裁断線／点線＝つなぎ目の縫い線・つなぎ代1cm×2含む／青線＝折り線）／袖口リブの仕上がり一周 " + fmt(ribInfo.armFin) + "cm（袖ぐり " + fmt(ribInfo.armArc) + "cm の95%）／首ぐり縫い線 " + fmt(ribInfo.neckArc) + "cm（着せる時はここまで広がります。頭まわりがこれ以下なら通ります）");
           var parts = [], body = "", y = margin;
           order.forEach(function (row, ri) {
             var x = margin;
@@ -4250,7 +4251,7 @@ setPINFORMEKarte=function(d){
            view, so an update build forces exactly one re-login. */
         var BUILD_KEY = "PINFORME_ADMIN_BUILD_V1";
         var LASTUSED_KEY = "PINFORME_ADMIN_LASTUSED_V1";
-        var BUILD_ID = "prod-2026-11-26-r22";
+        var BUILD_ID = "prod-2026-11-26-r23";
         var RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
 
         /* Breed master: formal names + aliases (normalisation is display-side). */
