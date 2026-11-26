@@ -1640,7 +1640,7 @@
       <!-- ============ 09 PATTERN MAKER ============ -->
       <section id="pattern">
         <div class="sec-head"><span class="sec-no">09</span><h2>型紙を作成する</h2></div>
-        <p class="sec-lead">OEM基準版と独自版v4、2つの型紙を並べて比べられます。作り（後ろ身頃が幅の約68%、前身頃は細いお腹パネル）はどちらもOEMのまま。独自版は、目標寸法の決め方だけを自社のやり方に変えたものです。34・40・45の帯はOEM基準版がなく、独自版のみです。サイズ帯の型紙はできあがっているもの、IDで選んだ子の型紙は、その子の寸法に合わせて帯の型を拡縮して作ります。織物版（総柄）は、独自版をもとに生地の伸縮率から胸囲を自動計算し、リブのパーツまで含めて作ります。首のリブ幅はサイズごとに変わります。</p>
+        <p class="sec-lead">OEM基準版と独自版v4、2つの型紙を並べて比べられます。作り（後ろ身頃が幅の約68%、前身頃は細いお腹パネル）はどちらもOEMのまま。独自版は、目標寸法の決め方だけを自社のやり方に変えたものです。34・40・45の帯はOEM基準版がなく、独自版のみです。サイズ帯の型紙はできあがっているもの、IDで選んだ子の型紙は、その子の寸法に合わせて帯の型を拡縮して作ります。型紙は1つの自動計算で作ります。生地の伸縮率を入れると、身頃とリブ（首・袖口）のパーツをまとめて計算します。首のリブ幅はサイズごとに変わります。</p>
         <div class="card">
           <div class="tabs" role="tablist" aria-label="型紙のもとにする寸法">
             <button class="tab-btn" id="ptabbtn-id" role="tab" aria-selected="true" aria-controls="ppanel-id">IDで選んだ子の実測</button>
@@ -1662,16 +1662,15 @@
             <div>
               <label>ダウンロード・印刷に使う型紙</label>
               <div class="pat-out-row">
-                <label class="pat-out"><input type="radio" name="pat-out" value="inhouse" checked> 独自版v4</label>
+                <label class="pat-out"><input type="radio" name="pat-out" value="auto" checked> 自動計算（伸縮率で計算）</label>
                 <label class="pat-out"><input type="radio" name="pat-out" value="oem"> OEM基準版</label>
-                <label class="pat-out"><input type="radio" name="pat-out" value="woven"> 織物版（総柄）</label>
               </div>
-              <div id="pat-woven-opts" hidden>
+              <div id="pat-woven-opts">
                 <label for="pat-woven-stretch">生地の伸縮率（%）</label>
-                <input type="number" id="pat-woven-stretch" value="0" min="0" max="60" step="0.5" inputmode="decimal">
-                <p class="hint">織物版は、独自版v4をもとに、胸囲を「基準ニットの伸縮率11%（仮置き）÷（1＋生地の伸縮率）」で自動計算します。首・丈は変えず、首と袖口のリブのパーツ（寸法つき）も一緒に出ます。サイズ帯の型紙で選べます。</p>
+                <input type="number" id="pat-woven-stretch" value="11" min="0" max="60" step="0.5" inputmode="decimal">
+                <p class="hint">型紙はこの1つの自動計算で作ります。生地の伸縮率を入れると、独自版v4をもとに胸囲を自動計算し、首と袖口のリブのパーツも一緒に作ります。基準ニットは11%（仮置き）で、11%を入れると土台の型紙そのものになります。伸びない生地（総柄など）は0%です。伸縮率の計算はサイズ帯の型紙で使います（IDの型紙は、その子の実測に合わせて作り、リブもその寸法から計算します）。</p>
               </div>
-              <p class="hint">プレビューには独自版とOEM基準版が出て、織物版を選ぶと織物版も出ます。下のボタン（SVGダウンロード／A4印刷用ページ）で出すのは、ここで選んだ方です。</p>
+              <p class="hint">プレビューには自動計算の型紙とOEM基準版が出ます。下のボタン（SVGダウンロード／A4印刷用ページ）で出すのは、ここで選んだ方です。</p>
             </div>
           </div>
           <p class="pat-source" id="pat-source" role="status"></p>
@@ -3285,8 +3284,8 @@ setPINFORMEKarte=function(d){
         var currentSVG = null;
         var currentPattern = null; // panel geometry in mm units, for A4 print tiling
         var currentFile = "pattern.svg";
-        var patOutBasis = "inhouse"; // inhouse | oem | woven (download/print target)
-        var patWovenStretchPct = 0; // 織物版: 生地の伸縮率（%）
+        var patOutBasis = "auto"; // auto | inhouse | oem (download/print target)
+        var patWovenStretchPct = 11; // 生地の伸縮率（%）: 基準ニット11%（仮置き）
         var patSets = null;
         var patFileBase = "pattern";
 
@@ -3354,6 +3353,30 @@ setPINFORMEKarte=function(d){
           var fy = tgt.back / baseT.back;
           return { sew: patTf(piece.sew, wx, fy), cut: patTf(piece.cut, wx, fy) };
         }
+        var PAT_NECK_BAND_MM = { "34": 60, "37": 60, "40": 70, "42": 70, "45": 80, "48": 80 };
+        function patChainLen(pts, i, j) {
+          var n = pts.length, tot = 0, prev = pts[i], k = i;
+          while (k !== j) {
+            k = (k + 1) % n;
+            tot += Math.hypot(pts[k][0] - prev[0], pts[k][1] - prev[1]);
+            prev = pts[k];
+          }
+          return tot / 10;
+        }
+        function patArmholeCm(frontSew, backSew) {
+          var l = patChainLen(frontSew, 15, 59) + patChainLen(backSew, 137, 161);
+          var r = patChainLen(frontSew, 75, 119) + patChainLen(backSew, 21, 45);
+          return Math.round((l + r) / 2 * 100) / 100;
+        }
+        function patRibPart(name, cutCm, hMm, foldYs, spec) {
+          var wMm = Math.round(cutCm * 10);
+          var cut = [[0, 0], [wMm, 0], [wMm, hMm], [0, hMm]];
+          var sew = [[10, 0], [wMm - 10, 0], [wMm - 10, hMm], [10, hMm]];
+          var extra = foldYs.map(function (fy) {
+            return '<line x1="0" y1="' + fy + '" x2="' + wMm + '" y2="' + fy + '" stroke="#7a9cc4" stroke-width="0.5"/>';
+          }).join("");
+          return { name: name, sew: sew, cut: cut, w: wMm, h: hMm, cx: wMm / 2, cy: hMm / 2, foldYs: foldYs, spec: spec, extra: extra };
+        }
         function patBuildSet(basisKey, sizeKey, tgt, titleName) {
           var B = PAT_BASE[basisKey];
           var baseT = B.targets[sizeKey];
@@ -3370,8 +3393,24 @@ setPINFORMEKarte=function(d){
             var sb = patBBox(sew);
             byName[p.name] = { name: p.name, sew: sew, cut: cut, w: cb.maxX - cb.minX, h: cb.maxY - cb.minY, cx: (sb.minX + sb.maxX) / 2, cy: (sb.minY + sb.maxY) / 2 };
           });
-          var order = [["後ろ身頃", "前身頃"], ["後ろ裾内貼り"], ["袖口バインディング"]];
-          var gap = 15, margin = 12, headH = 108;
+          var ribInfo = null;
+          if (basisKey === "inhouse" && byName["前身頃"] && byName["後ろ身頃"]) {
+            var bandMm = PAT_NECK_BAND_MM[sizeKey] || 60;
+            var finW = (bandMm - 20) / 20;
+            var neckSpec = (tgt.neck === null || tgt.neck === undefined) ? baseT.neck : tgt.neck;
+            var neckFin = Math.round(neckSpec * 10) / 10;
+            var neckCut = Math.round((neckSpec + 2.0) * 10) / 10;
+            var armArc = patArmholeCm(byName["前身頃"].sew, byName["後ろ身頃"].sew);
+            var armFin = Math.round(armArc * 0.95 * 10) / 10;
+            var armCut = Math.round((armArc * 0.95 + 2.0) * 10) / 10;
+            byName["首まわりバインディング"] = patRibPart("首まわりバインディング", neckCut, bandMm, [10, bandMm / 2, bandMm - 10],
+              "帯幅" + fmt(bandMm / 10) + "cm×長さ" + fmt(neckCut) + "cm ×1本・仕上がり幅" + fmt(finW) + "cm・仕上がり一周" + fmt(neckFin) + "cm");
+            byName["袖口バインディング"] = patRibPart("袖口バインディング", armCut, 40, [10, 20, 30],
+              "帯幅4.0cm×長さ" + fmt(armCut) + "cm ×2本・仕上がり幅1cm・仕上がり一周" + fmt(armFin) + "cm");
+            ribInfo = { neckFin: neckFin, bandMm: bandMm, finW: finW, armFin: armFin, armArc: armArc };
+          }
+          var order = ribInfo ? [["後ろ身頃", "前身頃"], ["後ろ裾内貼り"], ["首まわりバインディング", "袖口バインディング"]] : [["後ろ身頃", "前身頃"], ["後ろ裾内貼り"], ["袖口バインディング"]];
+          var gap = 15, margin = 12, headH = ribInfo ? 132 : 108;
           var rowsH = [], sheetW = 0, sheetH = margin * 2;
           order.forEach(function (row) {
             var rw = 0, rh = 0;
@@ -3384,8 +3423,9 @@ setPINFORMEKarte=function(d){
             "PINFORME 型紙（" + B.label + "） " + titleName,
             "目標寸法（cm）: 胴 " + fmt(tgt.chest) + " / 首 " + fmt(tgt.neck) + " / 着丈 " + fmt(tgt.back) + " / 前丈 " + fmt(tgt.front) + (tgt.space ? " / 前足間巾 " + fmt(tgt.space) : ""),
             "実線＝裁断線／点線＝縫い線（縫い代はOEMの型のまま）",
-            "首まわりは型の形を変えず、リブの裁断で合わせます"
+            ribInfo ? "首リブの仕上がり一周 " + fmt(ribInfo.neckFin) + "cm（首の寸法）・帯幅" + fmt(ribInfo.bandMm / 10) + "cm（仕上がり幅" + fmt(ribInfo.finW) + "cm）" : "首まわりは型の形を変えず、リブの裁断で合わせます"
           ];
+          if (ribInfo) info.push("リブはパーツごとの型紙（実線＝裁断線／点線＝つなぎ目の縫い線・つなぎ代1cm×2含む／青線＝折り線）／袖口リブの仕上がり一周 " + fmt(ribInfo.armFin) + "cm（袖ぐり " + fmt(ribInfo.armArc) + "cm の95%）");
           var parts = [], body = "", y = margin;
           order.forEach(function (row, ri) {
             var x = margin;
@@ -3393,11 +3433,16 @@ setPINFORMEKarte=function(d){
               var p = byName[nm]; if (!p) return;
               var col = PAT_COLORS[nm] || ["#333333", "#eeeeee"];
               var dim = (p.w / 10).toFixed(1) + "×" + (p.h / 10).toFixed(1) + "cm";
-              parts.push({ short: nm, label: nm, pts: p.sew, sa: p.cut, cx: p.cx, cy: p.cy, dim: dim, stroke: col[0], fill: col[1] });
+              var label = p.spec ? nm + " " + p.spec : nm;
+              parts.push({ short: nm, label: label, pts: p.sew, sa: p.cut, cx: p.cx, cy: p.cy, dim: dim, stroke: col[0], fill: col[1], extra: p.extra || "" });
+              var folds = "";
+              (p.foldYs || []).forEach(function (fy) {
+                folds += '<line x1="0" y1="' + fy + '" x2="' + p.w + '" y2="' + fy + '" stroke="#7a9cc4" stroke-width="1"/>';
+              });
               body += '<g transform="translate(' + x.toFixed(1) + " " + y.toFixed(1) + ')">' +
                 '<path d="' + pathFrom(p.sew, true) + '" fill="none" stroke="#999" stroke-width="1.4" stroke-dasharray="7 6"/>' +
-                '<path d="' + pathFrom(p.cut, true) + '" fill="' + col[1] + '" fill-opacity="0.55" stroke="' + col[0] + '" stroke-width="2.4"/>' +
-                '<text x="' + p.cx.toFixed(1) + '" y="' + p.cy.toFixed(1) + '" font-size="15" text-anchor="middle" fill="' + col[0] + '">' + nm + " " + dim + "</text></g>";
+                '<path d="' + pathFrom(p.cut, true) + '" fill="' + col[1] + '" fill-opacity="0.55" stroke="' + col[0] + '" stroke-width="2.4"/>' + folds +
+                '<text x="' + p.cx.toFixed(1) + '" y="' + p.cy.toFixed(1) + '" font-size="15" text-anchor="middle" fill="' + col[0] + '">' + (p.spec ? nm + " " + p.spec : nm + " " + dim) + "</text></g>";
               x += p.w + gap;
             });
             y += rowsH[ri] + gap;
@@ -3455,25 +3500,15 @@ setPINFORMEKarte=function(d){
             var sb = patBBox(sew);
             byName[p.name] = { name: p.name, sew: sew, cut: cut, w: cb.maxX - cb.minX, h: cb.maxY - cb.minY, cx: (sb.minX + sb.maxX) / 2, cy: (sb.minY + sb.maxY) / 2 };
           });
-          var NECK_BAND_MM = { "34": 60, "37": 60, "40": 70, "42": 70, "45": 80, "48": 80 };
-          var neckBandMm = NECK_BAND_MM[sizeKey] || 60;
+          var neckBandMm = PAT_NECK_BAND_MM[sizeKey] || 60;
           var neckFinW = (neckBandMm - 20) / 20;
           var neckFin = Math.round(base.neck * 10) / 10;
           var neckCut = Math.round((base.neck + 2.0) * 10) / 10;
           var armFin = Math.round(WV.armArc * 0.95 * 10) / 10;
           var armCut = Math.round((WV.armArc * 0.95 + 2.0) * 10) / 10;
-          function ribPart(name, cutCm, hMm, foldYs, spec) {
-            var wMm = Math.round(cutCm * 10);
-            var cut = [[0, 0], [wMm, 0], [wMm, hMm], [0, hMm]];
-            var sew = [[10, 0], [wMm - 10, 0], [wMm - 10, hMm], [10, hMm]];
-            var extra = foldYs.map(function (fy) {
-              return '<line x1="0" y1="' + fy + '" x2="' + wMm + '" y2="' + fy + '" stroke="#7a9cc4" stroke-width="0.5"/>';
-            }).join("");
-            return { name: name, sew: sew, cut: cut, w: wMm, h: hMm, cx: wMm / 2, cy: hMm / 2, foldYs: foldYs, spec: spec, extra: extra };
-          }
-          byName["首まわりバインディング"] = ribPart("首まわりバインディング", neckCut, neckBandMm, [10, neckBandMm / 2, neckBandMm - 10],
+          byName["首まわりバインディング"] = patRibPart("首まわりバインディング", neckCut, neckBandMm, [10, neckBandMm / 2, neckBandMm - 10],
             "帯幅" + fmt(neckBandMm / 10) + "cm×長さ" + fmt(neckCut) + "cm ×1本・仕上がり幅" + fmt(neckFinW) + "cm・仕上がり一周" + fmt(neckFin) + "cm");
-          byName["袖口バインディング"] = ribPart("袖口バインディング", armCut, 40, [10, 20, 30],
+          byName["袖口バインディング"] = patRibPart("袖口バインディング", armCut, 40, [10, 20, 30],
             "帯幅4.0cm×長さ" + fmt(armCut) + "cm ×2本・仕上がり幅1cm・仕上がり一周" + fmt(armFin) + "cm");
           var order = [["後ろ身頃", "前身頃"], ["後ろ裾内貼り"], ["首まわりバインディング", "袖口バインディング"]];
           var gap = 15, margin = 12, headH = 132;
@@ -3486,7 +3521,7 @@ setPINFORMEKarte=function(d){
           sheetH += gap * (order.length - 1);
           sheetW += margin * 2;
           var info = [
-            "PINFORME 型紙（織物版） " + titleName,
+            "PINFORME 型紙 " + titleName + "（生地の伸縮率" + pct + "%で自動計算）",
             "目標寸法（cm）: 胴 " + fmt(conv) + "（生地の伸縮率" + pct + "%で計算） / 首 " + fmt(base.neck) + " / 着丈 " + fmt(base.back) + " / 前丈 " + fmt(base.front),
             "実線＝裁断線／点線＝縫い線（縫い代はOEMの型のまま）",
             "首ぐり縫い線 " + fmt(WV.neckArc) + "cm（型のまま）／首リブの仕上がり一周 " + fmt(neckFin) + "cm（首の寸法）・帯幅" + fmt(neckBandMm / 10) + "cm（仕上がり幅" + fmt(neckFinW) + "cm）",
@@ -3515,10 +3550,10 @@ setPINFORMEKarte=function(d){
           });
           var head = "";
           info.forEach(function (t, i) { head += '<text x="' + margin + '" y="' + (margin + 18 + i * 24) + '" font-size="15" fill="#333">' + t + "</text>"; });
-          var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + Math.round(sheetW) + 'mm" height="' + Math.round(sheetH + headH) + 'mm" viewBox="0 0 ' + sheetW.toFixed(1) + " " + (sheetH + headH).toFixed(1) + '" role="img" aria-label="タンクトップの型紙（織物版）">' +
+          var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + Math.round(sheetW) + 'mm" height="' + Math.round(sheetH + headH) + 'mm" viewBox="0 0 ' + sheetW.toFixed(1) + " " + (sheetH + headH).toFixed(1) + '" role="img" aria-label="タンクトップの型紙">' +
             '<rect width="' + sheetW.toFixed(1) + '" height="' + (sheetH + headH).toFixed(1) + '" fill="white"/>' + head +
             '<g transform="translate(0 ' + headH + ')">' + body + "</g></svg>";
-          return { svg: svg, pattern: { name: titleName + "（織物版）", info: info, parts: parts } };
+          return { svg: svg, pattern: { name: titleName + "（伸縮率" + pct + "%）", info: info, parts: parts } };
         }
         function renderPatDogCands() {
           if (!patDogCands) return;
@@ -3645,7 +3680,7 @@ setPINFORMEKarte=function(d){
         }
         function patApplyOutput() {
           if (!patSets) return;
-          var bk = patSets[patOutBasis] ? patOutBasis : "inhouse";
+          var bk = patSets[patOutBasis] ? patOutBasis : (patSets.auto ? "auto" : "inhouse");
           var s = patSets[bk];
           currentSVG = s.svg;
           currentPattern = s.pattern;
@@ -3694,13 +3729,14 @@ setPINFORMEKarte=function(d){
           patFileBase = inp.file;
           var sets = {};
           ["inhouse", "oem"].forEach(function (bk) {
+            if (inp.bandMode && bk === "inhouse") return;
             if (!PAT_DATA[bk][inp.sizeKey]) return;
             if (inp.bandMode && !PAT_BASE[bk].targets[inp.sizeKey]) return;
             var tgt = inp.bandMode ? PAT_BASE[bk].targets[inp.sizeKey] : inp.targets;
             sets[bk] = patBuildSet(bk, inp.sizeKey, tgt, inp.name);
           });
           if (inp.bandMode && PAT_WOVEN.sizes[inp.sizeKey]) {
-            sets.woven = patWovenBuildSet(inp.sizeKey, inp.name);
+            sets.auto = patWovenBuildSet(inp.sizeKey, inp.name);
           }
           patSets = sets;
           if (inp.bandMode) {
@@ -3724,8 +3760,8 @@ setPINFORMEKarte=function(d){
             patDiff.innerHTML = '<p class="hint">この子の帯はOEM基準版がないため、独自版v4のみで、この子の実測（胴 ' + fmt(inp.targets.chest) + " / 着丈 " + fmt(inp.targets.back) + " / 前丈 " + fmt(inp.targets.front) + 'cm）に合わせて作っています。</p>';
           }
           patPreview.innerHTML =
-            (sets.woven && patOutBasis === "woven" ? '<div class="pat-set"><h3>織物版（総柄）</h3>' + sets.woven.svg + "</div>" : "") +
-            '<div class="pat-set"><h3>独自版v4</h3>' + sets.inhouse.svg + "</div>" +
+            (sets.auto ? '<div class="pat-set"><h3>型紙（生地の伸縮率' + patWovenStretchPct + '%で自動計算）</h3>' + sets.auto.svg + "</div>" : "") +
+            (sets.inhouse ? '<div class="pat-set"><h3>独自版v4</h3>' + sets.inhouse.svg + "</div>" : "") +
             (sets.oem ? '<div class="pat-set"><h3>OEM基準版</h3>' + sets.oem.svg + "</div>" : "");
           patApplyOutput();
         }
@@ -3763,8 +3799,6 @@ setPINFORMEKarte=function(d){
         document.querySelectorAll('input[name="pat-out"]').forEach(function (r) {
           r.addEventListener("change", function () {
             patOutBasis = this.value;
-            var wo = document.getElementById("pat-woven-opts");
-            if (wo) wo.hidden = patOutBasis !== "woven";
             renderPattern();
           });
         });
@@ -3773,7 +3807,7 @@ setPINFORMEKarte=function(d){
           patWovenStretchEl.addEventListener("input", function () {
             var v = parseFloat(patWovenStretchEl.value);
             patWovenStretchPct = isNaN(v) ? 0 : v;
-            if (patOutBasis === "woven") renderPattern();
+            renderPattern();
           });
         }
         document.getElementById("dist-breed-select").addEventListener("change", function () {
@@ -4216,7 +4250,7 @@ setPINFORMEKarte=function(d){
            view, so an update build forces exactly one re-login. */
         var BUILD_KEY = "PINFORME_ADMIN_BUILD_V1";
         var LASTUSED_KEY = "PINFORME_ADMIN_LASTUSED_V1";
-        var BUILD_ID = "prod-2026-11-26-r21";
+        var BUILD_ID = "prod-2026-11-26-r22";
         var RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
 
         /* Breed master: formal names + aliases (normalisation is display-side). */
