@@ -1668,6 +1668,16 @@
               <div id="pat-woven-opts">
                 <label for="pat-woven-stretch">生地の伸縮率（%）</label>
                 <input type="number" id="pat-woven-stretch" value="11" min="0" max="60" step="0.5" inputmode="decimal">
+                <div class="pat-stretch-calc">
+                  <label>伸縮率を測って出す</label>
+                  <div>
+                    元の長さ <input type="number" id="pat-stretch-base" value="10" min="1" max="100" step="0.1" inputmode="decimal"> cm
+                    ／ 伸ばした長さ <input type="number" id="pat-stretch-ext" value="" min="0" max="300" step="0.1" inputmode="decimal" placeholder="例：11.1"> cm
+                    ＝ 伸縮率 <span id="pat-stretch-result">—</span>
+                    <button type="button" id="pat-stretch-apply" class="dl-btn ghost" disabled>この値を伸縮率に入れる</button>
+                  </div>
+                  <p class="hint">生地の横方向（胴まわり方向）に印をつけて、着せる時にかかるくらいまで伸ばして測ります。3回測って平均した値を入れてください。</p>
+                </div>
                 <p class="hint">型紙はこの1つの自動計算で作ります。生地の伸縮率を入れると、独自版v4をもとに胸囲を自動計算し、首と袖口のリブのパーツも一緒に作ります。基準ニットは11%（仮置き）で、11%を入れると土台の型紙そのものになります。伸びない生地（総柄など）は0%です。伸縮率の計算はサイズ帯の型紙で使います（IDの型紙は、その子の実測に合わせて作り、リブもその寸法から計算します）。</p>
               </div>
               <p class="hint">プレビューには自動計算の型紙とOEM基準版が出ます。下のボタン（SVGダウンロード／A4印刷用ページ）で出すのは、ここで選んだ方です。</p>
@@ -3811,6 +3821,33 @@ setPINFORMEKarte=function(d){
             renderPattern();
           });
         }
+        var patStretchBaseEl = document.getElementById("pat-stretch-base");
+        var patStretchExtEl = document.getElementById("pat-stretch-ext");
+        var patStretchResultEl = document.getElementById("pat-stretch-result");
+        var patStretchApplyBtn = document.getElementById("pat-stretch-apply");
+        function patStretchCalc() {
+          var b = parseFloat(patStretchBaseEl.value), e = parseFloat(patStretchExtEl.value);
+          if (!isFinite(b) || !isFinite(e) || b <= 0 || e < b) {
+            patStretchResultEl.textContent = "—";
+            patStretchApplyBtn.disabled = true;
+            return null;
+          }
+          var pct = Math.round(((e - b) / b * 100) * 10) / 10;
+          patStretchResultEl.textContent = pct + "%";
+          patStretchApplyBtn.disabled = false;
+          return pct;
+        }
+        if (patStretchBaseEl && patStretchExtEl && patStretchApplyBtn) {
+          patStretchBaseEl.addEventListener("input", patStretchCalc);
+          patStretchExtEl.addEventListener("input", patStretchCalc);
+          patStretchApplyBtn.addEventListener("click", function () {
+            var pct = patStretchCalc();
+            if (pct === null) return;
+            patWovenStretchPct = pct;
+            if (patWovenStretchEl) patWovenStretchEl.value = pct;
+            renderPattern();
+          });
+        }
         document.getElementById("dist-breed-select").addEventListener("change", function () {
           distBreed = this.value || null;
           renderStats();
@@ -4251,7 +4288,7 @@ setPINFORMEKarte=function(d){
            view, so an update build forces exactly one re-login. */
         var BUILD_KEY = "PINFORME_ADMIN_BUILD_V1";
         var LASTUSED_KEY = "PINFORME_ADMIN_LASTUSED_V1";
-        var BUILD_ID = "prod-2026-11-26-r23";
+        var BUILD_ID = "prod-2026-11-26-r24";
         var RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
 
         /* Breed master: formal names + aliases (normalisation is display-side). */
