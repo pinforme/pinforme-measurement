@@ -3947,9 +3947,191 @@ setPINFORMEKarte=function(d){
             { base: basePiece.sew, moved: movedPiece.sew, mA: sewA, mB: sewB },
             { base: basePiece.cut, moved: movedPiece.cut, mA: cutA, mB: cutB }
           ];
-          jobs.forEach(function (job) {
+          jobs.forEach(function (job, jobIdx) {
             var idxsA = patHemWalkIdx(job.moved, job.mA[0], 1, job.mA[1]);
             var idxsB = patHemWalkIdx(job.moved, job.mB[0], -1, job.mB[1]);
+            if (jobIdx === 1 && idxsA.length === idxsB.length) {
+              // 裁断線の袖ぐり鎖は円弧へ引き直さない。生成側の裁断線と
+              // 同じ作法（土台ペアから取った幅プロファイルを、換算後の
+              // 縫い線へ (tau, w) 輸送＋距離補正＋鎖ペア対称化）で作り
+              // 直す。円弧 fit は土台の幅の形（付け根の急な変化）を
+              // 潰してしまい、換算後の裁断線が期待形から最大4.5mm
+              // 離れていた（r44 fix4 §4.1・§5-1）。書き戻すのは袖ぐり
+              // 鎖の頂点だけで、裾・首ぐり・脇は従来の処理のまま。
+              var bpSew = basePiece.sew, bpCut = basePiece.cut;
+              var mvSew = movedPiece.sew, mvCut = movedPiece.cut;
+              var coreN = function (P) {
+                var n = P.length;
+                if (n > 1 && Math.abs(P[0][0] - P[n - 1][0]) < 1e-9 && Math.abs(P[0][1] - P[n - 1][1]) < 1e-9) return n - 1;
+                return n;
+              };
+              var nSB = coreN(bpSew), nCB = coreN(bpCut), nSM = coreN(mvSew);
+              var projLoop = function (p, P, n) {
+                var bd = 1e18, bs = 0, bt = 0, bf = null;
+                for (var i = 0; i < n; i++) {
+                  var a = P[i], b = P[(i + 1) % n];
+                  var vx = b[0] - a[0], vy = b[1] - a[1];
+                  var L2 = vx * vx + vy * vy;
+                  var t = L2 < 1e-12 ? 0 : Math.max(0, Math.min(1, ((p[0] - a[0]) * vx + (p[1] - a[1]) * vy) / L2));
+                  var qx = a[0] + t * vx, qy = a[1] + t * vy;
+                  var d = Math.hypot(p[0] - qx, p[1] - qy);
+                  if (d < bd) { bd = d; bs = i; bt = t; bf = [qx, qy]; }
+                }
+                return { d: bd, seg: bs, t: bt, foot: bf };
+              };
+              var cumOf = function (P, n) {
+                var cum = [0];
+                for (var i = 1; i < n; i++) cum.push(cum[i - 1] + Math.hypot(P[i][0] - P[i - 1][0], P[i][1] - P[i - 1][1]));
+                var L = cum[n - 1] + Math.hypot(P[0][0] - P[n - 1][0], P[0][1] - P[n - 1][1]);
+                return { cum: cum, L: L };
+              };
+              var pointAt = function (P, n, cum, L, u) {
+                u = ((u % L) + L) % L;
+                var cl = cum.concat([L]);
+                var j = 0;
+                for (var i2 = 0; i2 < cl.length; i2++) { if (cl[i2] <= u) j = i2; }
+                if (j > n - 1) j = n - 1;
+                var f = cl[j + 1] === cl[j] ? 0 : (u - cl[j]) / (cl[j + 1] - cl[j]);
+                f = Math.max(0, Math.min(1, f));
+                var a = P[j], b = P[(j + 1) % n];
+                return [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f];
+              };
+              var inPoly = function (p, P, n) {
+                var inside = false;
+                for (var i = 0; i < n; i++) {
+                  var a = P[i], b = P[(i + 1) % n];
+                  if ((a[1] > p[1]) !== (b[1] > p[1])) {
+                    var x = a[0] + (p[1] - a[1]) * (b[0] - a[0]) / (b[1] - a[1]);
+                    if (p[0] < x) inside = !inside;
+                  }
+                }
+                return inside;
+              };
+              var outNormal = function (P, n, cum, L, u) {
+                var pa = pointAt(P, n, cum, L, u - 15.0);
+                var pb = pointAt(P, n, cum, L, u + 15.0);
+                var tx = pb[0] - pa[0], ty = pb[1] - pa[1];
+                var ll = Math.hypot(tx, ty) || 1;
+                var nx = -ty / ll, ny = tx / ll;
+                var p = pointAt(P, n, cum, L, u);
+                if (inPoly([p[0] + nx * 0.7, p[1] + ny * 0.7], P, n)) { nx = -nx; ny = -ny; }
+                return [nx, ny];
+              };
+              var reflPt = function (p, A, B) {
+                var dx = B[0] - A[0], dy = B[1] - A[1];
+                var L2 = dx * dx + dy * dy;
+                var t = ((p[0] - A[0]) * dx + (p[1] - A[1]) * dy) / L2;
+                return [2 * (A[0] + t * dx) - p[0], 2 * (A[1] + t * dy) - p[1]];
+              };
+              // 土台プロファイル: 各裁断頂点の足（seg, t）と対称化した
+              // ずれ offSym、その局所フレーム成分 (tau, w) と幅 |offSym|。
+              var axA = bpSew[0], axB = bpSew[hc];
+              var axu = axB[0] - axA[0], ayu = axB[1] - axA[1];
+              var alU = Math.hypot(axu, ayu); axu /= alU; ayu /= alU;
+              var cumB = cumOf(bpSew, nSB);
+              var prof = [];
+              for (var j3 = 0; j3 < nCB; j3++) {
+                var pr0 = projLoop(bpCut[j3], bpSew, nSB);
+                prof.push({ seg: pr0.seg, t: pr0.t,
+                  off: [bpCut[j3][0] - pr0.foot[0], bpCut[j3][1] - pr0.foot[1]],
+                  refl: reflPt(bpCut[j3], axA, axB) });
+              }
+              for (var j4 = 0; j4 < nCB; j4++) {
+                var rp = prof[j4].refl, mj = 0, md = 1e18;
+                for (var k4 = 0; k4 < nCB; k4++) {
+                  var dd4 = Math.hypot(bpCut[k4][0] - rp[0], bpCut[k4][1] - rp[1]);
+                  if (dd4 < md) { md = dd4; mj = k4; }
+                }
+                var mo = prof[mj].off;
+                var dv = mo[0] * axu + mo[1] * ayu;
+                var rox = 2 * dv * axu - mo[0], roy = 2 * dv * ayu - mo[1];
+                var osx = (prof[j4].off[0] + rox) / 2, osy = (prof[j4].off[1] + roy) / 2;
+                var segL = (prof[j4].seg + 1 < nSB) ? cumB.cum[prof[j4].seg + 1] : cumB.L;
+                var uu = cumB.cum[prof[j4].seg] + (segL - cumB.cum[prof[j4].seg]) * prof[j4].t;
+                var paB = pointAt(bpSew, nSB, cumB.cum, cumB.L, uu - 15.0);
+                var pbB = pointAt(bpSew, nSB, cumB.cum, cumB.L, uu + 15.0);
+                var txB = pbB[0] - paB[0], tyB = pbB[1] - paB[1];
+                var llB = Math.hypot(txB, tyB) || 1;
+                var nbB = outNormal(bpSew, nSB, cumB.cum, cumB.L, uu);
+                prof[j4].tau = osx * (txB / llB) + osy * (tyB / llB);
+                prof[j4].w = osx * nbB[0] + osy * nbB[1];
+                prof[j4].ref = Math.hypot(osx, osy);
+              }
+              // 換算後の縫い線への輸送（袖ぐり鎖の頂点だけ）。
+              var cumM = cumOf(mvSew, nSM);
+              var placed = {};
+              var chainIdx = idxsA.concat(idxsB);
+              chainIdx.forEach(function (cj) {
+                var v = prof[cj];
+                var aM2 = mvSew[v.seg], bM2 = mvSew[(v.seg + 1) % nSM];
+                var footX = aM2[0] + (bM2[0] - aM2[0]) * v.t, footY = aM2[1] + (bM2[1] - aM2[1]) * v.t;
+                var segLM = (v.seg + 1 < nSM) ? cumM.cum[v.seg + 1] : cumM.L;
+                var uM = cumM.cum[v.seg] + (segLM - cumM.cum[v.seg]) * v.t;
+                var paM = pointAt(mvSew, nSM, cumM.cum, cumM.L, uM - 15.0);
+                var pbM = pointAt(mvSew, nSM, cumM.cum, cumM.L, uM + 15.0);
+                var txM = pbM[0] - paM[0], tyM = pbM[1] - paM[1];
+                var llM = Math.hypot(txM, tyM) || 1;
+                var ngM = outNormal(mvSew, nSM, cumM.cum, cumM.L, uM);
+                placed[cj] = [footX + v.tau * (txM / llM) + v.w * ngM[0],
+                              footY + v.tau * (tyM / llM) + v.w * ngM[1]];
+              });
+              // 距離補正: 実測距離を土台の幅へ（生成側と同じ2ラウンド）。
+              for (var rd = 0; rd < 2; rd++) {
+                var anyMove = false;
+                chainIdx.forEach(function (cj) {
+                  var v = prof[cj];
+                  var p = placed[cj];
+                  var pr1 = projLoop(p, mvSew, nSM);
+                  var diff = v.ref - pr1.d;
+                  if (Math.abs(diff) > 0.2) {
+                    var ux = p[0] - pr1.foot[0], uy = p[1] - pr1.foot[1];
+                    var ul = Math.hypot(ux, uy);
+                    if (ul < 1e-9) return;
+                    var step = Math.max(-5.0, Math.min(5.0, diff));
+                    placed[cj] = [p[0] + ux / ul * step, p[1] + uy / ul * step];
+                    anyMove = true;
+                  }
+                });
+                if (!anyMove) break;
+              }
+              // 鎖ペアの対称化: 換算後の縫い線の軸で左右の鎖を鏡映し、
+              // 射影との中点へ（6ラウンド。監査の期待形 _symmetrize と
+              // 同じ回数。3ラウンドでは SIZE45 前の付け根から2つ目の
+              // 頂点に強い反転が1つ残った）。
+              var axMA = mvSew[0], axMB = mvSew[hc];
+              var projChain = function (p, chainPts) {
+                var bd = 1e18, bf = null;
+                for (var i = 0; i < chainPts.length - 1; i++) {
+                  var a = chainPts[i], b = chainPts[i + 1];
+                  var vx = b[0] - a[0], vy = b[1] - a[1];
+                  var L2 = vx * vx + vy * vy;
+                  var t = L2 < 1e-12 ? 0 : Math.max(0, Math.min(1, ((p[0] - a[0]) * vx + (p[1] - a[1]) * vy) / L2));
+                  var qx = a[0] + t * vx, qy = a[1] + t * vy;
+                  var d = Math.hypot(p[0] - qx, p[1] - qy);
+                  if (d < bd) { bd = d; bf = [qx, qy]; }
+                }
+                return bf;
+              };
+              for (var rs = 0; rs < 6; rs++) {
+                var chA = idxsA.map(function (i) { return placed[i]; });
+                var chB = idxsB.map(function (i) { return placed[i]; });
+                idxsA.forEach(function (ci, k) {
+                  var rpA = reflPt(placed[ci], axMA, axMB);
+                  var fB = projChain(rpA, chB);
+                  var rqA = reflPt(fB, axMA, axMB);
+                  placed[ci] = [(placed[ci][0] + rqA[0]) / 2, (placed[ci][1] + rqA[1]) / 2];
+                });
+                var chA2 = idxsA.map(function (i) { return placed[i]; });
+                idxsB.forEach(function (ci, k) {
+                  var rpB = reflPt(placed[ci], axMA, axMB);
+                  var fA = projChain(rpB, chA2);
+                  var rqB = reflPt(fA, axMA, axMB);
+                  placed[ci] = [(placed[ci][0] + rqB[0]) / 2, (placed[ci][1] + rqB[1]) / 2];
+                });
+              }
+              chainIdx.forEach(function (cj) { mvCut[cj] = placed[cj]; });
+              return;
+            }
             var pair = null;
             if (idxsA.length === idxsB.length) {
               var sym = idxsA.map(function (ia, k) {
@@ -5029,7 +5211,7 @@ setPINFORMEKarte=function(d){
            view, so an update build forces exactly one re-login. */
         var BUILD_KEY = "PINFORME_ADMIN_BUILD_V1";
         var LASTUSED_KEY = "PINFORME_ADMIN_LASTUSED_V1";
-        var BUILD_ID = "prod-2026-11-28-r44";
+        var BUILD_ID = "prod-2026-11-28-r45";
         var RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
 
         /* Breed master: formal names + aliases (normalisation is display-side). */
